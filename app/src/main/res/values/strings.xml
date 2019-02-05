@@ -1,0 +1,13 @@
+<resources>
+    <string name="app_name">Note5</string>
+
+    <string name="dummy_button">Dummy Button</string>
+    <string name="dummy_content">DUMMY\nCONTENT</string>
+    <string name="go">GO</string>
+    <string name="username">username</string>
+    <string name="password">password</string>
+    <string name="content_hint">input your mind …</string>
+    <string name="title_hint">title</string>
+    <string name="markdown_enter_list">\n-\ </string>
+    <integer name="config_shortAnimTime">100</integer>
+</resources>

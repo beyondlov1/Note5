@@ -1,0 +1,20 @@
+body {
+    padding:0;
+	padding-left:30px;
+	padding-right:30px;
+}
+
+span,p,div{
+word-break:break-all;
+}
+
+.detail_title{
+color:#4286F3;
+}
+
+.detail_content{
+color:#55AF7B;
+}
+
+
+
