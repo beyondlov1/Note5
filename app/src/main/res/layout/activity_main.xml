@@ -22,7 +22,7 @@
             android:layout_height="match_parent">
 
             <android.support.v4.view.PagerTabStrip
-                android:id="@+id/pagertab"
+                android:id="@+id/pager_tab_strip"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_gravity="top"
@@ -39,7 +39,7 @@
         android:layout_marginBottom="10dp"
         android:clickable="true"
         app:srcCompat="@drawable/ic_add_white_24dp"
-        />
+        android:focusable="true" />
 
     <!-- This FrameLayout insets its children based on system windows using
          android:fitsSystemWindows. -->

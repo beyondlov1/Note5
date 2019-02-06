@@ -26,6 +26,7 @@ buildscript {
         mavenCentral() // add repository
     }
     dependencies {
+        //noinspection GradleDependency
         classpath 'com.android.tools.build:gradle:3.0.1'
         classpath 'org.greenrobot:greendao-gradle-plugin:3.2.2' // add plugin
 
@@ -34,7 +35,7 @@ buildscript {
 
 greendao {
     schemaVersion 1 //数据库版本号
-    daoPackage 'com.beyond.note5.dao' // 设置DaoMaster、DaoSession、Dao 包名
+    daoPackage 'com.beyond.note5.model.dao' // 设置DaoMaster、DaoSession、Dao 包名
     targetGenDir 'src/main/java'//设置DaoMaster、DaoSession、Dao目录
     generateTests false //设置为true以自动生成单元测试。
     targetGenDirTests 'src/main/java' //应存储生成的单元测试的基本目录。默认为 src / androidTest / java。

@@ -4,7 +4,8 @@ import android.content.Context;
 import android.util.AttributeSet;
 
 /**
- * Created by beyond on 2019/2/2.
+ * @author: beyond
+ * @date: 2019/2/2
  */
 
 public class ViewSwitcher extends android.widget.ViewSwitcher{

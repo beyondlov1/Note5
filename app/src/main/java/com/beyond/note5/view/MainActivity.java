@@ -12,6 +12,7 @@ import android.support.v4.app.DialogFragment;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentActivity;
 import android.support.v4.app.FragmentPagerAdapter;
+import android.support.v4.view.PagerTabStrip;
 import android.support.v4.view.ViewPager;
 import android.view.View;
 
@@ -34,38 +35,64 @@ import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
- * Created by beyond on 2019/1/30.
+ * @author: beyond
+ * @date: 2019/1/30
  */
-
 public class MainActivity extends FragmentActivity {
-
 
     public View mainContainer;
     private ViewPager mainViewPager;
     private FloatingActionButton addDocumentButton;
     private List<Fragment> fragments = new ArrayList<>();
 
-    private MainActivity instance;
-
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        instance = this;
+        initView();
+        initViewPagerData();
+        initEvent();
+    }
 
+    private void initView() {
         mainContainer = findViewById(R.id.main_container);
         mainViewPager = findViewById(R.id.main_view_pager);
+        PagerTabStrip pagerTabStrip = findViewById(R.id.pager_tab_strip);
         addDocumentButton = findViewById(R.id.add_document);
 
-        showMainViewPager();
-        initEvent();
+        pagerTabStrip.setTabIndicatorColor(getResources().getColor(R.color.google_yellow));
+        pagerTabStrip.setTextColor(getResources().getColor(R.color.white));
+    }
 
+    private void initViewPagerData() {
+        Fragment noteFragment = new NoteListFragment();
+        Fragment todoFragment = new TodoListFragment();
+        fragments.add(noteFragment);
+        fragments.add(todoFragment);
+        final List<String> fragmentTitles = new ArrayList<>();
+        fragmentTitles.add("Note");
+        fragmentTitles.add("Todo");
+        mainViewPager.setAdapter(new FragmentPagerAdapter(getSupportFragmentManager()) {
+            @Override
+            public Fragment getItem(int position) {
+                return fragments.get(position);
+            }
 
+            @Override
+            public int getCount() {
+                return fragments.size();
+            }
+
+            @Override
+            public CharSequence getPageTitle(int position) {
+                return fragmentTitles.get(position);
+            }
+
+        });
     }
 
     private void initEvent() {
-
         //监控输入法
         this.getWindow().getDecorView().getViewTreeObserver()
                 .addOnGlobalLayoutListener(new OnKeyboardChangeListener(this) {
@@ -94,7 +121,7 @@ public class MainActivity extends FragmentActivity {
             public void onClick(View v) {
                 int currentItemPosition = mainViewPager.getCurrentItem();
                 Fragment fragment = fragments.get(currentItemPosition);
-                DialogFragment dialog = null;
+                DialogFragment dialog;
                 if (fragment instanceof NoteListFragment) {
                     dialog = new NoteEditFragment();
 
@@ -106,33 +133,6 @@ public class MainActivity extends FragmentActivity {
                 dialog.show(getSupportFragmentManager(), "editDialog");
 
             }
-        });
-    }
-
-    private void showMainViewPager() {
-        Fragment noteFragment = new NoteListFragment();
-        Fragment todoFragment = new TodoListFragment();
-        fragments.add(noteFragment);
-        fragments.add(todoFragment);
-        final List<String> fragmentTitles = new ArrayList<>();
-        fragmentTitles.add("note");
-        fragmentTitles.add("todo");
-        mainViewPager.setAdapter(new FragmentPagerAdapter(getSupportFragmentManager()) {
-            @Override
-            public Fragment getItem(int position) {
-                return fragments.get(position);
-            }
-
-            @Override
-            public int getCount() {
-                return fragments.size();
-            }
-
-            @Override
-            public CharSequence getPageTitle(int position) {
-                return fragmentTitles.get(position);
-            }
-
         });
     }
 

@@ -1,5 +1,6 @@
 package com.beyond.note5.view.fragment;
 
+import android.annotation.SuppressLint;
 import android.app.Dialog;
 import android.content.Context;
 import android.content.DialogInterface;
@@ -41,7 +42,8 @@ import org.greenrobot.eventbus.ThreadMode;
 
 
 /**
- * Created by beyond on 2019/1/30.
+ * @author: beyond
+ * @date: 2019/1/30
  */
 
 public abstract class AbstractDocumentEditFragment<T extends Document> extends DialogFragment {
@@ -52,21 +54,21 @@ public abstract class AbstractDocumentEditFragment<T extends Document> extends D
     protected View root;
     protected EditText contentEditText;
     protected WebView displayWebView;
-    protected T createdDocument;
 
-    private static ScrollWebView scrollWebView;
+    protected T createdDocument;
 
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        //初始化弹出框的位置
         if (dialogHeightWithSoftInputMethod == 0) {
             dialogHeightWithSoftInputMethod =
                     getActivity().getSharedPreferences(MyApplication.SHARED_PREFERENCES_NAME, Context.MODE_PRIVATE)
                             .getInt(DIALOG_HEIGHT_WITH_SOFT_INPUT_METHOD, 0);
         }
-        scrollWebView = ScrollWebView.getInstance();
     }
 
+    @SuppressLint("InflateParams")
     @NonNull
     @Override
     public Dialog onCreateDialog(Bundle savedInstanceState) {
@@ -134,15 +136,17 @@ public abstract class AbstractDocumentEditFragment<T extends Document> extends D
         markdownToolBracketsRight.setOnClickListener(onMarkdownToolItemClickListener);
     }
 
+    @SuppressWarnings("ConstantConditions")
     private void initDialogAnimation() {
         getDialog().requestWindowFeature(Window.FEATURE_NO_TITLE);
         getDialog().getWindow().setWindowAnimations(R.style.edit_dialog_animation);
     }
 
+    @SuppressLint("SetJavaScriptEnabled")
     private void initEvent() {
         displayWebView.getSettings().setJavaScriptEnabled(true);
         displayWebView.getSettings().setJavaScriptCanOpenWindowsAutomatically(true);
-        displayWebView.scrollTo(0,100000);
+        displayWebView.scrollTo(0, 100000);
         contentEditText.addTextChangedListener(new TextWatcher() {
             @Override
             public void beforeTextChanged(CharSequence s, int start, int count, int after) {
@@ -153,12 +157,13 @@ public abstract class AbstractDocumentEditFragment<T extends Document> extends D
             public void onTextChanged(final CharSequence s, int start, int before, int count) {
                 createdDocument.setContent(s.toString());
                 WebViewUtil.loadWebContent(displayWebView, createdDocument);
-                final CharSequence target= s.subSequence(start+count,s.length()).toString()
+                final CharSequence target = s.subSequence(start + count, s.length()).toString()
                         .replaceAll("\\p{Punct}*", "")
                         .replaceAll("\\s*|\n|\t|\r", "");
-                scrollWebView.setTarget(target);
-                scrollWebView.setInputLength(count);
-                displayWebView.setWebViewClient(scrollWebView);
+                ScrollWebViewClient scrollWebViewClient = ScrollWebViewClient.getInstance();
+                scrollWebViewClient.setTarget(target);
+                scrollWebViewClient.setInputLength(count);
+                displayWebView.setWebViewClient(scrollWebViewClient);
             }
 
             @Override
@@ -180,7 +185,8 @@ public abstract class AbstractDocumentEditFragment<T extends Document> extends D
         //要放到这里才有用, 可能是onCreateView的时候没有加载全
         //初始化默认弹出窗口大小设置
         Window win = getDialog().getWindow();
-//        // 一定要设置Background，如果不设置，window属性设置无效
+        // 一定要设置Background，如果不设置，window属性设置无效
+        assert win != null;
         win.setBackgroundDrawable(new ColorDrawable(Color.WHITE));
         DisplayMetrics dm = new DisplayMetrics();
         getActivity().getWindowManager().getDefaultDisplay().getMetrics(dm);
@@ -203,8 +209,13 @@ public abstract class AbstractDocumentEditFragment<T extends Document> extends D
     @Subscribe(threadMode = ThreadMode.MAIN)
     public void onEventMainThread(ShowKeyBoardEvent event) {
         Integer y = event.get();
+        adjustDialogSize(y);
+    }
+
+    private void adjustDialogSize(Integer y) {
         Window win = getDialog().getWindow();
         // 一定要设置Background，如果不设置，window属性设置无效
+        assert win != null;
         win.setBackgroundDrawable(new ColorDrawable(Color.WHITE));
 
         DisplayMetrics dm = new DisplayMetrics();
@@ -212,12 +223,6 @@ public abstract class AbstractDocumentEditFragment<T extends Document> extends D
         WindowManager.LayoutParams params = win.getAttributes();
         params.gravity = Gravity.TOP;
         params.width = dm.widthPixels;
-        params.height = dm.heightPixels - y - 50;
-        win.setAttributes(params);
-
-        displayWebView.setMinimumHeight(dm.heightPixels);
-        contentEditText.setMinimumHeight(dm.heightPixels);
-
         //设置初始的dialogHeightWithSoftInputMethod, 为了不让开始的时候动画跳一下
         if (dialogHeightWithSoftInputMethod == 0) {
             dialogHeightWithSoftInputMethod = dm.heightPixels - y - 50;
@@ -225,6 +230,11 @@ public abstract class AbstractDocumentEditFragment<T extends Document> extends D
             editor.putInt(DIALOG_HEIGHT_WITH_SOFT_INPUT_METHOD, dm.heightPixels - y - 50);
             editor.apply();
         }
+        params.height = dialogHeightWithSoftInputMethod;
+        win.setAttributes(params);
+
+        displayWebView.setMinimumHeight(dm.heightPixels);
+        contentEditText.setMinimumHeight(dm.heightPixels);
     }
 
     class OnMarkdownToolItemClickListener implements View.OnClickListener {
@@ -267,17 +277,20 @@ public abstract class AbstractDocumentEditFragment<T extends Document> extends D
         }
     }
 
-    static class ScrollWebView extends WebViewClient{
+    static class ScrollWebViewClient extends WebViewClient {
 
         private CharSequence target;
         private int inputLength;
 
-        private ScrollWebView(){}
-        public static ScrollWebView getInstance(){
+        private ScrollWebViewClient() {
+        }
+
+        static ScrollWebViewClient getInstance() {
             return WebViewClientHolder.instance;
         }
-        private static class WebViewClientHolder{
-            private static final ScrollWebView instance = new ScrollWebView();
+
+        private static class WebViewClientHolder {
+            private static final ScrollWebViewClient instance = new ScrollWebViewClient();
         }
 
         @Override
@@ -288,7 +301,7 @@ public abstract class AbstractDocumentEditFragment<T extends Document> extends D
         @Override
         public void onPageFinished(final WebView view, String url) {
             super.onPageFinished(view, url);
-            view.evaluateJavascript("javascript:searchAndScrollTo('"+ target +"','"+inputLength+"')", new ValueCallback<String>() {
+            view.evaluateJavascript("javascript:searchAndScrollTo('" + target + "','" + inputLength + "')", new ValueCallback<String>() {
                 @Override
                 public void onReceiveValue(String value) {
 
@@ -300,7 +313,7 @@ public abstract class AbstractDocumentEditFragment<T extends Document> extends D
             return target;
         }
 
-        public void setTarget(CharSequence target) {
+        void setTarget(CharSequence target) {
             this.target = target;
         }
 
@@ -308,7 +321,7 @@ public abstract class AbstractDocumentEditFragment<T extends Document> extends D
             return inputLength;
         }
 
-        public void setInputLength(int inputLength) {
+        void setInputLength(int inputLength) {
             this.inputLength = inputLength;
         }
     }

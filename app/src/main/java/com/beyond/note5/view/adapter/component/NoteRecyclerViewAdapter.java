@@ -1,4 +1,4 @@
-package com.beyond.note5.view.adapter;
+package com.beyond.note5.view.adapter.component;
 
 import android.content.Context;
 import android.support.v4.app.FragmentManager;
@@ -6,14 +6,15 @@ import android.view.View;
 
 import com.beyond.note5.bean.Note;
 import com.beyond.note5.event.DetailNoteEvent;
-import com.beyond.note5.view.fragment.NoteDetailSwitcherFragment;
+import com.beyond.note5.view.fragment.NoteDetailFragment;
 
 import org.greenrobot.eventbus.EventBus;
 
 import java.util.List;
 
 /**
- * Created by beyond on 2019/2/2.
+ * @author: beyond
+ * @date: 2019/2/2
  */
 
 public class NoteRecyclerViewAdapter extends DocumentRecyclerViewAdapter<Note> {
@@ -28,8 +29,8 @@ public class NoteRecyclerViewAdapter extends DocumentRecyclerViewAdapter<Note> {
     @Override
     protected void onItemClick(View v, List<Note> data, Note note, int position) {
         super.onItemClick(v,data, note, position);
-        NoteDetailSwitcherFragment noteDetailSwitcherFragment = new NoteDetailSwitcherFragment();
-        noteDetailSwitcherFragment.show(fragmentManager, "detail");
+        NoteDetailFragment noteDetailFragment = new NoteDetailFragment();
+        noteDetailFragment.show(fragmentManager, "detail");
         EventBus.getDefault().postSticky(new DetailNoteEvent(data,position));
 //        Snackbar.make(v, note.getContent(), Snackbar.LENGTH_LONG).show();
     }

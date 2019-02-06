@@ -6,7 +6,8 @@ import android.view.View;
 import android.view.inputmethod.InputMethodManager;
 
 /**
- * Created by beyond on 2019/2/5.
+ * @author: beyond
+ * @date: 2019/2/5
  */
 
 public class InputMethodUtil {

@@ -9,7 +9,8 @@ import java.io.InputStream;
 import java.nio.charset.Charset;
 
 /**
- * Created by beyond on 2019/2/3.
+ * @author: beyond
+ * @date: 2019/2/3
  */
 
 public class ResourceUtil {

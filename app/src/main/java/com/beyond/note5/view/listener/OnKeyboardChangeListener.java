@@ -9,7 +9,8 @@ import android.view.WindowManager;
 import android.view.inputmethod.InputMethodManager;
 
 /**
- * Created by beyond on 2019/2/4.
+ * @author: beyond
+ * @date: 2019/2/4
  */
 
 public class OnKeyboardChangeListener implements ViewTreeObserver.OnGlobalLayoutListener {

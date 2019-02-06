@@ -13,14 +13,15 @@ import com.beyond.note5.MyApplication;
 import com.beyond.note5.R;
 import com.beyond.note5.bean.Document;
 import com.beyond.note5.bean.Todo;
-import com.beyond.note5.dao.DaoSession;
-import com.beyond.note5.dao.DocumentDao;
-import com.beyond.note5.view.adapter.DocumentRecyclerViewAdapter;
+import com.beyond.note5.model.dao.DaoSession;
+import com.beyond.note5.model.dao.DocumentDao;
+import com.beyond.note5.view.adapter.component.DocumentRecyclerViewAdapter;
 
 import java.util.List;
 
 /**
- * Created by beyond on 2019/1/30.
+ * @author: beyond
+ * @date: 2019/1/30
  */
 
 public class TodoListFragment extends Fragment  {
@@ -38,6 +39,7 @@ public class TodoListFragment extends Fragment  {
         return viewGroup;
     }
 
+    @SuppressWarnings("unchecked")
     private void showTodoList(ViewGroup viewGroup) {
         todoRecyclerView = viewGroup.findViewById(R.id.todo_recycler_view);
         data = getData();

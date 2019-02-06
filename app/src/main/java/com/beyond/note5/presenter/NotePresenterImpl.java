@@ -8,7 +8,8 @@ import com.beyond.note5.view.NoteView;
 import java.util.List;
 
 /**
- * Created by beyond on 2019/1/31.
+ * @author: beyond
+ * @date: 2019/1/31
  */
 
 public class NotePresenterImpl implements NotePresenter {
@@ -22,86 +23,86 @@ public class NotePresenterImpl implements NotePresenter {
     }
 
     @Override
-    public void addNote(Note note) {
+    public void add(Note note) {
         try {
-            noteModel.addNote(note);
-            this.addNoteSuccess(note);
+            noteModel.add(note);
+            this.addSuccess(note);
         }catch (Exception e){
             e.printStackTrace();
-            this.addNoteFail(note);
+            this.addFail(note);
         }
     }
 
     @Override
-    public void addNoteSuccess(Note note) {
-        noteView.onAddNoteSuccess(note);
+    public void addSuccess(Note note) {
+        noteView.onAddSuccess(note);
     }
 
     @Override
-    public void addNoteFail(Note note) {
-        noteView.msg("添加失败");
+    public void addFail(Note note) {
+        noteView.onAddFail(note);
     }
 
     @Override
-    public void updateNote(Note note) {
+    public void update(Note note) {
         try {
-            noteModel.updateNote(note);
-            this.updateNoteSuccess(note);
+            noteModel.update(note);
+            this.updateSuccess(note);
         }catch (Exception e){
             e.printStackTrace();
-            this.updateNoteFail(note);
+            this.updateFail(note);
         }
     }
 
     @Override
-    public void updateNoteSuccess(Note note) {
-        noteView.updateNoteSuccess(note);
+    public void updateSuccess(Note note) {
+        noteView.onUpdateSuccess(note);
     }
 
     @Override
-    public void updateNoteFail(Note note) {
-        noteView.updateNoteFail(note);
+    public void updateFail(Note note) {
+        noteView.onUpdateFail(note);
     }
 
     @Override
-    public void deleteNote(Note note) {
+    public void delete(Note note) {
         try {
-            noteModel.deleteNote(note);
-            this.deleteNoteSuccess(note);
+            noteModel.delete(note);
+            this.deleteSuccess(note);
         }catch (Exception e){
             e.printStackTrace();
-            this.deleteNoteFail(note);
+            this.deleteFail(note);
         }
     }
 
     @Override
-    public void deleteNoteSuccess(Note note) {
-        noteView.deleteNoteSuccess(note);
+    public void deleteSuccess(Note note) {
+        noteView.onDeleteSuccess(note);
     }
 
     @Override
-    public void deleteNoteFail(Note note) {
-        noteView.deleteNoteFail(note);
+    public void deleteFail(Note note) {
+        noteView.onDeleteFail(note);
     }
 
     @Override
-    public void findAllNote() {
+    public void findAll() {
         try {
-            List<Note> allNote = noteModel.findAllNote();
-            this.findAllNoteSuccess(allNote);
+            List<Note> allNote = noteModel.findAll();
+            this.findAllSuccess(allNote);
         }catch (Exception e){
             e.printStackTrace();
-            this.findAllNoteFail();
+            this.findAllFail();
         }
     }
 
     @Override
-    public void findAllNoteSuccess(List<Note> allNote) {
-        noteView.onFindAllNoteSuccess(allNote);
+    public void findAllSuccess(List<Note> allNote) {
+        noteView.onFindAllSuccess(allNote);
     }
 
     @Override
-    public void findAllNoteFail() {
-        noteView.msg("查询失败");
+    public void findAllFail() {
+        noteView.onFindAllFail();
     }
 }

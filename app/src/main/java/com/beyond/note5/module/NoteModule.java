@@ -11,7 +11,8 @@ import dagger.Module;
 import dagger.Provides;
 
 /**
- * Created by beyond on 2019/1/31.
+ * @author: beyond
+ * @date: 2019/1/31
  */
 
 @Module

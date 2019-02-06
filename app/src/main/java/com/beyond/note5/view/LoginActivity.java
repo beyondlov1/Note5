@@ -11,7 +11,8 @@ import com.beyond.note5.R;
 import com.beyond.note5.bean.User;
 
 /**
- * Created by beyond on 2019/1/29.
+ * @author: beyond
+ * @date: 2019/1/29
  */
 
 public class LoginActivity extends AppCompatActivity{

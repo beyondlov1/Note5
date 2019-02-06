@@ -20,7 +20,8 @@ import com.beyond.note5.view.convert.MarkdownHtml2HtmlConverter;
 import java.util.regex.Pattern;
 
 /**
- * Created by beyond on 2019/2/3.
+ * @author: beyond
+ * @date: 2019/2/3
  */
 
 @SuppressWarnings("unchecked")
@@ -57,19 +58,26 @@ public class WebViewUtil {
         webView.loadDataWithBaseURL(null,content, MIME_TYPE,null,null);
     }
 
-
     public static void configWebView(WebView webView){
-        final ProgressBar progressBar = new ProgressBar(webView.getContext(),null,android.R.attr.progressBarStyleHorizontal);
-        ViewGroup.LayoutParams layoutParams = new ViewGroup.LayoutParams(
-                ViewGroup.LayoutParams.MATCH_PARENT, 8);
-        progressBar.setLayoutParams(layoutParams);
         webView.setWebViewClient(new WebViewClient(){
             @Override
             public boolean shouldOverrideUrlLoading(WebView view, WebResourceRequest request) {
                 return false;
             }
 
+            @Override
+            public void onPageFinished(WebView view, String url) {
+                super.onPageFinished(view, url);
+                removeWebViewAllViews(view);
+            }
         });
+    }
+
+    public static void addWebViewProgressBar(WebView webView){
+        final ProgressBar progressBar = new ProgressBar(webView.getContext(),null,android.R.attr.progressBarStyleHorizontal);
+        ViewGroup.LayoutParams layoutParams = new ViewGroup.LayoutParams(
+                ViewGroup.LayoutParams.MATCH_PARENT, 8);
+        progressBar.setLayoutParams(layoutParams);
         webView.setWebChromeClient(new WebChromeClient() {
             @Override
             public void onProgressChanged(WebView view, int newProgress) {
@@ -87,6 +95,10 @@ public class WebViewUtil {
 
         webView.addView(progressBar);
     }
+    public static void removeWebViewAllViews(WebView webView){
+        webView.removeAllViews();
+    }
+
 
     public static String getUrl(Document document){
         String urlWeGet=null;

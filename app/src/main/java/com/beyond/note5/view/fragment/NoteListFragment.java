@@ -7,7 +7,6 @@ import android.support.v7.widget.StaggeredGridLayoutManager;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.Toast;
 
 import com.beyond.note5.R;
 import com.beyond.note5.bean.Note;
@@ -20,8 +19,8 @@ import com.beyond.note5.module.DaggerNoteComponent;
 import com.beyond.note5.module.NoteComponent;
 import com.beyond.note5.module.NoteModule;
 import com.beyond.note5.presenter.NotePresenter;
-import com.beyond.note5.view.NoteView;
-import com.beyond.note5.view.adapter.NoteRecyclerViewAdapter;
+import com.beyond.note5.view.adapter.AbstractFragmentNoteView;
+import com.beyond.note5.view.adapter.component.NoteRecyclerViewAdapter;
 
 import org.apache.commons.lang3.StringUtils;
 import org.greenrobot.eventbus.EventBus;
@@ -35,18 +34,17 @@ import java.util.List;
 import javax.inject.Inject;
 
 /**
- * Created by beyond on 2019/1/30.
+ * @author: beyond
+ * @date: 2019/1/30
  */
 
-public class NoteListFragment extends AbstractDocumentFragment implements NoteView {
+public class NoteListFragment extends AbstractFragmentNoteView {
 
     private List<Note> data = new ArrayList<>();
 
     private RecyclerView noteRecyclerView;
 
     private NoteRecyclerViewAdapter noteRecyclerViewAdapter;
-
-    private StaggeredGridLayoutManager staggeredGridLayoutManager;
 
     @Inject
     NotePresenter notePresenter;
@@ -110,36 +108,35 @@ public class NoteListFragment extends AbstractDocumentFragment implements NoteVi
     public void onStart() {
         super.onStart();
         //显示所有Note
-        notePresenter.findAllNote();
+        notePresenter.findAll();
     }
 
     private void initView(ViewGroup viewGroup) {
         noteRecyclerView = viewGroup.findViewById(R.id.note_recycler_view);
         noteRecyclerView.setAdapter(noteRecyclerViewAdapter);
         //设置显示格式
-        staggeredGridLayoutManager = new StaggeredGridLayoutManager(2, StaggeredGridLayoutManager.VERTICAL);
+        StaggeredGridLayoutManager staggeredGridLayoutManager = new StaggeredGridLayoutManager(2, StaggeredGridLayoutManager.VERTICAL);
         noteRecyclerView.setLayoutManager(staggeredGridLayoutManager);
     }
 
     @Subscribe(threadMode = ThreadMode.MAIN)
     public void onNoteReceived(AddNoteEvent event) {
-        notePresenter.addNote(event.get());
+        notePresenter.add(event.get());
     }
 
     @Subscribe(threadMode = ThreadMode.MAIN)
     public void onNoteReceived(UpdateNoteEvent event) {
-        notePresenter.updateNote(event.get());
+        notePresenter.update(event.get());
     }
 
     @Subscribe(threadMode = ThreadMode.MAIN)
     public void onNoteReceived(DeleteNoteEvent event) {
-        notePresenter.deleteNote(event.get());
+        notePresenter.delete(event.get());
     }
 
     @Override
-    public void onAddNoteSuccess(Note note) {
+    public void onAddSuccess(Note note) {
         data.add(0, note);
-//        noteRecyclerView.getAdapter().notifyDataSetChanged();
         noteRecyclerView.getAdapter().notifyItemInserted(0);
         noteRecyclerView.getAdapter().notifyItemRangeChanged(1, data.size() - 1);
         noteRecyclerView.scrollToPosition(0);
@@ -147,12 +144,7 @@ public class NoteListFragment extends AbstractDocumentFragment implements NoteVi
     }
 
     @Override
-    public void msg(String msg) {
-        Toast.makeText(getActivity(), msg, Toast.LENGTH_SHORT).show();
-    }
-
-    @Override
-    public void onFindAllNoteSuccess(List<Note> allNote) {
+    public void onFindAllSuccess(List<Note> allNote) {
         int previousSize = data.size();
         data.clear();
         noteRecyclerView.getAdapter().notifyItemRangeRemoved(0, previousSize);
@@ -161,12 +153,7 @@ public class NoteListFragment extends AbstractDocumentFragment implements NoteVi
     }
 
     @Override
-    public void deleteNoteFail(Note note) {
-        msg("删除失败");
-    }
-
-    @Override
-    public void deleteNoteSuccess(Note note) {
+    public void onDeleteSuccess(Note note) {
         int index = data.indexOf(note);
         data.remove(note);
         if (index!=-1){
@@ -177,7 +164,7 @@ public class NoteListFragment extends AbstractDocumentFragment implements NoteVi
     }
 
     @Override
-    public void updateNoteSuccess(Note note) {
+    public void onUpdateSuccess(Note note) {
         Iterator<Note> iterator = data.iterator();
         while (iterator.hasNext()) {
             Note oldNote = iterator.next();
@@ -191,8 +178,4 @@ public class NoteListFragment extends AbstractDocumentFragment implements NoteVi
         }
     }
 
-    @Override
-    public void updateNoteFail(Note note) {
-        msg("更新失败");
-    }
 }

@@ -3,13 +3,14 @@ package com.beyond.note5.model;
 import com.beyond.note5.MyApplication;
 import com.beyond.note5.bean.Document;
 import com.beyond.note5.bean.Note;
-import com.beyond.note5.dao.DaoSession;
-import com.beyond.note5.dao.NoteDao;
+import com.beyond.note5.model.dao.DaoSession;
+import com.beyond.note5.model.dao.NoteDao;
 
 import java.util.List;
 
 /**
- * Created by beyond on 2019/1/31.
+ * @author: beyond
+ * @date: 2019/1/31
  */
 
 public class NoteModelImpl implements NoteModel {
@@ -22,22 +23,22 @@ public class NoteModelImpl implements NoteModel {
     }
 
     @Override
-    public void addNote(Note note){
+    public void add(Note note){
         noteDao.insert(note);
     }
 
     @Override
-    public void updateNote(Note note) {
+    public void update(Note note) {
         noteDao.update(note);
     }
 
     @Override
-    public void deleteNote(Note note) {
+    public void delete(Note note) {
         noteDao.delete(note);
     }
 
     @Override
-    public List<Note> findAllNote() {
+    public List<Note> findAll() {
         return noteDao.queryBuilder()
                 .where(NoteDao.Properties.Type.eq(Document.NOTE))
                 .orderDesc(NoteDao.Properties.LastModifyTime)

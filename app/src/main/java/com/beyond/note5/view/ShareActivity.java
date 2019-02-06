@@ -1,12 +1,10 @@
 package com.beyond.note5.view;
 
-import android.app.Activity;
 import android.content.Intent;
 import android.os.Build;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.support.annotation.RequiresApi;
-import android.widget.Toast;
 
 import com.beyond.note5.bean.Note;
 import com.beyond.note5.module.DaggerNoteComponent;
@@ -14,19 +12,20 @@ import com.beyond.note5.module.NoteComponent;
 import com.beyond.note5.module.NoteModule;
 import com.beyond.note5.presenter.NotePresenter;
 import com.beyond.note5.utils.IDUtil;
+import com.beyond.note5.view.adapter.AbstractActivityNoteView;
 
 import org.apache.commons.lang3.StringUtils;
 
 import java.util.Date;
-import java.util.List;
 
 import javax.inject.Inject;
 
 /**
- * Created by beyond on 17-12-15.
+ * @author: beyond
+ * @date: 17-12-15
  */
 
-public class ShareActivity extends Activity implements NoteView {
+public class ShareActivity extends AbstractActivityNoteView {
     public final static String SEND = "android.intent.action.SEND";
     public final static String PROCESS_TEXT = "android.intent.action.PROCESS_TEXT";
 
@@ -41,12 +40,12 @@ public class ShareActivity extends Activity implements NoteView {
         final Intent intent = getIntent();
         if ("text/plain".equals(intent.getType()) && (SEND.equals(intent.getAction()) )){
             Note note = generateNoteFromSend(intent);
-            notePresenter.addNote(note);
+            notePresenter.add(note);
         }
         if ("text/plain".equals(intent.getType()) && PROCESS_TEXT.equals(intent.getAction())){
             if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.M) {
                 Note note = generateNoteFromProcessText(intent);
-                notePresenter.addNote(note);
+                notePresenter.add(note);
             }
         }
 
@@ -86,38 +85,4 @@ public class ShareActivity extends Activity implements NoteView {
         return note;
     }
 
-    @Override
-    public void onAddNoteSuccess(Note note) {
-        msg("添加成功");
-    }
-
-    @Override
-    public void msg(String msg) {
-        Toast.makeText(this, msg, Toast.LENGTH_SHORT).show();
-    }
-
-    @Override
-    public void onFindAllNoteSuccess(List<Note> allNote) {
-
-    }
-
-    @Override
-    public void deleteNoteFail(Note note) {
-
-    }
-
-    @Override
-    public void deleteNoteSuccess(Note note) {
-
-    }
-
-    @Override
-    public void updateNoteSuccess(Note note) {
-
-    }
-
-    @Override
-    public void updateNoteFail(Note note) {
-
-    }
 }

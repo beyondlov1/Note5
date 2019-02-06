@@ -6,7 +6,8 @@ import java.util.LinkedList;
 import java.util.List;
 
 /**
- * Created by beyond on 2019/2/3.
+ * @author: beyond
+ * @date: 2019/2/3
  */
 
 public class ConverterBuilder<T, S> {

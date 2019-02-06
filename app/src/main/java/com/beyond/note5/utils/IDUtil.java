@@ -3,7 +3,8 @@ package com.beyond.note5.utils;
 import java.util.UUID;
 
 /**
- * Created by beyond on 2019/2/1.
+ * @author: beyond
+ * @date: 2019/2/1
  */
 
 public class IDUtil {

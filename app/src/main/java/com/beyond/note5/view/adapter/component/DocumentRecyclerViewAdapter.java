@@ -1,10 +1,9 @@
-package com.beyond.note5.view.adapter;
+package com.beyond.note5.view.adapter.component;
 
 import android.content.Context;
 import android.graphics.drawable.GradientDrawable;
 import android.support.v4.content.ContextCompat;
 import android.support.v7.widget.RecyclerView;
-import android.util.TypedValue;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -18,7 +17,8 @@ import org.apache.commons.lang3.StringUtils;
 import java.util.List;
 
 /**
- * Created by beyond on 2019/1/30.
+ * @author: beyond
+ * @date: 2019/1/30
  */
 
 public class DocumentRecyclerViewAdapter<T extends Document> extends RecyclerView.Adapter {
@@ -44,6 +44,7 @@ public class DocumentRecyclerViewAdapter<T extends Document> extends RecyclerVie
         return new DocumentRecyclerViewAdapter.MyViewHolder(view);
     }
 
+    @SuppressWarnings("unchecked")
     @Override
     public void onBindViewHolder(RecyclerView.ViewHolder holder, int position) {
         MyViewHolder viewHolder = (MyViewHolder) holder;
@@ -70,7 +71,6 @@ public class DocumentRecyclerViewAdapter<T extends Document> extends RecyclerVie
     protected void initDisplay(final MyViewHolder viewHolder, Document document, int position) {
         GradientDrawable gradientDrawable=new GradientDrawable();
         gradientDrawable.setCornerRadius(13);
-//        gradientDrawable.setColor(ContextCompat.getColor(context, R.color.white));
         gradientDrawable.setStroke(1,ContextCompat.getColor(context, R.color.dark_gray));
         viewHolder.dataContainer.setBackground(gradientDrawable);
         if (StringUtils.isNotBlank(document.getTitle())){
@@ -79,9 +79,8 @@ public class DocumentRecyclerViewAdapter<T extends Document> extends RecyclerVie
         }else{
             viewHolder.title.setVisibility(View.GONE);
         }
-        viewHolder.content.setText(StringUtils.trim(document.getContent()));
         viewHolder.content.setTextSize(12);
-        viewHolder.content.setTextSize(TypedValue.COMPLEX_UNIT_PX, (float) (viewHolder.content.getTextSize() *(1+ 0.618*Math.pow(1.618, -document.getContent().length() / 10))));
+        viewHolder.content.setText(StringUtils.trim(document.getContent()));
     }
 
 

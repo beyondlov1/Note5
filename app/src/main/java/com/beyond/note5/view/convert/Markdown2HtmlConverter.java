@@ -6,7 +6,8 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 /**
- * Created by beyond on 2019/2/3.
+ * @author: beyond
+ * @date: 2019/2/3
  */
 
 public class Markdown2HtmlConverter implements Converter<String,String> {

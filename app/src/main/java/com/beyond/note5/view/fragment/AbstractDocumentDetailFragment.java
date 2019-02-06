@@ -5,7 +5,8 @@ import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
 
 /**
- * Created by beyond on 2019/2/1.
+ * @author: beyond
+ * @date: 2019/2/1
  */
 
 public abstract class AbstractDocumentDetailFragment extends Fragment {

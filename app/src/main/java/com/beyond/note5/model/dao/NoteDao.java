@@ -1,4 +1,4 @@
-package com.beyond.note5.dao;
+package com.beyond.note5.model.dao;
 
 import android.database.Cursor;
 import android.database.sqlite.SQLiteStatement;

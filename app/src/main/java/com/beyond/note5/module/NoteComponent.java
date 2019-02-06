@@ -8,7 +8,8 @@ import javax.inject.Singleton;
 import dagger.Component;
 
 /**
- * Created by beyond on 2019/1/31.
+ * @author: beyond
+ * @date: 2019/1/31
  */
 
 @Singleton

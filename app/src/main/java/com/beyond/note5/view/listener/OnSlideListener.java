@@ -6,7 +6,8 @@ import android.view.MotionEvent;
 import android.view.View;
 
 /**
- * Created by beyond on 2019/2/2.
+ * @author: beyond
+ * @date: 2019/2/2
  */
 
 public abstract class OnSlideListener implements View.OnTouchListener {
@@ -60,22 +61,11 @@ public abstract class OnSlideListener implements View.OnTouchListener {
 
     private GestureDetector gestureDetector = new GestureDetector(context, new GestureDetector.SimpleOnGestureListener() {
 
-        /**
-         * 双击发生时的通知
-         * @param e
-         * @return
-         */
         @Override
         public boolean onDoubleTap(MotionEvent e) {//双击事件
             onDoubleClick(e);
             return super.onDoubleTap(e);
         }
-
-        /**
-         * 双击手势过程中发生的事件，包括按下、移动和抬起事件
-         * @param e
-         * @return
-         */
         @Override
         public boolean onDoubleTapEvent(MotionEvent e) {
             return super.onDoubleTapEvent(e);

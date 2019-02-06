@@ -7,7 +7,8 @@ import com.beyond.note5.utils.IDUtil;
 import java.util.Date;
 
 /**
- * Created by beyond on 2019/1/31.
+ * @author: beyond
+ * @date: 2019/1/31
  */
 
 public class TodoEditFragment extends AbstractDocumentEditFragment<Todo> {

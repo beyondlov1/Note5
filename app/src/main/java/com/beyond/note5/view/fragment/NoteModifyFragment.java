@@ -13,7 +13,8 @@ import org.greenrobot.eventbus.ThreadMode;
 import java.util.Date;
 
 /**
- * Created by beyond on 2019/2/5.
+ * @author: beyond
+ * @date: 2019/2/5
  */
 
 public class NoteModifyFragment extends AbstractDocumentEditFragment<Note> {

@@ -5,7 +5,8 @@ import com.beyond.note5.bean.Note;
 import java.util.List;
 
 /**
- * Created by beyond on 2019/2/2.
+ * @author: beyond
+ * @date: 2019/2/2
  */
 
 public class DetailNoteEvent extends AbstractEvent<List<Note>> {

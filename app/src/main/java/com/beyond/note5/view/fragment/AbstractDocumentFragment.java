@@ -3,15 +3,17 @@ package com.beyond.note5.view.fragment;
 
 import android.os.Bundle;
 import android.support.annotation.Nullable;
-import android.support.v4.app.Fragment;
+
+import com.beyond.note5.view.adapter.AbstractFragmentDocumentView;
 
 import org.greenrobot.eventbus.EventBus;
 
 /**
- * Created by beyond on 2019/1/31.
+ * @author: beyond
+ * @date: 2019/1/31
  */
 
-public abstract class AbstractDocumentFragment extends Fragment {
+public abstract class AbstractDocumentFragment<T> extends AbstractFragmentDocumentView<T> {
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);

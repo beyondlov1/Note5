@@ -3,6 +3,7 @@ package com.beyond.note5.view.fragment;
 import android.animation.Animator;
 import android.animation.AnimatorInflater;
 import android.animation.AnimatorListenerAdapter;
+import android.annotation.SuppressLint;
 import android.app.Dialog;
 import android.content.Context;
 import android.content.Intent;
@@ -11,6 +12,7 @@ import android.graphics.drawable.ColorDrawable;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.Handler;
+import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.v4.app.DialogFragment;
 import android.support.v7.app.AlertDialog;
@@ -46,10 +48,11 @@ import java.util.TimerTask;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
- * Created by beyond on 2019/2/2.
+ * @author: beyond
+ * @date: 2019/2/2
  */
 
-public class NoteDetailSwitcherFragment extends DialogFragment {
+public class NoteDetailFragment extends DialogFragment {
 
     private Context context;
     private View root;
@@ -57,11 +60,10 @@ public class NoteDetailSwitcherFragment extends DialogFragment {
     private TextView pageCountTextView;
     private DetailViewHolder detailViewHolder;
 
-    private WebView browserWebView;
+    private List<Note> data;
+    private int currPosition;
 
-    private List<Note> notes;
-    private int position;
-    private ViewGroup operationContainer;
+    private View operationContainer;
     private View operationItemsContainer;
     private View deleteButton;
     private View searchButton;
@@ -73,6 +75,8 @@ public class NoteDetailSwitcherFragment extends DialogFragment {
         this.context = getActivity();
     }
 
+    @SuppressLint("InflateParams")
+    @NonNull
     @Override
     public Dialog onCreateDialog(Bundle savedInstanceState) {
 
@@ -105,6 +109,7 @@ public class NoteDetailSwitcherFragment extends DialogFragment {
         browserSearchButton = view.findViewById(R.id.fragment_note_detail_operation_browser_search);
     }
 
+    @SuppressWarnings("ConstantConditions")
     private void initDialogAnimation() {
         getDialog().requestWindowFeature(Window.FEATURE_NO_TITLE);
         getDialog().getWindow().setWindowAnimations(R.style.detail_dialog_animation);
@@ -135,14 +140,14 @@ public class NoteDetailSwitcherFragment extends DialogFragment {
             deleteButton.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
-                    Note currentNote = notes.get(position);
+                    Note currentNote = data.get(currPosition);
                     EventBus.getDefault().post(new DeleteNoteEvent(currentNote));
-                    if (notes.isEmpty()) {
+                    if (data.isEmpty()) {
                         getDialog().dismiss();
                         return;
                     }
-                    if (position == notes.size()) {
-                        position--;
+                    if (currPosition == data.size()) {
+                        currPosition--;
                     }
                     viewSwitcher.removeAllViews();
                     reloadView();
@@ -193,14 +198,14 @@ public class NoteDetailSwitcherFragment extends DialogFragment {
             deleteButton.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
-                    Note currentNote = notes.get(position);
+                    Note currentNote = data.get(currPosition);
                     EventBus.getDefault().post(new DeleteNoteEvent(currentNote));
-                    if (notes.isEmpty()) {
+                    if (data.isEmpty()) {
                         getDialog().dismiss();
                         return;
                     }
-                    if (position == notes.size()) {
-                        position--;
+                    if (currPosition == data.size()) {
+                        currPosition--;
                     }
                     viewSwitcher.removeAllViews();
                     reloadView();
@@ -210,8 +215,9 @@ public class NoteDetailSwitcherFragment extends DialogFragment {
         searchButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                String url = WebViewUtil.getUrl(notes.get(position));
+                String url = WebViewUtil.getUrl(data.get(currPosition));
                 if (url != null){
+                    WebViewUtil.addWebViewProgressBar(new DetailViewHolder(viewSwitcher.getCurrentView()).displayWebView);
                     new DetailViewHolder(viewSwitcher.getCurrentView()).displayWebView.loadUrl(url);
                 }else {
                     Toast.makeText(context, "搜索文字不能超过32个字", Toast.LENGTH_SHORT).show();
@@ -221,7 +227,7 @@ public class NoteDetailSwitcherFragment extends DialogFragment {
         browserSearchButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                String url = WebViewUtil.getUrl(notes.get(position));
+                String url = WebViewUtil.getUrl(data.get(currPosition));
                 if (url != null){
                     Uri uri = Uri.parse(url);
                     Intent intent = new Intent(Intent.ACTION_VIEW, uri);
@@ -269,6 +275,7 @@ public class NoteDetailSwitcherFragment extends DialogFragment {
         //初始化默认弹出窗口大小设置
         Window win = getDialog().getWindow();
 //        // 一定要设置Background，如果不设置，window属性设置无效
+        assert win != null;
         win.setBackgroundDrawable(new ColorDrawable(Color.WHITE));
         DisplayMetrics dm = new DisplayMetrics();
         getActivity().getWindowManager().getDefaultDisplay().getMetrics(dm);
@@ -289,27 +296,28 @@ public class NoteDetailSwitcherFragment extends DialogFragment {
 
     @Subscribe(threadMode = ThreadMode.MAIN, sticky = true)
     public void onEventMainThread(DetailNoteEvent detailNoteEvent) {
-        notes = detailNoteEvent.get();
-        position = detailNoteEvent.getPosition();
+        data = detailNoteEvent.get();
+        currPosition = detailNoteEvent.getPosition();
         reloadView();
     }
 
     @Subscribe(threadMode = ThreadMode.MAIN)
     public void onEventMainThread(ModifyNoteDoneEvent modifyNoteDoneEvent) {
         Note note = modifyNoteDoneEvent.get();
-        int index = notes.indexOf(note);
-        position = index == -1 ? 0 : index;
+        int index = data.indexOf(note);
+        currPosition = index == -1 ? 0 : index;
         viewSwitcher.removeAllViews();
         reloadView();
     }
 
+    @SuppressWarnings("ConstantConditions")
     private void reloadView() {
         // 默认情况下，dialog布局中设置EditText，在点击EditText后输入法不能弹出来, 将此标志位清除，则可以显示输入法
         this.getDialog().getWindow().clearFlags(WindowManager.LayoutParams.FLAG_ALT_FOCUSABLE_IM);
         viewSwitcher.setFactory(new ViewSwitcher.ViewFactory() {
             @Override
             public View makeView() {
-                View view = LayoutInflater.from(context).inflate(R.layout.fragment_note_detail, null);
+                @SuppressLint("InflateParams") View view = LayoutInflater.from(context).inflate(R.layout.fragment_note_detail, null);
                 view.setMinimumHeight(2000);
 
                 detailViewHolder = new DetailViewHolder(view);
@@ -329,11 +337,12 @@ public class NoteDetailSwitcherFragment extends DialogFragment {
 
     private void initDetailData(DetailViewHolder detailViewHolder) {
         this.detailViewHolder = detailViewHolder;
-        WebViewUtil.loadWebContent(detailViewHolder.displayWebView, notes.get(position));
-        String pageCount = String.format("%s/%s", position + 1, notes.size());
+        WebViewUtil.loadWebContent(detailViewHolder.displayWebView, data.get(currPosition));
+        String pageCount = String.format("%s/%s", currPosition + 1, data.size());
         pageCountTextView.setText(pageCount);
     }
 
+    @SuppressLint("ClickableViewAccessibility")
     private void initDetailEvent(final DetailViewHolder detailViewHolder) {
         //DialogButton
         ((AlertDialog) getDialog()).getButton(-1).setOnClickListener(new View.OnClickListener() {
@@ -382,11 +391,11 @@ public class NoteDetailSwitcherFragment extends DialogFragment {
     }
 
     private void next() {
-        if (position == notes.size() - 1) {
+        if (currPosition == data.size() - 1) {
             msg("已到达最后一页");
         }
-        if (position < notes.size() - 1) {
-            position++;
+        if (currPosition < data.size() - 1) {
+            currPosition++;
             viewSwitcher.setInAnimation(context, R.anim.slide_in_right);
             viewSwitcher.setOutAnimation(context, R.anim.slide_out_left);
             initDetailData(new DetailViewHolder(viewSwitcher.getNextView()));
@@ -395,11 +404,11 @@ public class NoteDetailSwitcherFragment extends DialogFragment {
     }
 
     private void prev() {
-        if (position == 0) {
+        if (currPosition == 0) {
             msg("已到达第一页");
         }
-        if (position > 0) {
-            position--;
+        if (currPosition > 0) {
+            currPosition--;
             viewSwitcher.setInAnimation(context, R.anim.slide_in_left);
             viewSwitcher.setOutAnimation(context, R.anim.slide_out_right);
             initDetailData(new DetailViewHolder(viewSwitcher.getNextView()));
@@ -410,7 +419,7 @@ public class NoteDetailSwitcherFragment extends DialogFragment {
     private void showModifyView() {
         NoteModifyFragment noteModifyFragment = new NoteModifyFragment();
         noteModifyFragment.show(getActivity().getSupportFragmentManager(), "modifyDialog");
-        EventBus.getDefault().postSticky(new FillNoteModifyEvent(notes.get(position)));
+        EventBus.getDefault().postSticky(new FillNoteModifyEvent(data.get(currPosition)));
     }
 
     class DetailViewHolder {
