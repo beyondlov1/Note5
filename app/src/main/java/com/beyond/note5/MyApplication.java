@@ -13,6 +13,8 @@ import org.greenrobot.greendao.database.Database;
 
 public class MyApplication extends Application {
 
+    public static final String  SHARED_PREFERENCES_NAME = "note5_preferences";
+
     private static MyApplication instance;
     public static MyApplication getInstance(){
         return instance;

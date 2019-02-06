@@ -1,7 +1,9 @@
 package com.beyond.note5.view.fragment;
 
 import android.app.Dialog;
+import android.content.Context;
 import android.content.DialogInterface;
+import android.content.SharedPreferences;
 import android.graphics.Color;
 import android.graphics.drawable.ColorDrawable;
 import android.os.Bundle;
@@ -18,10 +20,14 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.view.Window;
 import android.view.WindowManager;
+import android.webkit.ValueCallback;
+import android.webkit.WebResourceRequest;
 import android.webkit.WebView;
+import android.webkit.WebViewClient;
 import android.widget.EditText;
 import android.widget.TextView;
 
+import com.beyond.note5.MyApplication;
 import com.beyond.note5.R;
 import com.beyond.note5.bean.Document;
 import com.beyond.note5.event.Event;
@@ -41,11 +47,25 @@ import org.greenrobot.eventbus.ThreadMode;
 public abstract class AbstractDocumentEditFragment<T extends Document> extends DialogFragment {
 
     private static int dialogHeightWithSoftInputMethod;
+    private static final String DIALOG_HEIGHT_WITH_SOFT_INPUT_METHOD = "dialogHeightWithSoftInputMethod";
 
     protected View root;
     protected EditText contentEditText;
     protected WebView displayWebView;
     protected T createdDocument;
+
+    private static ScrollWebView scrollWebView;
+
+    @Override
+    public void onCreate(@Nullable Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        if (dialogHeightWithSoftInputMethod == 0) {
+            dialogHeightWithSoftInputMethod =
+                    getActivity().getSharedPreferences(MyApplication.SHARED_PREFERENCES_NAME, Context.MODE_PRIVATE)
+                            .getInt(DIALOG_HEIGHT_WITH_SOFT_INPUT_METHOD, 0);
+        }
+        scrollWebView = ScrollWebView.getInstance();
+    }
 
     @NonNull
     @Override
@@ -59,7 +79,7 @@ public abstract class AbstractDocumentEditFragment<T extends Document> extends D
                             public void onClick(DialogInterface dialog, int id) {
                                 String content = contentEditText.getText().toString();
                                 if (content.length() > 0) {
-                                    EventBus.getDefault().post(onPositiveButtonClick(content));
+                                    sendEventsOnOKClick(content);
                                 }
                                 dialog.dismiss();
                             }
@@ -71,7 +91,11 @@ public abstract class AbstractDocumentEditFragment<T extends Document> extends D
         return builder.create();
     }
 
-    protected abstract Event onPositiveButtonClick(String content);
+    protected abstract void sendEventsOnOKClick(String content);
+
+    public void post(Event event) {
+        EventBus.getDefault().post(event);
+    }
 
     protected DialogButton getNeutralButton() {
         return null;
@@ -116,6 +140,9 @@ public abstract class AbstractDocumentEditFragment<T extends Document> extends D
     }
 
     private void initEvent() {
+        displayWebView.getSettings().setJavaScriptEnabled(true);
+        displayWebView.getSettings().setJavaScriptCanOpenWindowsAutomatically(true);
+        displayWebView.scrollTo(0,100000);
         contentEditText.addTextChangedListener(new TextWatcher() {
             @Override
             public void beforeTextChanged(CharSequence s, int start, int count, int after) {
@@ -123,10 +150,15 @@ public abstract class AbstractDocumentEditFragment<T extends Document> extends D
             }
 
             @Override
-            public void onTextChanged(CharSequence s, int start, int before, int count) {
+            public void onTextChanged(final CharSequence s, int start, int before, int count) {
                 createdDocument.setContent(s.toString());
                 WebViewUtil.loadWebContent(displayWebView, createdDocument);
-                displayWebView.scrollTo(0, 1000);
+                final CharSequence target= s.subSequence(start+count,s.length()).toString()
+                        .replaceAll("\\p{Punct}*", "")
+                        .replaceAll("\\s*|\n|\t|\r", "");
+                scrollWebView.setTarget(target);
+                scrollWebView.setInputLength(count);
+                displayWebView.setWebViewClient(scrollWebView);
             }
 
             @Override
@@ -134,6 +166,7 @@ public abstract class AbstractDocumentEditFragment<T extends Document> extends D
 
             }
         });
+
     }
 
     @Override
@@ -186,7 +219,12 @@ public abstract class AbstractDocumentEditFragment<T extends Document> extends D
         contentEditText.setMinimumHeight(dm.heightPixels);
 
         //设置初始的dialogHeightWithSoftInputMethod, 为了不让开始的时候动画跳一下
-        dialogHeightWithSoftInputMethod = dm.heightPixels - y - 50;
+        if (dialogHeightWithSoftInputMethod == 0) {
+            dialogHeightWithSoftInputMethod = dm.heightPixels - y - 50;
+            SharedPreferences.Editor editor = getActivity().getSharedPreferences(MyApplication.SHARED_PREFERENCES_NAME, Context.MODE_PRIVATE).edit();
+            editor.putInt(DIALOG_HEIGHT_WITH_SOFT_INPUT_METHOD, dm.heightPixels - y - 50);
+            editor.apply();
+        }
     }
 
     class OnMarkdownToolItemClickListener implements View.OnClickListener {
@@ -226,6 +264,52 @@ public abstract class AbstractDocumentEditFragment<T extends Document> extends D
         public DialogButton(String name, DialogInterface.OnClickListener onClickListener) {
             this.name = name;
             this.onClickListener = onClickListener;
+        }
+    }
+
+    static class ScrollWebView extends WebViewClient{
+
+        private CharSequence target;
+        private int inputLength;
+
+        private ScrollWebView(){}
+        public static ScrollWebView getInstance(){
+            return WebViewClientHolder.instance;
+        }
+        private static class WebViewClientHolder{
+            private static final ScrollWebView instance = new ScrollWebView();
+        }
+
+        @Override
+        public boolean shouldOverrideUrlLoading(WebView view, WebResourceRequest request) {
+            return false;
+        }
+
+        @Override
+        public void onPageFinished(final WebView view, String url) {
+            super.onPageFinished(view, url);
+            view.evaluateJavascript("javascript:searchAndScrollTo('"+ target +"','"+inputLength+"')", new ValueCallback<String>() {
+                @Override
+                public void onReceiveValue(String value) {
+
+                }
+            });
+        }
+
+        public CharSequence getTarget() {
+            return target;
+        }
+
+        public void setTarget(CharSequence target) {
+            this.target = target;
+        }
+
+        public int getInputLength() {
+            return inputLength;
+        }
+
+        public void setInputLength(int inputLength) {
+            this.inputLength = inputLength;
         }
     }
 

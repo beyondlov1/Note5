@@ -4,7 +4,6 @@ import android.app.Activity;
 import android.content.Intent;
 import android.os.Build;
 import android.os.Bundle;
-import android.os.Handler;
 import android.support.annotation.Nullable;
 import android.support.annotation.RequiresApi;
 import android.widget.Toast;
@@ -15,6 +14,8 @@ import com.beyond.note5.module.NoteComponent;
 import com.beyond.note5.module.NoteModule;
 import com.beyond.note5.presenter.NotePresenter;
 import com.beyond.note5.utils.IDUtil;
+
+import org.apache.commons.lang3.StringUtils;
 
 import java.util.Date;
 import java.util.List;
@@ -28,8 +29,6 @@ import javax.inject.Inject;
 public class ShareActivity extends Activity implements NoteView {
     public final static String SEND = "android.intent.action.SEND";
     public final static String PROCESS_TEXT = "android.intent.action.PROCESS_TEXT";
-
-    private Handler handler = new Handler();
 
     @Inject
     NotePresenter notePresenter;
@@ -65,8 +64,11 @@ public class ShareActivity extends Activity implements NoteView {
         Date currDate = new Date();
         Note note = new Note();
         note.setId(IDUtil.uuid());
-        note.setTitle(title);
-        note.setContent(content);
+        if (StringUtils.isNotBlank(title)){
+            note.setContent(String.format("### %s\n%s",title,content));
+        }else {
+            note.setContent(content);
+        }
         note.setCreateTime(currDate);
         note.setLastModifyTime(currDate);
         return note;

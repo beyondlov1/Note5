@@ -19,7 +19,6 @@ import com.beyond.note5.R;
 import com.beyond.note5.event.HideFABEvent;
 import com.beyond.note5.event.ShowFABEvent;
 import com.beyond.note5.event.ShowKeyBoardEvent;
-import com.beyond.note5.view.fragment.NoteDetailFragment;
 import com.beyond.note5.view.fragment.NoteEditFragment;
 import com.beyond.note5.view.fragment.NoteListFragment;
 import com.beyond.note5.view.fragment.TodoEditFragment;
@@ -39,6 +38,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
  */
 
 public class MainActivity extends FragmentActivity {
+
 
     public View mainContainer;
     private ViewPager mainViewPager;
@@ -112,14 +112,11 @@ public class MainActivity extends FragmentActivity {
     private void showMainViewPager() {
         Fragment noteFragment = new NoteListFragment();
         Fragment todoFragment = new TodoListFragment();
-        Fragment noteShowFragment = new NoteDetailFragment();
         fragments.add(noteFragment);
         fragments.add(todoFragment);
-        fragments.add(noteShowFragment);
         final List<String> fragmentTitles = new ArrayList<>();
         fragmentTitles.add("note");
         fragmentTitles.add("todo");
-        fragmentTitles.add("detail");
         mainViewPager.setAdapter(new FragmentPagerAdapter(getSupportFragmentManager()) {
             @Override
             public Fragment getItem(int position) {

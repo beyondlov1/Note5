@@ -13,13 +13,13 @@ import java.util.Date;
 public class TodoEditFragment extends AbstractDocumentEditFragment<Todo> {
 
     @Override
-    protected AddTodoEvent onPositiveButtonClick(String content) {
+    protected void sendEventsOnOKClick(String content) {
         Todo todo = new Todo();
         todo.setId(IDUtil.uuid());
         todo.setTitle(content.length()>10?content.substring(1,10):content);
         todo.setContent(content);
         todo.setCreateTime(new Date());
         todo.setLastModifyTime(new Date());
-        return new AddTodoEvent(todo);
+        post( new AddTodoEvent(todo));
     }
 }

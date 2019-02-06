@@ -1,8 +1,13 @@
 package com.beyond.note5.utils;
 
 import android.net.Uri;
+import android.view.View;
+import android.view.ViewGroup;
+import android.webkit.WebChromeClient;
+import android.webkit.WebResourceRequest;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
+import android.widget.ProgressBar;
 
 import com.beyond.note5.bean.Document;
 import com.beyond.note5.view.convert.Converter;
@@ -54,14 +59,33 @@ public class WebViewUtil {
 
 
     public static void configWebView(WebView webView){
-        webView.setWebViewClient(new WebViewClient() {
+        final ProgressBar progressBar = new ProgressBar(webView.getContext(),null,android.R.attr.progressBarStyleHorizontal);
+        ViewGroup.LayoutParams layoutParams = new ViewGroup.LayoutParams(
+                ViewGroup.LayoutParams.MATCH_PARENT, 8);
+        progressBar.setLayoutParams(layoutParams);
+        webView.setWebViewClient(new WebViewClient(){
             @Override
-            public boolean shouldOverrideUrlLoading(WebView view, String url) {
-                view.loadUrl(url);
-                //return false 由webView加载url，return true 由应用代码处理url
+            public boolean shouldOverrideUrlLoading(WebView view, WebResourceRequest request) {
                 return false;
             }
+
         });
+        webView.setWebChromeClient(new WebChromeClient() {
+            @Override
+            public void onProgressChanged(WebView view, int newProgress) {
+                super.onProgressChanged(view, newProgress);
+                if (newProgress == 100) {
+                    progressBar.setVisibility(View.GONE);
+                } else {
+                    if (progressBar.getVisibility() == View.GONE)
+                        progressBar.setVisibility(View.VISIBLE);
+                    progressBar.setProgress(newProgress);
+                }
+                progressBar.setProgress(newProgress);
+            }
+        });
+
+        webView.addView(progressBar);
     }
 
     public static String getUrl(Document document){
@@ -95,12 +119,20 @@ public class WebViewUtil {
 
         } else {
             //不含网址的搜索
-            if (things.length()>32){
+            if (removeSpecialChars(things).length()>32){
                 urlWeGet=null;
             }else {
-                urlWeGet = "http://www.bing.com/search?q=" + things;
+                urlWeGet = "http://www.bing.com/search?q=" + removeSpecialChars(things);
             }
         }
+
         return urlWeGet;
+    }
+
+    public static String removeSpecialChars(String source){
+        return source.replaceAll("\\p{Punct} *", "")
+                .replaceAll("|\t|\r","")
+                .replaceAll("\n","+")
+                .replaceAll("\\s+","+");
     }
 }
