@@ -67,6 +67,8 @@ public class NoteListFragment extends AbstractFragmentNoteView {
         ViewGroup viewGroup = (ViewGroup) inflater.inflate(R.layout.fragment_note_list, container, false);
         initView(viewGroup);
         initOnScrollListener();
+        //显示所有Note
+        notePresenter.findAll();
         return viewGroup;
     }
 
@@ -102,13 +104,6 @@ public class NoteListFragment extends AbstractFragmentNoteView {
             }
 
         });
-    }
-
-    @Override
-    public void onStart() {
-        super.onStart();
-        //显示所有Note
-        notePresenter.findAll();
     }
 
     private void initView(ViewGroup viewGroup) {

@@ -32,6 +32,7 @@ import com.beyond.note5.MyApplication;
 import com.beyond.note5.R;
 import com.beyond.note5.bean.Document;
 import com.beyond.note5.event.Event;
+import com.beyond.note5.event.HideKeyBoardEvent;
 import com.beyond.note5.event.ShowKeyBoardEvent;
 import com.beyond.note5.utils.InputMethodUtil;
 import com.beyond.note5.utils.WebViewUtil;
@@ -235,6 +236,11 @@ public abstract class AbstractDocumentEditFragment<T extends Document> extends D
 
         displayWebView.setMinimumHeight(dm.heightPixels);
         contentEditText.setMinimumHeight(dm.heightPixels);
+    }
+
+    @Subscribe(threadMode = ThreadMode.MAIN)
+    public void onEventMainThread(HideKeyBoardEvent event) {
+        dismiss();
     }
 
     class OnMarkdownToolItemClickListener implements View.OnClickListener {

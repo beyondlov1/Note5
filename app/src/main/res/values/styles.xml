@@ -16,6 +16,21 @@
         <item name="metaButtonBarButtonStyle">?android:attr/buttonBarButtonStyle</item>
     </style>
 
+    <style name="StartLoadTranslucentFullScreenTheme" parent="FullscreenTheme">
+        <item name="android:windowIsTranslucent">true</item>
+        <item name="windowNoTitle">true</item>
+    </style>
+
+    <style name="StartLoadBackgroundFullScreenTheme" parent="FullscreenTheme">
+        <item name="windowNoTitle">true</item>
+        <item name="android:windowBackground">@android:color/white</item>
+    </style>
+
+    <style name="main_activity_animation">
+        <item name="android:windowEnterAnimation">@anim/scale_y_in</item>
+        <item name="android:windowExitAnimation">@anim/slide_out_down</item>
+    </style>
+
     <style name="FullscreenActionBarStyle" parent="Widget.AppCompat.ActionBar">
         <item name="android:background">@color/black_overlay</item>
     </style>
@@ -34,4 +49,5 @@
         <item name="android:windowEnterAnimation">@anim/scale_in</item>
         <item name="android:windowExitAnimation">@anim/fly_fade_out</item>
     </style>
+
 </resources>

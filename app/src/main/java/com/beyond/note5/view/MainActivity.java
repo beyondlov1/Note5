@@ -18,6 +18,7 @@ import android.view.View;
 
 import com.beyond.note5.R;
 import com.beyond.note5.event.HideFABEvent;
+import com.beyond.note5.event.HideKeyBoardEvent;
 import com.beyond.note5.event.ShowFABEvent;
 import com.beyond.note5.event.ShowKeyBoardEvent;
 import com.beyond.note5.view.fragment.NoteEditFragment;
@@ -53,6 +54,7 @@ public class MainActivity extends FragmentActivity {
         initView();
         initViewPagerData();
         initEvent();
+
     }
 
     private void initView() {
@@ -105,6 +107,7 @@ public class MainActivity extends FragmentActivity {
                     @Override
                     protected void onKeyBoardHide() {
                         super.onKeyBoardHide();
+                        EventBus.getDefault().post(new HideKeyBoardEvent(null));
                     }
                 });
 
