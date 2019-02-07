@@ -34,9 +34,9 @@ public abstract class OnSlideListener implements View.OnTouchListener {
                 }
 
                 float endY = event.getY();
-                if (endY-startY>0){
+                if (endY-startY>100){
                     onSlideDown();
-                }else if (endY-startY<0){
+                }else if (endY-startY<-100){
                     onSlideUp();
                 }
 

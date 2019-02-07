@@ -30,4 +30,8 @@
         <item name="android:windowExitAnimation">@anim/fade_out</item>
     </style>
 
+    <style name="detail_dialog_animation_2">
+        <item name="android:windowEnterAnimation">@anim/scale_in</item>
+        <item name="android:windowExitAnimation">@anim/fly_fade_out</item>
+    </style>
 </resources>

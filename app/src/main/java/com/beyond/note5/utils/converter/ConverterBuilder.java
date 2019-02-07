@@ -1,4 +1,4 @@
-package com.beyond.note5.view.convert;
+package com.beyond.note5.utils.converter;
 
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;

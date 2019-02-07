@@ -216,10 +216,10 @@ public class NoteDetailFragment extends DialogFragment {
             @Override
             public void onClick(View v) {
                 String url = WebViewUtil.getUrl(data.get(currPosition));
-                if (url != null){
+                if (url != null) {
                     WebViewUtil.addWebViewProgressBar(new DetailViewHolder(viewSwitcher.getCurrentView()).displayWebView);
                     new DetailViewHolder(viewSwitcher.getCurrentView()).displayWebView.loadUrl(url);
-                }else {
+                } else {
                     Toast.makeText(context, "搜索文字不能超过32个字", Toast.LENGTH_SHORT).show();
                 }
             }
@@ -228,11 +228,11 @@ public class NoteDetailFragment extends DialogFragment {
             @Override
             public void onClick(View v) {
                 String url = WebViewUtil.getUrl(data.get(currPosition));
-                if (url != null){
+                if (url != null) {
                     Uri uri = Uri.parse(url);
                     Intent intent = new Intent(Intent.ACTION_VIEW, uri);
                     startActivity(intent);
-                }else {
+                } else {
                     Toast.makeText(context, "搜索文字不能超过32个字", Toast.LENGTH_SHORT).show();
                 }
             }
@@ -349,7 +349,6 @@ public class NoteDetailFragment extends DialogFragment {
             @Override
             public void onClick(View v) {
                 dismiss();
-
             }
         });
         ((AlertDialog) getDialog()).getButton(-2).setOnClickListener(new View.OnClickListener() {

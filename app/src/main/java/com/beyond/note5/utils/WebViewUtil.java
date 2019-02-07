@@ -10,12 +10,12 @@ import android.webkit.WebViewClient;
 import android.widget.ProgressBar;
 
 import com.beyond.note5.bean.Document;
-import com.beyond.note5.view.convert.Converter;
-import com.beyond.note5.view.convert.ConverterBuilder;
-import com.beyond.note5.view.convert.Document2HtmlConverter;
-import com.beyond.note5.view.convert.Document2MarkdownConverter;
-import com.beyond.note5.view.convert.Markdown2HtmlConverter;
-import com.beyond.note5.view.convert.MarkdownHtml2HtmlConverter;
+import com.beyond.note5.utils.converter.Converter;
+import com.beyond.note5.utils.converter.ConverterBuilder;
+import com.beyond.note5.utils.converter.Document2HtmlConverter;
+import com.beyond.note5.utils.converter.Document2MarkdownConverter;
+import com.beyond.note5.utils.converter.Markdown2HtmlConverter;
+import com.beyond.note5.utils.converter.MarkdownHtml2HtmlConverter;
 
 import java.util.regex.Pattern;
 
