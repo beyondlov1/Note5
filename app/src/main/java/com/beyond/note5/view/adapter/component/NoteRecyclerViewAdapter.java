@@ -2,6 +2,7 @@ package com.beyond.note5.view.adapter.component;
 
 import android.content.Context;
 import android.support.v4.app.FragmentManager;
+import android.util.SparseArray;
 import android.view.View;
 
 import com.beyond.note5.bean.Note;
@@ -23,6 +24,10 @@ public class NoteRecyclerViewAdapter extends DocumentRecyclerViewAdapter<Note> {
 
     public NoteRecyclerViewAdapter(Context context, List<Note> data, FragmentManager fragmentManager) {
         super(context, data);
+        this.fragmentManager = fragmentManager;
+    }
+    public NoteRecyclerViewAdapter(Context context, List<Note> data, SparseArray<Header> headers, FragmentManager fragmentManager) {
+        super(context, data,headers);
         this.fragmentManager = fragmentManager;
     }
 
