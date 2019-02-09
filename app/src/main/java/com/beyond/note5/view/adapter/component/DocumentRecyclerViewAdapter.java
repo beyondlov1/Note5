@@ -165,7 +165,6 @@ public class DocumentRecyclerViewAdapter<T extends Document> extends RecyclerVie
             notifyItemRangeRemoved(positionStart, itemCount);
         }
         notifyItemRangeChanged(positionStart, data.size() + headers.size() - positionStart);
-
     }
 
     private int initHeaders() {
