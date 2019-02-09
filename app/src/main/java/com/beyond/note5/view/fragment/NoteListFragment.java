@@ -4,13 +4,11 @@ import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.StaggeredGridLayoutManager;
-import android.util.SparseArray;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 
 import com.beyond.note5.R;
-import com.beyond.note5.bean.Document;
 import com.beyond.note5.bean.Note;
 import com.beyond.note5.event.AddNoteEvent;
 import com.beyond.note5.event.DeleteNoteEvent;
@@ -22,19 +20,14 @@ import com.beyond.note5.module.NoteComponent;
 import com.beyond.note5.module.NoteModule;
 import com.beyond.note5.presenter.NotePresenter;
 import com.beyond.note5.view.adapter.AbstractFragmentNoteView;
-import com.beyond.note5.view.adapter.component.DocumentRecyclerViewAdapter;
 import com.beyond.note5.view.adapter.component.NoteRecyclerViewAdapter;
 
 import org.apache.commons.lang3.StringUtils;
-import org.apache.commons.lang3.time.DateFormatUtils;
-import org.apache.commons.lang3.time.DateUtils;
 import org.greenrobot.eventbus.EventBus;
 import org.greenrobot.eventbus.Subscribe;
 import org.greenrobot.eventbus.ThreadMode;
 
 import java.util.ArrayList;
-import java.util.Calendar;
-import java.util.Date;
 import java.util.Iterator;
 import java.util.List;
 
@@ -49,8 +42,6 @@ public class NoteListFragment extends AbstractFragmentNoteView {
 
     private List<Note> data = new ArrayList<>();
 
-    private SparseArray<DocumentRecyclerViewAdapter.Header> headers = new SparseArray<>();
-
     private RecyclerView noteRecyclerView;
 
     private NoteRecyclerViewAdapter noteRecyclerViewAdapter;
@@ -61,7 +52,7 @@ public class NoteListFragment extends AbstractFragmentNoteView {
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        noteRecyclerViewAdapter = new NoteRecyclerViewAdapter(this.getContext(), data,headers, getFragmentManager());
+        noteRecyclerViewAdapter = new NoteRecyclerViewAdapter(this.getContext(), data, getFragmentManager());
         initInjection();
     }
 
@@ -177,23 +168,6 @@ public class NoteListFragment extends AbstractFragmentNoteView {
                 msg("更新成功");
                 break;
             }
-        }
-    }
-
-    private void initHeaders() {
-        headers.clear();
-        Date lastDate = null;
-        int index = 0;
-        for (Document datum : data) {
-            Date lastModifyTime = datum.getLastModifyTime();
-            if (lastDate== null ){
-                headers.put(index + headers.size(),new DocumentRecyclerViewAdapter.Header(index+headers.size(), DateFormatUtils.format(lastModifyTime,"yyyy-MM-dd")));
-            }
-            if (lastDate!= null && !DateUtils.truncatedEquals(lastModifyTime,lastDate, Calendar.DATE)){
-                headers.put(index+headers.size(),new DocumentRecyclerViewAdapter.Header(index+headers.size(), DateFormatUtils.format(lastModifyTime,"yyyy-MM-dd")));
-            }
-            lastDate = lastModifyTime;
-            index++;
         }
     }
 }

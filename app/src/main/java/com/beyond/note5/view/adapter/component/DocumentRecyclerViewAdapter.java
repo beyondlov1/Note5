@@ -1,6 +1,7 @@
 package com.beyond.note5.view.adapter.component;
 
 import android.content.Context;
+import android.graphics.Color;
 import android.graphics.drawable.GradientDrawable;
 import android.support.v4.content.ContextCompat;
 import android.support.v7.widget.RecyclerView;
@@ -44,18 +45,6 @@ public class DocumentRecyclerViewAdapter<T extends Document> extends RecyclerVie
     public DocumentRecyclerViewAdapter(Context context, List<T> data) {
         this.context = context;
         this.data = data;
-        headers.put(0, new Header(0, "0"));
-        headers.put(2, new Header(2, "2"));
-        headers.put(6, new Header(6, "6"));
-        headers.put(8, new Header(8, "80"));
-        headers.put(14, new Header(14, "14"));
-    }
-
-    public DocumentRecyclerViewAdapter(Context context, List<T> data, SparseArray<Header> headers) {
-        this.context = context;
-        this.data = data;
-        this.headers = headers;
-        this.registerAdapterDataObserver(new AdapterDataObserver());
     }
 
     @Override
@@ -93,14 +82,49 @@ public class DocumentRecyclerViewAdapter<T extends Document> extends RecyclerVie
     }
 
     private void initHeaderDisplay(MyViewHolder viewHolder, int position) {
-        StaggeredGridLayoutManager.LayoutParams layoutParams = (StaggeredGridLayoutManager.LayoutParams) ((MyViewHolder) viewHolder).itemView.getLayoutParams();
-        layoutParams.setFullSpan(true);
+
         viewHolder.title.setVisibility(View.VISIBLE);
         viewHolder.title.setText(headers.get(position).content);
+        viewHolder.title.setTextColor(context.getResources().getColor(R.color.dark_yellow));
         viewHolder.content.setVisibility(View.GONE);
         viewHolder.content.setText(headers.get(position).content);
         viewHolder.container.setOnClickListener(null);
         viewHolder.dataContainer.setBackground(null);
+        processFullSpan(viewHolder, position);
+    }
+
+    private void processFullSpan(MyViewHolder viewHolder, int position) {
+        StaggeredGridLayoutManager.LayoutParams layoutParams = (StaggeredGridLayoutManager.LayoutParams) viewHolder.itemView.getLayoutParams();
+        layoutParams.setFullSpan(true);
+
+        //尝试将布局变紧凑, 让一天只有一条记录的可以和其他的合并,但是失败了, 自动的布局会将日期和note横排而不是纵排
+//        int lastIndex = headers.indexOfKey(position) - 1;
+//        int nextIndex = headers.indexOfKey(position) + 1;
+//        int next2Index = headers.indexOfKey(position) + 2;
+//        Integer lastPosition = null;
+//        Integer nextPosition = null;
+//        Integer next2Position = null;
+//        if (lastIndex >= 0) {
+//            lastPosition = headers.keyAt(lastIndex);
+//        }
+//        if (nextIndex < headers.size()) {
+//            nextPosition = headers.keyAt(nextIndex);
+//        }
+//        if (next2Index < headers.size()) {
+//            next2Position = headers.keyAt(next2Index);
+//        }
+//
+//        boolean isSingle = nextPosition != null && nextPosition - position == 2;
+//        boolean isLastSingle = lastPosition != null && position - lastPosition == 2;
+//        boolean isNextSingle =nextPosition!=null && next2Position != null && next2Position - nextPosition == 2;
+//
+//        if ((isSingle&&isNextSingle)||(isSingle&&isLastSingle)){ //连续两天都是single
+//            layoutParams.setFullSpan(false);
+//        }else {
+//            layoutParams.setFullSpan(true);
+//        }
+
+
     }
 
     protected void initDisplay(final MyViewHolder viewHolder, T document, int position) {
@@ -116,6 +140,7 @@ public class DocumentRecyclerViewAdapter<T extends Document> extends RecyclerVie
         } else {
             viewHolder.title.setVisibility(View.GONE);
         }
+        viewHolder.title.setTextColor(Color.DKGRAY);
         viewHolder.content.setVisibility(View.VISIBLE);
         viewHolder.content.setTextSize(12);
         viewHolder.content.setText(StringUtils.trim(document.getContent()));
@@ -167,7 +192,7 @@ public class DocumentRecyclerViewAdapter<T extends Document> extends RecyclerVie
         notifyItemRangeChanged(positionStart, data.size() + headers.size() - positionStart);
     }
 
-    private int initHeaders() {
+    protected int initHeaders() {
         int oldHeaderCount = headers.size();
         headers.clear();
         Date lastDate = null;
@@ -210,50 +235,5 @@ public class DocumentRecyclerViewAdapter<T extends Document> extends RecyclerVie
             this.position = position;
             this.content = content;
         }
-    }
-
-    class AdapterDataObserver extends RecyclerView.AdapterDataObserver {
-
-        @Override
-        public void onItemRangeInserted(int positionStart, int itemCount) {
-            int addedCount = initHeaders();
-            if (addedCount > 0) {
-                super.onItemRangeInserted(positionStart - addedCount, itemCount + addedCount);
-            } else {
-                super.onItemRangeInserted(positionStart, itemCount + addedCount);
-            }
-            System.out.println("insert");
-        }
-
-        @Override
-        public void onItemRangeChanged(int positionStart, int itemCount) {
-            int addedCount = initHeaders();
-            if (addedCount > 0) {
-                super.onItemRangeInserted(0, 1);
-            }
-            System.out.println("rangeChange");
-            if (itemCount + headers.size() != 0) {
-                super.onItemRangeChanged(positionStart, itemCount + headers.size());
-            }
-        }
-
-        @Override
-        public void onItemRangeRemoved(int positionStart, int itemCount) {
-            int addedCount = initHeaders();
-            if (addedCount < 0) {
-                super.onItemRangeRemoved(positionStart, itemCount + 1);
-            } else {
-                super.onItemRangeRemoved(positionStart, itemCount);
-            }
-            System.out.println("rangeRemoved");
-        }
-
-        @Override
-        public void onChanged() {
-            super.onChanged();
-            System.out.println("change");
-        }
-
-
     }
 }
