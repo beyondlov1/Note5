@@ -127,7 +127,6 @@ public class MainActivity extends FragmentActivity {
                 DialogFragment dialog;
                 if (fragment instanceof NoteListFragment) {
                     dialog = new NoteEditFragment();
-
                 } else if (fragment instanceof TodoListFragment) {
                     dialog = new TodoEditFragment();
                 } else {

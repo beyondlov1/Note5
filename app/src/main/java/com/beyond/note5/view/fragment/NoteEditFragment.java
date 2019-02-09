@@ -13,8 +13,9 @@ import java.util.Date;
 
 public class NoteEditFragment extends AbstractDocumentEditFragment<Note> {
 
-    public NoteEditFragment() {
-        createdDocument = new Note();
+    @Override
+    protected Note initCreatedDocument() {
+        return new Note();
     }
 
     @Override

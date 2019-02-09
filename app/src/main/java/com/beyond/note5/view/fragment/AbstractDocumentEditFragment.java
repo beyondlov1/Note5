@@ -58,6 +58,12 @@ public abstract class AbstractDocumentEditFragment<T extends Document> extends D
 
     protected T createdDocument;
 
+    public AbstractDocumentEditFragment(){
+        createdDocument = initCreatedDocument();
+    }
+
+    protected abstract T initCreatedDocument();
+
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -163,7 +169,7 @@ public abstract class AbstractDocumentEditFragment<T extends Document> extends D
                         .replaceAll("\\s*|\n|\t|\r", "");
                 ScrollWebViewClient scrollWebViewClient = ScrollWebViewClient.getInstance();
                 scrollWebViewClient.setTarget(target);
-                scrollWebViewClient.setInputLength(count);
+                scrollWebViewClient.setInputLengthEachTime(count);
                 displayWebView.setWebViewClient(scrollWebViewClient);
             }
 
@@ -286,7 +292,7 @@ public abstract class AbstractDocumentEditFragment<T extends Document> extends D
     static class ScrollWebViewClient extends WebViewClient {
 
         private CharSequence target;
-        private int inputLength;
+        private int inputLengthEachTime;
 
         private ScrollWebViewClient() {
         }
@@ -307,7 +313,7 @@ public abstract class AbstractDocumentEditFragment<T extends Document> extends D
         @Override
         public void onPageFinished(final WebView view, String url) {
             super.onPageFinished(view, url);
-            view.evaluateJavascript("javascript:searchAndScrollTo('" + target + "','" + inputLength + "')", new ValueCallback<String>() {
+            view.evaluateJavascript("javascript:searchAndScrollTo('" + target + "','" + inputLengthEachTime + "')", new ValueCallback<String>() {
                 @Override
                 public void onReceiveValue(String value) {
 
@@ -323,12 +329,12 @@ public abstract class AbstractDocumentEditFragment<T extends Document> extends D
             this.target = target;
         }
 
-        public int getInputLength() {
-            return inputLength;
+        public int getInputLengthEachTime() {
+            return inputLengthEachTime;
         }
 
-        void setInputLength(int inputLength) {
-            this.inputLength = inputLength;
+        void setInputLengthEachTime(int inputLengthEachTime) {
+            this.inputLengthEachTime = inputLengthEachTime;
         }
     }
 

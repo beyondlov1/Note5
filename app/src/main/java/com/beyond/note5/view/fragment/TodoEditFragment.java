@@ -14,6 +14,11 @@ import java.util.Date;
 public class TodoEditFragment extends AbstractDocumentEditFragment<Todo> {
 
     @Override
+    protected Todo initCreatedDocument() {
+        return new Todo();
+    }
+
+    @Override
     protected void sendEventsOnOKClick(String content) {
         Todo todo = new Todo();
         todo.setId(IDUtil.uuid());

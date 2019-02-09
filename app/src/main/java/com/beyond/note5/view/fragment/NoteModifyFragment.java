@@ -30,6 +30,12 @@ public class NoteModifyFragment extends AbstractDocumentEditFragment<Note> {
     }
 
     @Override
+    protected Note initCreatedDocument() {
+        //do nothing
+        return null;
+    }
+
+    @Override
     protected void sendEventsOnOKClick(String content) {
         createdDocument.setContent(content);
         createdDocument.setLastModifyTime(new Date());
