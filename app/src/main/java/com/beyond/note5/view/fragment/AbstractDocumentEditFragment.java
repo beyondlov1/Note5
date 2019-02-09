@@ -58,7 +58,7 @@ public abstract class AbstractDocumentEditFragment<T extends Document> extends D
 
     protected T createdDocument;
 
-    public AbstractDocumentEditFragment(){
+    public AbstractDocumentEditFragment() {
         createdDocument = initCreatedDocument();
     }
 
@@ -131,6 +131,7 @@ public abstract class AbstractDocumentEditFragment<T extends Document> extends D
         TextView markdownToolLine = view.findViewById(R.id.keyboard_top_tool_line);
         TextView markdownToolBracketsLeft = view.findViewById(R.id.keyboard_top_tool_brackets_left);
         TextView markdownToolBracketsRight = view.findViewById(R.id.keyboard_top_tool_brackets_right);
+        TextView markdownToolStrike = view.findViewById(R.id.keyboard_top_tool_strike);
         View markdownToolContainer = view.findViewById(R.id.keyboard_top_tool_tip_container);
 
         OnMarkdownToolItemClickListener onMarkdownToolItemClickListener = new OnMarkdownToolItemClickListener(contentEditText);
@@ -141,6 +142,7 @@ public abstract class AbstractDocumentEditFragment<T extends Document> extends D
         markdownToolLine.setOnClickListener(onMarkdownToolItemClickListener);
         markdownToolBracketsLeft.setOnClickListener(onMarkdownToolItemClickListener);
         markdownToolBracketsRight.setOnClickListener(onMarkdownToolItemClickListener);
+        markdownToolStrike.setOnClickListener(new OnMarkdownToolStikeClickListener(contentEditText));
     }
 
     @SuppressWarnings("ConstantConditions")
@@ -263,6 +265,17 @@ public abstract class AbstractDocumentEditFragment<T extends Document> extends D
                 TextView textView = (TextView) v;
                 CharSequence text = textView.getText();
                 appendToEditText(editText, text);
+
+                if (textView.getId() == R.id.keyboard_top_tool_strike) {
+                    int caretPosition = editText.getSelectionEnd();
+                    String editText = this.editText.getText().toString();
+                    if (isLineHasStrike(caretPosition, editText)) {
+                        editText = removeStrikeTagForLineAt(caretPosition, editText);
+                    } else {
+                        editText = insertStrikeTagForLineAt(caretPosition, editText);
+                    }
+                    this.editText.setText(editText);
+                }
             }
         }
 
@@ -277,6 +290,182 @@ public abstract class AbstractDocumentEditFragment<T extends Document> extends D
             }
         }
 
+        private boolean isLineHasStrike(int caretPosition, String text) {
+            char[] chars = (text + "\n").toCharArray();
+            int start = getLineStart(caretPosition, chars);
+            int end = getLineEnd(caretPosition, chars);
+            String substring = String.valueOf(chars).substring(start, end + 1);
+            System.out.println(substring);
+            return substring.contains(" <strike>") && substring.contains("</strike>");
+        }
+
+        private int getLineStart(int caretPosition, char[] chars) {
+            int start = caretPosition;
+            while (chars[start] != '-') {
+                if (start > 0) {
+                    start--;
+                } else {
+                    break;
+                }
+            }
+            start++;
+            return start;
+        }
+
+        private int getLineEnd(int caretPosition, char[] chars) {
+            int end = caretPosition;
+            while (chars[end] != '\n') {
+                if (end < chars.length - 1) {
+                    end++;
+                } else {
+                    break;
+                }
+            }
+            end--;
+            return end;
+        }
+
+        private String removeStrikeTagForLineAt(int caretPosition, String text) {
+            StringBuilder result = new StringBuilder();
+            char[] chars = (text + "\n").toCharArray();
+
+            int start = getLineStart(caretPosition, chars);
+            int end = getLineEnd(caretPosition, chars);
+
+            String substring = String.valueOf(chars).substring(start, end + 1);
+            if (substring.contains(" <strike>") && substring.contains("</strike>")) {
+                substring = substring.replace(" <strike>", "");
+                substring = substring.replace("</strike>", "");
+            }
+
+            result.append(text, 0, start);
+            result.append(substring);
+            result.append(text, end + 1, text.length());
+
+            return result.toString();
+        }
+
+        private String insertStrikeTagForLineAt(int caretPosition, String text) {
+            StringBuilder result = new StringBuilder();
+            char[] chars = (text + "\n").toCharArray();
+
+            int start = getLineStart(caretPosition, chars);
+            int end = getLineEnd(caretPosition, chars);
+
+            int index = 0;
+            for (char aChar : chars) {
+                if (index == start) {
+                    result.append(" <strike>");
+                }
+                result.append(aChar);
+                if (index == end) {
+                    result.append("</strike>");
+                }
+                index++;
+            }
+
+            return result.substring(0, result.length() - 1);
+        }
+    }
+
+    class OnMarkdownToolStikeClickListener implements View.OnClickListener {
+
+        private EditText editText;
+
+        public OnMarkdownToolStikeClickListener(EditText editText) {
+            this.editText = editText;
+        }
+
+        @Override
+        public void onClick(View v) {
+            if (v.getId() == R.id.keyboard_top_tool_strike) {
+                int caretPosition = editText.getSelectionEnd();
+                String editText = this.editText.getText().toString();
+                if (isLineHasStrike(caretPosition, editText)) {
+                    editText = removeStrikeTagForLineAt(caretPosition, editText);
+                } else {
+                    editText = insertStrikeTagForLineAt(caretPosition, editText);
+                }
+                this.editText.setText(editText);
+            }
+        }
+
+        private boolean isLineHasStrike(int caretPosition, String text) {
+            char[] chars = (text + "\n").toCharArray();
+            int start = getLineStart(caretPosition, chars);
+            int end = getLineEnd(caretPosition, chars);
+            String substring = String.valueOf(chars).substring(start, end + 1);
+            System.out.println(substring);
+            return substring.contains(" <strike>") && substring.contains("</strike>");
+        }
+
+        private int getLineStart(int caretPosition, char[] chars) {
+            int start = caretPosition;
+            while (chars[start] != '-') {
+                if (start > 0) {
+                    start--;
+                } else {
+                    break;
+                }
+            }
+            start++;
+            return start;
+        }
+
+        private int getLineEnd(int caretPosition, char[] chars) {
+            int end = caretPosition;
+            while (chars[end] != '\n') {
+                if (end < chars.length - 1) {
+                    end++;
+                } else {
+                    break;
+                }
+            }
+            end--;
+            return end;
+        }
+
+        private String removeStrikeTagForLineAt(int caretPosition, String text) {
+            StringBuilder result = new StringBuilder();
+            char[] chars = (text + "\n").toCharArray();
+
+            int start = getLineStart(caretPosition, chars);
+            int end = getLineEnd(caretPosition, chars);
+
+            String substring = String.valueOf(chars).substring(start, end + 1);
+            if (substring.contains(" <strike>") && substring.contains("</strike>")) {
+                substring = substring.replace(" <strike>", "");
+                substring = substring.replace("</strike>", "");
+            }
+
+            result.append(text, 0, start);
+            result.append(substring);
+            result.append(text, end + 1, text.length());
+
+            return result.toString();
+        }
+
+        private String insertStrikeTagForLineAt(int caretPosition, String text) {
+            StringBuilder result = new StringBuilder();
+            char[] chars = (text + "\n").toCharArray();
+
+            int start = getLineStart(caretPosition, chars);
+            int end = getLineEnd(caretPosition, chars);
+
+            int index = 0;
+            for (char aChar : chars) {
+                if (index == start) {
+                    result.append(" <strike>");
+                }
+                result.append(aChar);
+                if (index == end) {
+                    result.append("</strike>");
+                }
+                index++;
+            }
+
+            return result.substring(0, result.length() - 1);
+        }
     }
 
     class DialogButton {

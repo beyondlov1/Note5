@@ -8,7 +8,7 @@
     <LinearLayout
         android:id="@+id/keyboard_top_tool_tip_container"
         android:layout_width="match_parent"
-        android:layout_height="40dp"
+        android:layout_height="wrap_content"
         android:layout_gravity="center"
         android:gravity="center"
         android:orientation="horizontal">
@@ -21,8 +21,17 @@
             android:gravity="center"
             android:layout_weight="1"
             android:text="#"
-            android:textColor="#ff000000"
-            android:textSize="14sp" />
+            android:textColor="#ff000000"/>
+
+        <TextView
+            android:id="@+id/keyboard_top_tool_head_3"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            android:gravity="center"
+            android:layout_weight="1"
+            android:text="### "
+            android:textColor="#ff000000"/>
 
         <TextView
             android:id="@+id/keyboard_top_tool_list"
@@ -32,13 +41,17 @@
             android:gravity="center"
             android:layout_weight="1"
             android:text="- "
-            android:textColor="#ff000000"
-            android:textSize="14sp" />
+            android:textColor="#ff000000"/>
 
-        <Space
+        <TextView
+            android:id="@+id/keyboard_top_tool_enter_list"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_weight="1" />
+            android:layout_gravity="center"
+            android:gravity="center"
+            android:layout_weight="1"
+            android:text="@string/markdown_enter_list"
+            android:textColor="#ff000000"/>
 
         <TextView
             android:id="@+id/keyboard_top_tool_line"
@@ -48,8 +61,7 @@
             android:gravity="center"
             android:layout_weight="1"
             android:text="---  "
-            android:textColor="#ff000000"
-            android:textSize="14sp" />
+            android:textColor="#ff000000"/>
 
         <TextView
             android:id="@+id/keyboard_top_tool_brackets_left"
@@ -59,8 +71,7 @@
             android:gravity="center"
             android:layout_weight="1"
             android:text="("
-            android:textColor="#ff000000"
-            android:textSize="14sp" />
+            android:textColor="#ff000000" />
 
         <TextView
             android:id="@+id/keyboard_top_tool_brackets_right"
@@ -69,7 +80,17 @@
             android:layout_gravity="center"
             android:gravity="center"
             android:layout_weight="1"
-            android:text="("
+            android:text=")"
+            android:textColor="#ff000000"/>
+
+        <TextView
+            android:id="@+id/keyboard_top_tool_strike"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            android:gravity="center"
+            android:layout_weight="1"
+            android:text="x"
             android:textColor="#ff000000"
             android:textSize="14sp" />
     </LinearLayout>
