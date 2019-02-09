@@ -15,7 +15,11 @@ import com.beyond.note5.R;
 import com.beyond.note5.bean.Document;
 
 import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.time.DateFormatUtils;
+import org.apache.commons.lang3.time.DateUtils;
 
+import java.util.Calendar;
+import java.util.Date;
 import java.util.List;
 
 /**
@@ -40,18 +44,18 @@ public class DocumentRecyclerViewAdapter<T extends Document> extends RecyclerVie
     public DocumentRecyclerViewAdapter(Context context, List<T> data) {
         this.context = context;
         this.data = data;
-        headers.put(0,new Header(0,"0"));
-        headers.put(2,new Header(2,"2"));
-        headers.put(6,new Header(6,"6"));
-        headers.put(8,new Header(8,"80"));
-        headers.put(14,new Header(14,"14"));
+        headers.put(0, new Header(0, "0"));
+        headers.put(2, new Header(2, "2"));
+        headers.put(6, new Header(6, "6"));
+        headers.put(8, new Header(8, "80"));
+        headers.put(14, new Header(14, "14"));
     }
 
     public DocumentRecyclerViewAdapter(Context context, List<T> data, SparseArray<Header> headers) {
         this.context = context;
         this.data = data;
         this.headers = headers;
-
+        this.registerAdapterDataObserver(new AdapterDataObserver());
     }
 
     @Override
@@ -75,11 +79,11 @@ public class DocumentRecyclerViewAdapter<T extends Document> extends RecyclerVie
 
         int count = 0;
         for (int i = 0; i <= position; i++) {
-            if (headers.get(i)!=null){
+            if (headers.get(i) != null) {
                 count++;
             }
         }
-        if (headers.get(position)!=null) {
+        if (headers.get(position) != null) {
             initHeaderDisplay(viewHolder, position);
         } else {
             T t = data.get(position - count);
@@ -97,19 +101,6 @@ public class DocumentRecyclerViewAdapter<T extends Document> extends RecyclerVie
         viewHolder.content.setText(headers.get(position).content);
         viewHolder.container.setOnClickListener(null);
         viewHolder.dataContainer.setBackground(null);
-    }
-
-    private void initEvent(MyViewHolder viewHolder, final T t, final int position) {
-        viewHolder.container.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                onItemClick(v, data, t, position);
-            }
-        });
-    }
-
-    protected void onItemClick(View v, List<T> data, final T t, final int position) {
-
     }
 
     protected void initDisplay(final MyViewHolder viewHolder, T document, int position) {
@@ -130,10 +121,70 @@ public class DocumentRecyclerViewAdapter<T extends Document> extends RecyclerVie
         viewHolder.content.setText(StringUtils.trim(document.getContent()));
     }
 
+    private void initEvent(MyViewHolder viewHolder, final T t, final int position) {
+        viewHolder.container.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                onItemClick(v, data, t, position);
+            }
+        });
+    }
+
+    protected void onItemClick(View v, List<T> data, final T t, final int position) {
+
+    }
 
     @Override
     public int getItemCount() {
         return data.size() + headers.size();
+    }
+
+    public void notifyRangeInserted(int positionStart, int itemCount) {
+        int addedCount = initHeaders();
+        if (addedCount > 0) {
+            notifyItemRangeInserted(positionStart, itemCount + addedCount);
+        } else {
+            notifyItemRangeInserted(positionStart, itemCount);
+        }
+        notifyItemRangeChanged(0, data.size() + headers.size());
+    }
+
+    public void notifyFullRangeChanged() {
+        int addedCount = initHeaders();
+        if (addedCount > 0) {
+            notifyItemRangeInserted(0, addedCount);
+        }
+        notifyItemRangeChanged(0, data.size() + headers.size());
+    }
+
+    public void notifyRangeRemoved(int positionStart, int itemCount) {
+        int addedCount = initHeaders();
+        if (addedCount < 0) {
+            notifyItemRangeRemoved(positionStart, itemCount - addedCount);
+        } else {
+            notifyItemRangeRemoved(positionStart, itemCount);
+        }
+        notifyItemRangeChanged(positionStart, data.size() + headers.size() - positionStart);
+
+    }
+
+    private int initHeaders() {
+        int oldHeaderCount = headers.size();
+        headers.clear();
+        Date lastDate = null;
+        int index = 0;
+        for (Document datum : data) {
+            Date lastModifyTime = datum.getLastModifyTime();
+            if (lastDate == null) {
+                headers.put(index + headers.size(), new DocumentRecyclerViewAdapter.Header(index + headers.size(), DateFormatUtils.format(lastModifyTime, "yyyy-MM-dd")));
+            }
+            if (lastDate != null && !DateUtils.truncatedEquals(lastModifyTime, lastDate, Calendar.DATE)) {
+                headers.put(index + headers.size(), new DocumentRecyclerViewAdapter.Header(index + headers.size(), DateFormatUtils.format(lastModifyTime, "yyyy-MM-dd")));
+            }
+            lastDate = lastModifyTime;
+            index++;
+        }
+        return headers.size() - oldHeaderCount;
     }
 
     class MyViewHolder extends RecyclerView.ViewHolder {
@@ -160,5 +211,50 @@ public class DocumentRecyclerViewAdapter<T extends Document> extends RecyclerVie
             this.position = position;
             this.content = content;
         }
+    }
+
+    class AdapterDataObserver extends RecyclerView.AdapterDataObserver {
+
+        @Override
+        public void onItemRangeInserted(int positionStart, int itemCount) {
+            int addedCount = initHeaders();
+            if (addedCount > 0) {
+                super.onItemRangeInserted(positionStart - addedCount, itemCount + addedCount);
+            } else {
+                super.onItemRangeInserted(positionStart, itemCount + addedCount);
+            }
+            System.out.println("insert");
+        }
+
+        @Override
+        public void onItemRangeChanged(int positionStart, int itemCount) {
+            int addedCount = initHeaders();
+            if (addedCount > 0) {
+                super.onItemRangeInserted(0, 1);
+            }
+            System.out.println("rangeChange");
+            if (itemCount + headers.size() != 0) {
+                super.onItemRangeChanged(positionStart, itemCount + headers.size());
+            }
+        }
+
+        @Override
+        public void onItemRangeRemoved(int positionStart, int itemCount) {
+            int addedCount = initHeaders();
+            if (addedCount < 0) {
+                super.onItemRangeRemoved(positionStart, itemCount + 1);
+            } else {
+                super.onItemRangeRemoved(positionStart, itemCount);
+            }
+            System.out.println("rangeRemoved");
+        }
+
+        @Override
+        public void onChanged() {
+            super.onChanged();
+            System.out.println("change");
+        }
+
+
     }
 }

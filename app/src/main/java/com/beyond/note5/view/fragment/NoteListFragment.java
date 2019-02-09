@@ -141,9 +141,7 @@ public class NoteListFragment extends AbstractFragmentNoteView {
     @Override
     public void onAddSuccess(Note note) {
         data.add(0, note);
-        initHeaders();
-        noteRecyclerView.getAdapter().notifyItemInserted(0);
-        noteRecyclerView.getAdapter().notifyItemRangeChanged(1, data.size()+headers.size() - 1);
+        noteRecyclerViewAdapter.notifyRangeInserted(0,1);
         noteRecyclerView.scrollToPosition(0);
         msg("添加成功");
     }
@@ -152,10 +150,9 @@ public class NoteListFragment extends AbstractFragmentNoteView {
     public void onFindAllSuccess(List<Note> allNote) {
         int previousSize = data.size();
         data.clear();
-        noteRecyclerView.getAdapter().notifyItemRangeRemoved(0, previousSize);
+        noteRecyclerViewAdapter.notifyRangeRemoved(0, previousSize);
         data.addAll(allNote);
-        initHeaders();
-        noteRecyclerView.getAdapter().notifyItemRangeInserted(0, data.size());
+        noteRecyclerViewAdapter.notifyRangeInserted(0, data.size());
     }
 
     @Override
@@ -163,9 +160,7 @@ public class NoteListFragment extends AbstractFragmentNoteView {
         int index = data.indexOf(note);
         data.remove(note);
         if (index!=-1){
-            noteRecyclerView.getAdapter().notifyItemRemoved(index);
-            initHeaders();
-            noteRecyclerView.getAdapter().notifyItemRangeChanged(index, data.size()+headers.size()-index);
+            noteRecyclerViewAdapter.notifyRangeRemoved(index,1);
             msg("删除成功");
         }
     }
@@ -178,8 +173,7 @@ public class NoteListFragment extends AbstractFragmentNoteView {
             if (StringUtils.equals(oldNote.getId(), note.getId())) {
                 iterator.remove();
                 data.add(0, note);
-                initHeaders();
-                noteRecyclerView.getAdapter().notifyItemRangeChanged(0, data.size()+headers.size());
+                noteRecyclerViewAdapter.notifyFullRangeChanged();
                 msg("更新成功");
                 break;
             }
