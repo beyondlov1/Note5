@@ -82,7 +82,6 @@ public class DocumentRecyclerViewAdapter<T extends Document> extends RecyclerVie
     }
 
     private void initHeaderDisplay(MyViewHolder viewHolder, int position) {
-
         viewHolder.title.setVisibility(View.VISIBLE);
         viewHolder.title.setText(headers.get(position).content);
         viewHolder.title.setTextColor(context.getResources().getColor(R.color.dark_yellow));
@@ -90,10 +89,10 @@ public class DocumentRecyclerViewAdapter<T extends Document> extends RecyclerVie
         viewHolder.content.setText(headers.get(position).content);
         viewHolder.container.setOnClickListener(null);
         viewHolder.dataContainer.setBackground(null);
-        processFullSpan(viewHolder, position);
+        processHeaderFullSpan(viewHolder, position);
     }
 
-    private void processFullSpan(MyViewHolder viewHolder, int position) {
+    private void processHeaderFullSpan(MyViewHolder viewHolder, int position) {
         StaggeredGridLayoutManager.LayoutParams layoutParams = (StaggeredGridLayoutManager.LayoutParams) viewHolder.itemView.getLayoutParams();
         layoutParams.setFullSpan(true);
 
@@ -128,8 +127,6 @@ public class DocumentRecyclerViewAdapter<T extends Document> extends RecyclerVie
     }
 
     protected void initDisplay(final MyViewHolder viewHolder, T document, int position) {
-        StaggeredGridLayoutManager.LayoutParams layoutParams = (StaggeredGridLayoutManager.LayoutParams) ((MyViewHolder) viewHolder).itemView.getLayoutParams();
-        layoutParams.setFullSpan(false);
         GradientDrawable gradientDrawable = new GradientDrawable();
         gradientDrawable.setCornerRadius(13);
         gradientDrawable.setStroke(1, ContextCompat.getColor(context, R.color.dark_gray));
@@ -144,6 +141,38 @@ public class DocumentRecyclerViewAdapter<T extends Document> extends RecyclerVie
         viewHolder.content.setVisibility(View.VISIBLE);
         viewHolder.content.setTextSize(12);
         viewHolder.content.setText(StringUtils.trim(document.getContent()));
+
+        processNoteFullSpan(viewHolder, position);
+    }
+
+    private void processNoteFullSpan(MyViewHolder viewHolder, int position) {
+        StaggeredGridLayoutManager.LayoutParams layoutParams = (StaggeredGridLayoutManager.LayoutParams) viewHolder.itemView.getLayoutParams();
+        if (position>0&&position<data.size()-1) {
+            Date lastTime = data.get(position - 1).getLastModifyTime();
+            Date thisTime = data.get(position).getLastModifyTime();
+            Date nextTime = data.get(position + 1).getLastModifyTime();
+            if (DateUtils.truncatedEquals(lastTime,thisTime, Calendar.DATE)||DateUtils.truncatedEquals(nextTime,thisTime,Calendar.DATE)){
+                layoutParams.setFullSpan(false);
+            }else {
+                layoutParams.setFullSpan(true);
+            }
+        }else if (position == 0){
+            Date thisTime = data.get(position).getLastModifyTime();
+            Date nextTime = data.get(position + 1).getLastModifyTime();
+            if (DateUtils.truncatedEquals(nextTime,thisTime,Calendar.DATE)){
+                layoutParams.setFullSpan(false);
+            }else {
+                layoutParams.setFullSpan(true);
+            }
+        }else {
+            Date lastTime = data.get(position - 1).getLastModifyTime();
+            Date thisTime = data.get(position).getLastModifyTime();
+            if (DateUtils.truncatedEquals(lastTime,thisTime,Calendar.DATE)){
+                layoutParams.setFullSpan(false);
+            }else {
+                layoutParams.setFullSpan(true);
+            }
+        }
     }
 
     private void initEvent(MyViewHolder viewHolder, final T t, final int position) {
