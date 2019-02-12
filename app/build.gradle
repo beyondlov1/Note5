@@ -20,14 +20,16 @@ android {
 
 }
 
-buildscript {
+buildscript{
     repositories {
+//        maven { url 'https://dl.google.com/dl/android/maven2/' }
+//        google()
         jcenter()
         mavenCentral() // add repository
     }
     dependencies {
         //noinspection GradleDependency
-        classpath 'com.android.tools.build:gradle:3.0.1'
+        classpath 'com.android.tools.build:gradle:3.2.1'
         classpath 'org.greenrobot:greendao-gradle-plugin:3.2.2' // add plugin
 
     }
@@ -56,20 +58,20 @@ dependencies {
     implementation 'net.zetetic:android-database-sqlcipher:3.5.7@aar'
 
     //common
-    compile group: 'org.apache.commons', name: 'commons-lang3', version: '3.8.1'
-    compile group: 'commons-io', name: 'commons-io', version: '2.6'
+    implementation group: 'org.apache.commons', name: 'commons-lang3', version: '3.8.1'
+    implementation group: 'commons-io', name: 'commons-io', version: '2.6'
 
     //dagger2
-    implementation 'com.google.dagger:dagger:2.11'
-    annotationProcessor 'com.google.dagger:dagger-compiler:2.11'
-    implementation 'com.google.dagger:dagger-android:2.11'
-    implementation 'com.google.dagger:dagger-android-support:2.11'
-    annotationProcessor 'com.google.dagger:dagger-android-processor:2.11'
+    implementation 'com.google.dagger:dagger:2.15'
+    annotationProcessor 'com.google.dagger:dagger-compiler:2.15'
+    implementation 'com.google.dagger:dagger-android:2.15'
+    implementation 'com.google.dagger:dagger-android-support:2.15'
+    annotationProcessor 'com.google.dagger:dagger-android-processor:2.15'
     //eventBus
     implementation 'org.greenrobot:eventbus:3.1.1'
 
     //markdown
-    compile group: 'org.markdownj', name: 'markdownj-core', version: '0.4'
+    implementation group: 'org.markdownj', name: 'markdownj-core', version: '0.4'
 
     //float action button
 //    implementation 'com.melnykov:floatingactionbutton:1.3.0'
