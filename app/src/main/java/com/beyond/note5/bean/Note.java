@@ -17,10 +17,11 @@ public class Note extends Document {
     private Date createTime;
     private Date lastModifyTime;
     private Integer version;
+    private Integer readFlag;
 
-    @Generated(hash = 1388475274)
-    public Note(String id, String title, String content, String type,
-            Date createTime, Date lastModifyTime, Integer version) {
+    @Generated(hash = 988450006)
+    public Note(String id, String title, String content, String type, Date createTime, Date lastModifyTime,
+            Integer version, Integer readFlag) {
         this.id = id;
         this.title = title;
         this.content = content;
@@ -28,6 +29,7 @@ public class Note extends Document {
         this.createTime = createTime;
         this.lastModifyTime = lastModifyTime;
         this.version = version;
+        this.readFlag = readFlag;
     }
 
     @Generated(hash = 1272611929)
@@ -132,5 +134,15 @@ public class Note extends Document {
         result = 31 * result + (lastModifyTime != null ? lastModifyTime.hashCode() : 0);
         result = 31 * result + (version != null ? version.hashCode() : 0);
         return result;
+    }
+
+    @Override
+    public Integer getReadFlag() {
+        return readFlag;
+    }
+
+    @Override
+    public void setReadFlag(Integer readFlag) {
+        this.readFlag = readFlag;
     }
 }

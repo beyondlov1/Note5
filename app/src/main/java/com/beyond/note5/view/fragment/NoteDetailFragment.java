@@ -7,6 +7,7 @@ import android.annotation.SuppressLint;
 import android.app.Dialog;
 import android.content.Context;
 import android.content.Intent;
+import android.content.res.Resources;
 import android.graphics.Color;
 import android.graphics.drawable.ColorDrawable;
 import android.net.Uri;
@@ -25,6 +26,8 @@ import android.view.ViewGroup;
 import android.view.Window;
 import android.view.WindowManager;
 import android.webkit.WebView;
+import android.widget.Button;
+import android.widget.ImageButton;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -34,15 +37,19 @@ import com.beyond.note5.event.DeleteNoteEvent;
 import com.beyond.note5.event.DetailNoteEvent;
 import com.beyond.note5.event.FillNoteModifyEvent;
 import com.beyond.note5.event.ModifyNoteDoneEvent;
+import com.beyond.note5.event.UpdateNoteEvent;
 import com.beyond.note5.utils.WebViewUtil;
 import com.beyond.note5.view.custom.ViewSwitcher;
 import com.beyond.note5.view.listener.OnSlideListener;
 
+import org.apache.commons.lang3.ObjectUtils;
 import org.greenrobot.eventbus.EventBus;
 import org.greenrobot.eventbus.Subscribe;
 import org.greenrobot.eventbus.ThreadMode;
 
+import java.util.Date;
 import java.util.List;
+import java.util.Objects;
 import java.util.Timer;
 import java.util.TimerTask;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -68,6 +75,9 @@ public class NoteDetailFragment extends DialogFragment {
     private View deleteButton;
     private View searchButton;
     private View browserSearchButton;
+    private View stickButton;
+
+    public static AtomicBoolean isShowing = new AtomicBoolean(false);
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -81,7 +91,7 @@ public class NoteDetailFragment extends DialogFragment {
     public Dialog onCreateDialog(Bundle savedInstanceState) {
 
         final AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());
-        root = LayoutInflater.from(context).inflate(R.layout.fragment_note_detail_switcher, null);
+        root = LayoutInflater.from(context).inflate(R.layout.fragment_note_detail, null);
         builder.setView(root)
                 .setPositiveButton("OK", null)
                 .setNegativeButton("Cancel", null)
@@ -92,7 +102,7 @@ public class NoteDetailFragment extends DialogFragment {
     @Nullable
     @Override
     public View onCreateView(LayoutInflater inflater, @Nullable ViewGroup container, Bundle savedInstanceState) {
-//        root = inflater.inflate(R.layout.fragment_note_detail_switcher, container, false);
+//        root = inflater.inflate(R.layout.fragment_note_detail, container, false);
         initView(root);
         initDialogAnimation();
         initEvent();
@@ -107,6 +117,7 @@ public class NoteDetailFragment extends DialogFragment {
         deleteButton = view.findViewById(R.id.fragment_note_detail_operation_delete);
         searchButton = view.findViewById(R.id.fragment_note_detail_operation_search);
         browserSearchButton = view.findViewById(R.id.fragment_note_detail_operation_browser_search);
+        stickButton = view.findViewById(R.id.fragment_note_detail_operation_stick);
     }
 
     @SuppressWarnings("ConstantConditions")
@@ -237,6 +248,15 @@ public class NoteDetailFragment extends DialogFragment {
                 }
             }
         });
+        stickButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Note note = data.get(currPosition);
+                note.setReadFlag(-1);
+                EventBus.getDefault().post(new UpdateNoteEvent(note));
+                Toast.makeText(context, "置顶成功", Toast.LENGTH_SHORT).show();
+            }
+        });
     }
 
     private void showOperation() {
@@ -268,6 +288,7 @@ public class NoteDetailFragment extends DialogFragment {
         super.onStart();
         initDialogSize();
         EventBus.getDefault().register(this);
+        isShowing.set(true);
     }
 
     private void initDialogSize() {
@@ -291,6 +312,7 @@ public class NoteDetailFragment extends DialogFragment {
     @Override
     public void onStop() {
         EventBus.getDefault().unregister(this);
+        isShowing.set(false);
         super.onStop();
     }
 
@@ -298,7 +320,39 @@ public class NoteDetailFragment extends DialogFragment {
     public void onEventMainThread(DetailNoteEvent detailNoteEvent) {
         data = detailNoteEvent.get();
         currPosition = detailNoteEvent.getPosition();
+        processDetailTools();
         reloadView();
+    }
+
+    private void processDetailTools() {
+        // 置顶按钮
+        if (data.get(currPosition).getReadFlag() < 0){
+            ((ImageButton) stickButton).setImageDrawable(getResources().getDrawable(R.drawable.ic_thumb_up_grey_600_24dp,null));
+            stickButton.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    Note note = ObjectUtils.clone(data.get(currPosition));
+                    note.setLastModifyTime(new Date());
+                    note.setReadFlag(0);
+                    EventBus.getDefault().post(new UpdateNoteEvent(note));
+                    Toast.makeText(context, "取消置顶", Toast.LENGTH_SHORT).show();
+                    EventBus.getDefault().post(new ModifyNoteDoneEvent(note));
+                }
+            });
+        }else {
+            ((ImageButton) stickButton).setImageDrawable(getResources().getDrawable(R.drawable.ic_thumb_up_blue_400_24dp,null));
+            stickButton.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    Note note = ObjectUtils.clone(data.get(currPosition));
+                    note.setLastModifyTime(new Date());
+                    note.setReadFlag(-1);
+                    EventBus.getDefault().post(new UpdateNoteEvent(note));
+                    Toast.makeText(context, "置顶成功", Toast.LENGTH_SHORT).show();
+                    EventBus.getDefault().post(new ModifyNoteDoneEvent(note));
+                }
+            });
+        }
     }
 
     @Subscribe(threadMode = ThreadMode.MAIN)
@@ -317,7 +371,7 @@ public class NoteDetailFragment extends DialogFragment {
         viewSwitcher.setFactory(new ViewSwitcher.ViewFactory() {
             @Override
             public View makeView() {
-                @SuppressLint("InflateParams") View view = LayoutInflater.from(context).inflate(R.layout.fragment_note_detail, null);
+                @SuppressLint("InflateParams") View view = LayoutInflater.from(context).inflate(R.layout.fragment_note_detail_content, null);
                 view.setMinimumHeight(2000);
 
                 detailViewHolder = new DetailViewHolder(view);

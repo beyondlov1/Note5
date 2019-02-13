@@ -20,6 +20,7 @@ public class Document implements Element, Cloneable{
     private Date createTime;
     private Date lastModifyTime;
     private Integer version;
+    private Integer readFlag;
 
     public Document() {
     }
@@ -29,9 +30,10 @@ public class Document implements Element, Cloneable{
         this.content = content;
     }
 
-    @Generated(hash = 1191716812)
+    @Generated(hash = 2075388908)
     public Document(String id, String title, String content, String type,
-            Date createTime, Date lastModifyTime, Integer version) {
+            Date createTime, Date lastModifyTime, Integer version,
+            Integer readFlag) {
         this.id = id;
         this.title = title;
         this.content = content;
@@ -39,6 +41,7 @@ public class Document implements Element, Cloneable{
         this.createTime = createTime;
         this.lastModifyTime = lastModifyTime;
         this.version = version;
+        this.readFlag = readFlag;
     }
 
     public String getId() {
@@ -100,5 +103,13 @@ public class Document implements Element, Cloneable{
     @Override
     protected Object clone() throws CloneNotSupportedException {
         return super.clone();
+    }
+
+    public Integer getReadFlag() {
+        return readFlag;
+    }
+
+    public void setReadFlag(Integer readFlag) {
+        this.readFlag = readFlag;
     }
 }

@@ -1,25 +1,35 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<FrameLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
-    android:orientation="vertical" android:layout_width="match_parent"
+    android:layout_width="match_parent"
     android:layout_height="match_parent">
 
+   <include layout="@layout/fragment_note_detail_tool"/>
+
     <LinearLayout
-        android:id="@+id/fragment_document_display_container"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:layout_weight="1"
-        android:orientation="vertical">
+        android:orientation="vertical"
+        android:layout_marginTop="30dp"
+        >
 
-        <WebView
-            android:id="@+id/fragment_document_display_web"
+        <com.beyond.note5.view.custom.ViewSwitcher
+            android:id="@+id/fragment_note_detail_view_switcher"
             android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:layout_weight="1"
-            tools:ignore="NestedWeights">
+            android:layout_height="0dp"
+            android:layout_weight="1">
 
-        </WebView>
+        </com.beyond.note5.view.custom.ViewSwitcher>
+
+        <TextView
+            android:id="@+id/fragment_note_detail_page_count"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="TextView"
+            android:textAlignment="center" />
 
     </LinearLayout>
 
-</LinearLayout>
+</FrameLayout>

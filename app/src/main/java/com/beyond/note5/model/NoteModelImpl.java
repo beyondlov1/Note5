@@ -41,6 +41,7 @@ public class NoteModelImpl implements NoteModel {
     public List<Note> findAll() {
         return noteDao.queryBuilder()
                 .where(NoteDao.Properties.Type.eq(Document.NOTE))
+                .orderAsc(NoteDao.Properties.ReadFlag)
                 .orderDesc(NoteDao.Properties.LastModifyTime)
                 .list();
     }

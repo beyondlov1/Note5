@@ -134,6 +134,10 @@ public class DocumentRecyclerViewAdapter<T extends Document> extends RecyclerVie
                 layoutParams.setFullSpan(true);
             }
         }else if (position == 0){
+            if(data.size() <= 1){
+                layoutParams.setFullSpan(true);
+                return;
+            }
             Date thisTime = data.get(position).getLastModifyTime();
             Date nextTime = data.get(position + 1).getLastModifyTime();
             if (DateUtils.truncatedEquals(nextTime,thisTime,Calendar.DATE)){
@@ -179,6 +183,18 @@ public class DocumentRecyclerViewAdapter<T extends Document> extends RecyclerVie
         notifyItemRangeChanged(0, data.size() + headers.size());
     }
 
+    //TODO
+    public void notifyRangeChanged(int positionStart, int itemCount){
+        int addedCount = initHeaderData(headers);
+        if (addedCount > 0) {
+            notifyItemRangeInserted(0, addedCount);
+        }
+        if (addedCount < 0) {
+            notifyItemRangeRemoved(positionStart, itemCount - addedCount);
+        }
+        notifyItemRangeChanged(positionStart, data.size() + headers.size() - positionStart);
+    }
+
     public void notifyRangeRemoved(int positionStart, int itemCount) {
         int addedCount = initHeaderData(headers);
         if (addedCount < 0) {
@@ -189,9 +205,14 @@ public class DocumentRecyclerViewAdapter<T extends Document> extends RecyclerVie
         notifyItemRangeChanged(positionStart, data.size() + headers.size() - positionStart);
     }
 
-    protected int initHeaderData(SparseArray<Header> headers) {
+    private int initHeaderData(SparseArray<Header> headers) {
         int oldHeaderCount = headers.size();
         headers.clear();
+        addHeaderData(headers);
+        return headers.size() - oldHeaderCount;
+    }
+
+    protected void addHeaderData(SparseArray<Header> headers){
         Date lastDate = null;
         int index = 0;
         for (Document datum : data) {
@@ -205,7 +226,6 @@ public class DocumentRecyclerViewAdapter<T extends Document> extends RecyclerVie
             lastDate = lastModifyTime;
             index++;
         }
-        return headers.size() - oldHeaderCount;
     }
 
     class MyViewHolder extends RecyclerView.ViewHolder {

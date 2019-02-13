@@ -22,6 +22,7 @@ import com.beyond.note5.presenter.NotePresenter;
 import com.beyond.note5.view.adapter.AbstractFragmentNoteView;
 import com.beyond.note5.view.adapter.component.NoteRecyclerViewAdapter;
 
+import org.apache.commons.lang3.ObjectUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.greenrobot.eventbus.EventBus;
 import org.greenrobot.eventbus.Subscribe;
@@ -30,6 +31,7 @@ import org.greenrobot.eventbus.ThreadMode;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Objects;
 
 import javax.inject.Inject;
 
@@ -163,11 +165,34 @@ public class NoteListFragment extends AbstractFragmentNoteView {
             Note oldNote = iterator.next();
             if (StringUtils.equals(oldNote.getId(), note.getId())) {
                 iterator.remove();
-                data.add(0, note);
+                int sectionStartIndex = getSectionStartIndex(data, note);
+                data.add(sectionStartIndex, note);
+                //TODO
+                if (sectionStartIndex == 0){
+                    noteRecyclerViewAdapter.notifyRangeInserted(sectionStartIndex,1);
+                }
                 noteRecyclerViewAdapter.notifyFullRangeChanged();
                 msg("更新成功");
                 break;
             }
         }
+    }
+
+    private int getSectionStartIndex(List<Note> data, Note target){
+        int index = 0;
+        for (Note note : data) {
+            if (Objects.equals(note.getReadFlag(),target.getReadFlag())){
+                break;
+            }
+            index++;
+        }
+        if (index == data.size()&&target.getReadFlag()<0){
+            return 0;
+        }
+        if (index == data.size()&&target.getReadFlag()>0){
+            return data.size()-1;
+        }
+
+        return index;
     }
 }

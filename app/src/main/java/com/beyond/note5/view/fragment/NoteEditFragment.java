@@ -24,6 +24,8 @@ public class NoteEditFragment extends AbstractDocumentEditFragment<Note> {
         createdDocument.setContent(content);
         createdDocument.setCreateTime(new Date());
         createdDocument.setLastModifyTime(new Date());
+        createdDocument.setVersion(1);
+        createdDocument.setReadFlag(0);
         post(new AddNoteEvent(createdDocument));
     }
 }

@@ -39,6 +39,7 @@ public class NoteModifyFragment extends AbstractDocumentEditFragment<Note> {
     protected void sendEventsOnOKClick(String content) {
         createdDocument.setContent(content);
         createdDocument.setLastModifyTime(new Date());
+        createdDocument.setVersion(createdDocument.getVersion() == null?0:createdDocument.getVersion()+1);
         post(new UpdateNoteEvent(createdDocument));
         post(new ModifyNoteDoneEvent(createdDocument));
     }

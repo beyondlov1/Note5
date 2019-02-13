@@ -17,10 +17,12 @@ public class Todo extends Document {
     private Date createTime;
     private Date lastModifyTime;
     private Integer version;
+    private Integer readFlag;
 
-    @Generated(hash = 1524771027)
+    @Generated(hash = 1800421537)
     public Todo(String id, String title, String content, String type,
-            Date createTime, Date lastModifyTime, Integer version) {
+            Date createTime, Date lastModifyTime, Integer version,
+            Integer readFlag) {
         this.id = id;
         this.title = title;
         this.content = content;
@@ -28,6 +30,7 @@ public class Todo extends Document {
         this.createTime = createTime;
         this.lastModifyTime = lastModifyTime;
         this.version = version;
+        this.readFlag = readFlag;
     }
 
     @Generated(hash = 1698043777)
@@ -102,5 +105,15 @@ public class Todo extends Document {
     @Override
     public String getType() {
         return Document.TODO;
+    }
+
+    @Override
+    public Integer getReadFlag() {
+        return readFlag;
+    }
+
+    @Override
+    public void setReadFlag(Integer readFlag) {
+        this.readFlag = readFlag;
     }
 }

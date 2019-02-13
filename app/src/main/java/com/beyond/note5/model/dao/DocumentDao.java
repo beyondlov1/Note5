@@ -31,6 +31,7 @@ public class DocumentDao extends AbstractDao<Document, String> {
         public final static Property CreateTime = new Property(4, java.util.Date.class, "createTime", false, "CREATE_TIME");
         public final static Property LastModifyTime = new Property(5, java.util.Date.class, "lastModifyTime", false, "LAST_MODIFY_TIME");
         public final static Property Version = new Property(6, Integer.class, "version", false, "VERSION");
+        public final static Property ReadFlag = new Property(7, Integer.class, "readFlag", false, "READ_FLAG");
     }
 
 
@@ -52,7 +53,8 @@ public class DocumentDao extends AbstractDao<Document, String> {
                 "\"TYPE\" TEXT," + // 3: type
                 "\"CREATE_TIME\" INTEGER," + // 4: createTime
                 "\"LAST_MODIFY_TIME\" INTEGER," + // 5: lastModifyTime
-                "\"VERSION\" INTEGER);"); // 6: version
+                "\"VERSION\" INTEGER," + // 6: version
+                "\"READ_FLAG\" INTEGER);"); // 7: readFlag
     }
 
     /** Drops the underlying database table. */
@@ -99,6 +101,11 @@ public class DocumentDao extends AbstractDao<Document, String> {
         if (version != null) {
             stmt.bindLong(7, version);
         }
+ 
+        Integer readFlag = entity.getReadFlag();
+        if (readFlag != null) {
+            stmt.bindLong(8, readFlag);
+        }
     }
 
     @Override
@@ -139,6 +146,11 @@ public class DocumentDao extends AbstractDao<Document, String> {
         if (version != null) {
             stmt.bindLong(7, version);
         }
+ 
+        Integer readFlag = entity.getReadFlag();
+        if (readFlag != null) {
+            stmt.bindLong(8, readFlag);
+        }
     }
 
     @Override
@@ -155,7 +167,8 @@ public class DocumentDao extends AbstractDao<Document, String> {
             cursor.isNull(offset + 3) ? null : cursor.getString(offset + 3), // type
             cursor.isNull(offset + 4) ? null : new java.util.Date(cursor.getLong(offset + 4)), // createTime
             cursor.isNull(offset + 5) ? null : new java.util.Date(cursor.getLong(offset + 5)), // lastModifyTime
-            cursor.isNull(offset + 6) ? null : cursor.getInt(offset + 6) // version
+            cursor.isNull(offset + 6) ? null : cursor.getInt(offset + 6), // version
+            cursor.isNull(offset + 7) ? null : cursor.getInt(offset + 7) // readFlag
         );
         return entity;
     }
@@ -169,6 +182,7 @@ public class DocumentDao extends AbstractDao<Document, String> {
         entity.setCreateTime(cursor.isNull(offset + 4) ? null : new java.util.Date(cursor.getLong(offset + 4)));
         entity.setLastModifyTime(cursor.isNull(offset + 5) ? null : new java.util.Date(cursor.getLong(offset + 5)));
         entity.setVersion(cursor.isNull(offset + 6) ? null : cursor.getInt(offset + 6));
+        entity.setReadFlag(cursor.isNull(offset + 7) ? null : cursor.getInt(offset + 7));
      }
     
     @Override
