@@ -11,14 +11,14 @@ import java.util.List;
 
 public class DetailNoteEvent extends AbstractEvent<List<Note>> {
 
-    private int position;
+    private int index;
 
-    public DetailNoteEvent(List<Note> notes, int position) {
+    public DetailNoteEvent(List<Note> notes, int index) {
         super(notes);
-        this.position = position;
+        this.index = index;
     }
 
-    public int getPosition(){
-        return position;
+    public int getIndex(){
+        return index;
     }
 }

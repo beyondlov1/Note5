@@ -65,7 +65,7 @@ public class NoteDetailFragment extends DialogFragment {
     private DetailViewHolder detailViewHolder;
 
     private List<Note> data;
-    private int currPosition;
+    private int currIndex;
 
     private View operationContainer;
     private View operationItemsContainer;
@@ -148,14 +148,14 @@ public class NoteDetailFragment extends DialogFragment {
             deleteButton.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
-                    Note currentNote = data.get(currPosition);
+                    Note currentNote = data.get(currIndex);
                     EventBus.getDefault().post(new DeleteNoteEvent(currentNote));
                     if (data.isEmpty()) {
                         getDialog().dismiss();
                         return;
                     }
-                    if (currPosition == data.size()) {
-                        currPosition--;
+                    if (currIndex == data.size()) {
+                        currIndex--;
                     }
                     viewSwitcher.removeAllViews();
                     reloadView();
@@ -206,14 +206,14 @@ public class NoteDetailFragment extends DialogFragment {
             deleteButton.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
-                    Note currentNote = data.get(currPosition);
+                    Note currentNote = data.get(currIndex);
                     EventBus.getDefault().post(new DeleteNoteEvent(currentNote));
                     if (data.isEmpty()) {
                         getDialog().dismiss();
                         return;
                     }
-                    if (currPosition == data.size()) {
-                        currPosition--;
+                    if (currIndex == data.size()) {
+                        currIndex--;
                     }
                     viewSwitcher.removeAllViews();
                     reloadView();
@@ -223,7 +223,7 @@ public class NoteDetailFragment extends DialogFragment {
         searchButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                String url = WebViewUtil.getUrl(data.get(currPosition));
+                String url = WebViewUtil.getUrl(data.get(currIndex));
                 if (url != null) {
                     WebViewUtil.addWebViewProgressBar(new DetailViewHolder(viewSwitcher.getCurrentView()).displayWebView);
                     new DetailViewHolder(viewSwitcher.getCurrentView()).displayWebView.loadUrl(url);
@@ -235,7 +235,7 @@ public class NoteDetailFragment extends DialogFragment {
         browserSearchButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                String url = WebViewUtil.getUrl(data.get(currPosition));
+                String url = WebViewUtil.getUrl(data.get(currIndex));
                 if (url != null) {
                     Uri uri = Uri.parse(url);
                     Intent intent = new Intent(Intent.ACTION_VIEW, uri);
@@ -248,7 +248,7 @@ public class NoteDetailFragment extends DialogFragment {
         stickButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                Note note = data.get(currPosition);
+                Note note = data.get(currIndex);
                 note.setReadFlag(-1);
                 EventBus.getDefault().post(new UpdateNoteEvent(note));
                 Toast.makeText(context, "置顶成功", Toast.LENGTH_SHORT).show();
@@ -316,19 +316,19 @@ public class NoteDetailFragment extends DialogFragment {
     @Subscribe(threadMode = ThreadMode.MAIN, sticky = true)
     public void onEventMainThread(DetailNoteEvent detailNoteEvent) {
         data = detailNoteEvent.get();
-        currPosition = detailNoteEvent.getPosition();
-//        processDetailTools();
+        currIndex = detailNoteEvent.getIndex();
         reloadView();
+        processDetailTools(); //TODO: 不能立即刷新
     }
 
     private void processDetailTools() {
         // 置顶按钮
-        if (data.get(currPosition).getReadFlag() < 0){
+        if (data.get(currIndex).getReadFlag() < 0){
             ((ImageButton) stickButton).setImageDrawable(getResources().getDrawable(R.drawable.ic_thumb_up_grey_600_24dp,null));
             stickButton.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
-                    Note note = ObjectUtils.clone(data.get(currPosition));
+                    Note note = ObjectUtils.clone(data.get(currIndex));
                     note.setLastModifyTime(new Date());
                     note.setReadFlag(0);
                     EventBus.getDefault().post(new UpdateNoteEvent(note));
@@ -341,7 +341,7 @@ public class NoteDetailFragment extends DialogFragment {
             stickButton.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
-                    Note note = ObjectUtils.clone(data.get(currPosition));
+                    Note note = ObjectUtils.clone(data.get(currIndex));
                     note.setLastModifyTime(new Date());
                     note.setReadFlag(-1);
                     EventBus.getDefault().post(new UpdateNoteEvent(note));
@@ -356,7 +356,7 @@ public class NoteDetailFragment extends DialogFragment {
     public void onEventMainThread(ModifyNoteDoneEvent modifyNoteDoneEvent) {
         Note note = modifyNoteDoneEvent.get();
         int index = data.indexOf(note);
-        currPosition = index == -1 ? 0 : index;
+        currIndex = index == -1 ? 0 : index;
         viewSwitcher.removeAllViews();
         reloadView();
     }
@@ -388,8 +388,8 @@ public class NoteDetailFragment extends DialogFragment {
 
     private void initDetailData(DetailViewHolder detailViewHolder) {
         this.detailViewHolder = detailViewHolder;
-        WebViewUtil.loadWebContent(detailViewHolder.displayWebView, data.get(currPosition));
-        String pageCount = String.format("%s/%s", currPosition + 1, data.size());
+        WebViewUtil.loadWebContent(detailViewHolder.displayWebView, data.get(currIndex));
+        String pageCount = String.format("%s/%s", currIndex + 1, data.size());
         pageCountTextView.setText(pageCount);
     }
 
@@ -441,11 +441,11 @@ public class NoteDetailFragment extends DialogFragment {
     }
 
     private void next() {
-        if (currPosition == data.size() - 1) {
+        if (currIndex == data.size() - 1) {
             msg("已到达最后一页");
         }
-        if (currPosition < data.size() - 1) {
-            currPosition++;
+        if (currIndex < data.size() - 1) {
+            currIndex++;
             viewSwitcher.setInAnimation(context, R.anim.slide_in_right);
             viewSwitcher.setOutAnimation(context, R.anim.slide_out_left);
             initDetailData(new DetailViewHolder(viewSwitcher.getNextView()));
@@ -454,11 +454,11 @@ public class NoteDetailFragment extends DialogFragment {
     }
 
     private void prev() {
-        if (currPosition == 0) {
+        if (currIndex == 0) {
             msg("已到达第一页");
         }
-        if (currPosition > 0) {
-            currPosition--;
+        if (currIndex > 0) {
+            currIndex--;
             viewSwitcher.setInAnimation(context, R.anim.slide_in_left);
             viewSwitcher.setOutAnimation(context, R.anim.slide_out_right);
             initDetailData(new DetailViewHolder(viewSwitcher.getNextView()));
@@ -469,7 +469,7 @@ public class NoteDetailFragment extends DialogFragment {
     private void showModifyView() {
         NoteModifyFragment noteModifyFragment = new NoteModifyFragment();
         noteModifyFragment.show(getActivity().getSupportFragmentManager(), "modifyDialog");
-        EventBus.getDefault().postSticky(new FillNoteModifyEvent(data.get(currPosition)));
+        EventBus.getDefault().postSticky(new FillNoteModifyEvent(data.get(currIndex)));
     }
 
     class DetailViewHolder {
