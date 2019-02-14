@@ -21,8 +21,8 @@ import com.beyond.note5.module.NoteModule;
 import com.beyond.note5.presenter.NotePresenter;
 import com.beyond.note5.view.adapter.AbstractFragmentNoteView;
 import com.beyond.note5.view.adapter.component.NoteRecyclerViewAdapter;
+import com.beyond.note5.view.adapter.component.header.ReadFlagItemDataGenerator;
 
-import org.apache.commons.lang3.ObjectUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.greenrobot.eventbus.EventBus;
 import org.greenrobot.eventbus.Subscribe;
@@ -31,7 +31,6 @@ import org.greenrobot.eventbus.ThreadMode;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
-import java.util.Objects;
 
 import javax.inject.Inject;
 
@@ -54,7 +53,7 @@ public class NoteListFragment extends AbstractFragmentNoteView {
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        noteRecyclerViewAdapter = new NoteRecyclerViewAdapter(this.getContext(), data, getFragmentManager());
+        noteRecyclerViewAdapter = new NoteRecyclerViewAdapter(this.getContext(), new ReadFlagItemDataGenerator<>(data), getFragmentManager());
         initInjection();
     }
 
@@ -131,33 +130,36 @@ public class NoteListFragment extends AbstractFragmentNoteView {
         notePresenter.delete(event.get());
     }
 
+    @SuppressWarnings("unchecked")
     @Override
     public void onAddSuccess(Note note) {
-        data.add(0, note);
-        noteRecyclerViewAdapter.notifyRangeInserted(0,1);
-        noteRecyclerView.scrollToPosition(0);
+        int insertIndex = noteRecyclerViewAdapter.getItemDataGenerator().getInsertIndex(note);
+        data.add(insertIndex, note);
+        noteRecyclerViewAdapter.notifyInserted(note);
+        noteRecyclerView.scrollToPosition(insertIndex);
         msg("添加成功");
     }
 
     @Override
     public void onFindAllSuccess(List<Note> allNote) {
-        int previousSize = data.size();
         data.clear();
-        noteRecyclerViewAdapter.notifyRangeRemoved(0, previousSize);
+        noteRecyclerViewAdapter.notifyFullRangeRemoved();
         data.addAll(allNote);
-        noteRecyclerViewAdapter.notifyRangeInserted(0, data.size());
+        noteRecyclerViewAdapter.notifyFullRangeInserted();
     }
 
+    @SuppressWarnings("unchecked")
     @Override
     public void onDeleteSuccess(Note note) {
-        int index = data.indexOf(note);
-        data.remove(note);
+        int index = noteRecyclerViewAdapter.getItemDataGenerator().getIndex(note);
         if (index!=-1){
-            noteRecyclerViewAdapter.notifyRangeRemoved(index,1);
+            data.remove(note);
+            noteRecyclerViewAdapter.notifyRemoved(note);
             msg("删除成功");
         }
     }
 
+    @SuppressWarnings("unchecked")
     @Override
     public void onUpdateSuccess(Note note) {
         Iterator<Note> iterator = data.iterator();
@@ -165,34 +167,14 @@ public class NoteListFragment extends AbstractFragmentNoteView {
             Note oldNote = iterator.next();
             if (StringUtils.equals(oldNote.getId(), note.getId())) {
                 iterator.remove();
-                int sectionStartIndex = getSectionStartIndex(data, note);
-                data.add(sectionStartIndex, note);
-                //TODO
-                if (sectionStartIndex == 0){
-                    noteRecyclerViewAdapter.notifyRangeInserted(sectionStartIndex,1);
-                }
-                noteRecyclerViewAdapter.notifyFullRangeChanged();
+                noteRecyclerViewAdapter.notifyRemoved(oldNote);
+                int insertIndex = noteRecyclerViewAdapter.getItemDataGenerator().getInsertIndex(note);
+                data.add(insertIndex, note);
+                noteRecyclerViewAdapter.notifyInserted(note);
+                noteRecyclerView.scrollToPosition(insertIndex);
                 msg("更新成功");
                 break;
             }
         }
-    }
-
-    private int getSectionStartIndex(List<Note> data, Note target){
-        int index = 0;
-        for (Note note : data) {
-            if (Objects.equals(note.getReadFlag(),target.getReadFlag())){
-                break;
-            }
-            index++;
-        }
-        if (index == data.size()&&target.getReadFlag()<0){
-            return 0;
-        }
-        if (index == data.size()&&target.getReadFlag()>0){
-            return data.size()-1;
-        }
-
-        return index;
     }
 }

@@ -6,7 +6,4 @@ package com.beyond.note5.bean;
  */
 public interface Element {
 
-    String getId();
-
-    void setId(String id);
 }

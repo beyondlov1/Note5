@@ -16,6 +16,7 @@ import com.beyond.note5.bean.Todo;
 import com.beyond.note5.model.dao.DaoSession;
 import com.beyond.note5.model.dao.DocumentDao;
 import com.beyond.note5.view.adapter.component.DocumentRecyclerViewAdapter;
+import com.beyond.note5.view.adapter.component.header.ReadFlagItemDataGenerator;
 
 import java.util.List;
 
@@ -43,7 +44,7 @@ public class TodoListFragment extends Fragment  {
     private void showTodoList(ViewGroup viewGroup) {
         todoRecyclerView = viewGroup.findViewById(R.id.todo_recycler_view);
         data = getData();
-        DocumentRecyclerViewAdapter documentRecyclerViewAdapter = new DocumentRecyclerViewAdapter(this.getContext(),data);
+        DocumentRecyclerViewAdapter documentRecyclerViewAdapter = new DocumentRecyclerViewAdapter(this.getContext(),new ReadFlagItemDataGenerator(data));
         todoRecyclerView.setAdapter(documentRecyclerViewAdapter);
 
         //设置显示格式

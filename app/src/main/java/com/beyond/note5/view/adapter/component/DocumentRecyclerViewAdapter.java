@@ -6,7 +6,6 @@ import android.graphics.drawable.GradientDrawable;
 import android.support.v4.content.ContextCompat;
 import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.StaggeredGridLayoutManager;
-import android.util.SparseArray;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -14,13 +13,12 @@ import android.widget.TextView;
 
 import com.beyond.note5.R;
 import com.beyond.note5.bean.Document;
+import com.beyond.note5.bean.Element;
+import com.beyond.note5.view.adapter.component.header.Header;
+import com.beyond.note5.view.adapter.component.header.ItemDataGenerator;
 
 import org.apache.commons.lang3.StringUtils;
-import org.apache.commons.lang3.time.DateFormatUtils;
-import org.apache.commons.lang3.time.DateUtils;
 
-import java.util.Calendar;
-import java.util.Date;
 import java.util.List;
 
 /**
@@ -31,8 +29,9 @@ import java.util.List;
 public class DocumentRecyclerViewAdapter<T extends Document> extends RecyclerView.Adapter {
 
     protected Context context;
-    protected List<T> data;
-    private SparseArray<Header> headers = new SparseArray<>();
+    protected List<Element> itemData;
+
+    protected ItemDataGenerator<T> itemDataGenerator;
 
     private static final int[] colorResIds = new int[]{
             R.color.google_blue,
@@ -41,9 +40,10 @@ public class DocumentRecyclerViewAdapter<T extends Document> extends RecyclerVie
             R.color.google_yellow
     };
 
-    public DocumentRecyclerViewAdapter(Context context, List<T> data) {
+    public DocumentRecyclerViewAdapter(Context context, ItemDataGenerator<T> itemDataGenerator) {
         this.context = context;
-        this.data = data;
+        this.itemDataGenerator = itemDataGenerator;
+        this.itemData = itemDataGenerator.getItemData();
     }
 
     @Override
@@ -55,46 +55,41 @@ public class DocumentRecyclerViewAdapter<T extends Document> extends RecyclerVie
     @SuppressWarnings("unchecked")
     @Override
     public void onBindViewHolder(RecyclerView.ViewHolder holder, int position) {
-        if (data.isEmpty()) {
+        if (itemDataGenerator.getContentData() == null|| itemDataGenerator.getContentData().isEmpty()) {
             return;
         }
         MyViewHolder viewHolder = (MyViewHolder) holder;
-        if (headers.get(position) != null) {
-            initHeaderView(viewHolder, position);
-        } else {
-            initContentView(position, viewHolder);
+        if (itemData.get(position) instanceof Header) {
+            Header header = (Header) itemData.get(position);
+            initHeaderView(position,header,viewHolder);
+        } else if (itemData.get(position) instanceof Document){
+            T document = (T) itemData.get(position);
+            initContentView(position, document,  viewHolder);
         }
     }
 
-    private void initHeaderView(MyViewHolder viewHolder, int position) {
+    private void initHeaderView( int position,Header header, MyViewHolder viewHolder) {
         viewHolder.title.setVisibility(View.VISIBLE);
-        viewHolder.title.setText(headers.get(position).content);
+        viewHolder.title.setText(header.getContent());
         viewHolder.title.setTextColor(context.getResources().getColor(R.color.dark_yellow));
         viewHolder.content.setVisibility(View.GONE);
-        viewHolder.content.setText(headers.get(position).content);
+        viewHolder.content.setText(header.getContent());
         viewHolder.container.setOnClickListener(null);
         viewHolder.dataContainer.setBackground(null);
-        processHeaderFullSpan(viewHolder, position);
+        processHeaderFullSpan(viewHolder);
     }
 
-    private void processHeaderFullSpan(MyViewHolder viewHolder, int position) {
+    private void processHeaderFullSpan(MyViewHolder viewHolder) {
         StaggeredGridLayoutManager.LayoutParams layoutParams = (StaggeredGridLayoutManager.LayoutParams) viewHolder.itemView.getLayoutParams();
         layoutParams.setFullSpan(true);
     }
 
-    private void initContentView(int position, MyViewHolder viewHolder) {
-        int count = 0;
-        for (int i = 0; i <= position; i++) {
-            if (headers.get(i) != null) {
-                count++;
-            }
-        }
-        T t = data.get(position - count);
-        initContentDisplay(viewHolder, t, position - count);
-        initContentEvent(viewHolder, t, position - count);
+    private void initContentView(int position, T document, MyViewHolder viewHolder) {
+        initContentDisplay(viewHolder, document, position );
+        initContentEvent(viewHolder, document);
     }
 
-    protected void initContentDisplay(final MyViewHolder viewHolder, T document, int position) {
+    protected void initContentDisplay(final MyViewHolder viewHolder, Document document, int position) {
         GradientDrawable gradientDrawable = new GradientDrawable();
         gradientDrawable.setCornerRadius(13);
         gradientDrawable.setStroke(1, ContextCompat.getColor(context, R.color.dark_gray));
@@ -112,120 +107,87 @@ public class DocumentRecyclerViewAdapter<T extends Document> extends RecyclerVie
 
         processContentFullSpan(viewHolder, position);
     }
+    private void processContentFullSpan(MyViewHolder viewHolder, int position) {
+        StaggeredGridLayoutManager.LayoutParams layoutParams = (StaggeredGridLayoutManager.LayoutParams) viewHolder.itemView.getLayoutParams();
+        if (itemDataGenerator.getSingleContentPositions().contains(position)){
+            layoutParams.setFullSpan(true);
+        }else {
+            layoutParams.setFullSpan(false);
+        }
+    }
 
-    private void initContentEvent(MyViewHolder viewHolder, final T t, final int position) {
+    private void initContentEvent(MyViewHolder viewHolder, final T t) {
+        final int index = itemDataGenerator.getIndex(t);
         viewHolder.container.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                onItemClick(v, data, t, position);
+                onItemClick(v, itemDataGenerator.getContentData(), t, index);
             }
         });
     }
 
-    private void processContentFullSpan(MyViewHolder viewHolder, int position) {
-        StaggeredGridLayoutManager.LayoutParams layoutParams = (StaggeredGridLayoutManager.LayoutParams) viewHolder.itemView.getLayoutParams();
-        if (position>0&&position<data.size()-1) {
-            Date lastTime = data.get(position - 1).getLastModifyTime();
-            Date thisTime = data.get(position).getLastModifyTime();
-            Date nextTime = data.get(position + 1).getLastModifyTime();
-            if (DateUtils.truncatedEquals(lastTime,thisTime, Calendar.DATE)||DateUtils.truncatedEquals(nextTime,thisTime,Calendar.DATE)){
-                layoutParams.setFullSpan(false);
-            }else {
-                layoutParams.setFullSpan(true);
-            }
-        }else if (position == 0){
-            if(data.size() <= 1){
-                layoutParams.setFullSpan(true);
-                return;
-            }
-            Date thisTime = data.get(position).getLastModifyTime();
-            Date nextTime = data.get(position + 1).getLastModifyTime();
-            if (DateUtils.truncatedEquals(nextTime,thisTime,Calendar.DATE)){
-                layoutParams.setFullSpan(false);
-            }else {
-                layoutParams.setFullSpan(true);
-            }
-        }else {
-            Date lastTime = data.get(position - 1).getLastModifyTime();
-            Date thisTime = data.get(position).getLastModifyTime();
-            if (DateUtils.truncatedEquals(lastTime,thisTime,Calendar.DATE)){
-                layoutParams.setFullSpan(false);
-            }else {
-                layoutParams.setFullSpan(true);
-            }
-        }
-    }
-
-    protected void onItemClick(View v, List<T> data, final T t, final int position) {
+    protected void onItemClick(View v, List<T> data, final T t, final int index) {
     }
 
     @Override
     public int getItemCount() {
-        return data.size() + headers.size();
+        return itemData.size();
     }
 
-    @SuppressWarnings("SameParameterValue")
-    public void notifyRangeInserted(int positionStart, int itemCount) {
-        int addedCount = initHeaderData(headers);
-        if (addedCount > 0) {
-            notifyItemRangeInserted(positionStart, itemCount + addedCount);
-        } else {
-            notifyItemRangeInserted(positionStart, itemCount);
-        }
-        notifyItemRangeChanged(0, data.size() + headers.size());
+
+    public void notifyFullRangeInserted(){
+        int addedCount = refreshItemData();
+        notifyItemRangeInserted(0,addedCount);
     }
 
-    public void notifyFullRangeChanged() {
-        int addedCount = initHeaderData(headers);
-        if (addedCount > 0) {
-            notifyItemRangeInserted(0, addedCount);
+    public void notifyInserted(T t){
+        int addedCount = refreshItemData();
+        if (addedCount == 1){
+            int insertedPosition = itemDataGenerator.getPosition(t);
+            notifyItemInserted(insertedPosition);
+            notifyItemRangeChanged(insertedPosition+1,itemDataGenerator.getItemData().size()-insertedPosition-1);
         }
-        notifyItemRangeChanged(0, data.size() + headers.size());
+
+        if (addedCount == 2){
+            int insertedPosition = itemDataGenerator.getPosition(t);
+            notifyItemRangeInserted(insertedPosition-1,2);
+            notifyItemRangeChanged(insertedPosition+1,itemDataGenerator.getItemData().size()-insertedPosition-2);
+        }
     }
 
-    //TODO
-    public void notifyRangeChanged(int positionStart, int itemCount){
-        int addedCount = initHeaderData(headers);
-        if (addedCount > 0) {
-            notifyItemRangeInserted(0, addedCount);
-        }
-        if (addedCount < 0) {
-            notifyItemRangeRemoved(positionStart, itemCount - addedCount);
-        }
-        notifyItemRangeChanged(positionStart, data.size() + headers.size() - positionStart);
+    public void notifyFullRangeRemoved() {
+        int addedCount = refreshItemData();
+        notifyItemRangeRemoved(0,-addedCount);
     }
 
-    public void notifyRangeRemoved(int positionStart, int itemCount) {
-        int addedCount = initHeaderData(headers);
-        if (addedCount < 0) {
-            notifyItemRangeRemoved(positionStart, itemCount - addedCount);
-        } else {
-            notifyItemRangeRemoved(positionStart, itemCount);
+    public void notifyRemoved(T t) {
+        int removedPosition = itemDataGenerator.getPosition(t);
+        int addedCount = refreshItemData();
+        if (addedCount == -1){
+            notifyItemRemoved(removedPosition);
+//            notifyItemRangeChanged(removedPosition,itemDataGenerator.getItemData().size()-removedPosition-1);
+            notifyFullRangeChanged(); // 更新全部， 避免跨列展示的item没有跨列效果： 比如删除后边的， 剩下前面那一个是单独的时候
+
         }
-        notifyItemRangeChanged(positionStart, data.size() + headers.size() - positionStart);
+
+        if (addedCount == -2){
+            notifyItemRangeRemoved(removedPosition-1,2);
+            notifyItemRangeChanged(removedPosition-1,itemDataGenerator.getItemData().size()-removedPosition-2);
+        }
     }
 
-    private int initHeaderData(SparseArray<Header> headers) {
-        int oldHeaderCount = headers.size();
-        headers.clear();
-        addHeaderData(headers);
-        return headers.size() - oldHeaderCount;
+    public void notifyFullRangeChanged(){
+        notifyItemRangeChanged(0,itemDataGenerator.getItemData().size());
     }
 
-    protected void addHeaderData(SparseArray<Header> headers){
-        Date lastDate = null;
-        int index = 0;
-        for (Document datum : data) {
-            Date lastModifyTime = datum.getLastModifyTime();
-            if (lastDate == null) {
-                headers.put(index + headers.size(), new DocumentRecyclerViewAdapter.Header(index + headers.size(), DateFormatUtils.format(lastModifyTime, "yyyy-MM-dd")));
-            }
-            if (lastDate != null && !DateUtils.truncatedEquals(lastModifyTime, lastDate, Calendar.DATE)) {
-                headers.put(index + headers.size(), new DocumentRecyclerViewAdapter.Header(index + headers.size(), DateFormatUtils.format(lastModifyTime, "yyyy-MM-dd")));
-            }
-            lastDate = lastModifyTime;
-            index++;
-        }
+    private int refreshItemData() {
+        int oldCount = itemDataGenerator.getItemData().size();
+        itemDataGenerator.refresh();
+        return itemDataGenerator.getItemData().size() - oldCount;
+    }
+
+    public ItemDataGenerator getItemDataGenerator() {
+        return itemDataGenerator;
     }
 
     class MyViewHolder extends RecyclerView.ViewHolder {
@@ -244,13 +206,5 @@ public class DocumentRecyclerViewAdapter<T extends Document> extends RecyclerVie
         }
     }
 
-    public static class Header {
-        private int position;
-        private String content;
 
-        public Header(int position, String content) {
-            this.position = position;
-            this.content = content;
-        }
-    }
 }

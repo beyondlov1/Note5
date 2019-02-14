@@ -7,7 +7,6 @@ import android.annotation.SuppressLint;
 import android.app.Dialog;
 import android.content.Context;
 import android.content.Intent;
-import android.content.res.Resources;
 import android.graphics.Color;
 import android.graphics.drawable.ColorDrawable;
 import android.net.Uri;
@@ -26,7 +25,6 @@ import android.view.ViewGroup;
 import android.view.Window;
 import android.view.WindowManager;
 import android.webkit.WebView;
-import android.widget.Button;
 import android.widget.ImageButton;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -49,7 +47,6 @@ import org.greenrobot.eventbus.ThreadMode;
 
 import java.util.Date;
 import java.util.List;
-import java.util.Objects;
 import java.util.Timer;
 import java.util.TimerTask;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -320,7 +317,7 @@ public class NoteDetailFragment extends DialogFragment {
     public void onEventMainThread(DetailNoteEvent detailNoteEvent) {
         data = detailNoteEvent.get();
         currPosition = detailNoteEvent.getPosition();
-        processDetailTools();
+//        processDetailTools();
         reloadView();
     }
 
