@@ -40,7 +40,6 @@ import com.beyond.note5.utils.WebViewUtil;
 import com.beyond.note5.view.custom.ViewSwitcher;
 import com.beyond.note5.view.listener.OnSlideListener;
 
-import org.apache.commons.lang3.ObjectUtils;
 import org.greenrobot.eventbus.EventBus;
 import org.greenrobot.eventbus.Subscribe;
 import org.greenrobot.eventbus.ThreadMode;
@@ -245,15 +244,7 @@ public class NoteDetailFragment extends DialogFragment {
                 }
             }
         });
-        stickButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                Note note = data.get(currIndex);
-                note.setReadFlag(-1);
-                EventBus.getDefault().post(new UpdateNoteEvent(note));
-                Toast.makeText(context, "置顶成功", Toast.LENGTH_SHORT).show();
-            }
-        });
+
     }
 
     private void showOperation() {
@@ -317,39 +308,39 @@ public class NoteDetailFragment extends DialogFragment {
     public void onEventMainThread(DetailNoteEvent detailNoteEvent) {
         data = detailNoteEvent.get();
         currIndex = detailNoteEvent.getIndex();
+        processDetailTools();
         reloadView();
-        processDetailTools(); //TODO: 不能立即刷新
     }
 
     private void processDetailTools() {
         // 置顶按钮
-        if (data.get(currIndex).getReadFlag() < 0){
-            ((ImageButton) stickButton).setImageDrawable(getResources().getDrawable(R.drawable.ic_thumb_up_grey_600_24dp,null));
-            stickButton.setOnClickListener(new View.OnClickListener() {
-                @Override
-                public void onClick(View v) {
-                    Note note = ObjectUtils.clone(data.get(currIndex));
-                    note.setLastModifyTime(new Date());
+        if (data.get(currIndex).getReadFlag() < 0) { // 置顶
+            ((ImageButton) stickButton).setImageDrawable(getResources().getDrawable(R.drawable.ic_thumb_up_blue_400_24dp, null));
+        } else { //其他
+            ((ImageButton) stickButton).setImageDrawable(getResources().getDrawable(R.drawable.ic_thumb_up_grey_600_24dp, null));
+
+        }
+        stickButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Note note = data.get(currIndex);
+                note.setLastModifyTime(new Date());
+                if (data.get(currIndex).getReadFlag() < 0) { // 置顶
                     note.setReadFlag(0);
                     EventBus.getDefault().post(new UpdateNoteEvent(note));
                     Toast.makeText(context, "取消置顶", Toast.LENGTH_SHORT).show();
                     EventBus.getDefault().post(new ModifyNoteDoneEvent(note));
-                }
-            });
-        }else {
-            ((ImageButton) stickButton).setImageDrawable(getResources().getDrawable(R.drawable.ic_thumb_up_blue_400_24dp,null));
-            stickButton.setOnClickListener(new View.OnClickListener() {
-                @Override
-                public void onClick(View v) {
-                    Note note = ObjectUtils.clone(data.get(currIndex));
-                    note.setLastModifyTime(new Date());
+                    ((ImageButton) stickButton).setImageDrawable(getResources().getDrawable(R.drawable.ic_thumb_up_grey_600_24dp, null));
+                } else { //其他
                     note.setReadFlag(-1);
                     EventBus.getDefault().post(new UpdateNoteEvent(note));
                     Toast.makeText(context, "置顶成功", Toast.LENGTH_SHORT).show();
                     EventBus.getDefault().post(new ModifyNoteDoneEvent(note));
+                    ((ImageButton) stickButton).setImageDrawable(getResources().getDrawable(R.drawable.ic_thumb_up_blue_400_24dp, null));
                 }
-            });
-        }
+            }
+        });
+
     }
 
     @Subscribe(threadMode = ThreadMode.MAIN)
@@ -450,6 +441,7 @@ public class NoteDetailFragment extends DialogFragment {
             viewSwitcher.setOutAnimation(context, R.anim.slide_out_left);
             initDetailData(new DetailViewHolder(viewSwitcher.getNextView()));
             viewSwitcher.showNext();
+            processDetailTools();
         }
     }
 
@@ -463,6 +455,7 @@ public class NoteDetailFragment extends DialogFragment {
             viewSwitcher.setOutAnimation(context, R.anim.slide_out_right);
             initDetailData(new DetailViewHolder(viewSwitcher.getNextView()));
             viewSwitcher.showPrevious();
+            processDetailTools();
         }
     }
 

@@ -1,4 +1,4 @@
-package com.beyond.note5.view.constant;
+package com.beyond.note5.constant;
 
 /**
  * @author: beyond

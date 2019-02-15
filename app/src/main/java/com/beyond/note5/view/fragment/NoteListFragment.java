@@ -13,6 +13,7 @@ import com.beyond.note5.bean.Note;
 import com.beyond.note5.event.AddNoteEvent;
 import com.beyond.note5.event.DeleteNoteEvent;
 import com.beyond.note5.event.HideFABEvent;
+import com.beyond.note5.event.RefreshNoteListEvent;
 import com.beyond.note5.event.ShowFABEvent;
 import com.beyond.note5.event.UpdateNoteEvent;
 import com.beyond.note5.module.DaggerNoteComponent;
@@ -128,6 +129,11 @@ public class NoteListFragment extends AbstractFragmentNoteView {
     @Subscribe(threadMode = ThreadMode.MAIN)
     public void onNoteReceived(DeleteNoteEvent event) {
         notePresenter.delete(event.get());
+    }
+
+    @Subscribe(threadMode = ThreadMode.MAIN)
+    public void onNoteReceived(RefreshNoteListEvent event) {
+        notePresenter.findAll();
     }
 
     @SuppressWarnings("unchecked")

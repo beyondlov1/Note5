@@ -17,7 +17,7 @@ public class Note extends Document {
     private Date createTime;
     private Date lastModifyTime;
     private Integer version;
-    private Integer readFlag;
+    private Integer readFlag = 0;
 
     @Generated(hash = 988450006)
     public Note(String id, String title, String content, String type, Date createTime, Date lastModifyTime,

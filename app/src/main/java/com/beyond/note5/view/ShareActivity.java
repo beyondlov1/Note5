@@ -7,6 +7,7 @@ import android.support.annotation.Nullable;
 import android.support.annotation.RequiresApi;
 
 import com.beyond.note5.bean.Note;
+import com.beyond.note5.event.RefreshNoteListEvent;
 import com.beyond.note5.module.DaggerNoteComponent;
 import com.beyond.note5.module.NoteComponent;
 import com.beyond.note5.module.NoteModule;
@@ -15,6 +16,7 @@ import com.beyond.note5.utils.IDUtil;
 import com.beyond.note5.view.adapter.AbstractActivityNoteView;
 
 import org.apache.commons.lang3.StringUtils;
+import org.greenrobot.eventbus.EventBus;
 
 import java.util.Date;
 
@@ -28,6 +30,8 @@ import javax.inject.Inject;
 public class ShareActivity extends AbstractActivityNoteView {
     public final static String SEND = "android.intent.action.SEND";
     public final static String PROCESS_TEXT = "android.intent.action.PROCESS_TEXT";
+
+    private final static String TAG = "ShareActivity";
 
     @Inject
     NotePresenter notePresenter;
@@ -48,6 +52,8 @@ public class ShareActivity extends AbstractActivityNoteView {
                 notePresenter.add(note);
             }
         }
+
+        EventBus.getDefault().post(new RefreshNoteListEvent(TAG));
 
         finish();
     }

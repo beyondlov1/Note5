@@ -55,20 +55,20 @@ public class DocumentRecyclerViewAdapter<T extends Document> extends RecyclerVie
     @SuppressWarnings("unchecked")
     @Override
     public void onBindViewHolder(RecyclerView.ViewHolder holder, int position) {
-        if (itemDataGenerator.getContentData() == null|| itemDataGenerator.getContentData().isEmpty()) {
+        if (itemDataGenerator.getContentData() == null || itemDataGenerator.getContentData().isEmpty()) {
             return;
         }
         MyViewHolder viewHolder = (MyViewHolder) holder;
         if (itemData.get(position) instanceof Header) {
             Header header = (Header) itemData.get(position);
-            initHeaderView(position,header,viewHolder);
-        } else if (itemData.get(position) instanceof Document){
+            initHeaderView(position, header, viewHolder);
+        } else if (itemData.get(position) instanceof Document) {
             T document = (T) itemData.get(position);
-            initContentView(position, document,  viewHolder);
+            initContentView(position, document, viewHolder);
         }
     }
 
-    private void initHeaderView( int position,Header header, MyViewHolder viewHolder) {
+    private void initHeaderView(int position, Header header, MyViewHolder viewHolder) {
         viewHolder.title.setVisibility(View.VISIBLE);
         viewHolder.title.setText(header.getContent());
         viewHolder.title.setTextColor(context.getResources().getColor(R.color.dark_yellow));
@@ -85,7 +85,7 @@ public class DocumentRecyclerViewAdapter<T extends Document> extends RecyclerVie
     }
 
     private void initContentView(int position, T document, MyViewHolder viewHolder) {
-        initContentDisplay(viewHolder, document, position );
+        initContentDisplay(viewHolder, document, position);
         initContentEvent(viewHolder, document);
     }
 
@@ -107,11 +107,12 @@ public class DocumentRecyclerViewAdapter<T extends Document> extends RecyclerVie
 
         processContentFullSpan(viewHolder, position);
     }
+
     private void processContentFullSpan(MyViewHolder viewHolder, int position) {
         StaggeredGridLayoutManager.LayoutParams layoutParams = (StaggeredGridLayoutManager.LayoutParams) viewHolder.itemView.getLayoutParams();
-        if (itemDataGenerator.getSingleContentPositions().contains(position)){
+        if (itemDataGenerator.getSingleContentPositions().contains(position)) {
             layoutParams.setFullSpan(true);
-        }else {
+        } else {
             layoutParams.setFullSpan(false);
         }
     }
@@ -135,49 +136,52 @@ public class DocumentRecyclerViewAdapter<T extends Document> extends RecyclerVie
     }
 
 
-    public void notifyFullRangeInserted(){
+    public void notifyFullRangeInserted() {
         int addedCount = refreshItemData();
-        notifyItemRangeInserted(0,addedCount);
+        notifyItemRangeInserted(0, addedCount);
     }
 
-    public void notifyInserted(T t){
+    public void notifyInserted(T t) {
         int addedCount = refreshItemData();
-        if (addedCount == 1){
+        if (addedCount == 1) {
             int insertedPosition = itemDataGenerator.getPosition(t);
             notifyItemInserted(insertedPosition);
-            notifyItemRangeChanged(insertedPosition+1,itemDataGenerator.getItemData().size()-insertedPosition-1);
+            notifyItemRangeChanged(insertedPosition + 1, itemDataGenerator.getItemData().size() - insertedPosition - 1);
         }
 
-        if (addedCount == 2){
+        if (addedCount >1) {
             int insertedPosition = itemDataGenerator.getPosition(t);
-            notifyItemRangeInserted(insertedPosition-1,2);
-            notifyItemRangeChanged(insertedPosition+1,itemDataGenerator.getItemData().size()-insertedPosition-2);
+            notifyItemRangeInserted(insertedPosition -addedCount + 1, addedCount);
+            notifyItemRangeChanged(insertedPosition + 1, itemDataGenerator.getItemData().size() - insertedPosition -addedCount);
         }
     }
 
     public void notifyFullRangeRemoved() {
         int addedCount = refreshItemData();
-        notifyItemRangeRemoved(0,-addedCount);
+        notifyItemRangeRemoved(0, -addedCount);
     }
 
     public void notifyRemoved(T t) {
         int removedPosition = itemDataGenerator.getPosition(t);
         int addedCount = refreshItemData();
-        if (addedCount == -1){
+        if (addedCount == -1) {
             notifyItemRemoved(removedPosition);
 //            notifyItemRangeChanged(removedPosition,itemDataGenerator.getItemData().size()-removedPosition-1);
             notifyFullRangeChanged(); // 更新全部， 避免跨列展示的item没有跨列效果： 比如删除后边的， 剩下前面那一个是单独的时候
 
         }
 
-        if (addedCount == -2){
-            notifyItemRangeRemoved(removedPosition-1,2);
-            notifyItemRangeChanged(removedPosition-1,itemDataGenerator.getItemData().size()-removedPosition-2);
+        if (addedCount < -1) {
+            notifyItemRangeRemoved(removedPosition + addedCount + 1, -addedCount);
+//            notifyItemRangeChanged(removedPosition-1,itemDataGenerator.getItemData().size()-removedPosition-2);
+//            notifyFullRangeChanged(); // 更新全部， 避免跨列展示的item没有跨列效果： 比如删除后边的， 剩下前面那一个是单独的时候
+            notifyDataSetChanged();
         }
+
     }
 
-    public void notifyFullRangeChanged(){
-        notifyItemRangeChanged(0,itemDataGenerator.getItemData().size());
+    public void notifyFullRangeChanged() {
+        notifyItemRangeChanged(0, itemDataGenerator.getItemData().size());
     }
 
     private int refreshItemData() {

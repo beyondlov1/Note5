@@ -30,6 +30,7 @@ public class NoteRecyclerViewAdapter extends DocumentRecyclerViewAdapter<Note> {
     @Override
     protected void onItemClick(View v, List<Note> data, Note note, int index) {
         super.onItemClick(v,data, note, index);
+
         if (!NoteDetailFragment.isShowing.get()){
             NoteDetailFragment noteDetailFragment = new NoteDetailFragment();
             noteDetailFragment.show(fragmentManager, "detail");

@@ -1,6 +1,7 @@
 package com.beyond.note5.view.adapter.component.header;
 
 import com.beyond.note5.bean.Document;
+import com.beyond.note5.constant.ReadFlagEnum;
 
 import java.util.List;
 import java.util.Objects;
@@ -18,7 +19,7 @@ public class ReadFlagItemDataGenerator<T extends Document> extends AbstractItemD
         for (T document : contentData) {
             Integer readFlag = document.getReadFlag();
             if (lastReadFlag == null || !lastReadFlag.equals(readFlag)) {
-                Header header = new Header(index + headerData.size(), String.valueOf(readFlag));
+                Header header = new Header(index + headerData.size(), ReadFlagEnum.getName(readFlag));
                 headerData.add(header);
                 itemData.add(header);
             }
