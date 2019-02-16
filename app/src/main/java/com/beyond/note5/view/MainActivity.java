@@ -36,6 +36,7 @@ import com.beyond.note5.view.fragment.NoteEditFragment;
 import com.beyond.note5.view.fragment.NoteListFragment;
 import com.beyond.note5.view.fragment.TodoEditFragment;
 import com.beyond.note5.view.fragment.TodoListFragment;
+import com.beyond.note5.view.listener.OnBackPressListener;
 import com.beyond.note5.view.listener.OnKeyboardChangeListener;
 
 import org.greenrobot.eventbus.EventBus;
@@ -58,6 +59,8 @@ public class MainActivity extends FragmentActivity {
     private FloatingActionButton addDocumentButton;
     private List<Fragment> fragments = new ArrayList<>();
 
+    private Fragment detailFragment;
+
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -69,11 +72,11 @@ public class MainActivity extends FragmentActivity {
 
         Point point = new Point();
         getWindowManager().getDefaultDisplay().getSize(point);
-        Fragment fragment = new NoteDetailSuperFragment();
+        detailFragment = new NoteDetailSuperFragment();
 
         FragmentManager fragmentManager = getSupportFragmentManager();
         FragmentTransaction fragmentTransaction = fragmentManager.beginTransaction();
-        fragmentTransaction.replace(R.id.container_fragment_note_detail, fragment);
+        fragmentTransaction.replace(R.id.container_fragment_note_detail, detailFragment);
         fragmentTransaction.commit();
 
         fragmentContainer = findViewById(R.id.container_fragment_note_detail);
@@ -201,6 +204,7 @@ public class MainActivity extends FragmentActivity {
         }
     }
 
+    private boolean isDetailShow = false;
     @Subscribe(threadMode = ThreadMode.MAIN)
     public void onRecieved(final ShowNoteDetailEvent event){
         fragmentContainer.setVisibility(View.VISIBLE);
@@ -240,7 +244,7 @@ public class MainActivity extends FragmentActivity {
             }
         });
         EventBus.getDefault().postSticky(new DetailNoteEvent(event.getData(),event.getIndex()));
-
+        isDetailShow = true;
     }
 
     @SuppressWarnings("unchecked")
@@ -289,6 +293,7 @@ public class MainActivity extends FragmentActivity {
                 fragmentContainer.setVisibility(View.GONE);
             }
         });
+        isDetailShow = false;
     }
 
     @Override
@@ -301,5 +306,18 @@ public class MainActivity extends FragmentActivity {
     protected void onStop() {
         EventBus.getDefault().unregister(this);
         super.onStop();
+    }
+
+    @Override
+    public void onBackPressed() {
+        if (isDetailShow){
+            OnBackPressListener onBackPressListener = (OnBackPressListener) detailFragment;
+            boolean consumed = onBackPressListener.onBackPressed();
+            if (!consumed){
+                super.onBackPressed();
+            }
+        }else {
+            super.onBackPressed();
+        }
     }
 }

@@ -11,6 +11,8 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.support.annotation.Nullable;
 import android.support.v4.app.DialogFragment;
+import android.support.v4.app.Fragment;
+import android.util.AttributeSet;
 import android.view.LayoutInflater;
 import android.view.MotionEvent;
 import android.view.View;
@@ -31,6 +33,7 @@ import com.beyond.note5.event.UpdateNoteEvent;
 import com.beyond.note5.utils.ViewUtil;
 import com.beyond.note5.utils.WebViewUtil;
 import com.beyond.note5.view.custom.ViewSwitcher;
+import com.beyond.note5.view.listener.OnBackPressListener;
 import com.beyond.note5.view.listener.OnSlideListener;
 
 import org.greenrobot.eventbus.EventBus;
@@ -43,7 +46,7 @@ import java.util.Timer;
 import java.util.TimerTask;
 import java.util.concurrent.atomic.AtomicBoolean;
 
-public class NoteDetailSuperFragment extends DialogFragment {
+public class NoteDetailSuperFragment extends DialogFragment implements OnBackPressListener {
     private static final String TAG = "NoteDetailSuperFragment";
     protected Context context;
     protected View root;
@@ -66,7 +69,15 @@ public class NoteDetailSuperFragment extends DialogFragment {
     public static AtomicBoolean isShowing = new AtomicBoolean(false);
 
     @Override
+    public void onAttach(Context context) {
+        super.onAttach(context);
+        System.out.println("onAttach");
+    }
+
+    @Override
     public void onCreate(Bundle savedInstanceState) {
+        System.out.println("onCreate");
+
         super.onCreate(savedInstanceState);
         this.context = getActivity();
     }
@@ -74,7 +85,9 @@ public class NoteDetailSuperFragment extends DialogFragment {
     @Nullable
     @Override
     public View onCreateView(LayoutInflater inflater, @Nullable ViewGroup container, Bundle savedInstanceState) {
-        if (root == null){
+        System.out.println("onCreateView");
+
+        if (root == null) {
             root = LayoutInflater.from(context).inflate(R.layout.fragment_note_detail, null);
         }
 //        root = inflater.inflate(R.layout.fragment_note_detail, container, false);
@@ -83,6 +96,12 @@ public class NoteDetailSuperFragment extends DialogFragment {
         initView(root);
         initEvent();
         return root;
+    }
+
+    @Override
+    public void onViewCreated(View view, @Nullable Bundle savedInstanceState) {
+        super.onViewCreated(view, savedInstanceState);
+        System.out.println("onViewCreated");
     }
 
     private void initCommonView(View view) {
@@ -96,7 +115,7 @@ public class NoteDetailSuperFragment extends DialogFragment {
         stickButton = view.findViewById(R.id.fragment_note_detail_operation_stick);
     }
 
-    protected void initView(View view){
+    protected void initView(View view) {
         modifyButton = view.findViewById(R.id.fragment_note_detail_modify);
         modifyButton.setVisibility(View.GONE);
         hideButton = view.findViewById(R.id.fragment_note_detail_hide);
@@ -107,6 +126,7 @@ public class NoteDetailSuperFragment extends DialogFragment {
 
     private static final boolean IS_OPERATION_AUTO_HIDE = false;
     private Timer operationItemsTimer;
+
     private void initCommonEvent(View view) {
         //防止事件向下传递
         view.setOnTouchListener(new View.OnTouchListener() {
@@ -237,7 +257,7 @@ public class NoteDetailSuperFragment extends DialogFragment {
 
     }
 
-    protected void initEvent(){
+    protected void initEvent() {
         modifyButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -252,14 +272,14 @@ public class NoteDetailSuperFragment extends DialogFragment {
         });
     }
 
-    protected void show(){
+    protected void show() {
 //        EventBus.getDefault().post( new ShowNoteDetailEvent(this));
     }
 
-    protected void hide(){
+    protected void hide() {
         viewSwitcher.removeAllViews();
 
-        EventBus.getDefault().post( new HideNoteDetailEvent(currIndex));
+        EventBus.getDefault().post(new HideNoteDetailEvent(currIndex));
     }
 
     private void showOperation() {
@@ -289,19 +309,37 @@ public class NoteDetailSuperFragment extends DialogFragment {
     @Override
     public void onStart() {
         super.onStart();
+        System.out.println("onStart");
+
         EventBus.getDefault().register(this);
         isShowing.set(true);
         initDialogButtonEvent();
     }
 
-    protected void initDialogButtonEvent(){
+    protected void initDialogButtonEvent() {
+    }
+
+    @Override
+    public void onResume() {
+        super.onResume();
+        System.out.println("onResume");
+
+
     }
 
     @Override
     public void onStop() {
+        System.out.println("onStop");
+
         EventBus.getDefault().unregister(this);
         isShowing.set(false);
         super.onStop();
+    }
+
+    @Override
+    public void onDetach() {
+        super.onDetach();
+        System.out.println("onDetach");
     }
 
     @Subscribe(threadMode = ThreadMode.MAIN, sticky = true)
@@ -374,7 +412,7 @@ public class NoteDetailSuperFragment extends DialogFragment {
         });
     }
 
-    protected void beforeReloadView(){
+    protected void beforeReloadView() {
     }
 
     private void initDetailContentConfig(NoteDetailSuperFragment.DetailViewHolder detailViewHolder) {
@@ -417,7 +455,7 @@ public class NoteDetailSuperFragment extends DialogFragment {
 
             @Override
             protected int getSlideYSensitivity() {
-                return (int) (ViewUtil.getScreenSize().y*0.33);
+                return (int) (ViewUtil.getScreenSize().y * 0.33);
             }
         });
     }
@@ -465,6 +503,32 @@ public class NoteDetailSuperFragment extends DialogFragment {
         NoteModifyFragment noteModifyFragment = new NoteModifyFragment();
         noteModifyFragment.show(getActivity().getSupportFragmentManager(), "modifyDialog");
         EventBus.getDefault().postSticky(new FillNoteModifyEvent(data.get(currIndex)));
+    }
+
+
+    @Override
+    public void onAttachFragment(Fragment childFragment) {
+        super.onAttachFragment(childFragment);
+        System.out.println("onAttachFragment");
+    }
+
+    @Override
+    public void onHiddenChanged(boolean hidden) {
+        super.onHiddenChanged(hidden);
+        System.out.println("onHiddenChanged");
+    }
+
+
+    @Override
+    public void onInflate(Context context, AttributeSet attrs, Bundle savedInstanceState) {
+        super.onInflate(context, attrs, savedInstanceState);
+        System.out.println("onInflate");
+    }
+
+    @Override
+    public boolean onBackPressed() {
+        hide();
+        return true;
     }
 
     class DetailViewHolder {
