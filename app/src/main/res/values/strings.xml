@@ -13,5 +13,6 @@
     <string name="note_read_flag_stick">置顶</string>
     <string name="note_read_flag_normal">其他</string>
     <string name="note_read_flag_done">已读</string>
+    <string name="page_count">page/count</string>
     <integer name="config_shortAnimTime">100</integer>
 </resources>

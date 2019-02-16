@@ -54,7 +54,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
  * @author: beyond
  * @date: 2019/2/2
  */
-
+@Deprecated
 public class NoteDetailFragment extends DialogFragment {
 
     private Context context;

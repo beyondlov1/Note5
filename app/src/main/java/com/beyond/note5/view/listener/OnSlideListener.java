@@ -34,9 +34,9 @@ public abstract class OnSlideListener implements View.OnTouchListener {
                 }
 
                 float endY = event.getY();
-                if (endY-startY>100){
+                if (endY-startY>getSlideYSensitivity()){
                     onSlideDown();
-                }else if (endY-startY<-100){
+                }else if (endY-startY<-getSlideYSensitivity()){
                     onSlideUp();
                 }
 
@@ -54,6 +54,10 @@ public abstract class OnSlideListener implements View.OnTouchListener {
     protected abstract void onSlideDown();
 
     private Context context;
+
+    private OnSlideListener(){
+
+    }
 
     public OnSlideListener(Context context){
         this.context = context;
@@ -74,4 +78,7 @@ public abstract class OnSlideListener implements View.OnTouchListener {
 
     protected abstract void onDoubleClick(MotionEvent e);
 
+    protected int getSlideYSensitivity(){
+        return 300;
+    }
 }

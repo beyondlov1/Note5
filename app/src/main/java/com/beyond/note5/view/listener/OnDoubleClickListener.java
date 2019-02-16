@@ -38,5 +38,5 @@ public abstract class OnDoubleClickListener implements View.OnTouchListener {
          return false;
     }
 
-    abstract void onDoubleClick(MotionEvent e);
+    protected abstract void onDoubleClick(MotionEvent e);
 }

@@ -2,11 +2,11 @@ package com.beyond.note5.view.listener;
 
 import android.app.Activity;
 import android.content.Context;
-import android.graphics.Point;
 import android.graphics.Rect;
 import android.view.ViewTreeObserver;
-import android.view.WindowManager;
 import android.view.inputmethod.InputMethodManager;
+
+import com.beyond.note5.utils.ViewUtil;
 
 /**
  * @author: beyond
@@ -26,8 +26,8 @@ public class OnKeyboardChangeListener implements ViewTreeObserver.OnGlobalLayout
         Rect rect = new Rect();
         // 获取当前页面窗口的显示范围
         context.getWindow().getDecorView().getWindowVisibleDisplayFrame(rect);
-        int screenWidth = getScreenSize().x;
-        int screenHeight = getScreenSize().y;
+        int screenWidth = ViewUtil.getScreenSize().x;
+        int screenHeight = ViewUtil.getScreenSize().y;
         int keyboardHeight = screenHeight - rect.bottom; // 输入法的高度
         boolean preShowing = isKeyBoardActive();
         if (Math.abs(keyboardHeight) > screenHeight / 5) {
@@ -46,15 +46,6 @@ public class OnKeyboardChangeListener implements ViewTreeObserver.OnGlobalLayout
 
     protected void onKeyBoardHide() {
 
-    }
-
-    private Point getScreenSize() {
-        Point size = new Point();
-        WindowManager systemService = (WindowManager) context.getSystemService(Context.WINDOW_SERVICE);
-        if (systemService!=null){
-            systemService.getDefaultDisplay().getSize(size);
-        }
-        return size;
     }
 
     private boolean isKeyBoardActive(){

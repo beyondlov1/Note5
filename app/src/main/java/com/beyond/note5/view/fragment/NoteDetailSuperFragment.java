@@ -28,6 +28,7 @@ import com.beyond.note5.event.FillNoteModifyEvent;
 import com.beyond.note5.event.HideNoteDetailEvent;
 import com.beyond.note5.event.ModifyNoteDoneEvent;
 import com.beyond.note5.event.UpdateNoteEvent;
+import com.beyond.note5.utils.ViewUtil;
 import com.beyond.note5.utils.WebViewUtil;
 import com.beyond.note5.view.custom.ViewSwitcher;
 import com.beyond.note5.view.listener.OnSlideListener;
@@ -78,7 +79,7 @@ public class NoteDetailSuperFragment extends DialogFragment {
         }
 //        root = inflater.inflate(R.layout.fragment_note_detail, container, false);
         initCommonView(root);
-        initCommonEvent();
+        initCommonEvent(root);
         initView(root);
         initEvent();
         return root;
@@ -97,12 +98,24 @@ public class NoteDetailSuperFragment extends DialogFragment {
 
     protected void initView(View view){
         modifyButton = view.findViewById(R.id.fragment_note_detail_modify);
+        modifyButton.setVisibility(View.GONE);
         hideButton = view.findViewById(R.id.fragment_note_detail_hide);
+        hideButton.setVisibility(View.GONE);
+        pageCountTextView.getLayoutParams().height = 100;
+        pageCountTextView.setLayoutParams(pageCountTextView.getLayoutParams());
     }
 
     private static final boolean IS_OPERATION_AUTO_HIDE = false;
     private Timer operationItemsTimer;
-    private void initCommonEvent() {
+    private void initCommonEvent(View view) {
+        //防止事件向下传递
+        view.setOnTouchListener(new View.OnTouchListener() {
+            @SuppressLint("ClickableViewAccessibility")
+            @Override
+            public boolean onTouch(View v, MotionEvent event) {
+                return true;
+            }
+        });
         //Operation
         if (IS_OPERATION_AUTO_HIDE) {
             final Handler handler = new Handler();
@@ -354,6 +367,7 @@ public class NoteDetailSuperFragment extends DialogFragment {
                 initDetailContentConfig(detailViewHolder);
                 initDetailContentData(detailViewHolder);
                 initCommonDetailContentEvent(detailViewHolder);
+                initDetailContentEvent(detailViewHolder);
 
                 return view;
             }
@@ -389,6 +403,7 @@ public class NoteDetailSuperFragment extends DialogFragment {
 
             @Override
             protected void onSlideUp() {
+                hide();
             }
 
             @Override
@@ -397,9 +412,26 @@ public class NoteDetailSuperFragment extends DialogFragment {
 
             @Override
             protected void onDoubleClick(MotionEvent e) {
+                showModifyView();
+            }
+
+            @Override
+            protected int getSlideYSensitivity() {
+                return (int) (ViewUtil.getScreenSize().y*0.33);
             }
         });
     }
+
+    @SuppressLint("ClickableViewAccessibility")
+    protected void initDetailContentEvent(DetailViewHolder detailViewHolder) {
+        pageCountTextView.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                hide();
+            }
+        });
+    }
+
 
     private void next() {
         if (currIndex == data.size() - 1) {

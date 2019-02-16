@@ -253,7 +253,6 @@ public class MainActivity extends FragmentActivity {
         NoteListFragment fragment = (NoteListFragment) fragments.get(0);
         ItemDataGenerator itemDataGenerator = fragment.noteRecyclerViewAdapter.getItemDataGenerator();
         Object note = itemDataGenerator.getContentData().get(currIndex);
-        itemDataGenerator.refresh();
         int position = itemDataGenerator.getPosition(note);
         fragment.noteRecyclerView.scrollToPosition(position);
         View view = fragment.noteRecyclerView.getLayoutManager().findViewByPosition(position);
