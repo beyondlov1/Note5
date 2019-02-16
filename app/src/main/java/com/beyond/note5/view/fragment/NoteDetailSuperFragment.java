@@ -4,26 +4,17 @@ import android.animation.Animator;
 import android.animation.AnimatorInflater;
 import android.animation.AnimatorListenerAdapter;
 import android.annotation.SuppressLint;
-import android.app.Dialog;
 import android.content.Context;
 import android.content.Intent;
-import android.graphics.Color;
-import android.graphics.drawable.ColorDrawable;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.Handler;
-import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.v4.app.DialogFragment;
-import android.support.v7.app.AlertDialog;
-import android.util.DisplayMetrics;
-import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
-import android.view.Window;
-import android.view.WindowManager;
 import android.webkit.WebView;
 import android.widget.ImageButton;
 import android.widget.TextView;
@@ -34,6 +25,7 @@ import com.beyond.note5.bean.Note;
 import com.beyond.note5.event.DeleteNoteEvent;
 import com.beyond.note5.event.DetailNoteEvent;
 import com.beyond.note5.event.FillNoteModifyEvent;
+import com.beyond.note5.event.HideNoteDetailEvent;
 import com.beyond.note5.event.ModifyNoteDoneEvent;
 import com.beyond.note5.event.UpdateNoteEvent;
 import com.beyond.note5.utils.WebViewUtil;
@@ -50,28 +42,25 @@ import java.util.Timer;
 import java.util.TimerTask;
 import java.util.concurrent.atomic.AtomicBoolean;
 
-/**
- * @author: beyond
- * @date: 2019/2/2
- */
+public class NoteDetailSuperFragment extends DialogFragment {
+    private static final String TAG = "NoteDetailSuperFragment";
+    protected Context context;
+    protected View root;
+    protected ViewSwitcher viewSwitcher;
+    protected TextView pageCountTextView;
+    protected DetailViewHolder detailViewHolder;
 
-public class NoteDetailFragment extends DialogFragment {
+    protected List<Note> data;
+    protected int currIndex;
 
-    private Context context;
-    private View root;
-    private ViewSwitcher viewSwitcher;
-    private TextView pageCountTextView;
-    private DetailViewHolder detailViewHolder;
-
-    private List<Note> data;
-    private int currIndex;
-
-    private View operationContainer;
-    private View operationItemsContainer;
-    private View deleteButton;
-    private View searchButton;
-    private View browserSearchButton;
-    private View stickButton;
+    protected View operationContainer;
+    protected View operationItemsContainer;
+    protected View deleteButton;
+    protected View searchButton;
+    protected View browserSearchButton;
+    protected View stickButton;
+    private View modifyButton;
+    private View hideButton;
 
     public static AtomicBoolean isShowing = new AtomicBoolean(false);
 
@@ -81,31 +70,21 @@ public class NoteDetailFragment extends DialogFragment {
         this.context = getActivity();
     }
 
-    @SuppressLint("InflateParams")
-    @NonNull
-    @Override
-    public Dialog onCreateDialog(Bundle savedInstanceState) {
-
-        final AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());
-        root = LayoutInflater.from(context).inflate(R.layout.fragment_note_detail, null);
-        builder.setView(root)
-                .setPositiveButton("OK", null)
-                .setNegativeButton("Cancel", null)
-                .setNeutralButton("Modify", null);
-        return builder.create();
-    }
-
     @Nullable
     @Override
     public View onCreateView(LayoutInflater inflater, @Nullable ViewGroup container, Bundle savedInstanceState) {
+        if (root == null){
+            root = LayoutInflater.from(context).inflate(R.layout.fragment_note_detail, null);
+        }
 //        root = inflater.inflate(R.layout.fragment_note_detail, container, false);
+        initCommonView(root);
+        initCommonEvent();
         initView(root);
-        initDialogAnimation();
         initEvent();
         return root;
     }
 
-    private void initView(View view) {
+    private void initCommonView(View view) {
         viewSwitcher = view.findViewById(R.id.fragment_note_detail_view_switcher);
         pageCountTextView = view.findViewById(R.id.fragment_note_detail_page_count);
         operationContainer = view.findViewById(R.id.fragment_note_detail_operation_container);
@@ -116,16 +95,14 @@ public class NoteDetailFragment extends DialogFragment {
         stickButton = view.findViewById(R.id.fragment_note_detail_operation_stick);
     }
 
-    @SuppressWarnings("ConstantConditions")
-    private void initDialogAnimation() {
-        getDialog().requestWindowFeature(Window.FEATURE_NO_TITLE);
-        getDialog().getWindow().setWindowAnimations(R.style.detail_dialog_animation);
+    protected void initView(View view){
+        modifyButton = view.findViewById(R.id.fragment_note_detail_modify);
+        hideButton = view.findViewById(R.id.fragment_note_detail_hide);
     }
 
     private static final boolean IS_OPERATION_AUTO_HIDE = false;
     private Timer operationItemsTimer;
-
-    private void initEvent() {
+    private void initCommonEvent() {
         //Operation
         if (IS_OPERATION_AUTO_HIDE) {
             final Handler handler = new Handler();
@@ -150,7 +127,7 @@ public class NoteDetailFragment extends DialogFragment {
                     Note currentNote = data.get(currIndex);
                     EventBus.getDefault().post(new DeleteNoteEvent(currentNote));
                     if (data.isEmpty()) {
-                        getDialog().dismiss();
+                        hide();
                         return;
                     }
                     if (currIndex == data.size()) {
@@ -208,7 +185,7 @@ public class NoteDetailFragment extends DialogFragment {
                     Note currentNote = data.get(currIndex);
                     EventBus.getDefault().post(new DeleteNoteEvent(currentNote));
                     if (data.isEmpty()) {
-                        getDialog().dismiss();
+                        hide();
                         return;
                     }
                     if (currIndex == data.size()) {
@@ -224,8 +201,8 @@ public class NoteDetailFragment extends DialogFragment {
             public void onClick(View v) {
                 String url = WebViewUtil.getUrl(data.get(currIndex));
                 if (url != null) {
-                    WebViewUtil.addWebViewProgressBar(new DetailViewHolder(viewSwitcher.getCurrentView()).displayWebView);
-                    new DetailViewHolder(viewSwitcher.getCurrentView()).displayWebView.loadUrl(url);
+                    WebViewUtil.addWebViewProgressBar(new NoteDetailSuperFragment.DetailViewHolder(viewSwitcher.getCurrentView()).displayWebView);
+                    new NoteDetailSuperFragment.DetailViewHolder(viewSwitcher.getCurrentView()).displayWebView.loadUrl(url);
                 } else {
                     Toast.makeText(context, "搜索文字不能超过32个字", Toast.LENGTH_SHORT).show();
                 }
@@ -245,6 +222,31 @@ public class NoteDetailFragment extends DialogFragment {
             }
         });
 
+    }
+
+    protected void initEvent(){
+        modifyButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                showModifyView();
+            }
+        });
+        hideButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                hide();
+            }
+        });
+    }
+
+    protected void show(){
+//        EventBus.getDefault().post( new ShowNoteDetailEvent(this));
+    }
+
+    protected void hide(){
+        viewSwitcher.removeAllViews();
+
+        EventBus.getDefault().post( new HideNoteDetailEvent(currIndex));
     }
 
     private void showOperation() {
@@ -274,50 +276,12 @@ public class NoteDetailFragment extends DialogFragment {
     @Override
     public void onStart() {
         super.onStart();
-        initDialogSize();
         EventBus.getDefault().register(this);
         isShowing.set(true);
-        initDialogButton(); // 初始化dialogButton， 放在别的地方报空指针
+        initDialogButtonEvent();
     }
 
-    protected void initDialogButton(){
-        //DialogButton
-        ((AlertDialog) getDialog()).getButton(-1).setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                dismiss();
-            }
-        });
-        ((AlertDialog) getDialog()).getButton(-2).setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                dismiss();
-            }
-        });
-        ((AlertDialog) getDialog()).getButton(-3).setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                showModifyView();
-            }
-        });
-    }
-
-    private void initDialogSize() {
-        //要放到这里才有用, 可能是onCreateView的时候没有加载全
-        //初始化默认弹出窗口大小设置
-        Window win = getDialog().getWindow();
-//        // 一定要设置Background，如果不设置，window属性设置无效
-        assert win != null;
-        win.setBackgroundDrawable(new ColorDrawable(Color.WHITE));
-        DisplayMetrics dm = new DisplayMetrics();
-        getActivity().getWindowManager().getDefaultDisplay().getMetrics(dm);
-        WindowManager.LayoutParams params = win.getAttributes();
-        params.gravity = Gravity.CENTER;
-        params.width = (int) (dm.widthPixels * 0.9);
-        params.height = (int) (dm.heightPixels * 0.87);
-        win.setAttributes(params);
-        root.setMinimumHeight(dm.heightPixels);
-        root.setMinimumHeight(dm.heightPixels);
+    protected void initDialogButtonEvent(){
     }
 
     @Override
@@ -329,6 +293,7 @@ public class NoteDetailFragment extends DialogFragment {
 
     @Subscribe(threadMode = ThreadMode.MAIN, sticky = true)
     public void onEventMainThread(DetailNoteEvent detailNoteEvent) {
+        show();
         data = detailNoteEvent.get();
         currIndex = detailNoteEvent.getIndex();
         processDetailTools();
@@ -371,36 +336,38 @@ public class NoteDetailFragment extends DialogFragment {
         Note note = modifyNoteDoneEvent.get();
         int index = data.indexOf(note);
         currIndex = index == -1 ? 0 : index;
-        viewSwitcher.removeAllViews();
         reloadView();
     }
 
     @SuppressWarnings("ConstantConditions")
     private void reloadView() {
-        // 默认情况下，dialog布局中设置EditText，在点击EditText后输入法不能弹出来, 将此标志位清除，则可以显示输入法
-        this.getDialog().getWindow().clearFlags(WindowManager.LayoutParams.FLAG_ALT_FOCUSABLE_IM);
+        beforeReloadView();
+        viewSwitcher.removeAllViews();
         viewSwitcher.setFactory(new ViewSwitcher.ViewFactory() {
             @Override
             public View makeView() {
                 @SuppressLint("InflateParams") View view = LayoutInflater.from(context).inflate(R.layout.fragment_note_detail_content, null);
                 view.setMinimumHeight(2000);
 
-                detailViewHolder = new DetailViewHolder(view);
+                detailViewHolder = new NoteDetailSuperFragment.DetailViewHolder(view);
 
-                initDetailConfig(detailViewHolder);
-                initDetailData(detailViewHolder);
-                initDetailEvent(detailViewHolder);
+                initDetailContentConfig(detailViewHolder);
+                initDetailContentData(detailViewHolder);
+                initCommonDetailContentEvent(detailViewHolder);
 
                 return view;
             }
         });
     }
 
-    private void initDetailConfig(DetailViewHolder detailViewHolder) {
+    protected void beforeReloadView(){
+    }
+
+    private void initDetailContentConfig(NoteDetailSuperFragment.DetailViewHolder detailViewHolder) {
         WebViewUtil.configWebView(detailViewHolder.displayWebView);
     }
 
-    private void initDetailData(DetailViewHolder detailViewHolder) {
+    private void initDetailContentData(NoteDetailSuperFragment.DetailViewHolder detailViewHolder) {
         this.detailViewHolder = detailViewHolder;
         WebViewUtil.loadWebContent(detailViewHolder.displayWebView, data.get(currIndex));
         String pageCount = String.format("%s/%s", currIndex + 1, data.size());
@@ -408,7 +375,7 @@ public class NoteDetailFragment extends DialogFragment {
     }
 
     @SuppressLint("ClickableViewAccessibility")
-    private void initDetailEvent(final DetailViewHolder detailViewHolder) {
+    private void initCommonDetailContentEvent(final NoteDetailSuperFragment.DetailViewHolder detailViewHolder) {
         detailViewHolder.displayWebView.setOnTouchListener(new OnSlideListener(context) {
             @Override
             protected void onSlideLeft() {
@@ -442,7 +409,7 @@ public class NoteDetailFragment extends DialogFragment {
             currIndex++;
             viewSwitcher.setInAnimation(context, R.anim.slide_in_right);
             viewSwitcher.setOutAnimation(context, R.anim.slide_out_left);
-            initDetailData(new DetailViewHolder(viewSwitcher.getNextView()));
+            initDetailContentData(new NoteDetailSuperFragment.DetailViewHolder(viewSwitcher.getNextView()));
             viewSwitcher.showNext();
             processDetailTools();
         }
@@ -456,13 +423,13 @@ public class NoteDetailFragment extends DialogFragment {
             currIndex--;
             viewSwitcher.setInAnimation(context, R.anim.slide_in_left);
             viewSwitcher.setOutAnimation(context, R.anim.slide_out_right);
-            initDetailData(new DetailViewHolder(viewSwitcher.getNextView()));
+            initDetailContentData(new NoteDetailSuperFragment.DetailViewHolder(viewSwitcher.getNextView()));
             viewSwitcher.showPrevious();
             processDetailTools();
         }
     }
 
-    private void showModifyView() {
+    protected void showModifyView() {
         NoteModifyFragment noteModifyFragment = new NoteModifyFragment();
         noteModifyFragment.show(getActivity().getSupportFragmentManager(), "modifyDialog");
         EventBus.getDefault().postSticky(new FillNoteModifyEvent(data.get(currIndex)));

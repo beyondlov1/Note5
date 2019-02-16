@@ -4,6 +4,8 @@ import android.animation.Animator;
 import android.animation.AnimatorInflater;
 import android.animation.AnimatorListenerAdapter;
 import android.animation.AnimatorSet;
+import android.animation.ValueAnimator;
+import android.graphics.Point;
 import android.os.Build;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
@@ -11,16 +13,25 @@ import android.support.design.widget.FloatingActionButton;
 import android.support.v4.app.DialogFragment;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentActivity;
+import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentPagerAdapter;
+import android.support.v4.app.FragmentTransaction;
 import android.support.v4.view.PagerTabStrip;
 import android.support.v4.view.ViewPager;
 import android.view.View;
+import android.view.animation.DecelerateInterpolator;
 
 import com.beyond.note5.R;
+import com.beyond.note5.event.DetailNoteEvent;
 import com.beyond.note5.event.HideFABEvent;
 import com.beyond.note5.event.HideKeyBoardEvent;
+import com.beyond.note5.event.HideNoteDetailEvent;
 import com.beyond.note5.event.ShowFABEvent;
 import com.beyond.note5.event.ShowKeyBoardEvent;
+import com.beyond.note5.event.ShowNoteDetailEvent;
+import com.beyond.note5.utils.ViewUtil;
+import com.beyond.note5.view.adapter.component.header.ItemDataGenerator;
+import com.beyond.note5.view.fragment.NoteDetailSuperFragment;
 import com.beyond.note5.view.fragment.NoteEditFragment;
 import com.beyond.note5.view.fragment.NoteListFragment;
 import com.beyond.note5.view.fragment.TodoEditFragment;
@@ -43,6 +54,7 @@ public class MainActivity extends FragmentActivity {
 
     public View mainContainer;
     private ViewPager mainViewPager;
+    private View fragmentContainer;
     private FloatingActionButton addDocumentButton;
     private List<Fragment> fragments = new ArrayList<>();
 
@@ -55,6 +67,17 @@ public class MainActivity extends FragmentActivity {
         initViewPagerData();
         initEvent();
 
+        Point point = new Point();
+        getWindowManager().getDefaultDisplay().getSize(point);
+        Fragment fragment = new NoteDetailSuperFragment();
+
+        FragmentManager fragmentManager = getSupportFragmentManager();
+        FragmentTransaction fragmentTransaction = fragmentManager.beginTransaction();
+        fragmentTransaction.replace(R.id.container_fragment_note_detail, fragment);
+        fragmentTransaction.commit();
+
+        fragmentContainer = findViewById(R.id.container_fragment_note_detail);
+        fragmentContainer.setVisibility(View.GONE);
     }
 
     private void initView() {
@@ -141,7 +164,6 @@ public class MainActivity extends FragmentActivity {
     private AtomicBoolean isFabShown = new AtomicBoolean(true);
     private AnimatorSet showAnimatorSet;
     private AnimatorSet hideAnimatorSet;
-
     @Override
     public void onWindowFocusChanged(boolean hasFocus) {
         super.onWindowFocusChanged(hasFocus);
@@ -177,6 +199,97 @@ public class MainActivity extends FragmentActivity {
                 }
             });
         }
+    }
+
+    @Subscribe(threadMode = ThreadMode.MAIN)
+    public void onRecieved(final ShowNoteDetailEvent event){
+        fragmentContainer.setVisibility(View.VISIBLE);
+        EventBus.getDefault().post(new HideFABEvent(null));
+
+        View view = event.get();
+
+        //获取view 位置、大小信息
+        final int clickItemWidth = ViewUtil.getWidth(view);
+        final int clickItemHeight =  ViewUtil.getHeight(view);
+        final float clickItemX = ViewUtil.getXInScreenWithoutNotification(view);
+        final float clickItemY = ViewUtil.getYInScreenWithoutNotification(view);
+
+        //设置初始位置
+        final int containerWidth = ViewUtil.getWidth(mainContainer);
+        final int containerHeight = ViewUtil.getHeight(mainContainer);
+        fragmentContainer.getLayoutParams().width = clickItemWidth;
+        fragmentContainer.getLayoutParams().height = clickItemHeight;
+        fragmentContainer.setX(clickItemX);
+        fragmentContainer.setY(clickItemY);
+
+        //出现动画
+        AnimatorSet animatorSet = new AnimatorSet();
+        ValueAnimator valueAnimator = ValueAnimator.ofFloat(0,1f).setDuration(300);
+        animatorSet.setInterpolator(new DecelerateInterpolator());
+        animatorSet.playTogether(valueAnimator);
+        animatorSet.start();
+        valueAnimator.addUpdateListener(new ValueAnimator.AnimatorUpdateListener() {
+            @Override
+            public void onAnimationUpdate(ValueAnimator animation) {
+                float animatedValue = (float) animation.getAnimatedValue();
+                fragmentContainer.setX(clickItemX -animatedValue* clickItemX);
+                fragmentContainer.setY(clickItemY -animatedValue* clickItemY);
+                fragmentContainer.getLayoutParams().width = (int) (clickItemWidth + animatedValue*(containerWidth - clickItemWidth));
+                fragmentContainer.getLayoutParams().height = (int) (clickItemHeight + animatedValue*(containerHeight - clickItemHeight));
+                fragmentContainer.setLayoutParams(fragmentContainer.getLayoutParams());
+            }
+        });
+        EventBus.getDefault().postSticky(new DetailNoteEvent(event.getData(),event.getIndex()));
+
+    }
+
+    @SuppressWarnings("unchecked")
+    @Subscribe(threadMode = ThreadMode.MAIN)
+    public void onRecieved(HideNoteDetailEvent event){
+        EventBus.getDefault().post(new ShowFABEvent(null));
+
+        //获取viewSwitcher划到的位置，获取动画要返回的view
+        Integer currIndex = event.get();
+        NoteListFragment fragment = (NoteListFragment) fragments.get(0);
+        ItemDataGenerator itemDataGenerator = fragment.noteRecyclerViewAdapter.getItemDataGenerator();
+        Object note = itemDataGenerator.getContentData().get(currIndex);
+        itemDataGenerator.refresh();
+        int position = itemDataGenerator.getPosition(note);
+        fragment.noteRecyclerView.scrollToPosition(position);
+        View view = fragment.noteRecyclerView.getLayoutManager().findViewByPosition(position);
+
+        //获取view 位置、大小信息
+        final int clickItemWidth = ViewUtil.getWidth(view);
+        final int clickItemHeight =  ViewUtil.getHeight(view);
+        final float clickItemX = ViewUtil.getXInScreenWithoutNotification(view);
+        final float clickItemY = ViewUtil.getYInScreenWithoutNotification(view);
+        final int containerWidth = ViewUtil.getWidth(mainContainer);
+        final int containerHeight = ViewUtil.getHeight(mainContainer);
+
+        //出现动画
+        AnimatorSet animatorSet = new AnimatorSet();
+        ValueAnimator valueAnimator = ValueAnimator.ofFloat(1f,0).setDuration(300);
+        animatorSet.playTogether(valueAnimator);
+        animatorSet.start();
+        valueAnimator.addUpdateListener(new ValueAnimator.AnimatorUpdateListener() {
+            @Override
+            public void onAnimationUpdate(ValueAnimator animation) {
+                float animatedValue = (float) animation.getAnimatedValue();
+                fragmentContainer.setX(clickItemX -animatedValue* clickItemX);
+                fragmentContainer.setY(clickItemY -animatedValue* clickItemY);
+                fragmentContainer.getLayoutParams().width = (int) (clickItemWidth + animatedValue*(containerWidth - clickItemWidth));
+                fragmentContainer.getLayoutParams().height = (int) (clickItemHeight + animatedValue*(containerHeight - clickItemHeight));
+                fragmentContainer.setLayoutParams(fragmentContainer.getLayoutParams());
+            }
+        });
+
+        animatorSet.addListener(new AnimatorListenerAdapter() {
+            @Override
+            public void onAnimationEnd(Animator animation) {
+                super.onAnimationEnd(animation);
+                fragmentContainer.setVisibility(View.GONE);
+            }
+        });
     }
 
     @Override

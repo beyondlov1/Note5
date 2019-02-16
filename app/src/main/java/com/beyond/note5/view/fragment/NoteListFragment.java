@@ -44,9 +44,9 @@ public class NoteListFragment extends AbstractFragmentNoteView {
 
     private List<Note> data = new ArrayList<>();
 
-    private RecyclerView noteRecyclerView;
+    public RecyclerView noteRecyclerView;
 
-    private NoteRecyclerViewAdapter noteRecyclerViewAdapter;
+    public NoteRecyclerViewAdapter noteRecyclerViewAdapter;
 
     @Inject
     NotePresenter notePresenter;

@@ -5,9 +5,8 @@ import android.support.v4.app.FragmentManager;
 import android.view.View;
 
 import com.beyond.note5.bean.Note;
-import com.beyond.note5.event.DetailNoteEvent;
+import com.beyond.note5.event.ShowNoteDetailEvent;
 import com.beyond.note5.view.adapter.component.header.ItemDataGenerator;
-import com.beyond.note5.view.fragment.NoteDetailFragment;
 
 import org.greenrobot.eventbus.EventBus;
 
@@ -31,11 +30,16 @@ public class NoteRecyclerViewAdapter extends DocumentRecyclerViewAdapter<Note> {
     protected void onItemClick(View v, List<Note> data, Note note, int index) {
         super.onItemClick(v,data, note, index);
 
-        if (!NoteDetailFragment.isShowing.get()){
-            NoteDetailFragment noteDetailFragment = new NoteDetailFragment();
-            noteDetailFragment.show(fragmentManager, "detail");
-            EventBus.getDefault().postSticky(new DetailNoteEvent(data,index));
-        }
+//        if (!NoteDetailFragment.isShowing.get()){
+//            NoteDetailFragment noteDetailFragment = new NoteDetailFragment();
+//            noteDetailFragment.show(fragmentManager, "detail");
+//            EventBus.getDefault().postSticky(new DetailNoteEvent(data,index));
+        ShowNoteDetailEvent showNoteDetailEvent = new ShowNoteDetailEvent(v);
+        showNoteDetailEvent.setData(data);
+        showNoteDetailEvent.setIndex(index);
+        EventBus.getDefault().post(showNoteDetailEvent);
+
+//        }
     }
 
 }
