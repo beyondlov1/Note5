@@ -142,7 +142,7 @@ public abstract class AbstractDocumentEditFragment<T extends Document> extends D
         markdownToolLine.setOnClickListener(onMarkdownToolItemClickListener);
         markdownToolBracketsLeft.setOnClickListener(onMarkdownToolItemClickListener);
         markdownToolBracketsRight.setOnClickListener(onMarkdownToolItemClickListener);
-        markdownToolStrike.setOnClickListener(new OnMarkdownToolStikeClickListener(contentEditText));
+        markdownToolStrike.setOnClickListener(new OnMarkdownToolStrikeClickListener(contentEditText));
     }
 
     @SuppressWarnings("ConstantConditions")
@@ -368,11 +368,11 @@ public abstract class AbstractDocumentEditFragment<T extends Document> extends D
         }
     }
 
-    class OnMarkdownToolStikeClickListener implements View.OnClickListener {
+    class OnMarkdownToolStrikeClickListener implements View.OnClickListener {
 
         private EditText editText;
 
-        public OnMarkdownToolStikeClickListener(EditText editText) {
+        public OnMarkdownToolStrikeClickListener(EditText editText) {
             this.editText = editText;
         }
 

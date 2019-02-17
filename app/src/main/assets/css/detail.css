@@ -1,8 +1,21 @@
+
 body {
     padding:0;
+    padding-top:15px;
+    padding-bottom:15px;
 	padding-left:30px;
 	padding-right:30px;
 }
+
+/*
+.detail_container{
+width:84%;
+height:99%;
+padding:0 15px 0 15px;
+border: 1px solid rgba(191,191,191,0.3);
+box-shadow:2px 2px 3px #aaaaaa;
+}
+*/
 
 span,p,div,li{
 word-break:break-all;

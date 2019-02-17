@@ -1,6 +1,7 @@
 package com.beyond.note5.utils;
 
 import android.net.Uri;
+import android.util.Log;
 import android.view.View;
 import android.view.ViewGroup;
 import android.webkit.WebChromeClient;
@@ -19,6 +20,7 @@ import com.beyond.note5.utils.converter.MarkdownHtml2HtmlConverter;
 
 import java.util.regex.Pattern;
 
+
 /**
  * @author: beyond
  * @date: 2019/2/3
@@ -28,6 +30,7 @@ import java.util.regex.Pattern;
 public class WebViewUtil {
 
     public static final String MIME_TYPE = "text/html; charset=UTF-8";
+    private static final String TAG = "WebViewUtil";
 
     private static Document2HtmlConverter document2HtmlConverter = new Document2HtmlConverter();
 
@@ -56,6 +59,7 @@ public class WebViewUtil {
         //直接用webView.loadData(content, MIME_TYPE,"UTF-8");会乱码
         //https://blog.csdn.net/top_code/article/details/9163597
         webView.loadDataWithBaseURL(null,content, MIME_TYPE,null,null);
+        Log.d(TAG,content);
     }
 
     public static void configWebView(WebView webView){
