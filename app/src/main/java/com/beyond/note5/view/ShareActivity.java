@@ -69,7 +69,7 @@ public class ShareActivity extends AbstractActivityNoteView {
         Date currDate = new Date();
         Note note = new Note();
         note.setId(IDUtil.uuid());
-        if (StringUtils.isNotBlank(title)){
+        if (StringUtils.isNotBlank(title)&&!StringUtils.equalsIgnoreCase(StringUtils.trim(title),"null")){
             note.setContent(String.format("### %s\n%s",title,content));
         }else {
             note.setContent(content);

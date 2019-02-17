@@ -50,4 +50,9 @@
         <item name="android:windowExitAnimation">@anim/fly_fade_out</item>
     </style>
 
+    <style name="edit_dialog" parent="AlertDialog.AppCompat">
+        <item name="android:windowFrame" >@null</item>
+        <item name="android:windowContentOverlay" >@null</item>
+    </style>
+
 </resources>

@@ -282,6 +282,7 @@ public class NoteDetailSuperFragment extends DialogFragment implements OnBackPre
             currIndex = -1;
         }
         EventBus.getDefault().post(new HideNoteDetailEvent(currIndex));
+        getActivity().getWindow().setStatusBarColor(getResources().getColor(R.color.google_blue));
     }
 
     private void showOperation() {

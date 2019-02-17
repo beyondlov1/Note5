@@ -19,6 +19,9 @@ import android.support.v4.app.FragmentTransaction;
 import android.support.v4.view.PagerTabStrip;
 import android.support.v4.view.ViewPager;
 import android.view.View;
+import android.view.ViewGroup;
+import android.view.Window;
+import android.view.WindowManager;
 import android.view.animation.DecelerateInterpolator;
 import android.widget.FrameLayout;
 
@@ -160,9 +163,25 @@ public class MainActivity extends FragmentActivity {
                     return;
                 }
                 dialog.show(getSupportFragmentManager(), "editDialog");
-
+//                processStatusBarColor(dialog);
             }
         });
+    }
+
+    private void processStatusBarColor(DialogFragment dialog){
+//        getActivity().getWindow().setFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN,
+//                WindowManager.LayoutParams.FLAG_FULLSCREEN);
+        dialog.getDialog().getWindow().clearFlags(WindowManager.LayoutParams.FLAG_TRANSLUCENT_STATUS);
+        dialog.getDialog().getWindow().addFlags(WindowManager.LayoutParams.FLAG_DRAWS_SYSTEM_BAR_BACKGROUNDS);
+        dialog.getDialog().getWindow().setStatusBarColor(getResources().getColor(R.color.white));
+        dialog.getDialog().getWindow().getDecorView().setSystemUiVisibility(View.VISIBLE);
+        ViewGroup viewGroup = dialog.getDialog().getWindow().findViewById(Window.ID_ANDROID_CONTENT);
+        View childView = viewGroup.getChildAt(0);
+        if (childView!=null){
+            childView.setFitsSystemWindows(false);
+            childView.requestApplyInsets();
+        }
+
     }
 
     private AtomicBoolean isFabShown = new AtomicBoolean(true);
@@ -242,6 +261,13 @@ public class MainActivity extends FragmentActivity {
                 fragmentContainer.getLayoutParams().width = (int) (clickItemWidth + animatedValue*(containerWidth - clickItemWidth));
                 fragmentContainer.getLayoutParams().height = (int) (clickItemHeight + animatedValue*(containerHeight - clickItemHeight));
                 fragmentContainer.setLayoutParams(fragmentContainer.getLayoutParams());
+            }
+        });
+        valueAnimator.addListener(new AnimatorListenerAdapter() {
+            @Override
+            public void onAnimationEnd(Animator animation) {
+                super.onAnimationEnd(animation);
+                getWindow().setStatusBarColor(getResources().getColor(R.color.white));
             }
         });
         EventBus.getDefault().postSticky(new DetailNoteEvent(event.getData(),event.getIndex()));
