@@ -20,6 +20,7 @@ import android.support.v4.view.PagerTabStrip;
 import android.support.v4.view.ViewPager;
 import android.view.View;
 import android.view.animation.DecelerateInterpolator;
+import android.widget.FrameLayout;
 
 import com.beyond.note5.R;
 import com.beyond.note5.event.DetailNoteEvent;
@@ -247,19 +248,13 @@ public class MainActivity extends FragmentActivity {
         isDetailShow = true;
     }
 
-    @SuppressWarnings("unchecked")
     @Subscribe(threadMode = ThreadMode.MAIN)
     public void onRecieved(HideNoteDetailEvent event){
         EventBus.getDefault().post(new ShowFABEvent(null));
 
         //获取viewSwitcher划到的位置，获取动画要返回的view
         Integer currIndex = event.get();
-        NoteListFragment fragment = (NoteListFragment) fragments.get(0);
-        ItemDataGenerator itemDataGenerator = fragment.noteRecyclerViewAdapter.getItemDataGenerator();
-        Object note = itemDataGenerator.getContentData().get(currIndex);
-        int position = itemDataGenerator.getPosition(note);
-        fragment.noteRecyclerView.scrollToPosition(position);
-        View view = fragment.noteRecyclerView.getLayoutManager().findViewByPosition(position);
+        View view = getViewToReturn(currIndex);
 
         //获取view 位置、大小信息
         final int clickItemWidth = ViewUtil.getWidth(view);
@@ -294,6 +289,28 @@ public class MainActivity extends FragmentActivity {
             }
         });
         isDetailShow = false;
+    }
+
+    @SuppressWarnings("unchecked")
+    private View getViewToReturn(Integer currIndex) {
+        View view;
+        if (currIndex == -1){
+            view = new View(this);
+            FrameLayout.LayoutParams layoutParams = new FrameLayout.LayoutParams(mainContainer.getLayoutParams());
+            layoutParams.width = 0;
+            layoutParams.height = 0;
+            view.setLayoutParams(layoutParams);
+            view.setX(0);
+            view.setY(0);
+        }else {
+            NoteListFragment fragment = (NoteListFragment) fragments.get(0);
+            ItemDataGenerator itemDataGenerator = fragment.noteRecyclerViewAdapter.getItemDataGenerator();
+            Object note = itemDataGenerator.getContentData().get(currIndex);
+            int position = itemDataGenerator.getPosition(note);
+            fragment.noteRecyclerView.scrollToPosition(position);
+            view = fragment.noteRecyclerView.getLayoutManager().findViewByPosition(position);
+        }
+        return view;
     }
 
     @Override

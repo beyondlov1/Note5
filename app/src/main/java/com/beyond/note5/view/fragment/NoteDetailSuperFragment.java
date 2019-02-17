@@ -278,7 +278,9 @@ public class NoteDetailSuperFragment extends DialogFragment implements OnBackPre
 
     protected void hide() {
         viewSwitcher.removeAllViews();
-
+        if(data.isEmpty()){
+            currIndex = -1;
+        }
         EventBus.getDefault().post(new HideNoteDetailEvent(currIndex));
     }
 
