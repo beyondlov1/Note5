@@ -1,13 +1,17 @@
 package com.beyond.note5.view;
 
+import android.Manifest;
 import android.animation.Animator;
 import android.animation.AnimatorInflater;
 import android.animation.AnimatorListenerAdapter;
 import android.animation.AnimatorSet;
 import android.animation.ValueAnimator;
+import android.content.Intent;
+import android.content.pm.PackageManager;
 import android.graphics.Point;
 import android.os.Build;
 import android.os.Bundle;
+import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.design.widget.FloatingActionButton;
 import android.support.v4.app.DialogFragment;
@@ -19,13 +23,12 @@ import android.support.v4.app.FragmentTransaction;
 import android.support.v4.view.PagerTabStrip;
 import android.support.v4.view.ViewPager;
 import android.view.View;
-import android.view.ViewGroup;
-import android.view.Window;
-import android.view.WindowManager;
 import android.view.animation.DecelerateInterpolator;
 import android.widget.FrameLayout;
 
 import com.beyond.note5.R;
+import com.beyond.note5.bean.Note;
+import com.beyond.note5.event.AddNoteEvent;
 import com.beyond.note5.event.DetailNoteEvent;
 import com.beyond.note5.event.HideFABEvent;
 import com.beyond.note5.event.HideKeyBoardEvent;
@@ -33,6 +36,8 @@ import com.beyond.note5.event.HideNoteDetailEvent;
 import com.beyond.note5.event.ShowFABEvent;
 import com.beyond.note5.event.ShowKeyBoardEvent;
 import com.beyond.note5.event.ShowNoteDetailEvent;
+import com.beyond.note5.utils.IDUtil;
+import com.beyond.note5.utils.PhotoUtil;
 import com.beyond.note5.utils.ViewUtil;
 import com.beyond.note5.view.adapter.component.header.ItemDataGenerator;
 import com.beyond.note5.view.fragment.NoteDetailSuperFragment;
@@ -47,7 +52,9 @@ import org.greenrobot.eventbus.EventBus;
 import org.greenrobot.eventbus.Subscribe;
 import org.greenrobot.eventbus.ThreadMode;
 
+import java.io.File;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
 
@@ -85,6 +92,20 @@ public class MainActivity extends FragmentActivity {
 
         fragmentContainer = findViewById(R.id.container_fragment_note_detail);
         fragmentContainer.setVisibility(View.GONE);
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            if (checkSelfPermission(Manifest.permission.READ_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
+                requestPermissions(new String[]{Manifest.permission.READ_EXTERNAL_STORAGE}, 1);
+            }
+        }
+    }
+
+    @Override
+    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+        if (requestCode == 1) {
+            System.out.println("yes");
+        }
     }
 
     private void initView() {
@@ -163,30 +184,14 @@ public class MainActivity extends FragmentActivity {
                     return;
                 }
                 dialog.show(getSupportFragmentManager(), "editDialog");
-//                processStatusBarColor(dialog);
             }
         });
-    }
-
-    private void processStatusBarColor(DialogFragment dialog){
-//        getActivity().getWindow().setFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN,
-//                WindowManager.LayoutParams.FLAG_FULLSCREEN);
-        dialog.getDialog().getWindow().clearFlags(WindowManager.LayoutParams.FLAG_TRANSLUCENT_STATUS);
-        dialog.getDialog().getWindow().addFlags(WindowManager.LayoutParams.FLAG_DRAWS_SYSTEM_BAR_BACKGROUNDS);
-        dialog.getDialog().getWindow().setStatusBarColor(getResources().getColor(R.color.white));
-        dialog.getDialog().getWindow().getDecorView().setSystemUiVisibility(View.VISIBLE);
-        ViewGroup viewGroup = dialog.getDialog().getWindow().findViewById(Window.ID_ANDROID_CONTENT);
-        View childView = viewGroup.getChildAt(0);
-        if (childView!=null){
-            childView.setFitsSystemWindows(false);
-            childView.requestApplyInsets();
-        }
-
     }
 
     private AtomicBoolean isFabShown = new AtomicBoolean(true);
     private AnimatorSet showAnimatorSet;
     private AnimatorSet hideAnimatorSet;
+
     @Override
     public void onWindowFocusChanged(boolean hasFocus) {
         super.onWindowFocusChanged(hasFocus);
@@ -206,8 +211,10 @@ public class MainActivity extends FragmentActivity {
                     isFabShown.set(false);
                 }
             });
+
         }
     }
+
 
     @Subscribe(threadMode = ThreadMode.MAIN)
     public void onRecievedShowFABCommand(ShowFABEvent showFABEvent) {
@@ -225,8 +232,9 @@ public class MainActivity extends FragmentActivity {
     }
 
     private boolean isDetailShow = false;
+
     @Subscribe(threadMode = ThreadMode.MAIN)
-    public void onRecieved(final ShowNoteDetailEvent event){
+    public void onRecieved(final ShowNoteDetailEvent event) {
         fragmentContainer.setVisibility(View.VISIBLE);
         EventBus.getDefault().post(new HideFABEvent(null));
 
@@ -234,7 +242,7 @@ public class MainActivity extends FragmentActivity {
 
         //获取view 位置、大小信息
         final int clickItemWidth = ViewUtil.getWidth(view);
-        final int clickItemHeight =  ViewUtil.getHeight(view);
+        final int clickItemHeight = ViewUtil.getHeight(view);
         final float clickItemX = ViewUtil.getXInScreenWithoutNotification(view);
         final float clickItemY = ViewUtil.getYInScreenWithoutNotification(view);
 
@@ -248,7 +256,7 @@ public class MainActivity extends FragmentActivity {
 
         //出现动画
         AnimatorSet animatorSet = new AnimatorSet();
-        ValueAnimator valueAnimator = ValueAnimator.ofFloat(0,1f).setDuration(300);
+        ValueAnimator valueAnimator = ValueAnimator.ofFloat(0, 1f).setDuration(300);
         animatorSet.setInterpolator(new DecelerateInterpolator());
         animatorSet.playTogether(valueAnimator);
         animatorSet.start();
@@ -256,10 +264,10 @@ public class MainActivity extends FragmentActivity {
             @Override
             public void onAnimationUpdate(ValueAnimator animation) {
                 float animatedValue = (float) animation.getAnimatedValue();
-                fragmentContainer.setX(clickItemX -animatedValue* clickItemX);
-                fragmentContainer.setY(clickItemY -animatedValue* clickItemY);
-                fragmentContainer.getLayoutParams().width = (int) (clickItemWidth + animatedValue*(containerWidth - clickItemWidth));
-                fragmentContainer.getLayoutParams().height = (int) (clickItemHeight + animatedValue*(containerHeight - clickItemHeight));
+                fragmentContainer.setX(clickItemX - animatedValue * clickItemX);
+                fragmentContainer.setY(clickItemY - animatedValue * clickItemY);
+                fragmentContainer.getLayoutParams().width = (int) (clickItemWidth + animatedValue * (containerWidth - clickItemWidth));
+                fragmentContainer.getLayoutParams().height = (int) (clickItemHeight + animatedValue * (containerHeight - clickItemHeight));
                 fragmentContainer.setLayoutParams(fragmentContainer.getLayoutParams());
             }
         });
@@ -270,12 +278,12 @@ public class MainActivity extends FragmentActivity {
                 getWindow().setStatusBarColor(getResources().getColor(R.color.white));
             }
         });
-        EventBus.getDefault().postSticky(new DetailNoteEvent(event.getData(),event.getIndex()));
+        EventBus.getDefault().postSticky(new DetailNoteEvent(event.getData(), event.getIndex()));
         isDetailShow = true;
     }
 
     @Subscribe(threadMode = ThreadMode.MAIN)
-    public void onRecieved(HideNoteDetailEvent event){
+    public void onRecieved(HideNoteDetailEvent event) {
         EventBus.getDefault().post(new ShowFABEvent(null));
 
         //获取viewSwitcher划到的位置，获取动画要返回的view
@@ -284,7 +292,7 @@ public class MainActivity extends FragmentActivity {
 
         //获取view 位置、大小信息
         final int clickItemWidth = ViewUtil.getWidth(view);
-        final int clickItemHeight =  ViewUtil.getHeight(view);
+        final int clickItemHeight = ViewUtil.getHeight(view);
         final float clickItemX = ViewUtil.getXInScreenWithoutNotification(view);
         final float clickItemY = ViewUtil.getYInScreenWithoutNotification(view);
         final int containerWidth = ViewUtil.getWidth(mainContainer);
@@ -292,17 +300,17 @@ public class MainActivity extends FragmentActivity {
 
         //出现动画
         AnimatorSet animatorSet = new AnimatorSet();
-        ValueAnimator valueAnimator = ValueAnimator.ofFloat(1f,0).setDuration(300);
+        ValueAnimator valueAnimator = ValueAnimator.ofFloat(1f, 0).setDuration(300);
         animatorSet.playTogether(valueAnimator);
         animatorSet.start();
         valueAnimator.addUpdateListener(new ValueAnimator.AnimatorUpdateListener() {
             @Override
             public void onAnimationUpdate(ValueAnimator animation) {
                 float animatedValue = (float) animation.getAnimatedValue();
-                fragmentContainer.setX(clickItemX -animatedValue* clickItemX);
-                fragmentContainer.setY(clickItemY -animatedValue* clickItemY);
-                fragmentContainer.getLayoutParams().width = (int) (clickItemWidth + animatedValue*(containerWidth - clickItemWidth));
-                fragmentContainer.getLayoutParams().height = (int) (clickItemHeight + animatedValue*(containerHeight - clickItemHeight));
+                fragmentContainer.setX(clickItemX - animatedValue * clickItemX);
+                fragmentContainer.setY(clickItemY - animatedValue * clickItemY);
+                fragmentContainer.getLayoutParams().width = (int) (clickItemWidth + animatedValue * (containerWidth - clickItemWidth));
+                fragmentContainer.getLayoutParams().height = (int) (clickItemHeight + animatedValue * (containerHeight - clickItemHeight));
                 fragmentContainer.setLayoutParams(fragmentContainer.getLayoutParams());
             }
         });
@@ -320,7 +328,7 @@ public class MainActivity extends FragmentActivity {
     @SuppressWarnings("unchecked")
     private View getViewToReturn(Integer currIndex) {
         View view;
-        if (currIndex == -1){
+        if (currIndex == -1) {
             view = new View(this);
             FrameLayout.LayoutParams layoutParams = new FrameLayout.LayoutParams(mainContainer.getLayoutParams());
             layoutParams.width = 0;
@@ -328,7 +336,7 @@ public class MainActivity extends FragmentActivity {
             view.setLayoutParams(layoutParams);
             view.setX(0);
             view.setY(0);
-        }else {
+        } else {
             NoteListFragment fragment = (NoteListFragment) fragments.get(0);
             ItemDataGenerator itemDataGenerator = fragment.noteRecyclerViewAdapter.getItemDataGenerator();
             Object note = itemDataGenerator.getContentData().get(currIndex);
@@ -353,14 +361,65 @@ public class MainActivity extends FragmentActivity {
 
     @Override
     public void onBackPressed() {
-        if (isDetailShow){
+        if (isDetailShow) {
             OnBackPressListener onBackPressListener = (OnBackPressListener) detailFragment;
             boolean consumed = onBackPressListener.onBackPressed();
-            if (!consumed){
+            if (!consumed) {
                 super.onBackPressed();
             }
-        }else {
+        } else {
             super.onBackPressed();
         }
     }
+
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        if (resultCode == RESULT_OK) {
+            if (requestCode == 1) {
+                addPhotoNote();
+            }
+        }
+    }
+
+
+    private String currPhotoPath;
+    private void takePhoto() {
+        File file = PhotoUtil.takePhoto(this,1);
+        if (file != null) {
+            currPhotoPath = file.getAbsolutePath();
+        }
+//        testFilePath();
+    }
+
+    private void testFilePath() {
+        File dataDir = null;
+        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.N) {
+            dataDir = this.getFilesDir();
+            File[] files = dataDir.listFiles();
+            for (File file : files) {
+                System.out.println(file.getAbsolutePath() + " " + file.getName());
+            }
+        }
+        File externalFilesDir = this.getExternalFilesDir(null);
+        System.out.println(externalFilesDir.getAbsolutePath());
+        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.N) {
+            File[] files = externalFilesDir.listFiles();
+            for (File file : files) {
+                System.out.println(file.getAbsolutePath() + " " + file.getName());
+            }
+        }
+    }
+
+    private void addPhotoNote() {
+        String content = "!file://" + currPhotoPath;
+        Date currDate = new Date();
+
+        Note note = new Note();
+        note.setId(IDUtil.uuid());
+        note.setContent(content);
+        note.setCreateTime(currDate);
+        note.setLastModifyTime(currDate);
+        EventBus.getDefault().post(new AddNoteEvent(note));
+    }
+
 }

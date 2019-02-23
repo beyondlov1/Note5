@@ -97,7 +97,26 @@ public abstract class AbstractDocumentEditFragment<T extends Document> extends D
         if (neutralButton != null) {
             builder.setNeutralButton(neutralButton.name, neutralButton.onClickListener);
         }
-        return builder.create();
+        AlertDialog alertDialog = builder.create();
+        processStatusBarColor(alertDialog);
+        return alertDialog;
+    }
+
+
+    private void processStatusBarColor(AlertDialog dialog){
+//        getActivity().getWindow().setFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN,
+//                WindowManager.LayoutParams.FLAG_FULLSCREEN);
+        dialog.getWindow().clearFlags(WindowManager.LayoutParams.FLAG_TRANSLUCENT_STATUS);
+        dialog.getWindow().addFlags(WindowManager.LayoutParams.FLAG_DRAWS_SYSTEM_BAR_BACKGROUNDS);
+        dialog.getWindow().setStatusBarColor(getResources().getColor(R.color.white));
+        dialog.getWindow().getDecorView().setSystemUiVisibility(View.VISIBLE);
+//        ViewGroup viewGroup = dialog.getWindow().findViewById(Window.ID_ANDROID_CONTENT);
+//        View childView = viewGroup.getChildAt(0);
+//        if (childView!=null){
+//            childView.setFitsSystemWindows(false);
+//            childView.requestApplyInsets();
+//        }
+
     }
 
     protected abstract void sendEventsOnOKClick(String content);
@@ -234,12 +253,12 @@ public abstract class AbstractDocumentEditFragment<T extends Document> extends D
         params.width = dm.widthPixels;
         //设置初始的dialogHeightWithSoftInputMethod, 为了不让开始的时候动画跳一下
         if (dialogHeightWithSoftInputMethod == 0) {
-            dialogHeightWithSoftInputMethod = dm.heightPixels - y - 50;
+            dialogHeightWithSoftInputMethod = dm.heightPixels - y -50;
             SharedPreferences.Editor editor = getActivity().getSharedPreferences(MyApplication.SHARED_PREFERENCES_NAME, Context.MODE_PRIVATE).edit();
             editor.putInt(DIALOG_HEIGHT_WITH_SOFT_INPUT_METHOD, dm.heightPixels - y - 50);
             editor.apply();
         }
-        params.height = dialogHeightWithSoftInputMethod;
+        params.height = dialogHeightWithSoftInputMethod+75;//因为改写了edit的通知栏，所以要加上通知栏的高度
         win.setAttributes(params);
 
         displayWebView.setMinimumHeight(dm.heightPixels);

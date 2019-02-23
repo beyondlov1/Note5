@@ -1,11 +1,15 @@
 package com.beyond.note5;
 
 import android.app.Application;
+import android.net.Uri;
+import android.util.Log;
 
 import com.beyond.note5.model.dao.DaoMaster;
 import com.beyond.note5.model.dao.DaoSession;
 
 import org.greenrobot.greendao.database.Database;
+
+import java.io.File;
 
 /**
  * @author: beyond
@@ -26,6 +30,10 @@ public class MyApplication extends Application {
         super.onCreate();
         instance = this;
         initDaoSession();
+
+        File file = this.getFileStreamPath("pic.jpg");
+        Log.d("MyApplication", Uri.fromFile(file).toString());
+
     }
 
     private void initDaoSession() {
