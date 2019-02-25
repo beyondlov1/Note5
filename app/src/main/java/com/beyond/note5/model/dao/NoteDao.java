@@ -34,6 +34,8 @@ public class NoteDao extends AbstractDao<Note, String> {
         public final static Property ReadFlag = new Property(7, Integer.class, "readFlag", false, "READ_FLAG");
     }
 
+    private DaoSession daoSession;
+
 
     public NoteDao(DaoConfig config) {
         super(config);
@@ -41,6 +43,7 @@ public class NoteDao extends AbstractDao<Note, String> {
     
     public NoteDao(DaoConfig config, DaoSession daoSession) {
         super(config, daoSession);
+        this.daoSession = daoSession;
     }
 
     /** Creates the underlying database table. */
@@ -151,6 +154,12 @@ public class NoteDao extends AbstractDao<Note, String> {
         if (readFlag != null) {
             stmt.bindLong(8, readFlag);
         }
+    }
+
+    @Override
+    protected final void attachEntity(Note entity) {
+        super.attachEntity(entity);
+        entity.__setDaoSession(daoSession);
     }
 
     @Override

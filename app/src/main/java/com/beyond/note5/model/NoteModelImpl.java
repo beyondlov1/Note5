@@ -1,11 +1,18 @@
 package com.beyond.note5.model;
 
 import com.beyond.note5.MyApplication;
+import com.beyond.note5.bean.Attachment;
 import com.beyond.note5.bean.Document;
 import com.beyond.note5.bean.Note;
+import com.beyond.note5.model.dao.AttachmentDao;
 import com.beyond.note5.model.dao.DaoSession;
 import com.beyond.note5.model.dao.NoteDao;
+import com.beyond.note5.utils.PhotoUtil;
 
+import org.apache.commons.collections4.CollectionUtils;
+import org.apache.commons.io.FileUtils;
+
+import java.io.File;
 import java.util.List;
 
 /**
@@ -17,24 +24,50 @@ public class NoteModelImpl implements NoteModel {
 
     private NoteDao noteDao;
 
-    public NoteModelImpl(){
+    private AttachmentDao attachmentDao;
+
+    public NoteModelImpl() {
         DaoSession daoSession = MyApplication.getInstance().getDaoSession();
         noteDao = daoSession.getNoteDao();
+        attachmentDao = daoSession.getAttachmentDao();
     }
 
     @Override
-    public void add(Note note){
+    public void add(Note note) {
         noteDao.insert(note);
+        List<Attachment> attachments = note.getAttachments();
+        if (CollectionUtils.isNotEmpty(attachments)) {
+            attachmentDao.insertInTx(attachments);
+
+            //压缩图片
+            for (Attachment attachment : attachments) {
+                PhotoUtil.compressImage(attachment.getPath());
+            }
+        }
+
     }
 
     @Override
     public void update(Note note) {
         noteDao.update(note);
+        List<Attachment> attachments = note.getAttachments();
+        if (CollectionUtils.isNotEmpty(attachments)) {
+            attachmentDao.updateInTx(attachments);
+        }
     }
 
     @Override
     public void delete(Note note) {
         noteDao.delete(note);
+        List<Attachment> attachments = note.getAttachments();
+        if (CollectionUtils.isNotEmpty(attachments)) {
+            for (Attachment attachment : attachments) {
+                String path = attachment.getPath();
+                File file = new File(path);
+                FileUtils.deleteQuietly(file);
+            }
+            attachmentDao.deleteInTx(attachments);
+        }
     }
 
     @Override

@@ -10,6 +10,9 @@ import android.os.Environment;
 import android.provider.MediaStore;
 import android.support.v4.content.FileProvider;
 
+import com.zxy.tiny.Tiny;
+import com.zxy.tiny.callback.FileCallback;
+
 import java.io.File;
 import java.io.IOException;
 import java.text.SimpleDateFormat;
@@ -47,13 +50,17 @@ public class PhotoUtil {
         return null;
     }
 
-    private static File createImageFile(Context context) {
+    public static File createImageFile(Context context) {
+        return createImageFile(context,"jpg");
+    }
+
+    public static File createImageFile(Context context,String suffix) {
         @SuppressLint("SimpleDateFormat") String timeStamp = new SimpleDateFormat("yyyyMMdd_HHmmss").format(new Date());
         String imageFileName = "JPEG_" + timeStamp + "_";
         File storageDir = context.getExternalFilesDir(Environment.DIRECTORY_PICTURES);
         File imageFile = null;
         try {
-            imageFile = File.createTempFile(imageFileName, ".jpg", storageDir);
+            imageFile = File.createTempFile(imageFileName, "."+suffix, storageDir);
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -67,4 +74,19 @@ public class PhotoUtil {
 //        mediaScanIntent.setData(contentUri);
 //        this.sendBroadcast(mediaScanIntent);
 //    }
+
+    public static void compressImage(String path){
+        compressImage(path, new FileCallback() {
+            @Override
+            public void callback(boolean isSuccess, String outfile) {
+
+            }
+        });
+    }
+
+    public static void compressImage(String path,FileCallback callback){
+        Tiny.FileCompressOptions options = new Tiny.FileCompressOptions();
+        options.overrideSource = true;
+        Tiny.getInstance().source(path).asFile().withOptions(options).compress(callback);
+    }
 }

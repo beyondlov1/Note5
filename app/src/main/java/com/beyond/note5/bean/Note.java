@@ -1,10 +1,17 @@
 package com.beyond.note5.bean;
 
+import com.beyond.note5.model.dao.AttachmentDao;
+import com.beyond.note5.model.dao.DaoSession;
+import com.beyond.note5.model.dao.NoteDao;
+
+import org.greenrobot.greendao.DaoException;
 import org.greenrobot.greendao.annotation.Entity;
 import org.greenrobot.greendao.annotation.Generated;
 import org.greenrobot.greendao.annotation.Id;
+import org.greenrobot.greendao.annotation.ToMany;
 
 import java.util.Date;
+import java.util.List;
 
 @Entity
 public class Note extends Document {
@@ -19,9 +26,22 @@ public class Note extends Document {
     private Integer version;
     private Integer readFlag = 0;
 
+    @ToMany(referencedJoinProperty = "noteId")
+    private List<Attachment> attachments;
+    /** Used to resolve relations */
+    @Generated(hash = 2040040024)
+    private transient DaoSession daoSession;
+    /** Used for active entity operations. */
+    @Generated(hash = 363862535)
+    private transient NoteDao myDao;
+
+    public Note() {
+    }
+
     @Generated(hash = 988450006)
-    public Note(String id, String title, String content, String type, Date createTime, Date lastModifyTime,
-            Integer version, Integer readFlag) {
+    public Note(String id, String title, String content, String type,
+            Date createTime, Date lastModifyTime, Integer version,
+            Integer readFlag) {
         this.id = id;
         this.title = title;
         this.content = content;
@@ -30,10 +50,6 @@ public class Note extends Document {
         this.lastModifyTime = lastModifyTime;
         this.version = version;
         this.readFlag = readFlag;
-    }
-
-    @Generated(hash = 1272611929)
-    public Note() {
     }
 
     @Override
@@ -107,36 +123,6 @@ public class Note extends Document {
     }
 
     @Override
-    public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
-
-        Note note = (Note) o;
-
-        if (id != null ? !id.equals(note.id) : note.id != null) return false;
-        if (title != null ? !title.equals(note.title) : note.title != null) return false;
-        if (content != null ? !content.equals(note.content) : note.content != null) return false;
-        if (type != null ? !type.equals(note.type) : note.type != null) return false;
-        if (createTime != null ? !createTime.equals(note.createTime) : note.createTime != null)
-            return false;
-        if (lastModifyTime != null ? !lastModifyTime.equals(note.lastModifyTime) : note.lastModifyTime != null)
-            return false;
-        return version != null ? version.equals(note.version) : note.version == null;
-    }
-
-    @Override
-    public int hashCode() {
-        int result = id != null ? id.hashCode() : 0;
-        result = 31 * result + (title != null ? title.hashCode() : 0);
-        result = 31 * result + (content != null ? content.hashCode() : 0);
-        result = 31 * result + (type != null ? type.hashCode() : 0);
-        result = 31 * result + (createTime != null ? createTime.hashCode() : 0);
-        result = 31 * result + (lastModifyTime != null ? lastModifyTime.hashCode() : 0);
-        result = 31 * result + (version != null ? version.hashCode() : 0);
-        return result;
-    }
-
-    @Override
     public Integer getReadFlag() {
         return readFlag;
     }
@@ -145,4 +131,81 @@ public class Note extends Document {
     public void setReadFlag(Integer readFlag) {
         this.readFlag = readFlag;
     }
+
+    public void setAttachments(List<Attachment> attachments) {
+        this.attachments = attachments;
+    }
+
+    /** Resets a to-many relationship, making the next get call to query for a fresh result. */
+    @Generated(hash = 1946849745)
+    public synchronized void resetAttachments() {
+        attachments = null;
+    }
+
+    /**
+     * Convenient call for {@link org.greenrobot.greendao.AbstractDao#delete(Object)}.
+     * Entity must attached to an entity context.
+     */
+    @Generated(hash = 128553479)
+    public void delete() {
+        if (myDao == null) {
+            throw new DaoException("Entity is detached from DAO context");
+        }
+        myDao.delete(this);
+    }
+
+    /**
+     * Convenient call for {@link org.greenrobot.greendao.AbstractDao#refresh(Object)}.
+     * Entity must attached to an entity context.
+     */
+    @Generated(hash = 1942392019)
+    public void refresh() {
+        if (myDao == null) {
+            throw new DaoException("Entity is detached from DAO context");
+        }
+        myDao.refresh(this);
+    }
+
+    /**
+     * Convenient call for {@link org.greenrobot.greendao.AbstractDao#update(Object)}.
+     * Entity must attached to an entity context.
+     */
+    @Generated(hash = 713229351)
+    public void update() {
+        if (myDao == null) {
+            throw new DaoException("Entity is detached from DAO context");
+        }
+        myDao.update(this);
+    }
+
+    /** called by internal mechanisms, do not call yourself. */
+    @Generated(hash = 799086675)
+    public void __setDaoSession(DaoSession daoSession) {
+        this.daoSession = daoSession;
+        myDao = daoSession != null ? daoSession.getNoteDao() : null;
+    }
+
+    /**
+     * To-many relationship, resolved on first access (and after reset).
+     * Changes to to-many relations are not persisted, make changes to the target entity.
+     */
+    @Generated(hash = 237313401)
+    public List<Attachment> getAttachments() {
+        if (attachments == null) {
+            final DaoSession daoSession = this.daoSession;
+            if (daoSession == null) {
+                throw new DaoException("Entity is detached from DAO context");
+            }
+            AttachmentDao targetDao = daoSession.getAttachmentDao();
+            List<Attachment> attachmentsNew = targetDao._queryNote_Attachments(id);
+            synchronized (this) {
+                if (attachments == null) {
+                    attachments = attachmentsNew;
+                }
+            }
+        }
+        return attachments;
+    }
+
+
 }

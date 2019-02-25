@@ -1,13 +1,12 @@
 package com.beyond.note5;
 
 import android.app.Application;
+import android.database.sqlite.SQLiteDatabase;
 import android.net.Uri;
 import android.util.Log;
 
 import com.beyond.note5.model.dao.DaoMaster;
 import com.beyond.note5.model.dao.DaoSession;
-
-import org.greenrobot.greendao.database.Database;
 
 import java.io.File;
 
@@ -37,9 +36,14 @@ public class MyApplication extends Application {
     }
 
     private void initDaoSession() {
-        DaoMaster.DevOpenHelper helper = new DaoMaster.DevOpenHelper(this, "beyond.db");
-        Database database = helper.getEncryptedWritableDb("beyond");
-        DaoMaster daoMaster = new DaoMaster(database);
+//        DaoMaster.DevOpenHelper helper = new DaoMaster.DevOpenHelper(this, "beyond.db");
+//        Database database = helper.getEncryptedWritableDb("beyond");
+//        DaoMaster daoMaster = new DaoMaster(database);
+//        daoSession = daoMaster.newSession();
+
+        DaoMaster.DevOpenHelper helper = new DaoMaster.DevOpenHelper(this, "beyond_not_safe.db");
+        SQLiteDatabase writableDatabase = helper.getWritableDatabase();
+        DaoMaster daoMaster = new DaoMaster(writableDatabase);
         daoSession = daoMaster.newSession();
     }
 

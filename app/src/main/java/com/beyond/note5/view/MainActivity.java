@@ -27,6 +27,7 @@ import android.view.animation.DecelerateInterpolator;
 import android.widget.FrameLayout;
 
 import com.beyond.note5.R;
+import com.beyond.note5.bean.Attachment;
 import com.beyond.note5.bean.Note;
 import com.beyond.note5.event.AddNoteEvent;
 import com.beyond.note5.event.DetailNoteEvent;
@@ -381,8 +382,8 @@ public class MainActivity extends FragmentActivity {
         }
     }
 
-
     private String currPhotoPath;
+    
     private void takePhoto() {
         File file = PhotoUtil.takePhoto(this,1);
         if (file != null) {
@@ -391,34 +392,28 @@ public class MainActivity extends FragmentActivity {
 //        testFilePath();
     }
 
-    private void testFilePath() {
-        File dataDir = null;
-        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.N) {
-            dataDir = this.getFilesDir();
-            File[] files = dataDir.listFiles();
-            for (File file : files) {
-                System.out.println(file.getAbsolutePath() + " " + file.getName());
-            }
-        }
-        File externalFilesDir = this.getExternalFilesDir(null);
-        System.out.println(externalFilesDir.getAbsolutePath());
-        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.N) {
-            File[] files = externalFilesDir.listFiles();
-            for (File file : files) {
-                System.out.println(file.getAbsolutePath() + " " + file.getName());
-            }
-        }
-    }
-
     private void addPhotoNote() {
         String content = "!file://" + currPhotoPath;
+        String noteId = IDUtil.uuid();
+        File file = new File(currPhotoPath);
+        String name = file.getName();
         Date currDate = new Date();
 
+        List<Attachment> attachments = new ArrayList<>();
+        Attachment attachment = new Attachment();
+        attachment.setId(IDUtil.uuid());
+        attachment.setName(name);
+        attachment.setNoteId(noteId);
+        attachment.setPath(currPhotoPath);
+        attachments.add(attachment);
+
         Note note = new Note();
-        note.setId(IDUtil.uuid());
+        note.setId(noteId);
         note.setContent(content);
+        note.setAttachments(attachments);
         note.setCreateTime(currDate);
         note.setLastModifyTime(currDate);
+
         EventBus.getDefault().post(new AddNoteEvent(note));
     }
 

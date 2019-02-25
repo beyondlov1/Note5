@@ -36,6 +36,7 @@ import com.beyond.note5.view.custom.ViewSwitcher;
 import com.beyond.note5.view.listener.OnBackPressListener;
 import com.beyond.note5.view.listener.OnSlideListener;
 
+import org.apache.commons.collections4.CollectionUtils;
 import org.greenrobot.eventbus.EventBus;
 import org.greenrobot.eventbus.Subscribe;
 import org.greenrobot.eventbus.ThreadMode;
@@ -355,6 +356,9 @@ public class NoteDetailSuperFragment extends DialogFragment implements OnBackPre
     }
 
     private void processDetailTools() {
+        if (CollectionUtils.isEmpty(data)){
+            return;
+        }
         // 置顶按钮
         if (data.get(currIndex).getReadFlag() < 0) { // 置顶
             ((ImageButton) stickButton).setImageDrawable(getResources().getDrawable(R.drawable.ic_thumb_up_blue_400_24dp, null));
