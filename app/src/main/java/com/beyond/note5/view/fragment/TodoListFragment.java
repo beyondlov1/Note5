@@ -2,70 +2,89 @@ package com.beyond.note5.view.fragment;
 
 import android.os.Bundle;
 import android.support.annotation.Nullable;
-import android.support.v4.app.Fragment;
-import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.StaggeredGridLayoutManager;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 
-import com.beyond.note5.MyApplication;
 import com.beyond.note5.R;
-import com.beyond.note5.bean.Document;
-import com.beyond.note5.bean.Todo;
-import com.beyond.note5.model.dao.DaoSession;
-import com.beyond.note5.model.dao.DocumentDao;
-import com.beyond.note5.view.adapter.component.DocumentRecyclerViewAdapter;
-import com.beyond.note5.view.adapter.component.header.ReadFlagItemDataGenerator;
+import com.beyond.note5.event.AddTodoEvent;
+import com.beyond.note5.event.CompleteTodoEvent;
+import com.beyond.note5.event.DeleteTodoEvent;
+import com.beyond.note5.event.RefreshTodoListEvent;
+import com.beyond.note5.event.UpdateTodoEvent;
+import com.beyond.note5.module.DaggerTodoComponent;
+import com.beyond.note5.module.TodoComponent;
+import com.beyond.note5.module.TodoModule;
+import com.beyond.note5.presenter.TodoPresenter;
+import com.beyond.note5.view.adapter.AbstractFragmentTodoView;
+import com.beyond.note5.view.adapter.component.TodoRecyclerViewAdapter;
+import com.beyond.note5.view.adapter.component.header.LastModifyTimeItemDataGenerator;
 
-import java.util.List;
+import org.greenrobot.eventbus.Subscribe;
+import org.greenrobot.eventbus.ThreadMode;
+
+import javax.inject.Inject;
 
 /**
  * @author: beyond
  * @date: 2019/1/30
  */
 
-public class TodoListFragment extends Fragment  {
+public class TodoListFragment extends AbstractFragmentTodoView {
 
-    private List<Document> data;
+    @Inject
+    TodoPresenter todoPresenter;
 
-    private RecyclerView todoRecyclerView;
+    @Override
+    public void onCreate(@Nullable Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        recyclerViewAdapter = new TodoRecyclerViewAdapter(this.getActivity(), new LastModifyTimeItemDataGenerator<>(data));
+        initInjection();
+    }
+
+    private void initInjection() {
+        TodoComponent todoComponent = DaggerTodoComponent.builder().todoModule(new TodoModule(this)).build();
+        todoComponent.inject(this);
+    }
 
     @Nullable
     @Override
     public View onCreateView(LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
         ViewGroup viewGroup=(ViewGroup) inflater.inflate(R.layout.fragment_todo_list,container,false);
-        showTodoList(viewGroup);
-
+        initView(viewGroup);
+        todoPresenter.findAll();
         return viewGroup;
     }
 
-    @SuppressWarnings("unchecked")
-    private void showTodoList(ViewGroup viewGroup) {
-        todoRecyclerView = viewGroup.findViewById(R.id.todo_recycler_view);
-        data = getData();
-        DocumentRecyclerViewAdapter documentRecyclerViewAdapter = new DocumentRecyclerViewAdapter(this.getContext(),new ReadFlagItemDataGenerator(data));
-        todoRecyclerView.setAdapter(documentRecyclerViewAdapter);
-
+    private void initView(ViewGroup viewGroup) {
+        recyclerView = viewGroup.findViewById(R.id.todo_recycler_view);
+        recyclerView.setAdapter(recyclerViewAdapter);
         //设置显示格式
-        final StaggeredGridLayoutManager staggeredGridLayoutManager = new StaggeredGridLayoutManager(2, StaggeredGridLayoutManager.VERTICAL);
-        todoRecyclerView.setLayoutManager(staggeredGridLayoutManager);
+        final StaggeredGridLayoutManager staggeredGridLayoutManager = new StaggeredGridLayoutManager(1, StaggeredGridLayoutManager.VERTICAL);
+        recyclerView.setLayoutManager(staggeredGridLayoutManager);
     }
 
-    private List<Document> getData() {
-        DaoSession daoSession = ((MyApplication) getActivity().getApplication()).getDaoSession();
-        DocumentDao documentDao = daoSession.getDocumentDao();
-        return documentDao.queryBuilder().where(DocumentDao.Properties.Type.eq(Document.TODO)).orderDesc(DocumentDao.Properties.LastModifyTime).list();
+    @Subscribe(threadMode = ThreadMode.MAIN)
+    public void onReceived(AddTodoEvent event) {
+        todoPresenter.add(event.get());
     }
 
-    public void onNoteReceived(Todo todo){
-        if (getActivity() == null){
-            return;
-        }
-        DaoSession daoSession = ((MyApplication) getActivity().getApplication()).getDaoSession();
-        DocumentDao documentDao = daoSession.getDocumentDao();
-        documentDao.insert(todo);
-        data.add(0,todo);
-        todoRecyclerView.getAdapter().notifyItemInserted(0);
+    @Subscribe(threadMode = ThreadMode.MAIN)
+    public void onReceived(UpdateTodoEvent event) {
+        todoPresenter.update(event.get());
+    }
+
+    @Subscribe(threadMode = ThreadMode.MAIN)
+    public void onReceived(DeleteTodoEvent event) {
+        todoPresenter.delete(event.get());
+    }
+    @Subscribe(threadMode = ThreadMode.MAIN)
+    public void onReceived(RefreshTodoListEvent event) {
+        todoPresenter.findAll();
+    }
+    @Subscribe(threadMode = ThreadMode.MAIN)
+    public void onReceived(CompleteTodoEvent event) {
+        todoPresenter.delete(event.get());
     }
 }

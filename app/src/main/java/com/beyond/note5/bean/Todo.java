@@ -1,10 +1,10 @@
 package com.beyond.note5.bean;
 
 import org.greenrobot.greendao.annotation.Entity;
+import org.greenrobot.greendao.annotation.Generated;
 import org.greenrobot.greendao.annotation.Id;
 
 import java.util.Date;
-import org.greenrobot.greendao.annotation.Generated;
 
 @Entity
 public class Todo extends Document {
@@ -21,8 +21,8 @@ public class Todo extends Document {
 
     @Generated(hash = 1800421537)
     public Todo(String id, String title, String content, String type,
-            Date createTime, Date lastModifyTime, Integer version,
-            Integer readFlag) {
+                Date createTime, Date lastModifyTime, Integer version,
+                Integer readFlag) {
         this.id = id;
         this.title = title;
         this.content = content;
@@ -68,11 +68,6 @@ public class Todo extends Document {
     }
 
     @Override
-    public void setType(String type) {
-        this.type = type;
-    }
-
-    @Override
     public Date getCreateTime() {
         return createTime;
     }
@@ -100,6 +95,11 @@ public class Todo extends Document {
     @Override
     public void setVersion(Integer version) {
         this.version = version;
+    }
+
+    @Override
+    public void setType(String type) {
+        this.type = type;
     }
 
     @Override

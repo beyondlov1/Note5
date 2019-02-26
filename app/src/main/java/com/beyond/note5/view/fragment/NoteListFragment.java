@@ -54,7 +54,7 @@ public class NoteListFragment extends AbstractFragmentNoteView {
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        noteRecyclerViewAdapter = new NoteRecyclerViewAdapter(this.getContext(), new ReadFlagItemDataGenerator<>(data), getFragmentManager());
+        noteRecyclerViewAdapter = new NoteRecyclerViewAdapter(this.getContext(), new ReadFlagItemDataGenerator<>(data));
         initInjection();
     }
 
@@ -117,22 +117,22 @@ public class NoteListFragment extends AbstractFragmentNoteView {
     }
 
     @Subscribe(threadMode = ThreadMode.MAIN)
-    public void onNoteReceived(AddNoteEvent event) {
+    public void onReceived(AddNoteEvent event) {
         notePresenter.add(event.get());
     }
 
     @Subscribe(threadMode = ThreadMode.MAIN)
-    public void onNoteReceived(UpdateNoteEvent event) {
+    public void onReceived(UpdateNoteEvent event) {
         notePresenter.update(event.get());
     }
 
     @Subscribe(threadMode = ThreadMode.MAIN)
-    public void onNoteReceived(DeleteNoteEvent event) {
+    public void onReceived(DeleteNoteEvent event) {
         notePresenter.delete(event.get());
     }
 
     @Subscribe(threadMode = ThreadMode.MAIN)
-    public void onNoteReceived(RefreshNoteListEvent event) {
+    public void onReceived(RefreshNoteListEvent event) {
         notePresenter.findAll();
     }
 
