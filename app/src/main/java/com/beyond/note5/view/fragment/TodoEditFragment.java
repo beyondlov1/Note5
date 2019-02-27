@@ -26,6 +26,7 @@ import android.widget.EditText;
 import com.beyond.note5.MyApplication;
 import com.beyond.note5.R;
 import com.beyond.note5.bean.Todo;
+import com.beyond.note5.constant.DocumentConst;
 import com.beyond.note5.event.AddTodoEvent;
 import com.beyond.note5.event.HideKeyBoardEvent;
 import com.beyond.note5.event.ShowKeyBoardEvent;
@@ -103,7 +104,7 @@ public class TodoEditFragment extends DialogFragment {
         todo.setContent(content);
         todo.setCreateTime(new Date());
         todo.setLastModifyTime(new Date());
-        todo.setReadFlag(0);
+        todo.setReadFlag(DocumentConst.READ_FLAG_NORMAL);
         EventBus.getDefault().post( new AddTodoEvent(todo));
     }
 

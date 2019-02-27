@@ -1,6 +1,7 @@
 package com.beyond.note5.view.fragment;
 
 import com.beyond.note5.bean.Note;
+import com.beyond.note5.constant.DocumentConst;
 import com.beyond.note5.event.AddNoteEvent;
 import com.beyond.note5.utils.IDUtil;
 
@@ -25,7 +26,7 @@ public class NoteEditFragment extends AbstractDocumentEditFragment<Note> {
         createdDocument.setCreateTime(new Date());
         createdDocument.setLastModifyTime(new Date());
         createdDocument.setVersion(1);
-        createdDocument.setReadFlag(0);
+        createdDocument.setReadFlag(DocumentConst.READ_FLAG_NORMAL);
         post(new AddNoteEvent(createdDocument));
     }
 }

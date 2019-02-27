@@ -1,5 +1,7 @@
 package com.beyond.note5.bean;
 
+import com.beyond.note5.constant.DocumentConst;
+
 import org.greenrobot.greendao.annotation.Entity;
 import org.greenrobot.greendao.annotation.Generated;
 import org.greenrobot.greendao.annotation.Id;
@@ -17,7 +19,7 @@ public class Todo extends Document {
     private Date createTime;
     private Date lastModifyTime;
     private Integer version;
-    private Integer readFlag;
+    private Integer readFlag = DocumentConst.READ_FLAG_NORMAL;
 
     @Generated(hash = 1800421537)
     public Todo(String id, String title, String content, String type,

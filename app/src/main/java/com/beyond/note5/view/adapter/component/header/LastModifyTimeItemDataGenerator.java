@@ -34,19 +34,21 @@ public class LastModifyTimeItemDataGenerator<T extends Document> extends Abstrac
 
     @Override
     public int getInsertIndex(T t) {
+        //插入普通数据
         int index = 0;
         for (T document : contentData) {
-            if (DateUtils.truncatedEquals(document.getLastModifyTime(),t.getLastModifyTime(),Calendar.DATE)){
+            if (DateUtils.truncatedEquals(document.getLastModifyTime(),t.getLastModifyTime(),Calendar.DATE) //判断lastModifyTime
+                    && t.getReadFlag()<=document.getReadFlag()){ //判断readFlag
                 return index;
             }
             index++;
         }
 
-        //所需的header不存在, 放在合适位置
+        //如果所需的header不存在, 放在合适位置
         if (index == contentData.size()){
             index = 0;
             for (T document : contentData) {
-                if (DateUtils.truncatedCompareTo(t.getLastModifyTime(),document.getLastModifyTime(),Calendar.DATE)<0){
+                if (DateUtils.truncatedCompareTo(t.getLastModifyTime(),document.getLastModifyTime(),Calendar.DATE)>0){
                     return index;
                 }
                 index++;

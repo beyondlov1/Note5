@@ -37,6 +37,7 @@ public class TodoModelImpl implements TodoModel {
         return todoDao.queryBuilder()
                 .where(TodoDao.Properties.Type.eq(Document.TODO))
                 .orderAsc(TodoDao.Properties.ReadFlag)
+//                .orderRaw("READ_FLAG ASC,LAST_MODIFY_TIME DESC")
                 .orderDesc(TodoDao.Properties.LastModifyTime)
                 .list();
     }

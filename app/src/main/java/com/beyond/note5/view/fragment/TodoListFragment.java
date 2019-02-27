@@ -79,12 +79,14 @@ public class TodoListFragment extends AbstractFragmentTodoView {
     public void onReceived(DeleteTodoEvent event) {
         todoPresenter.delete(event.get());
     }
+
     @Subscribe(threadMode = ThreadMode.MAIN)
     public void onReceived(RefreshTodoListEvent event) {
         todoPresenter.findAll();
     }
+
     @Subscribe(threadMode = ThreadMode.MAIN)
     public void onReceived(CompleteTodoEvent event) {
-        todoPresenter.delete(event.get());
+        todoPresenter.update(event.get());
     }
 }

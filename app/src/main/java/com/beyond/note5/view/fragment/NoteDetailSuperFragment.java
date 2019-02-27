@@ -24,6 +24,7 @@ import android.widget.Toast;
 
 import com.beyond.note5.R;
 import com.beyond.note5.bean.Note;
+import com.beyond.note5.constant.DocumentConst;
 import com.beyond.note5.event.DeleteNoteEvent;
 import com.beyond.note5.event.DetailNoteEvent;
 import com.beyond.note5.event.FillNoteModifyEvent;
@@ -372,13 +373,13 @@ public class NoteDetailSuperFragment extends DialogFragment implements OnBackPre
                 Note note = data.get(currIndex);
                 note.setLastModifyTime(new Date());
                 if (data.get(currIndex).getReadFlag() < 0) { // 置顶
-                    note.setReadFlag(0);
+                    note.setReadFlag(DocumentConst.READ_FLAG_NORMAL);
                     EventBus.getDefault().post(new UpdateNoteEvent(note));
                     Toast.makeText(context, "取消置顶", Toast.LENGTH_SHORT).show();
                     EventBus.getDefault().post(new ModifyNoteDoneEvent(note));
                     ((ImageButton) stickButton).setImageDrawable(getResources().getDrawable(R.drawable.ic_thumb_up_grey_600_24dp, null));
                 } else { //其他
-                    note.setReadFlag(-1);
+                    note.setReadFlag(DocumentConst.READ_FLAG_DONE);
                     EventBus.getDefault().post(new UpdateNoteEvent(note));
                     Toast.makeText(context, "置顶成功", Toast.LENGTH_SHORT).show();
                     EventBus.getDefault().post(new ModifyNoteDoneEvent(note));

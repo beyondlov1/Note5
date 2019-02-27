@@ -8,10 +8,11 @@ import android.support.v7.widget.StaggeredGridLayoutManager;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.CompoundButton;
+import android.widget.CheckBox;
 
 import com.beyond.note5.R;
 import com.beyond.note5.bean.Todo;
+import com.beyond.note5.constant.DocumentConst;
 import com.beyond.note5.event.CompleteTodoEvent;
 import com.beyond.note5.event.FillTodoModifyEvent;
 import com.beyond.note5.view.adapter.component.header.Header;
@@ -22,7 +23,7 @@ import com.beyond.note5.view.fragment.TodoModifyFragment;
 import org.apache.commons.lang3.StringUtils;
 import org.greenrobot.eventbus.EventBus;
 
-public class TodoRecyclerViewAdapter extends DocumentRecyclerViewAdapter<Todo,TodoViewHolder> {
+public class TodoRecyclerViewAdapter extends DocumentRecyclerViewAdapter<Todo, TodoViewHolder> {
 
     public TodoRecyclerViewAdapter(Context context, ItemDataGenerator<Todo> itemDataGenerator) {
         super(context, itemDataGenerator);
@@ -37,6 +38,7 @@ public class TodoRecyclerViewAdapter extends DocumentRecyclerViewAdapter<Todo,To
     @Override
     protected void initHeaderDisplay(int position, Header header, TodoViewHolder viewHolder) {
         viewHolder.checkbox.setVisibility(View.GONE);
+        viewHolder.checkbox.setChecked(false);
         viewHolder.title.setVisibility(View.VISIBLE);
         viewHolder.title.setText(header.getContent());
         viewHolder.title.setTextColor(context.getResources().getColor(R.color.dark_yellow));
@@ -54,7 +56,9 @@ public class TodoRecyclerViewAdapter extends DocumentRecyclerViewAdapter<Todo,To
         gradientDrawable.setStroke(1, ContextCompat.getColor(context, R.color.dark_gray));
         viewHolder.dataContainer.setBackground(gradientDrawable);
         viewHolder.checkbox.setVisibility(View.VISIBLE);
-        viewHolder.checkbox.setChecked(false); // Todo: 要根据todo的值来显示
+        System.out.println(todo.getContent());
+        System.out.println(todo.getReadFlag());
+        viewHolder.checkbox.setChecked(todo.getReadFlag().equals(DocumentConst.READ_FLAG_DONE));
         viewHolder.title.setVisibility(View.GONE);
         viewHolder.content.setVisibility(View.VISIBLE);
         viewHolder.content.setTextSize(12);
@@ -62,11 +66,15 @@ public class TodoRecyclerViewAdapter extends DocumentRecyclerViewAdapter<Todo,To
     }
 
     @Override
-    protected void initContentEvent(TodoViewHolder viewHolder, final Todo todo) {
-        viewHolder.checkbox.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+    protected void initContentEvent(final TodoViewHolder viewHolder, final Todo todo) {
+        viewHolder.checkbox.setOnClickListener(new View.OnClickListener() {
             @Override
-            public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
-                if (isChecked){
+            public void onClick(View v) {
+                if (((CheckBox)v).isChecked()){
+                    todo.setReadFlag(DocumentConst.READ_FLAG_DONE);
+                    EventBus.getDefault().post(new CompleteTodoEvent(todo));
+                }else {
+                    todo.setReadFlag(DocumentConst.READ_FLAG_NORMAL);
                     EventBus.getDefault().post(new CompleteTodoEvent(todo));
                 }
             }

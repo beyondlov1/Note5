@@ -1,5 +1,6 @@
 package com.beyond.note5.bean;
 
+import com.beyond.note5.constant.DocumentConst;
 import com.beyond.note5.model.dao.AttachmentDao;
 import com.beyond.note5.model.dao.DaoSession;
 import com.beyond.note5.model.dao.NoteDao;
@@ -24,7 +25,7 @@ public class Note extends Document {
     private Date createTime;
     private Date lastModifyTime;
     private Integer version;
-    private Integer readFlag = 0;
+    private Integer readFlag = DocumentConst.READ_FLAG_NORMAL;
 
     @ToMany(referencedJoinProperty = "noteId")
     private List<Attachment> attachments;
