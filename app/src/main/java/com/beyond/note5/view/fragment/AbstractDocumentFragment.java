@@ -72,9 +72,9 @@ public abstract class AbstractDocumentFragment<T extends Document> extends Abstr
     @SuppressWarnings("unchecked")
     @Override
     public void onDeleteSuccess(T t) {
-        int index = recyclerViewAdapter.getItemDataGenerator().getIndex(t);
+        int index = recyclerViewAdapter.getItemDataGenerator().getIndexById(t);
         if (index!=-1){
-            data.remove(t);
+            data.remove(index);
             recyclerViewAdapter.notifyRemoved(t);
             msg("删除成功");
         }

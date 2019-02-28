@@ -18,6 +18,8 @@ public interface ItemDataGenerator<T> {
 
     int getIndex(T t);
 
+    int getIndexById(T t);
+
     int getInsertIndex(T t);
 
     List<Integer> getSingleContentPositions();

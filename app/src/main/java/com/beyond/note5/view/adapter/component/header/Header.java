@@ -1,14 +1,18 @@
 package com.beyond.note5.view.adapter.component.header;
 
 import com.beyond.note5.bean.Element;
+import com.beyond.note5.utils.IDUtil;
 
 public class Header implements Element {
+
+    private String id;
     private int position;
     private String content;
 
     public Header(int position, String content) {
         this.position = position;
         this.content = content;
+        this.id = IDUtil.uuid();
     }
 
     public int getPosition() {
@@ -25,5 +29,15 @@ public class Header implements Element {
 
     public void setContent(String content) {
         this.content = content;
+    }
+
+    @Override
+    public String getId() {
+        return id;
+    }
+
+    @Override
+    public void setId(String id) {
+        this.id = id;
     }
 }

@@ -64,9 +64,14 @@ public abstract class DocumentRecyclerViewAdapter<T extends Document, S extends 
 
     private void initHeaderView(int position, Header header, S viewHolder){
         initHeaderDisplay(position,header,viewHolder);
+        initHeadEvent(position,header,viewHolder);
     }
 
     protected abstract void initHeaderDisplay(int position, Header header, S viewHolder);
+
+    protected void initHeadEvent(int position, Header header, S viewHolder){
+        //do nothing
+    }
 
     private void initContentView(int position, T document, S viewHolder) {
         initContentDisplay(viewHolder, document, position);

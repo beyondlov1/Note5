@@ -32,7 +32,9 @@ import com.beyond.note5.event.HideKeyBoardEvent;
 import com.beyond.note5.event.ShowKeyBoardEvent;
 import com.beyond.note5.utils.IDUtil;
 import com.beyond.note5.utils.InputMethodUtil;
+import com.beyond.note5.view.custom.DialogButton;
 
+import org.apache.commons.lang3.StringUtils;
 import org.greenrobot.eventbus.EventBus;
 import org.greenrobot.eventbus.Subscribe;
 import org.greenrobot.eventbus.ThreadMode;
@@ -52,6 +54,7 @@ public class TodoEditFragment extends DialogFragment {
 
     protected View root;
     protected EditText contentEditText;
+    private DialogButton neutralButton;
 
     protected Todo createdDocument = new Todo();
 
@@ -78,34 +81,42 @@ public class TodoEditFragment extends DialogFragment {
                             @Override
                             public void onClick(DialogInterface dialog, int id) {
                                 String content = contentEditText.getText().toString();
-                                if (content.length() > 0) {
-                                    sendEventsOnOKClick(content);
-                                }
+                                sendEventsOnOKClick(content);
                                 dialog.dismiss();
                             }
                         }).setNegativeButton("Cancel", null);
+         neutralButton = initNeutralButton();
+        if (neutralButton != null) {
+            builder.setNeutralButton(neutralButton.getName(), null);
+        }
         AlertDialog alertDialog = builder.create();
         processStatusBarColor(alertDialog);
         return alertDialog;
     }
 
+    protected DialogButton initNeutralButton() {
+        return null;
+    }
 
-    private void processStatusBarColor(AlertDialog dialog){
+    private void processStatusBarColor(AlertDialog dialog) {
         Objects.requireNonNull(dialog.getWindow()).clearFlags(WindowManager.LayoutParams.FLAG_TRANSLUCENT_STATUS);
         dialog.getWindow().addFlags(WindowManager.LayoutParams.FLAG_DRAWS_SYSTEM_BAR_BACKGROUNDS);
         dialog.getWindow().setStatusBarColor(getResources().getColor(R.color.white));
         dialog.getWindow().getDecorView().setSystemUiVisibility(View.VISIBLE);
     }
 
-    protected void sendEventsOnOKClick(String content){
+    protected void sendEventsOnOKClick(String content) {
+        if (StringUtils.isBlank(content)){
+            return;
+        }
         Todo todo = new Todo();
         todo.setId(IDUtil.uuid());
-        todo.setTitle(content.length()>10?content.substring(1,10):content);
+        todo.setTitle(content.length() > 10 ? content.substring(1, 10) : content);
         todo.setContent(content);
         todo.setCreateTime(new Date());
         todo.setLastModifyTime(new Date());
         todo.setReadFlag(DocumentConst.READ_FLAG_NORMAL);
-        EventBus.getDefault().post( new AddTodoEvent(todo));
+        EventBus.getDefault().post(new AddTodoEvent(todo));
     }
 
     @Nullable
@@ -152,6 +163,9 @@ public class TodoEditFragment extends DialogFragment {
         super.onStart();
         EventBus.getDefault().register(this);
         initDialogSize();
+        if(neutralButton!=null){
+            ((AlertDialog) getDialog()).getButton(-3).setOnClickListener(neutralButton.getOnClickListener());
+        }
     }
 
     private void initDialogSize() {
@@ -197,12 +211,12 @@ public class TodoEditFragment extends DialogFragment {
         params.width = dm.widthPixels;
         //设置初始的dialogHeightWithSoftInputMethod, 为了不让开始的时候动画跳一下
         if (dialogHeightWithSoftInputMethod == 0) {
-            dialogHeightWithSoftInputMethod = dm.heightPixels - y -50;
+            dialogHeightWithSoftInputMethod = dm.heightPixels - y - 50;
             SharedPreferences.Editor editor = getActivity().getSharedPreferences(MyApplication.SHARED_PREFERENCES_NAME, Context.MODE_PRIVATE).edit();
             editor.putInt(DIALOG_HEIGHT_WITH_SOFT_INPUT_METHOD, dm.heightPixels - y - 50);
             editor.apply();
         }
-        params.height = dialogHeightWithSoftInputMethod+75;//因为改写了edit的通知栏，所以要加上通知栏的高度
+        params.height = dialogHeightWithSoftInputMethod + 75;//因为改写了edit的通知栏，所以要加上通知栏的高度
         win.setAttributes(params);
 
         contentEditText.setMinimumHeight(dm.heightPixels);

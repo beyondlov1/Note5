@@ -5,5 +5,6 @@ package com.beyond.note5.bean;
  * @date 2018/10/21
  */
 public interface Element {
-
+    String getId();
+    void setId(String id);
 }

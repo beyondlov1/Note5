@@ -2,10 +2,12 @@ package com.beyond.note5.view.adapter.component.header;
 
 import com.beyond.note5.bean.Element;
 
+import org.apache.commons.lang3.StringUtils;
+
 import java.util.ArrayList;
 import java.util.List;
 
-public abstract class AbstractItemDataGenerator<T> implements ItemDataGenerator<T> {
+public abstract class AbstractItemDataGenerator<T extends Element> implements ItemDataGenerator<T> {
 
     protected List<T> contentData;
     protected List<Element> itemData;
@@ -71,12 +73,35 @@ public abstract class AbstractItemDataGenerator<T> implements ItemDataGenerator<
 
     @Override
     public int getPosition(T t) {
-        return itemData.indexOf(t);
+        return getPositionById(t);
+    }
+
+    private int getPositionById(T t){
+        int index = 0;
+        for (Element itemDatum : itemData) {
+            if (StringUtils.equals(itemDatum.getId(),t.getId())){
+                return index;
+            }
+            index++;
+        }
+        return -1;
     }
 
     @Override
     public int getIndex(T t) {
-        return contentData.indexOf(t);
+        return getIndexById(t);
+    }
+
+    @Override
+    public int getIndexById(T t) {
+        int index = 0;
+        for (T contentDatum : contentData) {
+            if (StringUtils.equals(contentDatum.getId(),t.getId())){
+                return index;
+            }
+            index++;
+        }
+        return -1;
     }
 
     @Override

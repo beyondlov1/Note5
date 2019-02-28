@@ -36,10 +36,13 @@ import com.beyond.note5.event.HideKeyBoardEvent;
 import com.beyond.note5.event.ShowKeyBoardEvent;
 import com.beyond.note5.utils.InputMethodUtil;
 import com.beyond.note5.utils.WebViewUtil;
+import com.beyond.note5.view.custom.DialogButton;
 
 import org.greenrobot.eventbus.EventBus;
 import org.greenrobot.eventbus.Subscribe;
 import org.greenrobot.eventbus.ThreadMode;
+
+import java.util.Objects;
 
 
 /**
@@ -95,7 +98,7 @@ public abstract class AbstractDocumentEditFragment<T extends Document> extends D
                         }).setNegativeButton("Cancel", null);
         DialogButton neutralButton = getNeutralButton();
         if (neutralButton != null) {
-            builder.setNeutralButton(neutralButton.name, neutralButton.onClickListener);
+            builder.setNeutralButton(neutralButton.getName(), null);
         }
         AlertDialog alertDialog = builder.create();
         processStatusBarColor(alertDialog);
@@ -104,19 +107,10 @@ public abstract class AbstractDocumentEditFragment<T extends Document> extends D
 
 
     private void processStatusBarColor(AlertDialog dialog){
-//        getActivity().getWindow().setFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN,
-//                WindowManager.LayoutParams.FLAG_FULLSCREEN);
-        dialog.getWindow().clearFlags(WindowManager.LayoutParams.FLAG_TRANSLUCENT_STATUS);
+        Objects.requireNonNull(dialog.getWindow()).clearFlags(WindowManager.LayoutParams.FLAG_TRANSLUCENT_STATUS);
         dialog.getWindow().addFlags(WindowManager.LayoutParams.FLAG_DRAWS_SYSTEM_BAR_BACKGROUNDS);
         dialog.getWindow().setStatusBarColor(getResources().getColor(R.color.white));
         dialog.getWindow().getDecorView().setSystemUiVisibility(View.VISIBLE);
-//        ViewGroup viewGroup = dialog.getWindow().findViewById(Window.ID_ANDROID_CONTENT);
-//        View childView = viewGroup.getChildAt(0);
-//        if (childView!=null){
-//            childView.setFitsSystemWindows(false);
-//            childView.requestApplyInsets();
-//        }
-
     }
 
     protected abstract void sendEventsOnOKClick(String content);
@@ -484,16 +478,6 @@ public abstract class AbstractDocumentEditFragment<T extends Document> extends D
             }
 
             return result.substring(0, result.length() - 1);
-        }
-    }
-
-    class DialogButton {
-        private String name;
-        private DialogInterface.OnClickListener onClickListener;
-
-        public DialogButton(String name, DialogInterface.OnClickListener onClickListener) {
-            this.name = name;
-            this.onClickListener = onClickListener;
         }
     }
 

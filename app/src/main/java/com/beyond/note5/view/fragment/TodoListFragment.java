@@ -8,6 +8,7 @@ import android.view.View;
 import android.view.ViewGroup;
 
 import com.beyond.note5.R;
+import com.beyond.note5.bean.Todo;
 import com.beyond.note5.event.AddTodoEvent;
 import com.beyond.note5.event.CompleteTodoEvent;
 import com.beyond.note5.event.DeleteTodoEvent;
@@ -21,8 +22,11 @@ import com.beyond.note5.view.adapter.AbstractFragmentTodoView;
 import com.beyond.note5.view.adapter.component.TodoRecyclerViewAdapter;
 import com.beyond.note5.view.adapter.component.header.LastModifyTimeItemDataGenerator;
 
+import org.apache.commons.lang3.StringUtils;
 import org.greenrobot.eventbus.Subscribe;
 import org.greenrobot.eventbus.ThreadMode;
+
+import java.util.Iterator;
 
 import javax.inject.Inject;
 
@@ -88,5 +92,24 @@ public class TodoListFragment extends AbstractFragmentTodoView {
     @Subscribe(threadMode = ThreadMode.MAIN)
     public void onReceived(CompleteTodoEvent event) {
         todoPresenter.update(event.get());
+    }
+
+    @SuppressWarnings("unchecked")
+    @Override
+    public void onUpdateSuccess(Todo todo) {
+        Iterator<Todo> iterator = data.iterator();
+        while (iterator.hasNext()) {
+            Todo oldT = iterator.next();
+            if (StringUtils.equals(oldT.getId(), todo.getId())) {
+                iterator.remove();
+                recyclerViewAdapter.notifyRemoved(oldT);
+                int insertIndex = recyclerViewAdapter.getItemDataGenerator().getInsertIndex(todo);
+                data.add(insertIndex, todo);
+                recyclerViewAdapter.notifyInserted(todo);
+//                recyclerView.scrollToPosition(insertIndex);
+                msg("更新成功");
+                break;
+            }
+        }
     }
 }
