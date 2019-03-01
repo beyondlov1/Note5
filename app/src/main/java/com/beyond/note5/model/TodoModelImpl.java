@@ -44,7 +44,7 @@ public class TodoModelImpl implements TodoModel {
         QueryBuilder<Todo> todoQueryBuilder = todoDao.queryBuilder();
         todoQueryBuilder
                 .where(TodoDao.Properties.Type.eq(Document.TODO))
-                .orderRaw("DATE(LAST_MODIFY_TIME/1000,'unixepoch','localtime') DESC,READ_FLAG ASC");
+                .orderRaw("DATE(LAST_MODIFY_TIME/1000,'unixepoch','localtime') DESC,READ_FLAG ASC, LAST_MODIFY_TIME DESC");
         if (MyApplication.getInstance().getSharedPreferences(MyApplication.SHARED_PREFERENCES_NAME, Context.MODE_PRIVATE)
                 .getBoolean(IS_SHOW_READ_FLAG_DONE,false)){
             return todoQueryBuilder.list();

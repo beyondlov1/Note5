@@ -29,12 +29,18 @@
                 android:background="@color/google_blue" />
         </android.support.v4.view.ViewPager>
 
+
         <FrameLayout
             android:id="@+id/container_fragment_note_detail"
             android:layout_width="match_parent"
             android:layout_height="match_parent">
+        </FrameLayout>
 
-
+        <FrameLayout
+            android:id="@+id/container_fragment_todo_edit"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            >
         </FrameLayout>
 
     </FrameLayout>

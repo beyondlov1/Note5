@@ -113,9 +113,11 @@ public class TodoRecyclerViewAdapter extends DocumentRecyclerViewAdapter<Todo, T
             }
         });
 
-        viewHolder.content.setOnClickListener(new View.OnClickListener() {
+        viewHolder.dataContainer.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
+//                ShowTodoEditEvent showTodoEditEvent = new ShowTodoEditEvent(v);
+//                EventBus.getDefault().post(showTodoEditEvent);
                 showModifyView(todo);
             }
         });
