@@ -120,7 +120,7 @@ public class TodoEditSuperFragment extends DialogFragment implements OnBackPress
 
     @Override
     public boolean onBackPressed() {
-        EventBus.getDefault().post(new HideTodoEditEvent(null));
+        InputMethodUtil.hideKeyboard(contentEditText);
         return true;
     }
 
