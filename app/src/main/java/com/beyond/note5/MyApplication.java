@@ -2,13 +2,9 @@ package com.beyond.note5;
 
 import android.app.Application;
 import android.database.sqlite.SQLiteDatabase;
-import android.net.Uri;
-import android.util.Log;
 
 import com.beyond.note5.model.dao.DaoMaster;
 import com.beyond.note5.model.dao.DaoSession;
-
-import java.io.File;
 
 /**
  * @author: beyond
@@ -18,6 +14,7 @@ import java.io.File;
 public class MyApplication extends Application {
 
     public static final String  SHARED_PREFERENCES_NAME = "note5_preferences";
+
 
     private static MyApplication instance;
     public static MyApplication getInstance(){
@@ -29,10 +26,6 @@ public class MyApplication extends Application {
         super.onCreate();
         instance = this;
         initDaoSession();
-
-        File file = this.getFileStreamPath("pic.jpg");
-        Log.d("MyApplication", Uri.fromFile(file).toString());
-
     }
 
     private void initDaoSession() {

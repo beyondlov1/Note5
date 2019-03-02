@@ -17,6 +17,8 @@ public class OnKeyboardChangeListener implements ViewTreeObserver.OnGlobalLayout
 
     public Activity context;
 
+    private boolean isShow = false;
+
     public OnKeyboardChangeListener(Activity context){
         this.context = context;
     }
@@ -31,11 +33,17 @@ public class OnKeyboardChangeListener implements ViewTreeObserver.OnGlobalLayout
         int keyboardHeight = screenHeight - rect.bottom; // 输入法的高度
         boolean preShowing = isKeyBoardActive();
         if (Math.abs(keyboardHeight) > screenHeight / 5) {
-            // 超过屏幕五分之一则表示弹出了输入法
-            onKeyBoardShow(screenWidth / 2, keyboardHeight);
+            if (!isShow){
+                // 超过屏幕五分之一则表示弹出了输入法
+                onKeyBoardShow(screenWidth / 2, keyboardHeight);
+                isShow = true;
+            }
         } else {
-            //隐藏输入法
-            onKeyBoardHide();
+            if (isShow){
+                //隐藏输入法
+                onKeyBoardHide();
+                isShow =false;
+            }
         }
 
     }

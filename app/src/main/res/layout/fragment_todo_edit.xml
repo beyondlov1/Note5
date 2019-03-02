@@ -18,4 +18,11 @@
         android:scrollHorizontally="false"
         android:singleLine="false"
         android:textAlignment="gravity" />
+
+    <ViewStub
+        android:id="@+id/fragment_edit_todo_view_stub"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout="@layout/fragment_todo_edit_tools"/>
+
 </LinearLayout>

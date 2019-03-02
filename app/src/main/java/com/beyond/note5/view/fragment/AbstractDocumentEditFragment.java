@@ -2,9 +2,7 @@ package com.beyond.note5.view.fragment;
 
 import android.annotation.SuppressLint;
 import android.app.Dialog;
-import android.content.Context;
 import android.content.DialogInterface;
-import android.content.SharedPreferences;
 import android.graphics.Color;
 import android.graphics.drawable.ColorDrawable;
 import android.os.Bundle;
@@ -28,7 +26,6 @@ import android.webkit.WebViewClient;
 import android.widget.EditText;
 import android.widget.TextView;
 
-import com.beyond.note5.MyApplication;
 import com.beyond.note5.R;
 import com.beyond.note5.bean.Document;
 import com.beyond.note5.event.Event;
@@ -52,9 +49,6 @@ import java.util.Objects;
 
 public abstract class AbstractDocumentEditFragment<T extends Document> extends DialogFragment {
 
-    private static int dialogHeightWithSoftInputMethod;
-    private static final String DIALOG_HEIGHT_WITH_SOFT_INPUT_METHOD = "dialogHeightWithSoftInputMethod";
-
     protected View root;
     protected EditText contentEditText;
     protected WebView displayWebView;
@@ -70,12 +64,6 @@ public abstract class AbstractDocumentEditFragment<T extends Document> extends D
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        //初始化弹出框的位置
-        if (dialogHeightWithSoftInputMethod == 0) {
-            dialogHeightWithSoftInputMethod =
-                    getActivity().getSharedPreferences(MyApplication.SHARED_PREFERENCES_NAME, Context.MODE_PRIVATE)
-                            .getInt(DIALOG_HEIGHT_WITH_SOFT_INPUT_METHOD, 0);
-        }
     }
 
     @SuppressLint("InflateParams")
@@ -215,7 +203,7 @@ public abstract class AbstractDocumentEditFragment<T extends Document> extends D
         WindowManager.LayoutParams params = win.getAttributes();
         params.gravity = Gravity.TOP;
         params.width = ViewGroup.LayoutParams.MATCH_PARENT;
-        params.height = dialogHeightWithSoftInputMethod;
+        params.height = InputMethodUtil.getDialogHeightWithSoftInputMethod();
         win.setAttributes(params);
         displayWebView.setMinimumHeight(dm.heightPixels);
         contentEditText.setMinimumHeight(dm.heightPixels);
@@ -246,11 +234,10 @@ public abstract class AbstractDocumentEditFragment<T extends Document> extends D
         params.gravity = Gravity.TOP;
         params.width = dm.widthPixels;
         //设置初始的dialogHeightWithSoftInputMethod, 为了不让开始的时候动画跳一下
-        if (dialogHeightWithSoftInputMethod == 0) {
+        int dialogHeightWithSoftInputMethod = InputMethodUtil.getDialogHeightWithSoftInputMethod();
+        if ( dialogHeightWithSoftInputMethod== 0) {
             dialogHeightWithSoftInputMethod = dm.heightPixels - y -50;
-            SharedPreferences.Editor editor = getActivity().getSharedPreferences(MyApplication.SHARED_PREFERENCES_NAME, Context.MODE_PRIVATE).edit();
-            editor.putInt(DIALOG_HEIGHT_WITH_SOFT_INPUT_METHOD, dm.heightPixels - y - 50);
-            editor.apply();
+            InputMethodUtil.rememberDialogHeightWithSoftInputMethod(dm.heightPixels - y -50);
         }
         params.height = dialogHeightWithSoftInputMethod+75;//因为改写了edit的通知栏，所以要加上通知栏的高度
         win.setAttributes(params);

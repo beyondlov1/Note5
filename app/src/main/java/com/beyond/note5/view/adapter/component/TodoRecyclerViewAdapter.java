@@ -18,6 +18,7 @@ import com.beyond.note5.constant.DocumentConst;
 import com.beyond.note5.event.CompleteTodoEvent;
 import com.beyond.note5.event.FillTodoModifyEvent;
 import com.beyond.note5.event.RefreshTodoListEvent;
+import com.beyond.note5.event.ShowTodoEditEvent;
 import com.beyond.note5.view.adapter.component.header.Header;
 import com.beyond.note5.view.adapter.component.header.ItemDataGenerator;
 import com.beyond.note5.view.adapter.component.viewholder.TodoViewHolder;
@@ -116,9 +117,10 @@ public class TodoRecyclerViewAdapter extends DocumentRecyclerViewAdapter<Todo, T
         viewHolder.dataContainer.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-//                ShowTodoEditEvent showTodoEditEvent = new ShowTodoEditEvent(v);
-//                EventBus.getDefault().post(showTodoEditEvent);
-                showModifyView(todo);
+                ShowTodoEditEvent showTodoEditEvent = new ShowTodoEditEvent(v);
+                EventBus.getDefault().post(showTodoEditEvent);
+                EventBus.getDefault().post(new FillTodoModifyEvent(todo));
+//                showModifyView(todo);
             }
         });
     }

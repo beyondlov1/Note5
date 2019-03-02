@@ -4,15 +4,13 @@ import android.animation.Animator;
 import android.animation.AnimatorInflater;
 import android.animation.AnimatorListenerAdapter;
 import android.annotation.SuppressLint;
-import android.content.Context;
+import android.app.Activity;
 import android.content.Intent;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.Handler;
 import android.support.annotation.Nullable;
 import android.support.v4.app.DialogFragment;
-import android.support.v4.app.Fragment;
-import android.util.AttributeSet;
 import android.view.LayoutInflater;
 import android.view.MotionEvent;
 import android.view.View;
@@ -33,6 +31,8 @@ import com.beyond.note5.event.ModifyNoteDoneEvent;
 import com.beyond.note5.event.UpdateNoteEvent;
 import com.beyond.note5.utils.ViewUtil;
 import com.beyond.note5.utils.WebViewUtil;
+import com.beyond.note5.view.animator.DefaultSmoothScalable;
+import com.beyond.note5.view.animator.SmoothScalable;
 import com.beyond.note5.view.custom.ViewSwitcher;
 import com.beyond.note5.view.listener.OnBackPressListener;
 import com.beyond.note5.view.listener.OnSlideListener;
@@ -48,9 +48,9 @@ import java.util.Timer;
 import java.util.TimerTask;
 import java.util.concurrent.atomic.AtomicBoolean;
 
-public class NoteDetailSuperFragment extends DialogFragment implements OnBackPressListener {
+public class NoteDetailSuperFragment extends DialogFragment implements OnBackPressListener,SmoothScalable {
     private static final String TAG = "NoteDetailSuperFragment";
-    protected Context context;
+    protected Activity context;
     protected View root;
     protected ViewSwitcher viewSwitcher;
     protected TextView pageCountTextView;
@@ -68,18 +68,13 @@ public class NoteDetailSuperFragment extends DialogFragment implements OnBackPre
     private View modifyButton;
     private View hideButton;
 
+    private SmoothScalable smoothScalable = new DefaultSmoothScalable();
+
     public static AtomicBoolean isShowing = new AtomicBoolean(false);
 
-    @Override
-    public void onAttach(Context context) {
-        super.onAttach(context);
-        System.out.println("onAttach");
-    }
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
-        System.out.println("onCreate");
-
         super.onCreate(savedInstanceState);
         this.context = getActivity();
     }
@@ -274,19 +269,6 @@ public class NoteDetailSuperFragment extends DialogFragment implements OnBackPre
         });
     }
 
-    protected void show() {
-//        EventBus.getDefault().post( new ShowNoteDetailEvent(this));
-    }
-
-    protected void hide() {
-        viewSwitcher.removeAllViews();
-        if(data.isEmpty()){
-            currIndex = -1;
-        }
-        EventBus.getDefault().post(new HideNoteDetailEvent(currIndex));
-        getActivity().getWindow().setStatusBarColor(getResources().getColor(R.color.google_blue));
-    }
-
     private void showOperation() {
         operationItemsContainer.setVisibility(View.VISIBLE);
         Animator animator = AnimatorInflater.loadAnimator(context, R.animator.fade_in);
@@ -325,26 +307,12 @@ public class NoteDetailSuperFragment extends DialogFragment implements OnBackPre
     }
 
     @Override
-    public void onResume() {
-        super.onResume();
-        System.out.println("onResume");
-
-
-    }
-
-    @Override
     public void onStop() {
         System.out.println("onStop");
 
         EventBus.getDefault().unregister(this);
         isShowing.set(false);
         super.onStop();
-    }
-
-    @Override
-    public void onDetach() {
-        super.onDetach();
-        System.out.println("onDetach");
     }
 
     @Subscribe(threadMode = ThreadMode.MAIN, sticky = true)
@@ -379,7 +347,7 @@ public class NoteDetailSuperFragment extends DialogFragment implements OnBackPre
                     EventBus.getDefault().post(new ModifyNoteDoneEvent(note));
                     ((ImageButton) stickButton).setImageDrawable(getResources().getDrawable(R.drawable.ic_thumb_up_grey_600_24dp, null));
                 } else { //其他
-                    note.setReadFlag(DocumentConst.READ_FLAG_DONE);
+                    note.setReadFlag(DocumentConst.READ_FLAG_STICK);
                     EventBus.getDefault().post(new UpdateNoteEvent(note));
                     Toast.makeText(context, "置顶成功", Toast.LENGTH_SHORT).show();
                     EventBus.getDefault().post(new ModifyNoteDoneEvent(note));
@@ -473,11 +441,10 @@ public class NoteDetailSuperFragment extends DialogFragment implements OnBackPre
         pageCountTextView.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                hide();
+                sendHideMessage();
             }
         });
     }
-
 
     private void next() {
         if (currIndex == data.size() - 1) {
@@ -513,30 +480,95 @@ public class NoteDetailSuperFragment extends DialogFragment implements OnBackPre
         EventBus.getDefault().postSticky(new FillNoteModifyEvent(data.get(currIndex)));
     }
 
-
-    @Override
-    public void onAttachFragment(Fragment childFragment) {
-        super.onAttachFragment(childFragment);
-        System.out.println("onAttachFragment");
-    }
-
-    @Override
-    public void onHiddenChanged(boolean hidden) {
-        super.onHiddenChanged(hidden);
-        System.out.println("onHiddenChanged");
-    }
-
-
-    @Override
-    public void onInflate(Context context, AttributeSet attrs, Bundle savedInstanceState) {
-        super.onInflate(context, attrs, savedInstanceState);
-        System.out.println("onInflate");
-    }
-
     @Override
     public boolean onBackPressed() {
-        hide();
+        sendHideMessage();
         return true;
+    }
+
+    private void sendHideMessage(){
+        viewSwitcher.removeAllViews();
+        if(data.isEmpty()){
+            currIndex = -1;
+        }
+        EventBus.getDefault().post(new HideNoteDetailEvent(currIndex));
+    }
+
+    public void setSmoothScalable(SmoothScalable smoothScalable){
+        this.smoothScalable = smoothScalable;
+    }
+
+    @Override
+    public void setContainer(View view) {
+        this.smoothScalable.setContainer(view);
+    }
+
+    @Override
+    public View getContainer() {
+        return smoothScalable.getContainer();
+    }
+
+    @Override
+    public void setStartView(View view) {
+        this.smoothScalable.setStartView(view);
+    }
+
+    @Override
+    public View getStartView() {
+        return this.smoothScalable.getStartView();
+    }
+
+    @Override
+    public void setEndView(View view) {
+        this.smoothScalable.setEndView(view);
+    }
+
+    @Override
+    public View getEndView() {
+        return this.smoothScalable.getEndView();
+    }
+
+    @Override
+    public void setShowingView(View view) {
+        this.smoothScalable.setShowingView(view);
+    }
+
+    @Override
+    public View getShowingView() {
+        return this.smoothScalable.getShowingView();
+    }
+
+    @Override
+    public void show() {
+        this.smoothScalable.setOnShownListener(new Runnable() {
+            @Override
+            public void run() {
+                context.getWindow().setStatusBarColor(getResources().getColor(R.color.white));
+            }
+        });
+        this.smoothScalable.setOnHiddenListener(new Runnable() {
+            @Override
+            public void run() {
+                smoothScalable.getContainer().setVisibility(View.GONE);
+            }
+        });
+        this.smoothScalable.show();
+    }
+
+    @Override
+    public void hide() {
+        getActivity().getWindow().setStatusBarColor(getResources().getColor(R.color.google_blue));
+        this.smoothScalable.hide();
+    }
+
+    @Override
+    public void setOnShownListener(Runnable onShownListener) {
+        //do nothing
+    }
+
+    @Override
+    public void setOnHiddenListener(Runnable onHiddenListener) {
+        //do nothing
     }
 
     class DetailViewHolder {

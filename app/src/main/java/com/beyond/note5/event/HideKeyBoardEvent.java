@@ -6,7 +6,18 @@ package com.beyond.note5.event;
  */
 
 public class HideKeyBoardEvent extends AbstractEvent<String> {
+
+    private String type;
+
     public HideKeyBoardEvent(String s) {
         super(s);
+    }
+
+    public String getType() {
+        return type;
+    }
+
+    public void setType(String type) {
+        this.type = type;
     }
 }

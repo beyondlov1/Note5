@@ -5,7 +5,6 @@ import android.animation.Animator;
 import android.animation.AnimatorInflater;
 import android.animation.AnimatorListenerAdapter;
 import android.animation.AnimatorSet;
-import android.animation.ValueAnimator;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.graphics.Point;
@@ -23,31 +22,35 @@ import android.support.v4.app.FragmentTransaction;
 import android.support.v4.view.PagerTabStrip;
 import android.support.v4.view.ViewPager;
 import android.view.View;
-import android.view.animation.DecelerateInterpolator;
 import android.widget.FrameLayout;
 
 import com.beyond.note5.R;
 import com.beyond.note5.bean.Attachment;
+import com.beyond.note5.bean.Document;
 import com.beyond.note5.bean.Note;
 import com.beyond.note5.event.AddNoteEvent;
 import com.beyond.note5.event.DetailNoteEvent;
 import com.beyond.note5.event.HideFABEvent;
 import com.beyond.note5.event.HideKeyBoardEvent;
 import com.beyond.note5.event.HideNoteDetailEvent;
+import com.beyond.note5.event.HideTodoEditEvent;
 import com.beyond.note5.event.ShowFABEvent;
 import com.beyond.note5.event.ShowKeyBoardEvent;
 import com.beyond.note5.event.ShowNoteDetailEvent;
 import com.beyond.note5.event.ShowTodoEditEvent;
 import com.beyond.note5.utils.IDUtil;
+import com.beyond.note5.utils.InputMethodUtil;
 import com.beyond.note5.utils.PhotoUtil;
-import com.beyond.note5.utils.ViewUtil;
 import com.beyond.note5.view.adapter.component.header.ItemDataGenerator;
+import com.beyond.note5.view.animator.ABASmoothScalable;
+import com.beyond.note5.view.animator.SmoothScalable;
 import com.beyond.note5.view.fragment.NoteDetailSuperFragment;
 import com.beyond.note5.view.fragment.NoteEditFragment;
 import com.beyond.note5.view.fragment.NoteListFragment;
 import com.beyond.note5.view.fragment.TodoEditFragment;
 import com.beyond.note5.view.fragment.TodoEditSuperFragment;
 import com.beyond.note5.view.fragment.TodoListFragment;
+import com.beyond.note5.view.fragment.TodoModifySuperFragment;
 import com.beyond.note5.view.listener.OnBackPressListener;
 import com.beyond.note5.view.listener.OnKeyboardChangeListener;
 
@@ -75,7 +78,9 @@ public class MainActivity extends FragmentActivity {
     private List<Fragment> fragments = new ArrayList<>();
 
     private Fragment noteDetailFragment;
-    private Fragment todoEditFragment;
+    private Fragment todoModifyFragment;
+
+    private String currentType;
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
@@ -87,7 +92,7 @@ public class MainActivity extends FragmentActivity {
         initEvent();
 
         initNoteDetailFragmentContainer();
-//        initTodoEditFragmentContainer();
+        initTodoEditFragmentContainer();
 
         //permission
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
@@ -97,7 +102,7 @@ public class MainActivity extends FragmentActivity {
         }
     }
 
-    private void initNoteDetailFragmentContainer(){
+    private void initNoteDetailFragmentContainer() {
         Point point = new Point();
         getWindowManager().getDefaultDisplay().getSize(point);
         noteDetailFragment = new NoteDetailSuperFragment();
@@ -112,14 +117,14 @@ public class MainActivity extends FragmentActivity {
     }
 
     private void initTodoEditFragmentContainer() {
-        todoEditFragment = new TodoEditSuperFragment();
+        todoModifyFragment = new TodoModifySuperFragment();
         FragmentManager fragmentManager = getSupportFragmentManager();
         FragmentTransaction fragmentTransaction = fragmentManager.beginTransaction();
-        fragmentTransaction.replace(R.id.container_fragment_todo_edit, todoEditFragment);
+        fragmentTransaction.replace(R.id.container_fragment_todo_edit, todoModifyFragment);
         fragmentTransaction.commit();
 
         todoEditFragmentContainer = findViewById(R.id.container_fragment_todo_edit);
-        todoEditFragmentContainer.setVisibility(View.VISIBLE);
+        todoEditFragmentContainer.setVisibility(View.GONE);
     }
 
     @Override
@@ -174,13 +179,17 @@ public class MainActivity extends FragmentActivity {
                     @Override
                     protected void onKeyBoardShow(int x, int y) {
                         super.onKeyBoardShow(x, y);
-                        EventBus.getDefault().post(new ShowKeyBoardEvent(y));
+                        ShowKeyBoardEvent showKeyBoardEvent = new ShowKeyBoardEvent(y);
+                        showKeyBoardEvent.setType(currentType);
+                        EventBus.getDefault().post(showKeyBoardEvent);
                     }
 
                     @Override
                     protected void onKeyBoardHide() {
                         super.onKeyBoardHide();
-                        EventBus.getDefault().post(new HideKeyBoardEvent(null));
+                        HideKeyBoardEvent hideKeyBoardEvent = new HideKeyBoardEvent(null);
+                        hideKeyBoardEvent.setType(currentType);
+                        EventBus.getDefault().post(hideKeyBoardEvent);
                     }
                 });
 
@@ -188,6 +197,13 @@ public class MainActivity extends FragmentActivity {
             mainViewPager.setOnScrollChangeListener(new View.OnScrollChangeListener() {
                 @Override
                 public void onScrollChange(View v, int scrollX, int scrollY, int oldScrollX, int oldScrollY) {
+                    int currentItemPosition = mainViewPager.getCurrentItem();
+                    Fragment fragment = fragments.get(currentItemPosition);
+                    if (fragment instanceof NoteListFragment) {
+                        currentType = Document.NOTE;
+                    } else if (fragment instanceof TodoListFragment) {
+                        currentType = Document.TODO;
+                    }
                     EventBus.getDefault().post(new ShowFABEvent(R.id.note_recycler_view));
                 }
             });
@@ -262,44 +278,12 @@ public class MainActivity extends FragmentActivity {
 
         View view = event.get();
 
-        //获取view 位置、大小信息
-        final int clickItemWidth = ViewUtil.getWidth(view);
-        final int clickItemHeight = ViewUtil.getHeight(view);
-        final float clickItemX = ViewUtil.getXInScreenWithoutNotification(view);
-        final float clickItemY = ViewUtil.getYInScreenWithoutNotification(view);
+        SmoothScalable smoothScalable = (SmoothScalable) noteDetailFragment;
+        smoothScalable.setContainer(noteDetailFragmentContainer);
+        smoothScalable.setStartView(view);
+        smoothScalable.setShowingView(mainContainer);
 
-        //设置初始位置
-        final int containerWidth = ViewUtil.getWidth(mainContainer);
-        final int containerHeight = ViewUtil.getHeight(mainContainer);
-        noteDetailFragmentContainer.getLayoutParams().width = clickItemWidth;
-        noteDetailFragmentContainer.getLayoutParams().height = clickItemHeight;
-        noteDetailFragmentContainer.setX(clickItemX);
-        noteDetailFragmentContainer.setY(clickItemY);
-
-        //出现动画
-        AnimatorSet animatorSet = new AnimatorSet();
-        ValueAnimator valueAnimator = ValueAnimator.ofFloat(0, 1f).setDuration(300);
-        animatorSet.setInterpolator(new DecelerateInterpolator());
-        animatorSet.playTogether(valueAnimator);
-        animatorSet.start();
-        valueAnimator.addUpdateListener(new ValueAnimator.AnimatorUpdateListener() {
-            @Override
-            public void onAnimationUpdate(ValueAnimator animation) {
-                float animatedValue = (float) animation.getAnimatedValue();
-                noteDetailFragmentContainer.setX(clickItemX - animatedValue * clickItemX);
-                noteDetailFragmentContainer.setY(clickItemY - animatedValue * clickItemY);
-                noteDetailFragmentContainer.getLayoutParams().width = (int) (clickItemWidth + animatedValue * (containerWidth - clickItemWidth));
-                noteDetailFragmentContainer.getLayoutParams().height = (int) (clickItemHeight + animatedValue * (containerHeight - clickItemHeight));
-                noteDetailFragmentContainer.setLayoutParams(noteDetailFragmentContainer.getLayoutParams());
-            }
-        });
-        valueAnimator.addListener(new AnimatorListenerAdapter() {
-            @Override
-            public void onAnimationEnd(Animator animation) {
-                super.onAnimationEnd(animation);
-                getWindow().setStatusBarColor(getResources().getColor(R.color.white));
-            }
-        });
+        smoothScalable.show();
         EventBus.getDefault().postSticky(new DetailNoteEvent(event.getData(), event.getIndex()));
         isDetailShow = true;
     }
@@ -312,40 +296,14 @@ public class MainActivity extends FragmentActivity {
         Integer currIndex = event.get();
         View view = getViewToReturn(currIndex);
 
-        //获取view 位置、大小信息
-        final int clickItemWidth = ViewUtil.getWidth(view);
-        final int clickItemHeight = ViewUtil.getHeight(view);
-        final float clickItemX = ViewUtil.getXInScreenWithoutNotification(view);
-        final float clickItemY = ViewUtil.getYInScreenWithoutNotification(view);
-        final int containerWidth = ViewUtil.getWidth(mainContainer);
-        final int containerHeight = ViewUtil.getHeight(mainContainer);
-
-        //出现动画
-        AnimatorSet animatorSet = new AnimatorSet();
-        ValueAnimator valueAnimator = ValueAnimator.ofFloat(1f, 0).setDuration(300);
-        animatorSet.playTogether(valueAnimator);
-        animatorSet.start();
-        valueAnimator.addUpdateListener(new ValueAnimator.AnimatorUpdateListener() {
-            @Override
-            public void onAnimationUpdate(ValueAnimator animation) {
-                float animatedValue = (float) animation.getAnimatedValue();
-                noteDetailFragmentContainer.setX(clickItemX - animatedValue * clickItemX);
-                noteDetailFragmentContainer.setY(clickItemY - animatedValue * clickItemY);
-                noteDetailFragmentContainer.getLayoutParams().width = (int) (clickItemWidth + animatedValue * (containerWidth - clickItemWidth));
-                noteDetailFragmentContainer.getLayoutParams().height = (int) (clickItemHeight + animatedValue * (containerHeight - clickItemHeight));
-                noteDetailFragmentContainer.setLayoutParams(noteDetailFragmentContainer.getLayoutParams());
-            }
-        });
-
-        animatorSet.addListener(new AnimatorListenerAdapter() {
-            @Override
-            public void onAnimationEnd(Animator animation) {
-                super.onAnimationEnd(animation);
-                noteDetailFragmentContainer.setVisibility(View.GONE);
-            }
-        });
+        SmoothScalable smoothScalable = (SmoothScalable) noteDetailFragment;
+        smoothScalable.setEndView(view);
+        smoothScalable.hide();
         isDetailShow = false;
     }
+
+    private boolean isTodoEditShow = false;
+    private View clickedView = null;
 
     @Subscribe(threadMode = ThreadMode.MAIN)
     public void onRecieved(final ShowTodoEditEvent event) {
@@ -353,45 +311,38 @@ public class MainActivity extends FragmentActivity {
         EventBus.getDefault().post(new HideFABEvent(null));
 
         View view = event.get();
+        clickedView = view;
 
-        //获取view 位置、大小信息
-        final int clickItemWidth = ViewUtil.getWidth(view);
-        final int clickItemHeight = ViewUtil.getHeight(view);
-        final float clickItemX = ViewUtil.getXInScreenWithoutNotification(view);
-        final float clickItemY = ViewUtil.getYInScreenWithoutNotification(view);
+        TodoEditSuperFragment todoModifyFragment = (TodoEditSuperFragment) this.todoModifyFragment;
+        todoModifyFragment.setSmoothScalable(new ABASmoothScalable());
+        SmoothScalable smoothScalable = (SmoothScalable) this.todoModifyFragment;
+        smoothScalable.setContainer(todoEditFragmentContainer);
+        smoothScalable.setStartView(view);
 
-        //设置初始位置
-        final int containerWidth = ViewUtil.getWidth(mainContainer);
-        final int containerHeight = ViewUtil.getHeight(mainContainer);
-        todoEditFragmentContainer.getLayoutParams().width = clickItemWidth;
-        todoEditFragmentContainer.getLayoutParams().height = clickItemHeight;
-        todoEditFragmentContainer.setX(clickItemX);
-        todoEditFragmentContainer.setY(clickItemY);
+        //创建view 并且设置大小
+        View fitInputMethodView = new View(this);
+        FrameLayout.LayoutParams layoutParams = new FrameLayout.LayoutParams(mainContainer.getLayoutParams());
+        fitInputMethodView.setLayoutParams(layoutParams);
+        fitInputMethodView.setX(0);
+        fitInputMethodView.setY(0);
+        fitInputMethodView.setLeft(0);
+        fitInputMethodView.setRight(mainContainer.getWidth());
+        fitInputMethodView.setTop(0);
+        fitInputMethodView.setBottom(InputMethodUtil.getDialogHeightWithSoftInputMethod());
+        smoothScalable.setShowingView(fitInputMethodView);
 
-        //出现动画
-        AnimatorSet animatorSet = new AnimatorSet();
-        ValueAnimator valueAnimator = ValueAnimator.ofFloat(0, 1f).setDuration(300);
-        animatorSet.setInterpolator(new DecelerateInterpolator());
-        animatorSet.playTogether(valueAnimator);
-        animatorSet.start();
-        valueAnimator.addUpdateListener(new ValueAnimator.AnimatorUpdateListener() {
-            @Override
-            public void onAnimationUpdate(ValueAnimator animation) {
-                float animatedValue = (float) animation.getAnimatedValue();
-                todoEditFragmentContainer.setX(clickItemX - animatedValue * clickItemX);
-                todoEditFragmentContainer.setY(clickItemY - animatedValue * clickItemY);
-                todoEditFragmentContainer.getLayoutParams().width = (int) (clickItemWidth + animatedValue * (containerWidth - clickItemWidth));
-                todoEditFragmentContainer.getLayoutParams().height = (int) (clickItemHeight + animatedValue * (containerHeight - clickItemHeight));
-                todoEditFragmentContainer.setLayoutParams(todoEditFragmentContainer.getLayoutParams());
-            }
-        });
-        valueAnimator.addListener(new AnimatorListenerAdapter() {
-            @Override
-            public void onAnimationEnd(Animator animation) {
-                super.onAnimationEnd(animation);
-                getWindow().setStatusBarColor(getResources().getColor(R.color.white));
-            }
-        });
+        smoothScalable.show();
+        isTodoEditShow = true;
+    }
+
+    @Subscribe(threadMode = ThreadMode.MAIN)
+    public void onRecieved(HideTodoEditEvent event) {
+        EventBus.getDefault().post(new ShowFABEvent(null));
+
+        SmoothScalable smoothScalable = (SmoothScalable) todoModifyFragment;
+        smoothScalable.setEndView(clickedView);
+        smoothScalable.hide();
+        isTodoEditShow = false;
     }
 
     @SuppressWarnings("unchecked")
@@ -431,14 +382,21 @@ public class MainActivity extends FragmentActivity {
     @Override
     public void onBackPressed() {
         if (isDetailShow) {
-            OnBackPressListener onBackPressListener = (OnBackPressListener) noteDetailFragment;
-            boolean consumed = onBackPressListener.onBackPressed();
+            OnBackPressListener noteDetailOnBackPressListener = (OnBackPressListener) noteDetailFragment;
+            boolean consumed = noteDetailOnBackPressListener.onBackPressed();
+            if (!consumed) {
+                super.onBackPressed();
+            }
+        } else if (isTodoEditShow) {
+            OnBackPressListener todoEditOnBackPressListener = (OnBackPressListener) todoModifyFragment;
+            boolean consumed = todoEditOnBackPressListener.onBackPressed();
             if (!consumed) {
                 super.onBackPressed();
             }
         } else {
             super.onBackPressed();
         }
+
     }
 
     @Override
@@ -451,9 +409,9 @@ public class MainActivity extends FragmentActivity {
     }
 
     private String currPhotoPath;
-    
+
     private void takePhoto() {
-        File file = PhotoUtil.takePhoto(this,1);
+        File file = PhotoUtil.takePhoto(this, 1);
         if (file != null) {
             currPhotoPath = file.getAbsolutePath();
         }
