@@ -39,16 +39,13 @@ import com.beyond.note5.event.ShowKeyBoardEvent;
 import com.beyond.note5.event.ShowNoteDetailEvent;
 import com.beyond.note5.event.ShowTodoEditEvent;
 import com.beyond.note5.utils.IDUtil;
-import com.beyond.note5.utils.InputMethodUtil;
 import com.beyond.note5.utils.PhotoUtil;
 import com.beyond.note5.view.adapter.component.header.ItemDataGenerator;
-import com.beyond.note5.view.animator.ABASmoothScalable;
 import com.beyond.note5.view.animator.SmoothScalable;
 import com.beyond.note5.view.fragment.NoteDetailSuperFragment;
 import com.beyond.note5.view.fragment.NoteEditFragment;
 import com.beyond.note5.view.fragment.NoteListFragment;
 import com.beyond.note5.view.fragment.TodoEditFragment;
-import com.beyond.note5.view.fragment.TodoEditSuperFragment;
 import com.beyond.note5.view.fragment.TodoListFragment;
 import com.beyond.note5.view.fragment.TodoModifySuperFragment;
 import com.beyond.note5.view.listener.OnBackPressListener;
@@ -313,23 +310,10 @@ public class MainActivity extends FragmentActivity {
         View view = event.get();
         clickedView = view;
 
-        TodoEditSuperFragment todoModifyFragment = (TodoEditSuperFragment) this.todoModifyFragment;
-        todoModifyFragment.setSmoothScalable(new ABASmoothScalable());
         SmoothScalable smoothScalable = (SmoothScalable) this.todoModifyFragment;
         smoothScalable.setContainer(todoEditFragmentContainer);
         smoothScalable.setStartView(view);
-
-        //创建view 并且设置大小
-        View fitInputMethodView = new View(this);
-        FrameLayout.LayoutParams layoutParams = new FrameLayout.LayoutParams(mainContainer.getLayoutParams());
-        fitInputMethodView.setLayoutParams(layoutParams);
-        fitInputMethodView.setX(0);
-        fitInputMethodView.setY(0);
-        fitInputMethodView.setLeft(0);
-        fitInputMethodView.setRight(mainContainer.getWidth());
-        fitInputMethodView.setTop(0);
-        fitInputMethodView.setBottom(InputMethodUtil.getDialogHeightWithSoftInputMethod());
-        smoothScalable.setShowingView(fitInputMethodView);
+        smoothScalable.setShowingView(mainContainer);
 
         smoothScalable.show();
         isTodoEditShow = true;

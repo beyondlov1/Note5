@@ -8,6 +8,7 @@ import android.view.animation.LinearInterpolator;
 
 import com.beyond.note5.utils.ViewUtil;
 
+@Deprecated
 public class ABASmoothScalable extends DefaultSmoothScalable {
     @Override
     public void show() {
