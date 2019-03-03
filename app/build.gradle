@@ -80,6 +80,9 @@ dependencies {
     implementation 'id.zelory:compressor:2.1.0'
     implementation 'com.zxy.android:tiny:0.0.6'
 
+    //permission
+    implementation 'com.github.dfqin:grantor:2.5'
+
     //float action button
 //    implementation 'com.melnykov:floatingactionbutton:1.3.0'
 

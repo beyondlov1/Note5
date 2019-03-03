@@ -2,6 +2,7 @@ package com.beyond.note5.view.fragment;
 
 import android.os.Bundle;
 import android.support.annotation.Nullable;
+import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.StaggeredGridLayoutManager;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -12,7 +13,9 @@ import com.beyond.note5.bean.Todo;
 import com.beyond.note5.event.AddTodoEvent;
 import com.beyond.note5.event.CompleteTodoEvent;
 import com.beyond.note5.event.DeleteTodoEvent;
+import com.beyond.note5.event.HideFABEvent;
 import com.beyond.note5.event.RefreshTodoListEvent;
+import com.beyond.note5.event.ShowFABEvent;
 import com.beyond.note5.event.UpdateTodoEvent;
 import com.beyond.note5.module.DaggerTodoComponent;
 import com.beyond.note5.module.TodoComponent;
@@ -23,6 +26,7 @@ import com.beyond.note5.view.adapter.component.TodoRecyclerViewAdapter;
 import com.beyond.note5.view.adapter.component.header.LastModifyTimeItemDataGenerator;
 
 import org.apache.commons.lang3.StringUtils;
+import org.greenrobot.eventbus.EventBus;
 import org.greenrobot.eventbus.Subscribe;
 import org.greenrobot.eventbus.ThreadMode;
 
@@ -58,7 +62,42 @@ public class TodoListFragment extends AbstractFragmentTodoView {
         ViewGroup viewGroup=(ViewGroup) inflater.inflate(R.layout.fragment_todo_list,container,false);
         initView(viewGroup);
         todoPresenter.findAll();
+        initOnScrollListener();
         return viewGroup;
+    }
+
+    private void initOnScrollListener() {
+        recyclerView.setOnFlingListener(new RecyclerView.OnFlingListener() {
+            @Override
+            public boolean onFling(int velocityX, int velocityY) {
+                //上划
+                if (velocityY<0){
+                    EventBus.getDefault().post(new ShowFABEvent(R.id.todo_recycler_view));
+                }
+                return false;
+            }
+        });
+        recyclerView.addOnScrollListener(new RecyclerView.OnScrollListener() {
+            @Override
+            public void onScrollStateChanged(RecyclerView recyclerView, int newState) {
+                super.onScrollStateChanged(recyclerView, newState);
+                //未到滚动的高度
+                if(!recyclerView.canScrollVertically(1)&&!recyclerView.canScrollVertically(-1)){
+                    EventBus.getDefault().post(new ShowFABEvent(R.id.todo_recycler_view));
+                    return;
+                }
+                //下划到底
+                if (!recyclerView.canScrollVertically(1)) {
+                    EventBus.getDefault().post(new HideFABEvent(R.id.todo_recycler_view));
+                }
+                //上划到顶
+                if (!recyclerView.canScrollVertically(-1)) {
+                    EventBus.getDefault().post(new ShowFABEvent(R.id.todo_recycler_view));
+                }
+
+            }
+
+        });
     }
 
     private void initView(ViewGroup viewGroup) {

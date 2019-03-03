@@ -5,6 +5,7 @@ import android.content.Intent;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
+import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.annotation.RequiresApi;
 import android.util.Log;
@@ -46,6 +47,8 @@ public class ShareActivity extends AbstractActivityNoteView {
 
     private final static String TAG = "ShareActivity";
 
+    private Intent intent;
+
     @Inject
     NotePresenter notePresenter;
 
@@ -54,7 +57,7 @@ public class ShareActivity extends AbstractActivityNoteView {
         super.onCreate(savedInstanceState);
         initInjection();
 
-        final Intent intent = getIntent();
+        intent = getIntent();
         if ("text/plain".equals(intent.getType()) && (SEND.equals(intent.getAction()))) {
             Note note = generateNoteFromSend(intent);
             notePresenter.add(note);
@@ -65,8 +68,29 @@ public class ShareActivity extends AbstractActivityNoteView {
                 notePresenter.add(note);
             }
         }
-        if (intent.getType().length()>6&&intent.getType().startsWith("image/")) {
+        if (intent.getType().length() > 6 && intent.getType().startsWith("image/")) {
             if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.M) {
+                //如果这里需要权限可以这样写， 记得要加finish()!!!
+//                if (ActivityCompat.checkSelfPermission(this, Manifest.permission.WRITE_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
+//                    PermissionsUtil.requestPermission(this, new PermissionListener() {
+//                        @Override
+//                        public void permissionGranted(@NonNull String[] permission) {
+//                            Note note = generateNoteFromImage(intent);
+//                            if (note != null) {
+//                                notePresenter.add(note);
+//                            }
+//                            EventBus.getDefault().post(new RefreshNoteListEvent(TAG));
+//                            finish();
+//                        }
+//
+//                        @Override
+//                        public void permissionDenied(@NonNull String[] permission) {
+//
+//                        }
+//                    }, new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE}, false, null);
+//                    finish();
+//                    return;
+//                }
                 Note note = generateNoteFromImage(intent);
                 if (note != null) {
                     notePresenter.add(note);
@@ -75,7 +99,6 @@ public class ShareActivity extends AbstractActivityNoteView {
         }
 
         EventBus.getDefault().post(new RefreshNoteListEvent(TAG));
-
         finish();
     }
 
@@ -155,7 +178,7 @@ public class ShareActivity extends AbstractActivityNoteView {
 
         ClipData data = intent.getClipData();
         String type = intent.getType();
-        String suffix = StringUtils.substring(type,6);
+        String suffix = StringUtils.substring(type, 6);
         if (data == null) {
             return null;
         }
@@ -165,7 +188,7 @@ public class ShareActivity extends AbstractActivityNoteView {
         for (int i = 0; i < itemCount; i++) {
             /*将content：//中的图片下载到指定位置*/
             Uri uri = data.getItemAt(i).getUri();
-            File imageFile = PhotoUtil.createImageFile(this,suffix);
+            File imageFile = PhotoUtil.createImageFile(this, suffix);
             String downloadPath = null;
             try (InputStream inputStream = this.getContentResolver().openInputStream(uri);
                  OutputStream outputStream = new FileOutputStream(imageFile)) {
@@ -184,4 +207,18 @@ public class ShareActivity extends AbstractActivityNoteView {
     }
 
 
+    @Override
+    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+        if (requestCode == 1) {
+            if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.M) {
+                Note note = generateNoteFromImage(intent);
+                if (note != null) {
+                    notePresenter.add(note);
+                }
+            }
+            EventBus.getDefault().post(new RefreshNoteListEvent(TAG));
+            finish();
+        }
+    }
 }

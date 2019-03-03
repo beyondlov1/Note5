@@ -1,5 +1,7 @@
 package com.beyond.note5.model;
 
+import com.beyond.note5.bean.Document;
+
 import java.util.List;
 
 /**
@@ -7,7 +9,7 @@ import java.util.List;
  * @date: 2019/2/6
  */
 
-public interface DocumentModel<T> extends Model {
+public interface DocumentModel<T extends Document> extends Model<T> {
 
     void add(T document);
 

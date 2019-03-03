@@ -1,16 +1,13 @@
 package com.beyond.note5.view;
 
-import android.Manifest;
 import android.animation.Animator;
 import android.animation.AnimatorInflater;
 import android.animation.AnimatorListenerAdapter;
 import android.animation.AnimatorSet;
 import android.content.Intent;
-import android.content.pm.PackageManager;
 import android.graphics.Point;
 import android.os.Build;
 import android.os.Bundle;
-import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.design.widget.FloatingActionButton;
 import android.support.v4.app.DialogFragment;
@@ -28,6 +25,8 @@ import com.beyond.note5.R;
 import com.beyond.note5.bean.Attachment;
 import com.beyond.note5.bean.Document;
 import com.beyond.note5.bean.Note;
+import com.beyond.note5.bean.Reminder;
+import com.beyond.note5.bean.Todo;
 import com.beyond.note5.event.AddNoteEvent;
 import com.beyond.note5.event.DetailNoteEvent;
 import com.beyond.note5.event.HideFABEvent;
@@ -38,6 +37,8 @@ import com.beyond.note5.event.ShowFABEvent;
 import com.beyond.note5.event.ShowKeyBoardEvent;
 import com.beyond.note5.event.ShowNoteDetailEvent;
 import com.beyond.note5.event.ShowTodoEditEvent;
+import com.beyond.note5.model.CalendarModel;
+import com.beyond.note5.model.CalendarModelImpl;
 import com.beyond.note5.utils.IDUtil;
 import com.beyond.note5.utils.PhotoUtil;
 import com.beyond.note5.view.adapter.component.header.ItemDataGenerator;
@@ -91,12 +92,24 @@ public class MainActivity extends FragmentActivity {
         initNoteDetailFragmentContainer();
         initTodoEditFragmentContainer();
 
-        //permission
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-            if (checkSelfPermission(Manifest.permission.READ_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
-                requestPermissions(new String[]{Manifest.permission.READ_EXTERNAL_STORAGE}, 1);
-            }
-        }
+
+        test();
+
+    }
+
+    private void test(){
+        CalendarModel calendarModel = new CalendarModelImpl(this);
+        Todo todo = new Todo();
+        todo.setId(IDUtil.uuid());
+        todo.setTitle("hahah");
+        todo.setContent("content");
+        Reminder reminder = new Reminder();
+        String reminderId = IDUtil.uuid();
+        reminder.setId(reminderId);
+        reminder.setStart(new Date());
+        todo.setReminderId(reminderId);
+        todo.setReminder(reminder);
+        calendarModel.add(todo);
     }
 
     private void initNoteDetailFragmentContainer() {
@@ -122,14 +135,6 @@ public class MainActivity extends FragmentActivity {
 
         todoEditFragmentContainer = findViewById(R.id.container_fragment_todo_edit);
         todoEditFragmentContainer.setVisibility(View.GONE);
-    }
-
-    @Override
-    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
-        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
-        if (requestCode == 1) {
-            System.out.println("yes");
-        }
     }
 
     private void initView() {

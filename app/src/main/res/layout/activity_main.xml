@@ -5,7 +5,7 @@
     android:layout_height="match_parent"
     android:background="#eeeeee"
     android:id="@+id/main_container"
-    tools:context="com.beyond.note5.view.MainActivity">
+    tools:activity="com.beyond.note5.view.MainActivity">
 
     <!-- The primary full-scrrootview. This can be replaced with whaterootview
          is needed to present your content, e.g. VideoView, SurfaceView,
