@@ -21,7 +21,7 @@ public class Todo extends Document {
     private String reminderId;
     private String title;
     private String content;
-    private String type;
+    private String type = Document.TODO;
     private Date createTime;
     private Date lastModifyTime;
     private Integer version;

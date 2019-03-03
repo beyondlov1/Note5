@@ -70,27 +70,6 @@ public class ShareActivity extends AbstractActivityNoteView {
         }
         if (intent.getType().length() > 6 && intent.getType().startsWith("image/")) {
             if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.M) {
-                //如果这里需要权限可以这样写， 记得要加finish()!!!
-//                if (ActivityCompat.checkSelfPermission(this, Manifest.permission.WRITE_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
-//                    PermissionsUtil.requestPermission(this, new PermissionListener() {
-//                        @Override
-//                        public void permissionGranted(@NonNull String[] permission) {
-//                            Note note = generateNoteFromImage(intent);
-//                            if (note != null) {
-//                                notePresenter.add(note);
-//                            }
-//                            EventBus.getDefault().post(new RefreshNoteListEvent(TAG));
-//                            finish();
-//                        }
-//
-//                        @Override
-//                        public void permissionDenied(@NonNull String[] permission) {
-//
-//                        }
-//                    }, new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE}, false, null);
-//                    finish();
-//                    return;
-//                }
                 Note note = generateNoteFromImage(intent);
                 if (note != null) {
                     notePresenter.add(note);

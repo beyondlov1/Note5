@@ -21,7 +21,7 @@ public class Note extends Document {
     private String id;
     private String title;
     private String content;
-    private String type;
+    private String type = Document.NOTE;
     private Date createTime;
     private Date lastModifyTime;
     private Integer version;
@@ -120,7 +120,7 @@ public class Note extends Document {
 
     @Override
     public String getType() {
-        return Document.NOTE;
+        return type;
     }
 
     @Override

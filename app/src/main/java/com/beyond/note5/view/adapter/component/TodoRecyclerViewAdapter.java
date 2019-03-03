@@ -3,7 +3,6 @@ package com.beyond.note5.view.adapter.component;
 import android.content.Context;
 import android.graphics.Paint;
 import android.graphics.drawable.GradientDrawable;
-import android.support.v4.app.FragmentActivity;
 import android.support.v4.content.ContextCompat;
 import android.support.v7.widget.StaggeredGridLayoutManager;
 import android.view.LayoutInflater;
@@ -22,7 +21,6 @@ import com.beyond.note5.event.ShowTodoEditEvent;
 import com.beyond.note5.view.adapter.component.header.Header;
 import com.beyond.note5.view.adapter.component.header.ItemDataGenerator;
 import com.beyond.note5.view.adapter.component.viewholder.TodoViewHolder;
-import com.beyond.note5.view.fragment.TodoModifyFragment;
 
 import org.apache.commons.lang3.StringUtils;
 import org.greenrobot.eventbus.EventBus;
@@ -120,16 +118,8 @@ public class TodoRecyclerViewAdapter extends DocumentRecyclerViewAdapter<Todo, T
                 ShowTodoEditEvent showTodoEditEvent = new ShowTodoEditEvent(v);
                 EventBus.getDefault().post(showTodoEditEvent);
                 EventBus.getDefault().post(new FillTodoModifyEvent(todo));
-//                showModifyView(todo);
             }
         });
-    }
-
-    private void showModifyView(Todo todo) {
-        TodoModifyFragment todoModifyFragment = new TodoModifyFragment();
-        FragmentActivity activity = (FragmentActivity) context;
-        todoModifyFragment.show(activity.getSupportFragmentManager(), "modifyDialog");
-        EventBus.getDefault().postSticky(new FillTodoModifyEvent(todo));
     }
 
 }

@@ -92,9 +92,6 @@ public class MainActivity extends FragmentActivity {
         initNoteDetailFragmentContainer();
         initTodoEditFragmentContainer();
 
-
-        test();
-
     }
 
     private void test(){
@@ -329,7 +326,7 @@ public class MainActivity extends FragmentActivity {
         EventBus.getDefault().post(new ShowFABEvent(null));
 
         SmoothScalable smoothScalable = (SmoothScalable) todoModifyFragment;
-        smoothScalable.setEndView(clickedView);
+        smoothScalable.setEndView(clickedView == null?getViewToReturn(-1):clickedView);
         smoothScalable.hide();
         isTodoEditShow = false;
     }

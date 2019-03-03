@@ -1,5 +1,6 @@
 package com.beyond.note5.view.fragment;
 
+import android.content.Context;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.support.v7.widget.RecyclerView;
@@ -8,6 +9,7 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 
+import com.beyond.note5.MyApplication;
 import com.beyond.note5.R;
 import com.beyond.note5.bean.Todo;
 import com.beyond.note5.event.AddTodoEvent;
@@ -31,8 +33,11 @@ import org.greenrobot.eventbus.Subscribe;
 import org.greenrobot.eventbus.ThreadMode;
 
 import java.util.Iterator;
+import java.util.List;
 
 import javax.inject.Inject;
+
+import static com.beyond.note5.model.TodoModelImpl.IS_SHOW_READ_FLAG_DONE;
 
 /**
  * @author: beyond
@@ -43,6 +48,8 @@ public class TodoListFragment extends AbstractFragmentTodoView {
 
     @Inject
     TodoPresenter todoPresenter;
+
+    private View container;
 
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
@@ -60,6 +67,7 @@ public class TodoListFragment extends AbstractFragmentTodoView {
     @Override
     public View onCreateView(LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
         ViewGroup viewGroup=(ViewGroup) inflater.inflate(R.layout.fragment_todo_list,container,false);
+        this.container = viewGroup;
         initView(viewGroup);
         todoPresenter.findAll();
         initOnScrollListener();
@@ -149,6 +157,25 @@ public class TodoListFragment extends AbstractFragmentTodoView {
                 msg("更新成功");
                 break;
             }
+        }
+    }
+
+    @Override
+    public void onFindAllSuccess(List<Todo> allT) {
+        super.onFindAllSuccess(allT);
+
+        //TODO: todo一个都没有时特殊处理
+        if (allT.isEmpty()){
+            container.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    getActivity().getSharedPreferences(MyApplication.SHARED_PREFERENCES_NAME, Context.MODE_PRIVATE).edit()
+                            .putBoolean(IS_SHOW_READ_FLAG_DONE,true).apply();
+                    EventBus.getDefault().post(new RefreshTodoListEvent(null));
+                }
+            });
+        }else {
+            container.setOnClickListener(null);
         }
     }
 }

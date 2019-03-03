@@ -317,7 +317,6 @@ public class NoteDetailSuperFragment extends DialogFragment implements OnBackPre
 
     @Subscribe(threadMode = ThreadMode.MAIN, sticky = true)
     public void onEventMainThread(DetailNoteEvent detailNoteEvent) {
-        show();
         data = detailNoteEvent.get();
         currIndex = detailNoteEvent.getIndex();
         processDetailTools();
