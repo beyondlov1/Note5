@@ -3,6 +3,7 @@ package com.beyond.note5.view.adapter;
 import android.app.Activity;
 import android.widget.Toast;
 
+import com.beyond.note5.utils.ToastUtil;
 import com.beyond.note5.view.DocumentView;
 
 import java.util.List;
@@ -54,6 +55,6 @@ public abstract class AbstractActivityDocumentView<T> extends Activity implement
     }
 
     protected void msg(String msg) {
-        Toast.makeText(this, msg, Toast.LENGTH_SHORT).show();
+        ToastUtil.toast(this, msg, Toast.LENGTH_SHORT);
     }
 }

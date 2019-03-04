@@ -3,6 +3,7 @@ package com.beyond.note5.view.adapter;
 import android.support.v4.app.Fragment;
 import android.widget.Toast;
 
+import com.beyond.note5.utils.ToastUtil;
 import com.beyond.note5.view.DocumentView;
 
 import java.util.List;
@@ -55,6 +56,6 @@ public abstract class AbstractFragmentDocumentView<T> extends Fragment implement
     }
 
     protected void msg(String msg) {
-        Toast.makeText(this.getActivity(), msg, Toast.LENGTH_SHORT).show();
+        ToastUtil.toast(this.getActivity(), msg, Toast.LENGTH_SHORT);
     }
 }

@@ -41,6 +41,7 @@ import com.beyond.note5.model.CalendarModel;
 import com.beyond.note5.model.CalendarModelImpl;
 import com.beyond.note5.utils.IDUtil;
 import com.beyond.note5.utils.PhotoUtil;
+import com.beyond.note5.utils.ToastUtil;
 import com.beyond.note5.view.adapter.component.header.ItemDataGenerator;
 import com.beyond.note5.view.animator.SmoothScalable;
 import com.beyond.note5.view.fragment.NoteDetailSuperFragment;
@@ -382,7 +383,7 @@ public class MainActivity extends FragmentActivity {
         } else {
             super.onBackPressed();
         }
-
+        ToastUtil.cancel();
     }
 
     @Override

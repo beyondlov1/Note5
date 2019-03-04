@@ -37,6 +37,7 @@ import com.beyond.note5.event.DetailNoteEvent;
 import com.beyond.note5.event.FillNoteModifyEvent;
 import com.beyond.note5.event.ModifyNoteDoneEvent;
 import com.beyond.note5.event.UpdateNoteEvent;
+import com.beyond.note5.utils.ToastUtil;
 import com.beyond.note5.utils.WebViewUtil;
 import com.beyond.note5.view.custom.ViewSwitcher;
 import com.beyond.note5.view.listener.OnSlideListener;
@@ -228,7 +229,7 @@ public class NoteDetailFragment extends DialogFragment {
                     WebViewUtil.addWebViewProgressBar(new DetailViewHolder(viewSwitcher.getCurrentView()).displayWebView);
                     new DetailViewHolder(viewSwitcher.getCurrentView()).displayWebView.loadUrl(url);
                 } else {
-                    Toast.makeText(context, "搜索文字不能超过32个字", Toast.LENGTH_SHORT).show();
+                    ToastUtil.toast(context, "搜索文字不能超过32个字", Toast.LENGTH_SHORT);
                 }
             }
         });
@@ -241,7 +242,7 @@ public class NoteDetailFragment extends DialogFragment {
                     Intent intent = new Intent(Intent.ACTION_VIEW, uri);
                     startActivity(intent);
                 } else {
-                    Toast.makeText(context, "搜索文字不能超过32个字", Toast.LENGTH_SHORT).show();
+                    ToastUtil.toast(context, "搜索文字不能超过32个字", Toast.LENGTH_SHORT);
                 }
             }
         });
@@ -269,7 +270,7 @@ public class NoteDetailFragment extends DialogFragment {
     }
 
     private void msg(String msg) {
-        Toast.makeText(context, msg, Toast.LENGTH_SHORT).show();
+        ToastUtil.toast(context, msg, Toast.LENGTH_SHORT);
     }
 
     @Override
@@ -352,13 +353,13 @@ public class NoteDetailFragment extends DialogFragment {
                 if (data.get(currIndex).getReadFlag() < 0) { // 置顶
                     note.setReadFlag(DocumentConst.READ_FLAG_NORMAL);
                     EventBus.getDefault().post(new UpdateNoteEvent(note));
-                    Toast.makeText(context, "取消置顶", Toast.LENGTH_SHORT).show();
+                    ToastUtil.toast(context, "取消置顶", Toast.LENGTH_SHORT);
                     EventBus.getDefault().post(new ModifyNoteDoneEvent(note));
                     ((ImageButton) stickButton).setImageDrawable(getResources().getDrawable(R.drawable.ic_thumb_up_grey_600_24dp, null));
                 } else { //其他
                     note.setReadFlag(DocumentConst.READ_FLAG_DONE);
                     EventBus.getDefault().post(new UpdateNoteEvent(note));
-                    Toast.makeText(context, "置顶成功", Toast.LENGTH_SHORT).show();
+                    ToastUtil.toast(context, "置顶成功", Toast.LENGTH_SHORT);
                     EventBus.getDefault().post(new ModifyNoteDoneEvent(note));
                     ((ImageButton) stickButton).setImageDrawable(getResources().getDrawable(R.drawable.ic_thumb_up_blue_400_24dp, null));
                 }
