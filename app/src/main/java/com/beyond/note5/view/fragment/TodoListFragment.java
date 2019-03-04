@@ -1,11 +1,14 @@
 package com.beyond.note5.view.fragment;
 
+import android.annotation.SuppressLint;
 import android.content.Context;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.StaggeredGridLayoutManager;
+import android.view.GestureDetector;
 import android.view.LayoutInflater;
+import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
 
@@ -33,7 +36,6 @@ import org.greenrobot.eventbus.Subscribe;
 import org.greenrobot.eventbus.ThreadMode;
 
 import java.util.Iterator;
-import java.util.List;
 
 import javax.inject.Inject;
 
@@ -48,8 +50,6 @@ public class TodoListFragment extends AbstractFragmentTodoView {
 
     @Inject
     TodoPresenter todoPresenter;
-
-    private View container;
 
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
@@ -66,10 +66,10 @@ public class TodoListFragment extends AbstractFragmentTodoView {
     @Nullable
     @Override
     public View onCreateView(LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
-        ViewGroup viewGroup=(ViewGroup) inflater.inflate(R.layout.fragment_todo_list,container,false);
-        this.container = viewGroup;
+        ViewGroup viewGroup = (ViewGroup) inflater.inflate(R.layout.fragment_todo_list, container, false);
         initView(viewGroup);
         todoPresenter.findAll();
+        initEvent();
         initOnScrollListener();
         return viewGroup;
     }
@@ -79,7 +79,7 @@ public class TodoListFragment extends AbstractFragmentTodoView {
             @Override
             public boolean onFling(int velocityX, int velocityY) {
                 //上划
-                if (velocityY<0){
+                if (velocityY < 0) {
                     EventBus.getDefault().post(new ShowFABEvent(R.id.todo_recycler_view));
                 }
                 return false;
@@ -90,7 +90,7 @@ public class TodoListFragment extends AbstractFragmentTodoView {
             public void onScrollStateChanged(RecyclerView recyclerView, int newState) {
                 super.onScrollStateChanged(recyclerView, newState);
                 //未到滚动的高度
-                if(!recyclerView.canScrollVertically(1)&&!recyclerView.canScrollVertically(-1)){
+                if (!recyclerView.canScrollVertically(1) && !recyclerView.canScrollVertically(-1)) {
                     EventBus.getDefault().post(new ShowFABEvent(R.id.todo_recycler_view));
                     return;
                 }
@@ -114,6 +114,60 @@ public class TodoListFragment extends AbstractFragmentTodoView {
         //设置显示格式
         final StaggeredGridLayoutManager staggeredGridLayoutManager = new StaggeredGridLayoutManager(1, StaggeredGridLayoutManager.VERTICAL);
         recyclerView.setLayoutManager(staggeredGridLayoutManager);
+    }
+
+    @SuppressLint("ClickableViewAccessibility")
+    private void initEvent(){
+
+        // 点击切换显示模式（是否显示已读）
+        recyclerView.setOnTouchListener(new View.OnTouchListener() {
+            GestureDetector gestureDetector = new GestureDetector(getContext(), new GestureDetector.OnGestureListener() {
+                @Override
+                public boolean onDown(MotionEvent e) {
+                    return false;
+                }
+
+                @Override
+                public void onShowPress(MotionEvent e) {
+
+                }
+
+                @Override
+                public boolean onSingleTapUp(MotionEvent e) {
+                    if (!getActivity().getSharedPreferences(MyApplication.SHARED_PREFERENCES_NAME, Context.MODE_PRIVATE)
+                            .getBoolean(IS_SHOW_READ_FLAG_DONE, false)) {
+                        getActivity().getSharedPreferences(MyApplication.SHARED_PREFERENCES_NAME, Context.MODE_PRIVATE).edit()
+                                .putBoolean(IS_SHOW_READ_FLAG_DONE, true).apply();
+                        EventBus.getDefault().post(new RefreshTodoListEvent(null));
+                    } else {
+                        getActivity().getSharedPreferences(MyApplication.SHARED_PREFERENCES_NAME, Context.MODE_PRIVATE).edit()
+                                .putBoolean(IS_SHOW_READ_FLAG_DONE, false).apply();
+                        EventBus.getDefault().post(new RefreshTodoListEvent(null));
+                    }
+                    return true;
+                }
+
+                @Override
+                public boolean onScroll(MotionEvent e1, MotionEvent e2, float distanceX, float distanceY) {
+                    return false;
+                }
+
+                @Override
+                public void onLongPress(MotionEvent e) {
+
+                }
+
+                @Override
+                public boolean onFling(MotionEvent e1, MotionEvent e2, float velocityX, float velocityY) {
+                    return false;
+                }
+            });
+
+            @Override
+            public boolean onTouch(View v, MotionEvent event) {
+                return gestureDetector.onTouchEvent(event);
+            }
+        });
     }
 
     @Subscribe(threadMode = ThreadMode.MAIN)
@@ -160,22 +214,4 @@ public class TodoListFragment extends AbstractFragmentTodoView {
         }
     }
 
-    @Override
-    public void onFindAllSuccess(List<Todo> allT) {
-        super.onFindAllSuccess(allT);
-
-        //TODO: todo一个都没有时特殊处理
-        if (allT.isEmpty()){
-            container.setOnClickListener(new View.OnClickListener() {
-                @Override
-                public void onClick(View v) {
-                    getActivity().getSharedPreferences(MyApplication.SHARED_PREFERENCES_NAME, Context.MODE_PRIVATE).edit()
-                            .putBoolean(IS_SHOW_READ_FLAG_DONE,true).apply();
-                    EventBus.getDefault().post(new RefreshTodoListEvent(null));
-                }
-            });
-        }else {
-            container.setOnClickListener(null);
-        }
-    }
 }

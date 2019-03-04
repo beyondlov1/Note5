@@ -83,6 +83,7 @@ public class TodoEditFragment extends DialogFragment {
                                 String content = contentEditText.getText().toString();
                                 sendEventsOnOKClick(content);
                                 dialog.dismiss();
+                                InputMethodUtil.hideKeyboard(contentEditText);
                             }
                         }).setNegativeButton("Cancel", null);
          neutralButton = initNeutralButton();
