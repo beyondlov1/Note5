@@ -14,6 +14,7 @@ import com.beyond.note5.model.dao.DaoSession;
 public class MyApplication extends Application {
 
     public static final String  SHARED_PREFERENCES_NAME = "note5_preferences";
+    public static final String DEFAULT_PAGE = "default_page";
 
 
     private static MyApplication instance;

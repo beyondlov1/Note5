@@ -5,7 +5,6 @@ import android.util.Log;
 import android.view.View;
 import android.view.ViewGroup;
 import android.webkit.WebChromeClient;
-import android.webkit.WebResourceRequest;
 import android.webkit.WebSettings;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
@@ -19,6 +18,7 @@ import com.beyond.note5.utils.converter.Document2MarkdownConverter;
 import com.beyond.note5.utils.converter.Markdown2HtmlConverter;
 import com.beyond.note5.utils.converter.MarkdownHtml2HtmlConverter;
 
+import java.util.Stack;
 import java.util.regex.Pattern;
 
 
@@ -32,6 +32,8 @@ public class WebViewUtil {
 
     public static final String MIME_TYPE = "text/html; charset=UTF-8";
     private static final String TAG = "WebViewUtil";
+
+    private static Stack<String> historyUrlStack = new Stack<>();
 
     private static Document2HtmlConverter document2HtmlConverter = new Document2HtmlConverter();
 
@@ -63,14 +65,21 @@ public class WebViewUtil {
         Log.d(TAG,content);
     }
 
-    public static void configWebView(WebView webView){
-        WebSettings webSettings = webView.getSettings();
+    private static String lastUrl;
+    public static void configWebView(final WebView webView){
+        final WebSettings webSettings = webView.getSettings();
         webSettings.setAllowUniversalAccessFromFileURLs(true);
         webSettings.setAllowFileAccess(true);
         webSettings.setAllowFileAccessFromFileURLs(true);
+        webSettings.setCacheMode(WebSettings.LOAD_CACHE_ELSE_NETWORK);
         webView.setWebViewClient(new WebViewClient(){
             @Override
-            public boolean shouldOverrideUrlLoading(WebView view, WebResourceRequest request) {
+            public boolean shouldOverrideUrlLoading(WebView view, String url) {
+                Log.d("webviewUtil",url);
+                if (lastUrl!=null){
+                    historyUrlStack.push(lastUrl);
+                }
+                lastUrl = url;
                 return false;
             }
 
@@ -80,6 +89,30 @@ public class WebViewUtil {
                 removeWebViewAllViews(view);
             }
         });
+    }
+
+    public static boolean canGoBack(WebView webView){
+        return !historyUrlStack.empty();
+    }
+
+    /**
+     * @param webView webview
+     * @return canGoBack
+     */
+    public static void goBack(WebView webView){
+        if (!historyUrlStack.empty()){
+            String url = historyUrlStack.pop();
+            addWebViewProgressBar(webView);
+            webView.loadUrl(url);
+            lastUrl = url;
+        }else {
+            lastUrl = null;
+        }
+    }
+
+    public static void clearHistory() {
+        historyUrlStack.clear();
+        lastUrl = null;
     }
 
     public static void addWebViewProgressBar(WebView webView){
@@ -104,10 +137,10 @@ public class WebViewUtil {
 
         webView.addView(progressBar);
     }
+
     public static void removeWebViewAllViews(WebView webView){
         webView.removeAllViews();
     }
-
 
     public static String getUrl(Document document){
         String urlWeGet=null;
@@ -143,7 +176,7 @@ public class WebViewUtil {
             if (removeSpecialChars(things).length()>32){
                 urlWeGet=null;
             }else {
-                urlWeGet = "http://www.bing.com/search?q=" + removeSpecialChars(things);
+                urlWeGet = "https://www.bing.com/search?q=" + removeSpecialChars(things);
             }
         }
 
@@ -156,4 +189,5 @@ public class WebViewUtil {
                 .replaceAll("\n","+")
                 .replaceAll("\\s+","+");
     }
+
 }

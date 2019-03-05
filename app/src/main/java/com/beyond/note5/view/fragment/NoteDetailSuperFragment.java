@@ -397,6 +397,7 @@ public class NoteDetailSuperFragment extends DialogFragment implements OnBackPre
 
     private void initDetailContentData(NoteDetailSuperFragment.DetailViewHolder detailViewHolder) {
         this.detailViewHolder = detailViewHolder;
+        WebViewUtil.clearHistory();
         WebViewUtil.loadWebContent(detailViewHolder.displayWebView, data.get(currIndex));
         String pageCount = String.format("%s/%s", currIndex + 1, data.size());
         pageCountTextView.setText(pageCount);
@@ -417,7 +418,7 @@ public class NoteDetailSuperFragment extends DialogFragment implements OnBackPre
 
             @Override
             protected void onSlideUp() {
-                hide();
+//                hide();
             }
 
             @Override
@@ -482,7 +483,13 @@ public class NoteDetailSuperFragment extends DialogFragment implements OnBackPre
 
     @Override
     public boolean onBackPressed() {
-        sendHideMessage();
+        WebView displayWebView = new DetailViewHolder(viewSwitcher.getCurrentView()).displayWebView;
+        if (WebViewUtil.canGoBack(displayWebView)){
+            WebViewUtil.goBack(displayWebView);
+        }else {
+            WebViewUtil.clearHistory();
+            sendHideMessage();
+        }
         return true;
     }
 

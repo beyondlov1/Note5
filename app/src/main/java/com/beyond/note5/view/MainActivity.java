@@ -18,9 +18,11 @@ import android.support.v4.app.FragmentPagerAdapter;
 import android.support.v4.app.FragmentTransaction;
 import android.support.v4.view.PagerTabStrip;
 import android.support.v4.view.ViewPager;
+import android.util.Log;
 import android.view.View;
 import android.widget.FrameLayout;
 
+import com.beyond.note5.MyApplication;
 import com.beyond.note5.R;
 import com.beyond.note5.bean.Attachment;
 import com.beyond.note5.bean.Document;
@@ -41,6 +43,7 @@ import com.beyond.note5.model.CalendarModel;
 import com.beyond.note5.model.CalendarModelImpl;
 import com.beyond.note5.utils.IDUtil;
 import com.beyond.note5.utils.PhotoUtil;
+import com.beyond.note5.utils.PreferenceUtil;
 import com.beyond.note5.utils.ToastUtil;
 import com.beyond.note5.view.adapter.component.header.ItemDataGenerator;
 import com.beyond.note5.view.animator.SmoothScalable;
@@ -170,6 +173,7 @@ public class MainActivity extends FragmentActivity {
             }
 
         });
+        mainViewPager.setCurrentItem(PreferenceUtil.getInt(MyApplication.DEFAULT_PAGE));
     }
 
     private void initEvent() {
@@ -364,6 +368,14 @@ public class MainActivity extends FragmentActivity {
     protected void onStop() {
         EventBus.getDefault().unregister(this);
         super.onStop();
+    }
+
+    @Override
+    protected void onDestroy() {
+        int currentItem = mainViewPager.getCurrentItem();
+        PreferenceUtil.put(MyApplication.DEFAULT_PAGE,currentItem);
+        Log.d("MainActivity",currentItem+"");
+        super.onDestroy();
     }
 
     @Override
