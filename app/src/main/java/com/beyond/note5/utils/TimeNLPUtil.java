@@ -5,9 +5,10 @@ import android.util.Log;
 import com.time.nlp.TimeNormalizer;
 import com.time.nlp.TimeUnit;
 
+import org.apache.commons.lang3.time.DateFormatUtils;
+
 import java.net.URISyntaxException;
 import java.net.URL;
-import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.TimeZone;
 
@@ -50,9 +51,7 @@ public class TimeNLPUtil {
 
     public static String getDateStringForMicrosoftEvent(Date date, String timeZoneId) {
         if (date == null) return null;
-        SimpleDateFormat simpleDateFormat = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss");
-        simpleDateFormat.setTimeZone(TimeZone.getTimeZone(timeZoneId));
-        return simpleDateFormat.format(date);
+        return DateFormatUtils.format(date,"yyyy-MM-dd'T'HH:mm:ss",TimeZone.getTimeZone(timeZoneId));
     }
 
     private static TimeNormalizer getNormalizer() {
