@@ -37,7 +37,6 @@ public class InputMethodUtil {
             public void run() {
                 InputMethodManager inputMethodManager = (InputMethodManager) view.getContext().getSystemService(Context.INPUT_METHOD_SERVICE);
                 if (inputMethodManager != null) {
-                    view.requestFocus();
                     inputMethodManager.hideSoftInputFromWindow(view.getWindowToken(), 0);
                 }
             }

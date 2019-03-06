@@ -82,6 +82,8 @@ public class MainActivity extends FragmentActivity {
     private Fragment noteDetailFragment;
     private Fragment todoModifyFragment;
 
+    private String[] documentTypes = new String[2];
+
     private String currentType;
 
     @Override
@@ -156,6 +158,8 @@ public class MainActivity extends FragmentActivity {
         final List<String> fragmentTitles = new ArrayList<>();
         fragmentTitles.add("Note");
         fragmentTitles.add("Todo");
+        documentTypes[0] = Document.NOTE;
+        documentTypes[1] = Document.TODO;
         mainViewPager.setAdapter(new FragmentPagerAdapter(getSupportFragmentManager()) {
             @Override
             public Fragment getItem(int position) {
@@ -174,6 +178,7 @@ public class MainActivity extends FragmentActivity {
 
         });
         mainViewPager.setCurrentItem(PreferenceUtil.getInt(MyApplication.DEFAULT_PAGE));
+        currentType = documentTypes[mainViewPager.getCurrentItem()];
     }
 
     private void initEvent() {
