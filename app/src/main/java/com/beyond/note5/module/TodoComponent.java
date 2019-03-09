@@ -9,5 +9,5 @@ import dagger.Component;
 @Singleton
 @Component(modules = {TodoModule.class})
 public interface TodoComponent {
-    void inject(TodoListFragment todoListFragment);
+    void inject(TodoListFragment todoListFragment); // 一个目标只能拿一个Component注入
 }

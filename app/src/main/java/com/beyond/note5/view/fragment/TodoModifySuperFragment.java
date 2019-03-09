@@ -5,14 +5,15 @@ import android.view.ViewStub;
 import android.widget.ImageButton;
 
 import com.beyond.note5.R;
-import com.beyond.note5.bean.Todo;
+import com.beyond.note5.bean.Reminder;
 import com.beyond.note5.event.DeleteTodoEvent;
 import com.beyond.note5.event.FillTodoModifyEvent;
 import com.beyond.note5.event.HideTodoEditEvent;
 import com.beyond.note5.event.UpdateTodoEvent;
+import com.beyond.note5.utils.IDUtil;
 import com.beyond.note5.utils.InputMethodUtil;
+import com.beyond.note5.utils.TimeNLPUtil;
 
-import org.apache.commons.lang3.ObjectUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.greenrobot.eventbus.EventBus;
 import org.greenrobot.eventbus.Subscribe;
@@ -28,10 +29,9 @@ public class TodoModifySuperFragment extends TodoEditSuperFragment {
     //回显
     @Subscribe(threadMode = ThreadMode.MAIN,sticky = true)
     public void onEventMainThread(FillTodoModifyEvent fillTodoModifyEvent){
-        Todo todo = fillTodoModifyEvent.get();
-        createdDocument = ObjectUtils.clone(todo);
-        contentEditText.setText(todo.getContent());
-        contentEditText.setSelection(todo.getContent().length());
+        createdDocument = fillTodoModifyEvent.get();
+        contentEditText.setText(createdDocument.getContent());
+        contentEditText.setSelection(createdDocument.getContent().length());
     }
 
     @Override
@@ -59,9 +59,23 @@ public class TodoModifySuperFragment extends TodoEditSuperFragment {
                 if (StringUtils.isBlank(content)){
                     EventBus.getDefault().post(new DeleteTodoEvent(createdDocument));
                 }else {
+                    createdDocument.setTitle(content.length() > 10 ? content.substring(1, 10) : content);
                     createdDocument.setContent(content);
                     createdDocument.setLastModifyTime(new Date());
                     createdDocument.setVersion(createdDocument.getVersion() == null?0:createdDocument.getVersion()+1);
+                    Reminder reminder = createdDocument.getReminder();
+                    Date reminderStart = TimeNLPUtil.parse(content);
+                    if (reminderStart !=null){
+                        if (reminder!=null){
+                            reminder.setStart(reminderStart);
+                        }else{
+                            reminder = new Reminder();
+                            reminder.setId(IDUtil.uuid());
+                            reminder.setStart(reminderStart);
+                            createdDocument.setReminderId(reminder.getId());
+                        }
+                        createdDocument.setReminder(reminder);
+                    }
                     EventBus.getDefault().post(new UpdateTodoEvent(createdDocument));
                 }
                 EventBus.getDefault().post(new HideTodoEditEvent(null));

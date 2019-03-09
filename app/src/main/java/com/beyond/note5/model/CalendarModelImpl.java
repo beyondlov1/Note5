@@ -71,10 +71,23 @@ public class CalendarModelImpl implements CalendarModel {
 
         if (uri != null) {
             long eventID = Long.parseLong(uri.getLastPathSegment());
+
+            //add Reminder
+            ContentValues reminderValues= new ContentValues();
+            reminderValues.put(CalendarContract.Reminders.EVENT_ID,eventID);
+            reminderValues.put(CalendarContract.Reminders.MINUTES,0);
+            reminderValues.put(CalendarContract.Reminders.METHOD,CalendarContract.Reminders.METHOD_ALERT);
+            Uri reminderUri = cr.insert(CalendarContract.Reminders.CONTENT_URI, reminderValues);
+            if (reminderUri == null){
+                Log.e(TAG,"添加提醒失败");
+                throw new RuntimeException("添加提醒失败");
+            }
+
             todo.getReminder().setCalendarEventId(eventID);
-//            reminderDao.update(todo.getReminder());
+            reminderDao.update(todo.getReminder());
         }else {
             Log.e(TAG,"事件添加失败");
+            throw new RuntimeException("添加提醒失败");
         }
     }
 

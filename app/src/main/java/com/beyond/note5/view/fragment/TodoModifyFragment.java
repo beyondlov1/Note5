@@ -16,6 +16,7 @@ import org.greenrobot.eventbus.ThreadMode;
 
 import java.util.Date;
 
+@Deprecated
 public class TodoModifyFragment extends TodoEditFragment {
     //回显
     @Subscribe(threadMode = ThreadMode.MAIN,sticky = true)

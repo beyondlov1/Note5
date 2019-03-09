@@ -25,6 +25,7 @@ import com.beyond.note5.event.UpdateTodoEvent;
 import com.beyond.note5.module.DaggerTodoComponent;
 import com.beyond.note5.module.TodoComponent;
 import com.beyond.note5.module.TodoModule;
+import com.beyond.note5.presenter.CalendarPresenter;
 import com.beyond.note5.presenter.TodoPresenter;
 import com.beyond.note5.view.adapter.AbstractFragmentTodoView;
 import com.beyond.note5.view.adapter.component.TodoRecyclerViewAdapter;
@@ -50,6 +51,8 @@ public class TodoListFragment extends AbstractFragmentTodoView {
 
     @Inject
     TodoPresenter todoPresenter;
+    @Inject
+    CalendarPresenter calendarPresenter;
 
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
@@ -59,7 +62,7 @@ public class TodoListFragment extends AbstractFragmentTodoView {
     }
 
     private void initInjection() {
-        TodoComponent todoComponent = DaggerTodoComponent.builder().todoModule(new TodoModule(this)).build();
+        TodoComponent todoComponent = DaggerTodoComponent.builder().todoModule(new TodoModule(getActivity(),this,this)).build();
         todoComponent.inject(this);
     }
 
@@ -173,16 +176,25 @@ public class TodoListFragment extends AbstractFragmentTodoView {
     @Subscribe(threadMode = ThreadMode.MAIN)
     public void onReceived(AddTodoEvent event) {
         todoPresenter.add(event.get());
+        if (event.get().getReminder()!=null) {
+            calendarPresenter.add(event.get());
+        }
     }
 
     @Subscribe(threadMode = ThreadMode.MAIN)
     public void onReceived(UpdateTodoEvent event) {
         todoPresenter.update(event.get());
+        if (event.get().getReminder()!=null) {
+            calendarPresenter.update(event.get());
+        }
     }
 
     @Subscribe(threadMode = ThreadMode.MAIN)
     public void onReceived(DeleteTodoEvent event) {
         todoPresenter.delete(event.get());
+        if (event.get().getReminder()!=null) {
+            calendarPresenter.delete(event.get());
+        }
     }
 
     @Subscribe(threadMode = ThreadMode.MAIN)
