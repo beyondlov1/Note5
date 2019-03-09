@@ -1,15 +1,11 @@
 package com.beyond.note5.model;
 
 import android.content.Context;
-
 import com.beyond.note5.MyApplication;
-import com.beyond.note5.bean.Document;
 import com.beyond.note5.bean.Todo;
-import com.beyond.note5.constant.DocumentConst;
 import com.beyond.note5.model.dao.DaoSession;
 import com.beyond.note5.model.dao.ReminderDao;
 import com.beyond.note5.model.dao.TodoDao;
-
 import org.greenrobot.greendao.query.QueryBuilder;
 
 import java.util.List;
@@ -54,15 +50,24 @@ public class TodoModelImpl implements TodoModel {
     @Override
     public List<Todo> findAll() {
         QueryBuilder<Todo> todoQueryBuilder = todoDao.queryBuilder();
-        todoQueryBuilder
-                .where(TodoDao.Properties.Type.eq(Document.TODO))
-                .orderRaw("DATE(LAST_MODIFY_TIME/1000,'unixepoch','localtime') DESC,READ_FLAG ASC, LAST_MODIFY_TIME DESC");
+//        todoQueryBuilder
+//                .where(TodoDao.Properties.Type.eq(Document.TODO))
+//                .orderRaw("DATE(LAST_MODIFY_TIME/1000,'unixepoch','localtime') DESC,READ_FLAG ASC, LAST_MODIFY_TIME DESC");
+//        if (MyApplication.getInstance().getSharedPreferences(MyApplication.SHARED_PREFERENCES_NAME, Context.MODE_PRIVATE)
+//                .getBoolean(IS_SHOW_READ_FLAG_DONE, false)) {
+//            return todoQueryBuilder.list();
+//        } else {
+//            todoQueryBuilder.where(TodoDao.Properties.ReadFlag.eq(DocumentConst.READ_FLAG_NORMAL));
+//            return todoQueryBuilder.list();
+//        }
+
+
         if (MyApplication.getInstance().getSharedPreferences(MyApplication.SHARED_PREFERENCES_NAME, Context.MODE_PRIVATE)
                 .getBoolean(IS_SHOW_READ_FLAG_DONE, false)) {
-            return todoQueryBuilder.list();
+            return todoDao.queryDeep("WHERE T.TYPE = 'todo' ORDER BY DATE(T0.START/1000,'unixepoch','localtime') DESC,READ_FLAG ASC, T0.START DESC");
         } else {
-            todoQueryBuilder.where(TodoDao.Properties.ReadFlag.eq(DocumentConst.READ_FLAG_NORMAL));
-            return todoQueryBuilder.list();
+            return todoDao.queryDeep("WHERE T.TYPE = 'todo' AND T.READ_FLAG = 0 ORDER BY DATE(T0.START/1000,'unixepoch','localtime') DESC,READ_FLAG ASC, T0.START DESC");
         }
+
     }
 }

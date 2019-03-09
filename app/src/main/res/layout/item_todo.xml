@@ -1,49 +1,75 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:app="http://schemas.android.com/apk/res-auto"
-    android:id="@+id/item_todo_container"
-    android:layout_width="match_parent"
-    android:layout_height="wrap_content"
-    android:orientation="vertical"
-    android:paddingLeft="5dp"
-    android:paddingTop="3dp"
-    android:paddingRight="5dp"
-    android:paddingBottom="3dp">
+              xmlns:app="http://schemas.android.com/apk/res-auto"
+              android:id="@+id/item_todo_container"
+              android:layout_width="match_parent"
+              android:layout_height="wrap_content"
+              android:orientation="vertical"
+              android:paddingLeft="5dp"
+              android:paddingTop="3dp"
+              android:paddingRight="5dp"
+              android:paddingBottom="3dp">
 
-    <LinearLayout
-        android:id="@+id/item_todo_data_container"
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:gravity="center"
-        android:orientation="horizontal"
-        android:paddingLeft="5dp"
-        android:paddingTop="5dp"
-        android:paddingRight="5dp"
-        android:paddingBottom="5dp">
-
-        <CheckBox
-            android:id="@+id/item_todo_checkbox"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:buttonTint="@color/dark_gray"
-            android:gravity="center" />
-
-        <com.beyond.note5.view.custom.AutoSizeTextView
-            android:id="@+id/item_todo_content"
+    <FrameLayout
+            android:id="@+id/item_todo_data_container"
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginRight="30dp"
-            android:gravity="center_vertical"
-            android:textSize="12sp"
-            app:scaleFactor="0.618" />
+            android:layout_height="match_parent"
+            android:gravity="center"
+            android:orientation="vertical"
+            android:paddingLeft="5dp"
+            android:paddingTop="5dp"
+            android:paddingRight="5dp"
+            android:paddingBottom="5dp">
 
-        <TextView
-            android:id="@+id/item_todo_title"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:visibility="gone" />
+        <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:gravity="center"
+                android:orientation="horizontal"
+                >
 
-    </LinearLayout>
+            <CheckBox
+                    android:id="@+id/item_todo_checkbox"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:buttonTint="@color/dark_gray"
+                    android:gravity="center"/>
+
+            <com.beyond.note5.view.custom.AutoSizeTextView
+                    android:id="@+id/item_todo_content"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginEnd="20dp"
+                    android:gravity="center_vertical"
+                    android:textSize="12sp"
+                    app:scaleFactor="0.618"/>
+
+            <TextView
+                    android:id="@+id/item_todo_title"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:visibility="gone"/>
+
+        </LinearLayout>
+
+        <RelativeLayout
+                android:id="@+id/item_todo_time_container"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_gravity="bottom"
+                android:elevation="3dp"
+                >
+
+            <TextView
+                    android:id="@+id/item_todo_reminder_time"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="MM/dd HH:mm"
+                    android:textSize="12sp"
+                    android:textColor="@color/google_red"
+                    android:layout_marginEnd="20dp"
+                    android:gravity="end"/>
+        </RelativeLayout>
+    </FrameLayout>
 </LinearLayout>

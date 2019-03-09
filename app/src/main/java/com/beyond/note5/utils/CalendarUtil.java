@@ -8,6 +8,8 @@ import android.database.Cursor;
 import android.graphics.Color;
 import android.net.Uri;
 import android.provider.CalendarContract;
+import com.beyond.note5.MyApplication;
+import com.beyond.note5.R;
 
 import java.util.TimeZone;
 
@@ -49,10 +51,10 @@ public class CalendarUtil {
     }
 
     //添加test账户所需的静态参数
-    private final static String CALENDARS_NAME = "test";
-    private final static String CALENDARS_ACCOUNT_NAME = "test@gmail.com";
+    private final static String CALENDARS_NAME = MyApplication.getInstance().getResources().getString(R.string.app_name);
+    private final static String CALENDARS_ACCOUNT_NAME = MyApplication.getInstance().getResources().getString(R.string.app_name)+"@gmail.com";
     private final static String CALENDARS_ACCOUNT_TYPE = "com.android.exchange";
-    private final static String CALENDARS_DISPLAY_NAME = "测试账户";
+    private final static String CALENDARS_DISPLAY_NAME = MyApplication.getInstance().getResources().getString(R.string.app_name);
 
     //添加test账户
     private static long addAccount(Context context) {

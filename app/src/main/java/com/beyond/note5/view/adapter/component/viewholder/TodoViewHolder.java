@@ -13,6 +13,8 @@ public class TodoViewHolder extends DocumentViewHolder {
     public TextView title;
     public CheckBox checkbox;
     public TextView content;
+    public View timeContainer;
+    public TextView time;
 
     public TodoViewHolder(View itemView) {
         super(itemView);
@@ -22,5 +24,7 @@ public class TodoViewHolder extends DocumentViewHolder {
         checkbox = itemView.findViewById(R.id.item_todo_checkbox);
         title = itemView.findViewById(R.id.item_todo_title);
         content = itemView.findViewById(R.id.item_todo_content);
+        time = itemView.findViewById(R.id.item_todo_reminder_time);
+        timeContainer = itemView.findViewById(R.id.item_todo_time_container);
     }
 }

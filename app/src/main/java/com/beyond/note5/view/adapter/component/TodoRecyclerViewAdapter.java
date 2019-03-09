@@ -9,7 +9,6 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.CheckBox;
-
 import com.beyond.note5.MyApplication;
 import com.beyond.note5.R;
 import com.beyond.note5.bean.Todo;
@@ -21,9 +20,13 @@ import com.beyond.note5.event.ShowTodoEditEvent;
 import com.beyond.note5.view.adapter.component.header.Header;
 import com.beyond.note5.view.adapter.component.header.ItemDataGenerator;
 import com.beyond.note5.view.adapter.component.viewholder.TodoViewHolder;
-
-import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.time.DateFormatUtils;
+import org.apache.commons.lang3.time.DateUtils;
 import org.greenrobot.eventbus.EventBus;
+
+import java.text.ParseException;
+import java.util.Calendar;
+import java.util.Date;
 
 import static com.beyond.note5.model.TodoModelImpl.IS_SHOW_READ_FLAG_DONE;
 
@@ -45,11 +48,22 @@ public class TodoRecyclerViewAdapter extends DocumentRecyclerViewAdapter<Todo, T
         viewHolder.checkbox.setChecked(false);
         viewHolder.title.setVisibility(View.VISIBLE);
         viewHolder.title.setText(header.getContent());
-        viewHolder.title.setTextColor(context.getResources().getColor(R.color.dark_yellow));
+        try {
+            if (DateUtils.truncatedEquals(new Date(), DateUtils.parseDate(header.getContent(), "yyyy-MM-dd"),
+                    Calendar.DATE)){
+                viewHolder.title.setTextColor(ContextCompat.getColor(context,R.color.darker_yellow));
+            }else {
+                viewHolder.title.setTextColor(ContextCompat.getColor(context,R.color.dark_yellow));
+            }
+        } catch (ParseException e) {
+            e.printStackTrace();
+        }
         viewHolder.content.setVisibility(View.GONE);
         viewHolder.content.setPaintFlags(viewHolder.title.getPaintFlags() & (~Paint.STRIKE_THRU_TEXT_FLAG));
         viewHolder.container.setOnClickListener(null);
         viewHolder.dataContainer.setBackground(null);
+        viewHolder.time.setVisibility(View.GONE);
+        viewHolder.timeContainer.setVisibility(View.GONE);
         StaggeredGridLayoutManager.LayoutParams layoutParams = (StaggeredGridLayoutManager.LayoutParams) viewHolder.itemView.getLayoutParams();
         layoutParams.setFullSpan(true);
     }
@@ -61,12 +75,12 @@ public class TodoRecyclerViewAdapter extends DocumentRecyclerViewAdapter<Todo, T
             @Override
             public void onClick(View v) {
                 if (context.getSharedPreferences(MyApplication.SHARED_PREFERENCES_NAME, Context.MODE_PRIVATE)
-                        .getBoolean(IS_SHOW_READ_FLAG_DONE,false)){
+                        .getBoolean(IS_SHOW_READ_FLAG_DONE, false)) {
                     context.getSharedPreferences(MyApplication.SHARED_PREFERENCES_NAME, Context.MODE_PRIVATE).edit()
-                            .putBoolean(IS_SHOW_READ_FLAG_DONE,false).apply();
-                }else {
+                            .putBoolean(IS_SHOW_READ_FLAG_DONE, false).apply();
+                } else {
                     context.getSharedPreferences(MyApplication.SHARED_PREFERENCES_NAME, Context.MODE_PRIVATE).edit()
-                            .putBoolean(IS_SHOW_READ_FLAG_DONE,true).apply();
+                            .putBoolean(IS_SHOW_READ_FLAG_DONE, true).apply();
                 }
                 EventBus.getDefault().post(new RefreshTodoListEvent(null));
             }
@@ -94,7 +108,28 @@ public class TodoRecyclerViewAdapter extends DocumentRecyclerViewAdapter<Todo, T
         }
 
         viewHolder.content.setVisibility(View.VISIBLE);
-        viewHolder.content.setText(StringUtils.trim(todo.getContent()));
+        viewHolder.content.setText(todo.getContentWithoutTime());
+        if (todo.getReminder() != null
+                && todo.getReminder().getCalendarEventId() != null
+                && todo.getReminder().getStart() != null) {
+
+            viewHolder.timeContainer.setVisibility(View.VISIBLE);
+            viewHolder.time.setVisibility(View.VISIBLE);
+            viewHolder.time.setText(DateFormatUtils.format(todo.getReminder().getStart(), "MM/dd HH:mm"));
+            long start = todo.getReminder().getStart().getTime();
+            long curr = System.currentTimeMillis();
+            long duration = start - curr;
+            if (duration > 0) {
+                long x = (long) Math.ceil(duration / (1000 * 60 * 30f));
+                int colorResId = colorResIds[(int) (Math.log(x) / Math.log(2)) > 2 ? 3 : (int) (Math.log(x) / Math.log(2))];
+                viewHolder.time.setTextColor(ContextCompat.getColor(context, colorResId));
+            } else {
+                viewHolder.time.setTextColor(ContextCompat.getColor(context, R.color.darker_gray));
+            }
+
+        } else {
+            viewHolder.timeContainer.setVisibility(View.GONE);
+        }
     }
 
     @Override

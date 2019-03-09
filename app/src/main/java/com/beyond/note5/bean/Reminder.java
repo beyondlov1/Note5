@@ -7,7 +7,7 @@ import org.greenrobot.greendao.annotation.Id;
 import java.util.Date;
 
 @Entity
-public class Reminder {
+public class Reminder implements Cloneable{
 
     @Id
     private String id;

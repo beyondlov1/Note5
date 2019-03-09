@@ -26,11 +26,11 @@ public abstract class DocumentRecyclerViewAdapter<T extends Document, S extends 
 
     protected ItemDataGenerator<T> itemDataGenerator;
 
-    private static final int[] colorResIds = new int[]{
-            R.color.google_blue,
-            R.color.google_green,
+    static final int[] colorResIds = new int[]{
             R.color.google_red,
-            R.color.google_yellow
+            R.color.google_yellow,
+            R.color.google_blue,
+            R.color.google_green
     };
 
     public DocumentRecyclerViewAdapter(Context context, ItemDataGenerator<T> itemDataGenerator) {

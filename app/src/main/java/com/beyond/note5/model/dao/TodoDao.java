@@ -33,11 +33,12 @@ public class TodoDao extends AbstractDao<Todo, String> {
         public final static Property ReminderId = new Property(1, String.class, "reminderId", false, "REMINDER_ID");
         public final static Property Title = new Property(2, String.class, "title", false, "TITLE");
         public final static Property Content = new Property(3, String.class, "content", false, "CONTENT");
-        public final static Property Type = new Property(4, String.class, "type", false, "TYPE");
-        public final static Property CreateTime = new Property(5, java.util.Date.class, "createTime", false, "CREATE_TIME");
-        public final static Property LastModifyTime = new Property(6, java.util.Date.class, "lastModifyTime", false, "LAST_MODIFY_TIME");
-        public final static Property Version = new Property(7, Integer.class, "version", false, "VERSION");
-        public final static Property ReadFlag = new Property(8, Integer.class, "readFlag", false, "READ_FLAG");
+        public final static Property ContentWithoutTime = new Property(4, String.class, "contentWithoutTime", false, "CONTENT_WITHOUT_TIME");
+        public final static Property Type = new Property(5, String.class, "type", false, "TYPE");
+        public final static Property CreateTime = new Property(6, java.util.Date.class, "createTime", false, "CREATE_TIME");
+        public final static Property LastModifyTime = new Property(7, java.util.Date.class, "lastModifyTime", false, "LAST_MODIFY_TIME");
+        public final static Property Version = new Property(8, Integer.class, "version", false, "VERSION");
+        public final static Property ReadFlag = new Property(9, Integer.class, "readFlag", false, "READ_FLAG");
     }
 
     private DaoSession daoSession;
@@ -60,11 +61,12 @@ public class TodoDao extends AbstractDao<Todo, String> {
                 "\"REMINDER_ID\" TEXT," + // 1: reminderId
                 "\"TITLE\" TEXT," + // 2: title
                 "\"CONTENT\" TEXT," + // 3: content
-                "\"TYPE\" TEXT," + // 4: type
-                "\"CREATE_TIME\" INTEGER," + // 5: createTime
-                "\"LAST_MODIFY_TIME\" INTEGER," + // 6: lastModifyTime
-                "\"VERSION\" INTEGER," + // 7: version
-                "\"READ_FLAG\" INTEGER);"); // 8: readFlag
+                "\"CONTENT_WITHOUT_TIME\" TEXT," + // 4: contentWithoutTime
+                "\"TYPE\" TEXT," + // 5: type
+                "\"CREATE_TIME\" INTEGER," + // 6: createTime
+                "\"LAST_MODIFY_TIME\" INTEGER," + // 7: lastModifyTime
+                "\"VERSION\" INTEGER," + // 8: version
+                "\"READ_FLAG\" INTEGER);"); // 9: readFlag
     }
 
     /** Drops the underlying database table. */
@@ -97,29 +99,34 @@ public class TodoDao extends AbstractDao<Todo, String> {
             stmt.bindString(4, content);
         }
  
+        String contentWithoutTime = entity.getContentWithoutTime();
+        if (contentWithoutTime != null) {
+            stmt.bindString(5, contentWithoutTime);
+        }
+ 
         String type = entity.getType();
         if (type != null) {
-            stmt.bindString(5, type);
+            stmt.bindString(6, type);
         }
  
         java.util.Date createTime = entity.getCreateTime();
         if (createTime != null) {
-            stmt.bindLong(6, createTime.getTime());
+            stmt.bindLong(7, createTime.getTime());
         }
  
         java.util.Date lastModifyTime = entity.getLastModifyTime();
         if (lastModifyTime != null) {
-            stmt.bindLong(7, lastModifyTime.getTime());
+            stmt.bindLong(8, lastModifyTime.getTime());
         }
  
         Integer version = entity.getVersion();
         if (version != null) {
-            stmt.bindLong(8, version);
+            stmt.bindLong(9, version);
         }
  
         Integer readFlag = entity.getReadFlag();
         if (readFlag != null) {
-            stmt.bindLong(9, readFlag);
+            stmt.bindLong(10, readFlag);
         }
     }
 
@@ -147,29 +154,34 @@ public class TodoDao extends AbstractDao<Todo, String> {
             stmt.bindString(4, content);
         }
  
+        String contentWithoutTime = entity.getContentWithoutTime();
+        if (contentWithoutTime != null) {
+            stmt.bindString(5, contentWithoutTime);
+        }
+ 
         String type = entity.getType();
         if (type != null) {
-            stmt.bindString(5, type);
+            stmt.bindString(6, type);
         }
  
         java.util.Date createTime = entity.getCreateTime();
         if (createTime != null) {
-            stmt.bindLong(6, createTime.getTime());
+            stmt.bindLong(7, createTime.getTime());
         }
  
         java.util.Date lastModifyTime = entity.getLastModifyTime();
         if (lastModifyTime != null) {
-            stmt.bindLong(7, lastModifyTime.getTime());
+            stmt.bindLong(8, lastModifyTime.getTime());
         }
  
         Integer version = entity.getVersion();
         if (version != null) {
-            stmt.bindLong(8, version);
+            stmt.bindLong(9, version);
         }
  
         Integer readFlag = entity.getReadFlag();
         if (readFlag != null) {
-            stmt.bindLong(9, readFlag);
+            stmt.bindLong(10, readFlag);
         }
     }
 
@@ -191,11 +203,12 @@ public class TodoDao extends AbstractDao<Todo, String> {
             cursor.isNull(offset + 1) ? null : cursor.getString(offset + 1), // reminderId
             cursor.isNull(offset + 2) ? null : cursor.getString(offset + 2), // title
             cursor.isNull(offset + 3) ? null : cursor.getString(offset + 3), // content
-            cursor.isNull(offset + 4) ? null : cursor.getString(offset + 4), // type
-            cursor.isNull(offset + 5) ? null : new java.util.Date(cursor.getLong(offset + 5)), // createTime
-            cursor.isNull(offset + 6) ? null : new java.util.Date(cursor.getLong(offset + 6)), // lastModifyTime
-            cursor.isNull(offset + 7) ? null : cursor.getInt(offset + 7), // version
-            cursor.isNull(offset + 8) ? null : cursor.getInt(offset + 8) // readFlag
+            cursor.isNull(offset + 4) ? null : cursor.getString(offset + 4), // contentWithoutTime
+            cursor.isNull(offset + 5) ? null : cursor.getString(offset + 5), // type
+            cursor.isNull(offset + 6) ? null : new java.util.Date(cursor.getLong(offset + 6)), // createTime
+            cursor.isNull(offset + 7) ? null : new java.util.Date(cursor.getLong(offset + 7)), // lastModifyTime
+            cursor.isNull(offset + 8) ? null : cursor.getInt(offset + 8), // version
+            cursor.isNull(offset + 9) ? null : cursor.getInt(offset + 9) // readFlag
         );
         return entity;
     }
@@ -206,11 +219,12 @@ public class TodoDao extends AbstractDao<Todo, String> {
         entity.setReminderId(cursor.isNull(offset + 1) ? null : cursor.getString(offset + 1));
         entity.setTitle(cursor.isNull(offset + 2) ? null : cursor.getString(offset + 2));
         entity.setContent(cursor.isNull(offset + 3) ? null : cursor.getString(offset + 3));
-        entity.setType(cursor.isNull(offset + 4) ? null : cursor.getString(offset + 4));
-        entity.setCreateTime(cursor.isNull(offset + 5) ? null : new java.util.Date(cursor.getLong(offset + 5)));
-        entity.setLastModifyTime(cursor.isNull(offset + 6) ? null : new java.util.Date(cursor.getLong(offset + 6)));
-        entity.setVersion(cursor.isNull(offset + 7) ? null : cursor.getInt(offset + 7));
-        entity.setReadFlag(cursor.isNull(offset + 8) ? null : cursor.getInt(offset + 8));
+        entity.setContentWithoutTime(cursor.isNull(offset + 4) ? null : cursor.getString(offset + 4));
+        entity.setType(cursor.isNull(offset + 5) ? null : cursor.getString(offset + 5));
+        entity.setCreateTime(cursor.isNull(offset + 6) ? null : new java.util.Date(cursor.getLong(offset + 6)));
+        entity.setLastModifyTime(cursor.isNull(offset + 7) ? null : new java.util.Date(cursor.getLong(offset + 7)));
+        entity.setVersion(cursor.isNull(offset + 8) ? null : cursor.getInt(offset + 8));
+        entity.setReadFlag(cursor.isNull(offset + 9) ? null : cursor.getInt(offset + 9));
      }
     
     @Override

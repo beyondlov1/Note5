@@ -4,7 +4,8 @@ import com.beyond.note5.constant.DocumentConst;
 import com.beyond.note5.model.dao.DaoSession;
 import com.beyond.note5.model.dao.ReminderDao;
 import com.beyond.note5.model.dao.TodoDao;
-
+import com.beyond.note5.utils.TimeNLPUtil;
+import org.apache.commons.lang3.StringUtils;
 import org.greenrobot.greendao.DaoException;
 import org.greenrobot.greendao.annotation.Entity;
 import org.greenrobot.greendao.annotation.Generated;
@@ -21,6 +22,7 @@ public class Todo extends Document {
     private String reminderId;
     private String title;
     private String content;
+    private String contentWithoutTime;
     private String type = Document.TODO;
     private Date createTime;
     private Date lastModifyTime;
@@ -36,14 +38,15 @@ public class Todo extends Document {
     @Generated(hash = 1860181255)
     private transient TodoDao myDao;
 
-    @Generated(hash = 1601477535)
+    @Generated(hash = 1318149066)
     public Todo(String id, String reminderId, String title, String content,
-            String type, Date createTime, Date lastModifyTime, Integer version,
-            Integer readFlag) {
+            String contentWithoutTime, String type, Date createTime,
+            Date lastModifyTime, Integer version, Integer readFlag) {
         this.id = id;
         this.reminderId = reminderId;
         this.title = title;
         this.content = content;
+        this.contentWithoutTime = contentWithoutTime;
         this.type = type;
         this.createTime = createTime;
         this.lastModifyTime = lastModifyTime;
@@ -85,6 +88,18 @@ public class Todo extends Document {
 
     public void setContent(String content) {
         this.content = content;
+        contentWithoutTime = StringUtils.trim(TimeNLPUtil.getOriginExpressionWithoutTime(StringUtils.trim(content)));
+        if (StringUtils.isBlank(contentWithoutTime)) {
+            contentWithoutTime = StringUtils.trim(content);
+        }
+    }
+
+    public String getContentWithoutTime() {
+        return this.contentWithoutTime;
+    }
+
+    public void setContentWithoutTime(String contentWithoutTime) {
+        this.contentWithoutTime = contentWithoutTime;
     }
 
     public String getType() {
@@ -201,4 +216,5 @@ public class Todo extends Document {
         this.daoSession = daoSession;
         myDao = daoSession != null ? daoSession.getTodoDao() : null;
     }
+
 }

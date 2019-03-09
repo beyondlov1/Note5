@@ -6,22 +6,11 @@ import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.StaggeredGridLayoutManager;
-import android.view.GestureDetector;
-import android.view.LayoutInflater;
-import android.view.MotionEvent;
-import android.view.View;
-import android.view.ViewGroup;
-
+import android.view.*;
 import com.beyond.note5.MyApplication;
 import com.beyond.note5.R;
 import com.beyond.note5.bean.Todo;
-import com.beyond.note5.event.AddTodoEvent;
-import com.beyond.note5.event.CompleteTodoEvent;
-import com.beyond.note5.event.DeleteTodoEvent;
-import com.beyond.note5.event.HideFABEvent;
-import com.beyond.note5.event.RefreshTodoListEvent;
-import com.beyond.note5.event.ShowFABEvent;
-import com.beyond.note5.event.UpdateTodoEvent;
+import com.beyond.note5.event.*;
 import com.beyond.note5.module.DaggerTodoComponent;
 import com.beyond.note5.module.TodoComponent;
 import com.beyond.note5.module.TodoModule;
@@ -29,16 +18,14 @@ import com.beyond.note5.presenter.CalendarPresenter;
 import com.beyond.note5.presenter.TodoPresenter;
 import com.beyond.note5.view.adapter.AbstractFragmentTodoView;
 import com.beyond.note5.view.adapter.component.TodoRecyclerViewAdapter;
-import com.beyond.note5.view.adapter.component.header.LastModifyTimeItemDataGenerator;
-
+import com.beyond.note5.view.adapter.component.header.ReminderTimeItemDataGenerator;
 import org.apache.commons.lang3.StringUtils;
 import org.greenrobot.eventbus.EventBus;
 import org.greenrobot.eventbus.Subscribe;
 import org.greenrobot.eventbus.ThreadMode;
 
-import java.util.Iterator;
-
 import javax.inject.Inject;
+import java.util.Iterator;
 
 import static com.beyond.note5.model.TodoModelImpl.IS_SHOW_READ_FLAG_DONE;
 
@@ -57,7 +44,7 @@ public class TodoListFragment extends AbstractFragmentTodoView {
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        recyclerViewAdapter = new TodoRecyclerViewAdapter(this.getActivity(), new LastModifyTimeItemDataGenerator<>(data));
+        recyclerViewAdapter = new TodoRecyclerViewAdapter(this.getActivity(), new ReminderTimeItemDataGenerator(data));
         initInjection();
     }
 

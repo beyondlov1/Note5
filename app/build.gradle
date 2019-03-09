@@ -86,7 +86,5 @@ dependencies {
     //implementation 'commons-cli:commons-cli:1.2'
     //implementation 'org.slf4j:slf4j-api:1.7.23'
     //    testCompile group: 'junit', name: 'junit', version: '4.11'
-    implementation files('libs/slf4j-api-1.7.23.jar')
-    implementation files('libs/commons-cli-1.2.jar')
 }
 
