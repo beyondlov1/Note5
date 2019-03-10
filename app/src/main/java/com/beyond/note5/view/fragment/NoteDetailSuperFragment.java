@@ -216,7 +216,7 @@ public class NoteDetailSuperFragment extends DialogFragment implements OnBackPre
                     Note currentNote = data.get(currIndex);
                     EventBus.getDefault().post(new DeleteNoteEvent(currentNote));
                     if (data.isEmpty()) {
-                        hide();
+                        sendHideMessage();
                         return;
                     }
                     if (currIndex == data.size()) {
