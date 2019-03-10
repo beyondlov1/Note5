@@ -20,4 +20,8 @@ public interface CalendarView {
     void onEventUpdateFail(Todo todo);
 
     void onEventUpdateSuccess(Todo todo);
+
+    void onReminderDeleteSuccess(Todo todo);
+
+    void onReminderDeleteFail(Todo todo);
 }

@@ -48,4 +48,14 @@ public class AbstractFragmentTodoView extends AbstractDocumentFragment<Todo> imp
     public void onEventUpdateFail(Todo todo) {
         msg("更新日历事件失败");
     }
+
+    @Override
+    public void onReminderDeleteSuccess(Todo todo) {
+        msg("取消提醒成功");
+    }
+
+    @Override
+    public void onReminderDeleteFail(Todo todo) {
+        msg("取消提醒失败");
+    }
 }

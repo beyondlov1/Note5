@@ -102,4 +102,25 @@ public class CalendarPresenterImpl implements CalendarPresenter {
     public void findAllFail() {
         calendarView.onEventFindAllFail();
     }
+
+    @Override
+    public void deleteReminder(Todo todo) {
+        try {
+            calendarModel.deleteReminder(todo);
+            this.deleteReminderSuccess(todo);
+        } catch (Exception e) {
+            e.printStackTrace();
+            this.deleteReminderFail(todo);
+        }
+    }
+
+    @Override
+    public void deleteReminderSuccess(Todo todo) {
+        calendarView.onReminderDeleteSuccess(todo);
+    }
+
+    @Override
+    public void deleteReminderFail(Todo todo) {
+        calendarView.onReminderDeleteFail(todo);
+    }
 }

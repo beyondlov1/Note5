@@ -37,11 +37,12 @@ public class ReminderTimeItemDataGenerator extends AbstractItemDataGenerator<Tod
 
     @Override
     public int getInsertIndex(Todo todo) {
+        final Date TODAY_MAX_TIME = new Date(DateUtils.ceiling(new Date(),Calendar.DATE).getTime()-1);
         //插入普通数据
         int index = 0;
         for (Todo todo1 : contentData) {
-            Date reminderTime =  todo.getReminder() == null?new Date():todo.getReminder().getStart();
-            Date reminderTime1 = todo1.getReminder() == null?new Date():todo1.getReminder().getStart();
+            Date reminderTime =  todo.getReminder() == null? TODAY_MAX_TIME :todo.getReminder().getStart();
+            Date reminderTime1 = todo1.getReminder() == null?TODAY_MAX_TIME:todo1.getReminder().getStart();
             if (DateUtils.truncatedEquals(reminderTime1,reminderTime,Calendar.DATE) //判断reminderTime
                     && todo.getReadFlag()<=todo1.getReadFlag()){ //判断readFlag
                 if (DateUtils.truncatedCompareTo(reminderTime1,reminderTime,Calendar.MILLISECOND)>=0){
@@ -55,8 +56,8 @@ public class ReminderTimeItemDataGenerator extends AbstractItemDataGenerator<Tod
         if (index == contentData.size()){
             index = 0;
             for (Todo todo1 : contentData) {
-                Date reminderTime =  todo.getReminder() == null?new Date():todo.getReminder().getStart();
-                Date reminderTime1 = todo1.getReminder() == null?new Date():todo1.getReminder().getStart();
+                Date reminderTime =  todo.getReminder() == null?TODAY_MAX_TIME:todo.getReminder().getStart();
+                Date reminderTime1 = todo1.getReminder() == null?TODAY_MAX_TIME:todo1.getReminder().getStart();
                 if (DateUtils.truncatedCompareTo(reminderTime,reminderTime1,Calendar.DATE)<0){
                     return index;
                 }

@@ -192,6 +192,7 @@ public class TodoListFragment extends AbstractFragmentTodoView {
     @Subscribe(threadMode = ThreadMode.MAIN)
     public void onReceived(CompleteTodoEvent event) {
         todoPresenter.update(event.get());
+        calendarPresenter.deleteReminder(event.get());
     }
 
     @SuppressWarnings("unchecked")

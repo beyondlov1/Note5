@@ -84,13 +84,13 @@ public class CalendarModelImpl implements CalendarModel {
             }
 
             todo.getReminder().setCalendarEventId(eventID);
+            todo.getReminder().setCalendarReminderId(Long.parseLong(reminderUri.getLastPathSegment()));
             reminderDao.update(todo.getReminder());
         }else {
             Log.e(TAG,"事件添加失败");
             throw new RuntimeException("添加提醒失败");
         }
     }
-
 
     @Override
     public void update(final Todo todo) {
@@ -156,6 +156,35 @@ public class CalendarModelImpl implements CalendarModel {
     @Override
     public List<Todo> findAll() {
         return null;
+    }
+
+    @Override
+    public void deleteReminder(final Todo todo) {
+        if (ActivityCompat.checkSelfPermission(activity, Manifest.permission.WRITE_CALENDAR) != PackageManager.PERMISSION_GRANTED) {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                PermissionsUtil.requestPermission(activity, new PermissionListener() {
+                    @Override
+                    public void permissionGranted(@NonNull String[] permission) {
+                        deleteReminder(todo);
+                    }
+
+                    @Override
+                    public void permissionDenied(@NonNull String[] permission) {
+
+                    }
+                }, new String[]{Manifest.permission.WRITE_CALENDAR}, false, null);
+            }
+            return;
+        }
+
+        Long reminderId = todo.getReminder().getCalendarReminderId();
+        if (reminderId == null){
+            return;
+        }
+        ContentResolver cr = MyApplication.getInstance().getContentResolver();
+        Uri deleteUri = ContentUris.withAppendedId(CalendarContract.Reminders.CONTENT_URI, reminderId);
+        int rows = cr.delete(deleteUri, null, null);
+        Log.i(TAG, "Rows deleted: " + rows);
     }
 
     private ContentValues getContentValues(Todo todo){
