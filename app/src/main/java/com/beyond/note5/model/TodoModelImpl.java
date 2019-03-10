@@ -67,15 +67,13 @@ public class TodoModelImpl implements TodoModel {
             return todoDao.queryDeep("WHERE T.TYPE = 'todo' " +
                     "ORDER BY CASE WHEN T0.START IS NULL THEN DATE('now') ELSE DATE( T0.START/1000,'unixepoch','localtime') END ASC," +
                     "READ_FLAG ASC, " +
-                    "CASE WHEN T0.START < DATETIME('now') THEN 1 ELSE 0 END ASC," + // 过期的提醒放到后边
-                    "CASE WHEN T0.START IS NULL THEN 1 ELSE 0 END ASC," +
+                    "CASE WHEN T0.START IS NULL THEN 1 ELSE 0 END DESC," +
                     "T0.START ASC");
         } else {
             return todoDao.queryDeep("WHERE T.TYPE = 'todo' AND T.READ_FLAG = 0 " +
                     "ORDER BY CASE WHEN T0.START IS NULL THEN DATE('now') ELSE DATE( T0.START/1000,'unixepoch','localtime') END ASC," +
                     "READ_FLAG ASC, " +
-                    "CASE WHEN T0.START < DATETIME('now') THEN 1 ELSE 0 END ASC," + // 过期的提醒放到后边
-                    "CASE WHEN T0.START IS NULL THEN 1 ELSE 0 END ASC," +
+                    "CASE WHEN T0.START IS NULL THEN 1 ELSE 0 END DESC," +
                     "T0.START ASC");
         }
 
