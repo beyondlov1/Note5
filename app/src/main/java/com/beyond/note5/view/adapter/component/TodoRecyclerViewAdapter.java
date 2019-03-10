@@ -5,7 +5,6 @@ import android.graphics.Paint;
 import android.graphics.drawable.GradientDrawable;
 import android.support.v4.content.ContextCompat;
 import android.support.v7.widget.StaggeredGridLayoutManager;
-import android.text.Html;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -48,13 +47,12 @@ public class TodoRecyclerViewAdapter extends DocumentRecyclerViewAdapter<Todo, T
         viewHolder.checkbox.setVisibility(View.GONE);
         viewHolder.checkbox.setChecked(false);
         viewHolder.title.setVisibility(View.VISIBLE);
+        viewHolder.title.setTextColor(ContextCompat.getColor(context,R.color.dark_yellow));
         try {
             if (DateUtils.truncatedEquals(new Date(), DateUtils.parseDate(header.getContent(), "yyyy-MM-dd"),
                     Calendar.DATE)){
-                viewHolder.title.setTextColor(ContextCompat.getColor(context,R.color.darker_yellow));
-                viewHolder.title.setText(Html.fromHtml(String.format("<u>%s</u>", header.getContent())));
+                viewHolder.title.setText(String.format("%s %s", header.getContent(),"<- Now"));
             }else {
-                viewHolder.title.setTextColor(ContextCompat.getColor(context,R.color.dark_yellow));
                 viewHolder.title.setText(header.getContent());
             }
         } catch (ParseException e) {
