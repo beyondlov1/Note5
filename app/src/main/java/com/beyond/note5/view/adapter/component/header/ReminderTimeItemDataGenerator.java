@@ -44,7 +44,9 @@ public class ReminderTimeItemDataGenerator extends AbstractItemDataGenerator<Tod
             Date reminderTime1 = todo1.getReminder() == null?new Date():todo1.getReminder().getStart();
             if (DateUtils.truncatedEquals(reminderTime1,reminderTime,Calendar.DATE) //判断reminderTime
                     && todo.getReadFlag()<=todo1.getReadFlag()){ //判断readFlag
-                return index;
+                if (DateUtils.truncatedCompareTo(reminderTime1,reminderTime,Calendar.MILLISECOND)>=0){
+                    return index;
+                }
             }
             index++;
         }
@@ -55,7 +57,7 @@ public class ReminderTimeItemDataGenerator extends AbstractItemDataGenerator<Tod
             for (Todo todo1 : contentData) {
                 Date reminderTime =  todo.getReminder() == null?new Date():todo.getReminder().getStart();
                 Date reminderTime1 = todo1.getReminder() == null?new Date():todo1.getReminder().getStart();
-                if (DateUtils.truncatedCompareTo(reminderTime,reminderTime1,Calendar.DATE)>0){
+                if (DateUtils.truncatedCompareTo(reminderTime,reminderTime1,Calendar.DATE)<0){
                     return index;
                 }
                 index++;

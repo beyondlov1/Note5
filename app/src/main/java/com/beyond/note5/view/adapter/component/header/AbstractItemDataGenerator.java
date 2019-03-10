@@ -9,10 +9,10 @@ import java.util.List;
 
 public abstract class AbstractItemDataGenerator<T extends Element> implements ItemDataGenerator<T> {
 
-    protected List<T> contentData;
-    protected List<Element> itemData;
-    protected List<Header> headerData;
-    private List<Integer> singleContentPosition;
+    protected List<T> contentData; //content
+    protected List<Header> headerData; //header
+    protected List<Element> itemData;  // header+content
+    private List<Integer> singleContentPosition; // single content for full span
 
 
     public AbstractItemDataGenerator(List<T> contentData) {
