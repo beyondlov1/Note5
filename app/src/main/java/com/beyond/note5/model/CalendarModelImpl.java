@@ -185,11 +185,53 @@ public class CalendarModelImpl implements CalendarModel {
         Uri deleteUri = ContentUris.withAppendedId(CalendarContract.Reminders.CONTENT_URI, reminderId);
         int rows = cr.delete(deleteUri, null, null);
         Log.i(TAG, "Rows deleted: " + rows);
+        todo.getReminder().setCalendarReminderId(null);
+        reminderDao.update(todo.getReminder());
+    }
+
+    @Override
+    public void restoreReminder(final Todo todo) {
+        if (todo.getReminder()==null||todo.getReminder().getCalendarEventId()==null){
+            return;
+        }
+
+        if (ActivityCompat.checkSelfPermission(activity, Manifest.permission.WRITE_CALENDAR) != PackageManager.PERMISSION_GRANTED) {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                PermissionsUtil.requestPermission(activity, new PermissionListener() {
+                    @Override
+                    public void permissionGranted(@NonNull String[] permission) {
+                        restoreReminder(todo);
+                    }
+
+                    @Override
+                    public void permissionDenied(@NonNull String[] permission) {
+
+                    }
+                },new String[]{Manifest.permission.WRITE_CALENDAR}, false, null);
+            }
+            return;
+        }
+
+        ContentResolver cr = MyApplication.getInstance().getContentResolver();
+        long eventID = todo.getReminder().getCalendarEventId();
+        //add Reminder
+        ContentValues reminderValues= new ContentValues();
+        reminderValues.put(CalendarContract.Reminders.EVENT_ID,eventID);
+        reminderValues.put(CalendarContract.Reminders.MINUTES,0);
+        reminderValues.put(CalendarContract.Reminders.METHOD,CalendarContract.Reminders.METHOD_ALERT);
+        Uri reminderUri = cr.insert(CalendarContract.Reminders.CONTENT_URI, reminderValues);
+        if (reminderUri == null){
+            Log.e(TAG,"恢复提醒失败");
+            throw new RuntimeException("恢复提醒失败");
+        }
+
+        todo.getReminder().setCalendarReminderId(Long.parseLong(reminderUri.getLastPathSegment()));
+        reminderDao.update(todo.getReminder());
     }
 
     private ContentValues getContentValues(Todo todo){
         Long startMillis;
-        Long endMillis;
+        long endMillis;
         String title;
         String content;
         Long calendarId = CalendarUtil.getCalendarId(activity);

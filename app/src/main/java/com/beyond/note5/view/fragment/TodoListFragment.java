@@ -195,6 +195,12 @@ public class TodoListFragment extends AbstractFragmentTodoView {
         calendarPresenter.deleteReminder(event.get());
     }
 
+    @Subscribe(threadMode = ThreadMode.MAIN)
+    public void onReceived(InCompleteTodoEvent event) {
+        todoPresenter.update(event.get());
+        calendarPresenter.restoreReminder(event.get());
+    }
+
     @SuppressWarnings("unchecked")
     @Override
     public void onUpdateSuccess(Todo todo) {

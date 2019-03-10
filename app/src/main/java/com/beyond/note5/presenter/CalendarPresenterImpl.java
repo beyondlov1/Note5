@@ -123,4 +123,26 @@ public class CalendarPresenterImpl implements CalendarPresenter {
     public void deleteReminderFail(Todo todo) {
         calendarView.onReminderDeleteFail(todo);
     }
+
+    @Override
+    public void restoreReminder(Todo todo) {
+        try {
+            calendarModel.restoreReminder(todo);
+            this.restoreReminderSuccess(todo);
+        } catch (Exception e) {
+            e.printStackTrace();
+            this.restoreReminderFail(todo);
+        }
+    }
+
+    @Override
+    public void restoreReminderSuccess(Todo todo) {
+        calendarView.onReminderRestoreSuccess(todo);
+    }
+
+    @Override
+    public void restoreReminderFail(Todo todo) {
+        calendarView.onReminderRestoreFail(todo);
+
+    }
 }

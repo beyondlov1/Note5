@@ -13,10 +13,7 @@ import com.beyond.note5.MyApplication;
 import com.beyond.note5.R;
 import com.beyond.note5.bean.Todo;
 import com.beyond.note5.constant.DocumentConst;
-import com.beyond.note5.event.CompleteTodoEvent;
-import com.beyond.note5.event.FillTodoModifyEvent;
-import com.beyond.note5.event.RefreshTodoListEvent;
-import com.beyond.note5.event.ShowTodoEditEvent;
+import com.beyond.note5.event.*;
 import com.beyond.note5.view.adapter.component.header.Header;
 import com.beyond.note5.view.adapter.component.header.ItemDataGenerator;
 import com.beyond.note5.view.adapter.component.viewholder.TodoViewHolder;
@@ -123,6 +120,9 @@ public class TodoRecyclerViewAdapter extends DocumentRecyclerViewAdapter<Todo, T
                 long x = (long) Math.ceil(duration / (1000 * 60 * 30f));
                 int colorResId = colorResIds[(int) (Math.log(x) / Math.log(2)) > 2 ? 3 : (int) (Math.log(x) / Math.log(2))];
                 viewHolder.time.setTextColor(ContextCompat.getColor(context, colorResId));
+                if (viewHolder.checkbox.isChecked()){ // 完成了的时候
+                    viewHolder.time.setTextColor(ContextCompat.getColor(context, R.color.darker_gray));
+                }
             } else {
                 viewHolder.time.setTextColor(ContextCompat.getColor(context, R.color.darker_gray));
             }
@@ -142,7 +142,7 @@ public class TodoRecyclerViewAdapter extends DocumentRecyclerViewAdapter<Todo, T
                     EventBus.getDefault().post(new CompleteTodoEvent(todo));
                 } else {
                     todo.setReadFlag(DocumentConst.READ_FLAG_NORMAL);
-                    EventBus.getDefault().post(new CompleteTodoEvent(todo));
+                    EventBus.getDefault().post(new InCompleteTodoEvent(todo));
                 }
             }
         });

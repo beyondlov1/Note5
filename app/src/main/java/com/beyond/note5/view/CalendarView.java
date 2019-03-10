@@ -24,4 +24,8 @@ public interface CalendarView {
     void onReminderDeleteSuccess(Todo todo);
 
     void onReminderDeleteFail(Todo todo);
+
+    void onReminderRestoreSuccess(Todo todo);
+
+    void onReminderRestoreFail(Todo todo);
 }

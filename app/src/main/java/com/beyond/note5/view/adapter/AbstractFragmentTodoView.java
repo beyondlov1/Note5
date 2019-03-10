@@ -58,4 +58,14 @@ public class AbstractFragmentTodoView extends AbstractDocumentFragment<Todo> imp
     public void onReminderDeleteFail(Todo todo) {
         msg("取消提醒失败");
     }
+
+    @Override
+    public void onReminderRestoreSuccess(Todo todo) {
+        msg("恢复提醒成功");
+    }
+
+    @Override
+    public void onReminderRestoreFail(Todo todo) {
+        msg("恢复提醒失败");
+    }
 }
