@@ -5,6 +5,7 @@ import android.app.Activity;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.support.v4.app.DialogFragment;
+import android.support.v4.content.ContextCompat;
 import android.text.Editable;
 import android.text.TextWatcher;
 import android.view.LayoutInflater;
@@ -174,7 +175,7 @@ public class TodoEditSuperFragment extends DialogFragment implements OnBackPress
         this.smoothScalable.setOnShownListener(new Runnable() {
             @Override
             public void run() {
-                context.getWindow().setStatusBarColor(getResources().getColor(R.color.white));
+                context.getWindow().setStatusBarColor(ContextCompat.getColor(context,R.color.white));
             }
         });
         this.smoothScalable.setOnHiddenListener(new Runnable() {
