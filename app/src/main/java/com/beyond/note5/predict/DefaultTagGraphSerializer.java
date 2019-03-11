@@ -34,6 +34,9 @@ public class DefaultTagGraphSerializer extends Observable implements TagGraphSer
      * @return
      */
     public TagGraph generate() {
+        if (tagGraph!=null){
+            return tagGraph;
+        }
         if (!file.exists()) {
             try {
                 boolean newFile = file.createNewFile();
