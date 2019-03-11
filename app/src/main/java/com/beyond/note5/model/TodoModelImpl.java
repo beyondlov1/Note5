@@ -29,6 +29,9 @@ public class TodoModelImpl implements TodoModel {
         if (todo.getReminder() != null) {
             reminderDao.insert(todo.getReminder());
         }
+
+        //train
+        MyApplication.getInstance().getTagPredictor().getTagTrainer().train(todo.getContent());
     }
 
     @Override
@@ -37,6 +40,9 @@ public class TodoModelImpl implements TodoModel {
         if (todo.getReminder() != null) {
             reminderDao.update(todo.getReminder());
         }
+
+        //train
+        MyApplication.getInstance().getTagPredictor().getTagTrainer().train(todo.getContent());
     }
 
     @Override

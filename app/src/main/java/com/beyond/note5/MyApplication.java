@@ -2,8 +2,12 @@ package com.beyond.note5;
 
 import android.app.Application;
 import android.database.sqlite.SQLiteDatabase;
+import android.os.Environment;
 import com.beyond.note5.model.dao.DaoMaster;
 import com.beyond.note5.model.dao.DaoSession;
+import com.beyond.note5.predict.TagPredictor;
+
+import java.io.File;
 
 /**
  * @author: beyond
@@ -27,6 +31,7 @@ public class MyApplication extends Application {
         super.onCreate();
         instance = this;
         initDaoSession();
+        initTagPredict();
     }
 
     private void initDaoSession() {
@@ -39,6 +44,17 @@ public class MyApplication extends Application {
         SQLiteDatabase writableDatabase = helper.getWritableDatabase();
         DaoMaster daoMaster = new DaoMaster(writableDatabase);
         daoSession = daoMaster.newSession();
+    }
+
+    private void initTagPredict() {
+        File storageDir = this.getExternalFilesDir(Environment.DIRECTORY_DOCUMENTS);
+        tagPredictor = new TagPredictor(new File(storageDir.getAbsolutePath()+File.separator+"model.json"));
+    }
+
+    TagPredictor tagPredictor;
+
+    public TagPredictor getTagPredictor() {
+        return tagPredictor;
     }
 
     DaoSession daoSession;
