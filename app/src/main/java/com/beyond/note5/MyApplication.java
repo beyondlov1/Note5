@@ -48,16 +48,17 @@ public class MyApplication extends Application {
 
     private void initTagPredict() {
         File storageDir = this.getExternalFilesDir(Environment.DIRECTORY_DOCUMENTS);
+        assert storageDir != null;
         tagPredictor = new TagPredictor(new File(storageDir.getAbsolutePath()+File.separator+"model.json"));
     }
 
-    TagPredictor tagPredictor;
+    private TagPredictor tagPredictor;
 
     public TagPredictor getTagPredictor() {
         return tagPredictor;
     }
 
-    DaoSession daoSession;
+    private DaoSession daoSession;
 
     public DaoSession getDaoSession() {
         return daoSession;

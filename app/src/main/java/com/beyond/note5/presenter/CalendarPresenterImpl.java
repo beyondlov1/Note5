@@ -105,6 +105,9 @@ public class CalendarPresenterImpl implements CalendarPresenter {
 
     @Override
     public void deleteReminder(Todo todo) {
+        if (todo.getReminder()==null){
+            return;
+        }
         try {
             calendarModel.deleteReminder(todo);
             this.deleteReminderSuccess(todo);
@@ -126,6 +129,9 @@ public class CalendarPresenterImpl implements CalendarPresenter {
 
     @Override
     public void restoreReminder(Todo todo) {
+        if (todo.getReminder()==null){
+            return;
+        }
         try {
             calendarModel.restoreReminder(todo);
             this.restoreReminderSuccess(todo);

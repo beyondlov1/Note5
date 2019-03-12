@@ -6,7 +6,6 @@ import com.beyond.note5.bean.Todo;
 import com.beyond.note5.model.dao.DaoSession;
 import com.beyond.note5.model.dao.ReminderDao;
 import com.beyond.note5.model.dao.TodoDao;
-import org.greenrobot.greendao.query.QueryBuilder;
 
 import java.util.List;
 
@@ -55,7 +54,7 @@ public class TodoModelImpl implements TodoModel {
 
     @Override
     public List<Todo> findAll() {
-        QueryBuilder<Todo> todoQueryBuilder = todoDao.queryBuilder();
+//        QueryBuilder<Todo> todoQueryBuilder = todoDao.queryBuilder();
 //        todoQueryBuilder
 //                .where(TodoDao.Properties.Type.eq(Document.TODO))
 //                .orderRaw("DATE(LAST_MODIFY_TIME/1000,'unixepoch','localtime') DESC,READ_FLAG ASC, LAST_MODIFY_TIME DESC");
@@ -74,13 +73,17 @@ public class TodoModelImpl implements TodoModel {
                     "ORDER BY CASE WHEN T0.START IS NULL THEN DATE('now') ELSE DATE( T0.START/1000,'unixepoch','localtime') END ASC," +
                     "READ_FLAG ASC, " +
                     "CASE WHEN T0.START IS NULL THEN 1 ELSE 0 END ASC," +
-                    "T0.START ASC");
+                    "T0.START ASC," +
+                    "LAST_MODIFY_TIME DESC"
+            );
         } else {
             return todoDao.queryDeep("WHERE T.TYPE = 'todo' AND T.READ_FLAG = 0 " +
                     "ORDER BY CASE WHEN T0.START IS NULL THEN DATE('now') ELSE DATE( T0.START/1000,'unixepoch','localtime') END ASC," +
                     "READ_FLAG ASC, " +
                     "CASE WHEN T0.START IS NULL THEN 1 ELSE 0 END ASC," +
-                    "T0.START ASC");
+                    "T0.START ASC," +
+                    "LAST_MODIFY_TIME DESC"
+            );
         }
 
     }

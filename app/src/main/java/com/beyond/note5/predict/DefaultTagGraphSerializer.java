@@ -18,6 +18,7 @@ public class DefaultTagGraphSerializer extends Observable implements TagGraphSer
 
     private TagGraph tagGraph;
     private File file;
+    private AtomicBoolean running = new AtomicBoolean(false);
     private AtomicBoolean ready = new AtomicBoolean(false);
 
     public DefaultTagGraphSerializer(File file) {
@@ -34,9 +35,25 @@ public class DefaultTagGraphSerializer extends Observable implements TagGraphSer
      * @return
      */
     public TagGraph generate() {
+        //如果正在运行循环等待
+        while (running.get()){
+            try {
+                Thread.sleep(100);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+        }
+
+        //如果tagGraph有值则直接返回
         if (tagGraph!=null){
+            ready.set(true);
+            setChanged();
+            notifyObservers();
             return tagGraph;
         }
+
+        //从文件读取模型
+        running.set(true);
         if (!file.exists()) {
             try {
                 boolean newFile = file.createNewFile();
@@ -72,13 +89,14 @@ public class DefaultTagGraphSerializer extends Observable implements TagGraphSer
         ready.set(true);
         setChanged();
         notifyObservers();
+        running.set(false);
         return tagGraph;
     }
 
     /**
      * 序列化到文件
      */
-    public void serialize() {
+    public synchronized void serialize() {
         try (OutputStream outputStream = new FileOutputStream(file)) {
             List<Tag> tags = tagGraph.getTags();
             for (Tag tag : tags) {

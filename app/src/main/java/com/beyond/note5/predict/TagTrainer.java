@@ -86,7 +86,11 @@ public class TagTrainer {
         List<Tag> resultTags= new ArrayList<Tag>();
         while (singleTags.size()>0){
             StringBuilder stringBuilder = new StringBuilder();
-            chain(singleTags,singleTags.get(0),stringBuilder);
+            List<Tag> walkedTags = new ArrayList<>();
+            chain(singleTags,walkedTags,singleTags.get(0));
+            for (Tag walkedTag : walkedTags) {
+                stringBuilder.append(walkedTag.getContent());
+            }
             Tag tag = new Tag();
             tag.setId(TagUtils.uuid());
             tag.setName(stringBuilder.toString());
@@ -98,15 +102,18 @@ public class TagTrainer {
 
     /**
      * 串联单个的词， 并从原列表中删除
-     * @param tags 原来单个词的列表
+     * @param singleTags 原来单个词的列表
+     * @param walkedTags 遍历过的tag，防止死循环： 1-2-3-1
      * @param tag 下一个单个词
-     * @param stringBuilder 串联的结果
      */
-    private void chain(List<Tag> tags, Tag tag, StringBuilder stringBuilder) {
-        stringBuilder.append(tag.getContent());
-        tags.remove(tag);
+    private void chain(List<Tag> singleTags,List<Tag> walkedTags, Tag tag) {
+        if (walkedTags.contains(tag)){
+            return;
+        }
+        walkedTags.add(tag);
+        singleTags.remove(tag);
         if (tag.getEdges().size() == 1) {
-            chain(tags, tag.getEdges().get(0).getTag(), stringBuilder);
+            chain(singleTags,walkedTags, tag.getEdges().get(0).getTag());
         }
     }
 
