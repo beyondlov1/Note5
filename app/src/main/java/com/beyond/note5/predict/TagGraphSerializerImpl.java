@@ -14,14 +14,14 @@ import java.util.concurrent.atomic.AtomicBoolean;
  * @author beyondlov1
  * @date 2019/03/10
  */
-public class DefaultTagGraphSerializer extends Observable implements TagGraphSerializer {
+public class TagGraphSerializerImpl extends Observable implements TagGraphSerializer {
 
     private TagGraph tagGraph;
     private File file;
     private AtomicBoolean running = new AtomicBoolean(false);
     private AtomicBoolean ready = new AtomicBoolean(false);
 
-    public DefaultTagGraphSerializer(File file) {
+    public TagGraphSerializerImpl(File file) {
         this.file = file;
     }
 
@@ -58,6 +58,7 @@ public class DefaultTagGraphSerializer extends Observable implements TagGraphSer
             try {
                 boolean newFile = file.createNewFile();
                 if (!newFile){
+                    running.set(false);
                     throw new RuntimeException("模型文件无法创建");
                 }
             } catch (IOException e) {
@@ -69,6 +70,7 @@ public class DefaultTagGraphSerializer extends Observable implements TagGraphSer
                 tagGraph = JSON.parseObject(inputStream, TagGraph.class);
                 if (tagGraph == null) {
                     tagGraph = new TagGraph();
+                    running.set(false);
                     return tagGraph;
                 }
                 List<Tag> tags = tagGraph.getTags();

@@ -30,7 +30,7 @@ public class TodoModelImpl implements TodoModel {
         }
 
         //train
-        MyApplication.getInstance().getTagPredictor().getTagTrainer().train(todo.getContent());
+        MyApplication.getInstance().getTagPredictorImpl().getTagTrainer().train(todo.getContent());
     }
 
     @Override
@@ -41,7 +41,7 @@ public class TodoModelImpl implements TodoModel {
         }
 
         //train
-        MyApplication.getInstance().getTagPredictor().getTagTrainer().train(todo.getContent());
+        MyApplication.getInstance().getTagPredictorImpl().getTagTrainer().train(todo.getContent());
     }
 
     @Override

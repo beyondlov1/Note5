@@ -1,6 +1,7 @@
 package com.beyond.note5.view.fragment;
 
 import android.os.Handler;
+import android.support.v4.content.ContextCompat;
 import android.text.Editable;
 import android.text.TextWatcher;
 import android.view.View;
@@ -16,7 +17,7 @@ import com.beyond.note5.event.DeleteTodoEvent;
 import com.beyond.note5.event.FillTodoModifyEvent;
 import com.beyond.note5.event.HideTodoEditEvent;
 import com.beyond.note5.event.UpdateTodoEvent;
-import com.beyond.note5.predict.bean.Callback;
+import com.beyond.note5.predict.AbstractTagCallback;
 import com.beyond.note5.predict.bean.Tag;
 import com.beyond.note5.utils.IDUtil;
 import com.beyond.note5.utils.InputMethodUtil;
@@ -31,9 +32,7 @@ import org.greenrobot.eventbus.EventBus;
 import org.greenrobot.eventbus.Subscribe;
 import org.greenrobot.eventbus.ThreadMode;
 
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.List;
+import java.util.*;
 
 public class TodoModifySuperFragment extends TodoEditSuperFragment {
 
@@ -70,6 +69,12 @@ public class TodoModifySuperFragment extends TodoEditSuperFragment {
             @Override
             public View getView(FlowLayout parent, int position, String s) {
                 TextView tv = new TextView(getContext());
+//                GradientDrawable gradientDrawable = new GradientDrawable();
+//                gradientDrawable.setCornerRadius(13);
+//                gradientDrawable.setStroke(1, ContextCompat.getColor(getContext(), R.color.dark_gray));
+
+                tv.setTextColor(ContextCompat.getColor(getContext(), R.color.white));
+                tv.setBackground(getResources().getDrawable(R.drawable.radius_24dp_blue,null));
                 tv.setText(s);
                 return tv;
             }
@@ -124,10 +129,20 @@ public class TodoModifySuperFragment extends TodoEditSuperFragment {
 
             @Override
             public void onTextChanged(CharSequence s, final int start, int before, int count) {
-                MyApplication.getInstance().getTagPredictor().predict(s.toString(), new Callback<List<Tag>>() {
+                MyApplication.getInstance().getTagPredictorImpl().predict(s.toString(), new AbstractTagCallback() {
+
                     @Override
-                    public void onSuccess(List<Tag> tags) {
+                    protected void handleResult(List<Tag> tags) {
                         tagData.clear();
+                        Collections.sort(tags, new Comparator<Tag>() {
+                            @Override
+                            public int compare(Tag o1, Tag o2) {
+                                return -o1.getScore()+o2.getScore();
+                            }
+                        });
+                        if (tags.size()>=5){
+                            tags = tags.subList(0,5);
+                        }
                         for (Tag tag : tags) {
                             tagData.add(tag.getContent());
                         }
@@ -139,10 +154,6 @@ public class TodoModifySuperFragment extends TodoEditSuperFragment {
                         });
                     }
 
-                    @Override
-                    public void onFail() {
-
-                    }
                 });
             }
 

@@ -5,7 +5,7 @@ import android.database.sqlite.SQLiteDatabase;
 import android.os.Environment;
 import com.beyond.note5.model.dao.DaoMaster;
 import com.beyond.note5.model.dao.DaoSession;
-import com.beyond.note5.predict.TagPredictor;
+import com.beyond.note5.predict.TagPredictorImpl;
 
 import java.io.File;
 
@@ -49,13 +49,13 @@ public class MyApplication extends Application {
     private void initTagPredict() {
         File storageDir = this.getExternalFilesDir(Environment.DIRECTORY_DOCUMENTS);
         assert storageDir != null;
-        tagPredictor = new TagPredictor(new File(storageDir.getAbsolutePath()+File.separator+"model.json"));
+        tagPredictorImpl = new TagPredictorImpl(new File(storageDir.getAbsolutePath()+File.separator+"model.json"));
     }
 
-    private TagPredictor tagPredictor;
+    private TagPredictorImpl tagPredictorImpl;
 
-    public TagPredictor getTagPredictor() {
-        return tagPredictor;
+    public TagPredictorImpl getTagPredictorImpl() {
+        return tagPredictorImpl;
     }
 
     private DaoSession daoSession;

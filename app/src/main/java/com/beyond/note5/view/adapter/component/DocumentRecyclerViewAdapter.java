@@ -28,7 +28,7 @@ public abstract class DocumentRecyclerViewAdapter<T extends Document, S extends 
 
     static final int[] colorResIds = new int[]{
             R.color.google_red,
-            R.color.google_yellow,
+            R.color.dark_yellow,
             R.color.google_blue,
             R.color.google_green
     };

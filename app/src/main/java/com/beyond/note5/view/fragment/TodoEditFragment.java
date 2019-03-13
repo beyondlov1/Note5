@@ -12,6 +12,7 @@ import android.os.Handler;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.v4.app.DialogFragment;
+import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AlertDialog;
 import android.text.Editable;
 import android.text.TextWatcher;
@@ -27,7 +28,7 @@ import com.beyond.note5.constant.DocumentConst;
 import com.beyond.note5.event.AddTodoEvent;
 import com.beyond.note5.event.HideKeyBoardEvent;
 import com.beyond.note5.event.ShowKeyBoardEvent;
-import com.beyond.note5.predict.bean.Callback;
+import com.beyond.note5.predict.AbstractTagCallback;
 import com.beyond.note5.predict.bean.Tag;
 import com.beyond.note5.utils.IDUtil;
 import com.beyond.note5.utils.InputMethodUtil;
@@ -42,10 +43,7 @@ import org.greenrobot.eventbus.EventBus;
 import org.greenrobot.eventbus.Subscribe;
 import org.greenrobot.eventbus.ThreadMode;
 
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.List;
-import java.util.Objects;
+import java.util.*;
 
 /**
  * @author: beyond
@@ -159,6 +157,8 @@ public class TodoEditFragment extends DialogFragment {
             @Override
             public View getView(FlowLayout parent, int position, String s) {
                 TextView tv = new TextView(getContext());
+                tv.setTextColor(ContextCompat.getColor(getContext(), R.color.white));
+                tv.setBackground(getResources().getDrawable(R.drawable.radius_24dp_blue,null));
                 tv.setText(s);
                 return tv;
             }
@@ -182,32 +182,18 @@ public class TodoEditFragment extends DialogFragment {
             @Override
             public void onTextChanged(final CharSequence s, int start, int before, int count) {
                 createdDocument.setContent(s.toString());
-
-                MyApplication.getInstance().getTagPredictor().predict(s.toString(), new Callback<List<Tag>>() {
-                    @Override
-                    public void onSuccess(List<Tag> tags) {
-                        tagData.clear();
-                        for (Tag tag : tags) {
-                            tagData.add(tag.getContent());
-                        }
-                        handler.post(new Runnable() {
-                            @Override
-                            public void run() {
-                                tagAdapter.notifyDataChanged();
-                            }
-                        });
-                    }
-
-                    @Override
-                    public void onFail() {
-
-                    }
-                });
+                predictTags(s);
             }
 
             @Override
             public void afterTextChanged(Editable s) {
 
+            }
+        });
+        contentEditText.setOnFocusChangeListener(new View.OnFocusChangeListener() {
+            @Override
+            public void onFocusChange(View v, boolean hasFocus) {
+                predictTags(contentEditText.getText());
             }
         });
         flowLayout.setOnTagClickListener(new TagFlowLayout.OnTagClickListener() {
@@ -238,6 +224,35 @@ public class TodoEditFragment extends DialogFragment {
             }
         });
 
+    }
+
+    private void predictTags(CharSequence s) {
+        MyApplication.getInstance().getTagPredictorImpl().predict(s.toString(), new AbstractTagCallback() {
+
+            @Override
+            protected void handleResult(List<Tag> tags) {
+                tagData.clear();
+                Collections.sort(tags, new Comparator<Tag>() {
+                    @Override
+                    public int compare(Tag o1, Tag o2) {
+                        return -o1.getScore()+o2.getScore();
+                    }
+                });
+                if (tags.size()>=5){
+                    tags = tags.subList(0,5);
+                }
+                for (Tag tag : tags) {
+                    tagData.add(tag.getContent());
+                }
+                handler.post(new Runnable() {
+                    @Override
+                    public void run() {
+                        tagAdapter.notifyDataChanged();
+                    }
+                });
+            }
+
+        });
     }
 
     @Override

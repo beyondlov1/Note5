@@ -3,6 +3,7 @@ package com.beyond.note5.predict;
 
 import com.beyond.note5.predict.bean.Callback;
 import com.beyond.note5.predict.bean.Tag;
+import com.beyond.note5.predict.bean.TagGraph;
 
 import java.io.File;
 import java.util.List;
@@ -44,11 +45,12 @@ public class Main {
 
         File file = new File("/home/beyond/下载/test.json");
 
-        TagPredictor tagPredictor = new TagPredictor(file);
-//        tagPredictor.getTagTrainer().train(source);
-        tagPredictor.predict("统计法", new Callback<List<Tag>>() {
+        TagPredictorImpl tagPredictorImpl = new TagPredictorImpl(file);
+//        tagPredictorImpl.getTagTrainer().train(source);
+        tagPredictorImpl.predict("统计法", new Callback<String, TagGraph>() {
             @Override
-            public void onSuccess(List<Tag> result) {
+            public void onSuccess(String s, TagGraph tagGraph) {
+                List<Tag> result = tagGraph.predict(s);
                 System.out.println("-------------------------");
                 if (result != null) {
                     for (Tag tag : result) {
