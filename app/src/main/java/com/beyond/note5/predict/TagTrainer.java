@@ -1,14 +1,12 @@
 package com.beyond.note5.predict;
 
+import android.support.annotation.NonNull;
 import android.util.Log;
 import com.alibaba.fastjson.JSON;
-import com.beyond.note5.predict.bean.SegResponse;
-import com.beyond.note5.predict.bean.Tag;
-import com.beyond.note5.predict.bean.TagEdge;
-import com.beyond.note5.predict.bean.TagGraph;
+import com.beyond.note5.predict.bean.*;
 import com.beyond.note5.predict.utils.TagUtils;
+import okhttp3.Callback;
 import okhttp3.*;
-import org.apache.commons.lang3.StringUtils;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -50,7 +48,7 @@ public class TagTrainer {
             public void onResponse(Call call, Response response) throws IOException {
                 List<String> list = getTrainSource(response);
                 if (list == null) return;
-                processMergedWord(content,list);
+                processMergedWordScore(content,list);
                 injector.inject(list);
                 mergeSingleTags(tagGraph.getTags());
                 Log.d("afterTrain",tagGraph.toString());
@@ -64,7 +62,7 @@ public class TagTrainer {
      * @param content 传入内容
      * @param list 分词列表
      */
-    private void processMergedWord(String content, List<String> list) {
+    private void processMergedWordScore(String content, List<String> list) {
 
         //思路： 找到分词列表中不存在的合并单词， 给相应的root加分， 找到相应的edge加分， 加分+2
         TagGraph tagGraph = getTagGraph();
@@ -90,8 +88,15 @@ public class TagTrainer {
         }
     }
 
-    private Tag getPrevTag(String content,Tag foundTag,List<String> list){
-        int index = content.indexOf(foundTag.getContent());
+    /**
+     * 获取前一个tag
+     * @param source 语句
+     * @param tag 目标tag
+     * @param list 语句的分词列表
+     * @return
+     */
+    private Tag getPrevTag(String source,Tag tag,List<String> list){
+        int index = source.indexOf(tag.getContent());
         int tmp = 0;
         for (String s : list) {
             tmp += s.length();
@@ -124,65 +129,51 @@ public class TagTrainer {
      * @param roots graph中的根（也就是所有出现过的词）
      */
     private void mergeSingleTags(List<Tag> roots) {
+        List<Tag> resultTags= new ArrayList<Tag>();
+        List<Tag> singleTags = getSingleTags(roots);
+        List<MergedTagSet> mergedTagSets = getMergedTags(singleTags);
+        for (MergedTagSet mergedTagSet : mergedTagSets) {
+            String mergedContent = mergedTagSet.getMergedTag().getContent();
+            Tag foundTag =TagUtils.findTagByContent(roots, mergedContent);
+            if (foundTag==null) { // roots中不存在
+                //新创建一个tag， 加到结果中
+                Tag mergedTag = TagUtils.createTag(mergedContent);
+                resultTags.add(mergedTag);
+
+                //如果有root中有第一个词， 那也应该包括合并后的这个词
+                for (Tag root : roots) {
+                    TagEdge foundEdge = root.findEdge(mergedTagSet.getStartTag());
+                    if (foundEdge!=null){
+                        TagEdge mergedTagEdge = TagUtils.createTagEdge(mergedTag);
+                        root.getEdges().add(mergedTagEdge);
+                    }
+                }
+            }
+        }
+        roots.addAll(resultTags);
+    }
+
+    private List<MergedTagSet> getMergedTags(List<Tag> singleTags) {
+        List<MergedTagSet> mergedTagSets = new ArrayList<>();
+        while (singleTags.size()>0){
+            List<Tag> walkedTags = new ArrayList<>();
+            Tag startTag = singleTags.get(0);
+            chain(singleTags,walkedTags,startTag);
+            MergedTagSet mergedTagSet = new MergedTagSet(walkedTags);
+            mergedTagSets.add(mergedTagSet);
+        }
+        return mergedTagSets;
+    }
+
+    @NonNull
+    private List<Tag> getSingleTags(List<Tag> roots) {
         List<Tag> singleTags = new ArrayList<Tag>();
         for (Tag next : roots) {
             if (next.getEdges().size() == 1) {
                 singleTags.add(next);
             }
         }
-
-        List<Tag> resultTags= new ArrayList<Tag>();
-        while (singleTags.size()>0){
-            StringBuilder stringBuilder = new StringBuilder();
-            List<Tag> walkedTags = new ArrayList<>();
-            Tag startTag = singleTags.get(0);
-            chain(singleTags,walkedTags,startTag);
-            for (Tag walkedTag : walkedTags) {
-                stringBuilder.append(walkedTag.getContent());
-            }
-            Tag foundTag = null;
-            for (Tag root : roots) {
-                if (StringUtils.equals(root.getContent(),stringBuilder.toString())){
-                    foundTag = root;
-                    break;
-                }
-            }
-            if (foundTag==null) { // roots中不存在
-                Tag tag = new Tag();
-                tag.setId(TagUtils.uuid());
-                tag.setName(stringBuilder.toString());
-                tag.setContent(stringBuilder.toString());
-                resultTags.add(tag);
-
-                for (Tag root : roots) {
-                    List<TagEdge> edges = root.getEdges();
-                    for (TagEdge edge : edges) {
-                        if (edge.getTag() == startTag) {
-                            TagEdge tagEdge = new TagEdge();
-                            tagEdge.setId(TagUtils.uuid());
-                            tagEdge.setTag(tag);
-                            root.getEdges().add(tagEdge);
-                            break;
-                        }
-                    }
-                }
-            }
-//            else{// roots中存在
-//                foundTag.setScore(foundTag.getScore()+1);
-//
-//                for (Tag root : roots) {
-//                    List<TagEdge> edges = root.getEdges();
-//                    for (TagEdge edge : edges) {
-//                        if (edge.getTag() == foundTag) {
-//                            edge.setScore(edge.getScore()+1);
-//                            break;
-//                        }
-//                    }
-//                }
-//            }
-
-        }
-        roots.addAll(resultTags);
+        return singleTags;
     }
 
     /**

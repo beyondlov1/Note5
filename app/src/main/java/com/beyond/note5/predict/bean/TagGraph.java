@@ -1,5 +1,7 @@
 package com.beyond.note5.predict.bean;
 
+import com.beyond.note5.predict.utils.TagUtils;
+
 import java.util.ArrayList;
 import java.util.List;
 
@@ -32,12 +34,7 @@ public class TagGraph {
     }
 
     public Tag find(String str){
-        for (Tag tag : tags) {
-            if (tag.getContent().equals(str)){
-                return tag;
-            }
-        }
-        return null;
+        return TagUtils.findTagByContent(tags,str);
     }
 
     @Override

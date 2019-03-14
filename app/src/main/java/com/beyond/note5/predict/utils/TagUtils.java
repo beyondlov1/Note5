@@ -1,5 +1,10 @@
 package com.beyond.note5.predict.utils;
 
+import com.beyond.note5.predict.bean.Tag;
+import com.beyond.note5.predict.bean.TagEdge;
+import org.apache.commons.lang3.StringUtils;
+
+import java.util.List;
 import java.util.UUID;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -33,6 +38,56 @@ public class TagUtils {
             str = str.replace(group1, ch + "");
         }
         return str;
+    }
+
+    public static Tag findTagByContent(List<Tag> tags, String content){
+        Tag foundTag = null;
+        for (Tag root : tags) {
+            if (StringUtils.equals(root.getContent(),content)){
+                foundTag = root;
+                break;
+            }
+        }
+        return foundTag;
+    }
+
+    public static TagEdge findTagEdgeByContent(List<TagEdge> tagEdges, String content){
+        TagEdge found = null;
+        for (TagEdge edge : tagEdges) {
+            if (StringUtils.equals(edge.getTag().getContent(),content)){
+                found = edge;
+                break;
+            }
+        }
+        return found;
+    }
+
+    public static Tag createTag(String content){
+        if (StringUtils.isNoneBlank(content)){
+            Tag tag = new Tag();
+            tag.setId(uuid());
+            tag.setName(content);
+            tag.setContent(content);
+            return tag;
+        }else {
+            throw new RuntimeException("content can not be null");
+        }
+    }
+    public static TagEdge createTagEdge(Tag tag){
+        TagEdge tagEdge = new TagEdge();
+        tagEdge.setId(uuid());
+        tagEdge.setTag(tag);
+        return tagEdge;
+    }
+
+    public static Tag addScore(Tag tag, int i){
+        tag.setScore(tag.getScore()+i);
+        return tag;
+    }
+
+    public static TagEdge addScore(TagEdge tagEdge, int i){
+        tagEdge.setScore(tagEdge.getScore()+i);
+        return tagEdge;
     }
 
 }
