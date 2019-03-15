@@ -198,7 +198,7 @@ public class TodoListFragment extends AbstractFragmentTodoView {
 //        for (final Header headerDatum : headerData) {
 //            if (StringUtils.equalsIgnoreCase(headerDatum.getContent(),
 //                    DateFormatUtils.format(System.currentTimeMillis(),"yyyy-MM-dd"))){
-//                recyclerView.scrollTo(0,100);
+//                recyclerView.getLayoutManager().scrollToPosition(headerDatum.getPosition());
 //                break;
 //            }
 //        }
