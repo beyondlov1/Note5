@@ -132,6 +132,10 @@ public abstract class DocumentRecyclerViewAdapter<T extends Document, S extends 
         notifyItemRangeChanged(0, itemDataGenerator.getItemData().size());
     }
 
+    /**
+     * 刷新itemData
+     * @return 增加的个数
+     */
     private int refreshItemData() {
         int oldCount = itemDataGenerator.getItemData().size();
         itemDataGenerator.refresh();

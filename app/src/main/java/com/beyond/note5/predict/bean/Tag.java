@@ -12,6 +12,7 @@ import java.util.List;
 public class Tag {
     @JSONField(serialize = false)
     private String id;
+    @JSONField(serialize = false)
     private String name;
     private String content;
     private int score;

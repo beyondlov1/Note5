@@ -122,6 +122,9 @@ public class DefaultSmoothScalable implements SmoothScalable {
             @Override
             public void onAnimationUpdate(ValueAnimator animation) {
                 float animatedValue = (float) animation.getAnimatedValue();
+                if (container == null){
+                    return;
+                }
                 container.setX(clickItemX - animatedValue * clickItemX);
                 container.setY(clickItemY - animatedValue * clickItemY);
                 container.getLayoutParams().width = (int) (clickItemWidth + animatedValue * (containerWidth - clickItemWidth));

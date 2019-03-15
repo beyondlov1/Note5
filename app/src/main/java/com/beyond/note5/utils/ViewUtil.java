@@ -30,9 +30,15 @@ public class ViewUtil {
         return xy[1]-75;
     }
     public static int getWidth(View view){
+        if (view == null){
+            return 0;
+        }
         return view.getWidth();
     }
     public static int getHeight(View view){
+        if (view == null){
+            return 0;
+        }
         return view.getHeight();
     }
 

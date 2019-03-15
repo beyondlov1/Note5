@@ -3,6 +3,7 @@ package com.beyond.note5.view.fragment;
 import android.annotation.SuppressLint;
 import android.content.Context;
 import android.os.Bundle;
+import android.os.Handler;
 import android.support.annotation.Nullable;
 import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.StaggeredGridLayoutManager;
@@ -16,16 +17,20 @@ import com.beyond.note5.module.TodoComponent;
 import com.beyond.note5.module.TodoModule;
 import com.beyond.note5.presenter.CalendarPresenter;
 import com.beyond.note5.presenter.TodoPresenter;
+import com.beyond.note5.utils.ViewUtil;
 import com.beyond.note5.view.adapter.AbstractFragmentTodoView;
 import com.beyond.note5.view.adapter.component.TodoRecyclerViewAdapter;
+import com.beyond.note5.view.adapter.component.header.Header;
 import com.beyond.note5.view.adapter.component.header.ReminderTimeItemDataGenerator;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.time.DateFormatUtils;
 import org.greenrobot.eventbus.EventBus;
 import org.greenrobot.eventbus.Subscribe;
 import org.greenrobot.eventbus.ThreadMode;
 
 import javax.inject.Inject;
 import java.util.Iterator;
+import java.util.List;
 
 import static com.beyond.note5.model.TodoModelImpl.IS_SHOW_READ_FLAG_DONE;
 
@@ -184,9 +189,19 @@ public class TodoListFragment extends AbstractFragmentTodoView {
         }
     }
 
+    @SuppressWarnings("unchecked")
     @Subscribe(threadMode = ThreadMode.MAIN)
     public void onReceived(RefreshTodoListEvent event) {
         todoPresenter.findAll();
+//        //滚动到当前时间的header  //没有用
+//        List<Header> headerData = recyclerViewAdapter.getItemDataGenerator().getHeaderData();
+//        for (final Header headerDatum : headerData) {
+//            if (StringUtils.equalsIgnoreCase(headerDatum.getContent(),
+//                    DateFormatUtils.format(System.currentTimeMillis(),"yyyy-MM-dd"))){
+//                recyclerView.scrollTo(0,100);
+//                break;
+//            }
+//        }
     }
 
     @Subscribe(threadMode = ThreadMode.MAIN)
@@ -213,11 +228,9 @@ public class TodoListFragment extends AbstractFragmentTodoView {
                 int insertIndex = recyclerViewAdapter.getItemDataGenerator().getInsertIndex(todo);
                 data.add(insertIndex, todo);
                 recyclerViewAdapter.notifyInserted(todo);
-//                recyclerView.scrollToPosition(insertIndex);
                 msg("更新成功");
                 break;
             }
         }
     }
-
 }

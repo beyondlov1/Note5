@@ -105,7 +105,7 @@ public class TodoEditSuperFragment extends DialogFragment implements OnBackPress
     @Subscribe(threadMode = ThreadMode.MAIN)
     public void onEventMainThread(ShowKeyBoardEvent event) {
         String type = event.getType();
-        if (StringUtils.equals(Document.TODO, type)){
+        if (StringUtils.equals(Document.TODO, type) && smoothScalable.getContainer()!=null){
             smoothScalable.getContainer().getLayoutParams().height = InputMethodUtil.getDialogHeightWithSoftInputMethod();
             smoothScalable.getContainer().setLayoutParams(smoothScalable.getContainer().getLayoutParams());
         }

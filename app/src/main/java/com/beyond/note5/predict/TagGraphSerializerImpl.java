@@ -1,11 +1,13 @@
 package com.beyond.note5.predict;
 
 import com.alibaba.fastjson.JSON;
+import com.beyond.note5.predict.bean.MergedTag;
 import com.beyond.note5.predict.bean.Tag;
 import com.beyond.note5.predict.bean.TagEdge;
 import com.beyond.note5.predict.bean.TagGraph;
 
 import java.io.*;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Observable;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -75,6 +77,7 @@ public class TagGraphSerializerImpl extends Observable implements TagGraphSerial
                 }
                 List<Tag> tags = tagGraph.getTags();
                 for (Tag tag : tags) {
+                    //给 tagEdge 中的 tag 赋值
                     List<TagEdge> edges = tag.getEdges();
                     for (TagEdge edge : edges) {
                         int index = edge.getIndex();
@@ -82,6 +85,18 @@ public class TagGraphSerializerImpl extends Observable implements TagGraphSerial
                             edge.setTag(tagGraph.getTags().get(index));
                         }
                     }
+
+                    //给 mergedTag 中的 List<Tag> 赋值
+                    if (tag instanceof MergedTag){
+                        MergedTag rootMergedTag = (MergedTag) tag;
+                        List<Integer> childrenIndexes = rootMergedTag.getChildrenIndexes();
+                        List<Tag> children = new ArrayList<>();
+                        for (Integer childrenIndex : childrenIndexes) {
+                            children.add(tags.get(childrenIndex));
+                        }
+                        rootMergedTag.setChildren(children);
+                    }
+
                 }
             }
         } catch (IOException e) {
@@ -100,14 +115,30 @@ public class TagGraphSerializerImpl extends Observable implements TagGraphSerial
      */
     public synchronized void serialize() {
         try (OutputStream outputStream = new FileOutputStream(file)) {
+
             List<Tag> tags = tagGraph.getTags();
             for (Tag tag : tags) {
+                //给 index 赋值
                 List<TagEdge> edges = tag.getEdges();
                 for (TagEdge edge : edges) {
                     int index = tagGraph.getTags().indexOf(edge.getTag());
                     edge.setIndex(index);
                 }
+
+                //给 childrenIndexes 赋值
+                if (tag instanceof MergedTag){
+                    MergedTag rootMergedTag = (MergedTag) tag;
+                    List<Tag> children = rootMergedTag.getChildren();
+                    List<Integer> childrenIndex = new ArrayList<>();
+                    for (Tag child : children) {
+                        int index = tagGraph.getTags().indexOf(child);
+                        childrenIndex.add(index);
+                    }
+                    rootMergedTag.setChildrenIndexes(childrenIndex);
+                }
             }
+
+
             JSON.writeJSONString(outputStream, tagGraph);
             outputStream.flush();
         } catch (IOException e) {

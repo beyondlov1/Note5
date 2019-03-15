@@ -131,18 +131,18 @@ public class TagTrainer {
     private void mergeSingleTags(List<Tag> roots) {
         List<Tag> resultTags= new ArrayList<Tag>();
         List<Tag> singleTags = getSingleTags(roots);
-        List<MergedTagSet> mergedTagSets = getMergedTags(singleTags);
-        for (MergedTagSet mergedTagSet : mergedTagSets) {
-            String mergedContent = mergedTagSet.getMergedTag().getContent();
+        List<MergedTag> mergedTags = getMergedTags(singleTags);
+        for (MergedTag mergedTag : mergedTags) {
+            String mergedContent = mergedTag.getContent();
             Tag foundTag =TagUtils.findTagByContent(roots, mergedContent);
             if (foundTag==null) { // roots中不存在
                 //新创建一个tag， 加到结果中
-                Tag mergedTag = TagUtils.createTag(mergedContent);
                 resultTags.add(mergedTag);
 
                 //如果有root中有第一个词， 那也应该包括合并后的这个词
                 for (Tag root : roots) {
-                    TagEdge foundEdge = root.findEdge(mergedTagSet.getStartTag());
+                    Tag firstChildTag = mergedTag.getChildren().get(0);
+                    TagEdge foundEdge = root.findEdge(firstChildTag);
                     if (foundEdge!=null){
                         TagEdge mergedTagEdge = TagUtils.createTagEdge(mergedTag);
                         root.getEdges().add(mergedTagEdge);
@@ -153,16 +153,16 @@ public class TagTrainer {
         roots.addAll(resultTags);
     }
 
-    private List<MergedTagSet> getMergedTags(List<Tag> singleTags) {
-        List<MergedTagSet> mergedTagSets = new ArrayList<>();
+    private List<MergedTag> getMergedTags(List<Tag> singleTags) {
+        List<MergedTag> mergedTags = new ArrayList<>();
         while (singleTags.size()>0){
             List<Tag> walkedTags = new ArrayList<>();
             Tag startTag = singleTags.get(0);
             chain(singleTags,walkedTags,startTag);
-            MergedTagSet mergedTagSet = new MergedTagSet(walkedTags);
-            mergedTagSets.add(mergedTagSet);
+            MergedTag mergedTag = MergedTag.create(walkedTags);
+            mergedTags.add(mergedTag);
         }
-        return mergedTagSets;
+        return mergedTags;
     }
 
     @NonNull
