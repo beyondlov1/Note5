@@ -27,13 +27,13 @@ public class TagTrainer {
     private TagGraphInjector injector;
     private OkHttpClient okHttpClient;
 
-    public TagTrainer(TagGraphSerializer serializer,TagGraphInjector injector) {
+    public TagTrainer(TagGraphSerializer serializer, TagGraphInjector injector) {
         this.serializer = serializer;
         this.injector = injector;
         this.okHttpClient = new OkHttpClient();
     }
 
-    public void train(final String content){
+    public void train(final String content) {
         final TagGraph tagGraph = getTagGraph();
 
         String url = "http://www.sogou.com/labs/webservice/sogou_word_seg.php?q=" + content;
@@ -53,11 +53,11 @@ public class TagTrainer {
             public void onResponse(@NonNull Call call, @NonNull Response response) throws IOException {
                 List<String> list = getTrainSource(response);
                 if (list == null) return;
-                processMergedWordScore(content,list);
+                processMergedWordScore(content, list);
                 injector.inject(list);
                 mergeSingleTags(tagGraph.getTags());
                 replaceToTimeTags(tagGraph.getTags());
-                Log.d("afterTrain",tagGraph.toString());
+                Log.d("afterTrain", tagGraph.toString());
                 serializer.serialize();
             }
         });
@@ -65,39 +65,41 @@ public class TagTrainer {
 
     /**
      * 将含有时间的字符串的tag转为TimeTag模式
+     *
      * @param tags root
      */
     @SuppressWarnings("ResultOfMethodCallIgnored")
     private void replaceToTimeTags(List<Tag> tags) {
-
-        for (Tag tag : tags) {
-            if (tag instanceof TimeTag){
-                continue;
-            }
-            if (tag instanceof MergedTag){
-                MergedTag mergedTag = (MergedTag) tag;
-                MergedTimeTag mergedTimeTag = new MergedTimeTag();
-                TagUtils.copyMergedTagTo(mergedTag,mergedTimeTag);
-                Collections.replaceAll(tags,tag,mergedTimeTag);
-                continue;
-            }
-            TimeUnit timeUnit = TimeNLPUtil.parseForTimeUnit(tag.getContent());
-            if (timeUnit != null){
-                TimeTag timeTag = new TimeTag();
-                TagUtils.copyTagTo(tag,timeTag);
-                if (StringUtils.equalsIgnoreCase(tag.getContent(),timeUnit.Origin_Time_Expression)){
-                    timeTag.setTime(timeUnit.getTime());
-                }
-                Collections.replaceAll(tags,tag,timeTag);
-            }
-        }
-
         //因为time替换的原因，要重新给tagEdge赋值
         for (Tag tag : tags) {
             List<TagEdge> edges = tag.getEdges();
             for (TagEdge edge : edges) {
-                if (tags.get(edge.getIndex())!=null){
+                if (tags.get(edge.getIndex()) != null) {
                     edge.setTag(tags.get(edge.getIndex()));
+                }
+            }
+        }
+
+        for (Tag tag : tags) {
+            if (tag instanceof TimeTag) {
+                continue;
+            }
+            TimeUnit timeUnit = TimeNLPUtil.parseForTimeUnit(tag.getContent());
+            if (timeUnit != null) {
+                if (StringUtils.equalsIgnoreCase(tag.getContent(), timeUnit.Origin_Time_Expression)) {
+
+                    if (tag instanceof MergedTag) {
+                        MergedTag mergedTag = (MergedTag) tag;
+                        MergedTimeTag mergedTimeTag = new MergedTimeTag();
+                        TagUtils.copyMergedTagTo(mergedTag, mergedTimeTag);
+                        Collections.replaceAll(tags, tag, mergedTimeTag);
+                        continue;
+                    }
+
+                    TimeTag timeTag = new TimeTag();
+                    TagUtils.copyTagTo(tag, timeTag);
+                    timeTag.setTime(timeUnit.getTime());
+                    Collections.replaceAll(tags, tag, timeTag);
                 }
             }
         }
@@ -105,28 +107,29 @@ public class TagTrainer {
 
     /**
      * 处理合并过的词语， 主要是来加分
+     *
      * @param content 传入内容
-     * @param list 分词列表
+     * @param list    分词列表
      */
     private void processMergedWordScore(String content, List<String> list) {
 
         //思路： 找到分词列表中不存在的合并单词， 给相应的root加分， 找到相应的edge加分， 加分+2
         TagGraph tagGraph = getTagGraph();
         for (Tag tag : tagGraph.getTags()) {
-            if (content.contains(tag.getContent())&&!list.contains(tag.getContent())){
+            if (content.contains(tag.getContent()) && !list.contains(tag.getContent())) {
                 Tag foundTag = getTagGraph().find(tag.getContent());
-                if (foundTag!=null){// 能找到
-                    System.out.println("foundTagContent "+foundTag.getContent());
-                    foundTag.setScore(foundTag.getScore()+2); // 对于这种小几率事件 权重大些
+                if (foundTag != null) {// 能找到
+                    System.out.println("foundTagContent " + foundTag.getContent());
+                    foundTag.setScore(foundTag.getScore() + 2); // 对于这种小几率事件 权重大些
                     Tag prevTag = getPrevTag(content, foundTag, list); //查找前一个tag
-                    System.out.println("prevTag "+prevTag);
-                    if (prevTag!=null){
-                        System.out.println("prevTagContent "+prevTag.getContent());
+                    System.out.println("prevTag " + prevTag);
+                    if (prevTag != null) {
+                        System.out.println("prevTagContent " + prevTag.getContent());
                         TagEdge foundEdge = prevTag.findEdge(foundTag);
-                        System.out.println("foundEdge "+foundEdge);
-                        if (foundEdge!=null){
-                            System.out.println("foundEdgeContent "+foundEdge.getTag().getContent());
-                            foundEdge.setScore(foundEdge.getScore()+1); //给前一个tag的对应edge score+1
+                        System.out.println("foundEdge " + foundEdge);
+                        if (foundEdge != null) {
+                            System.out.println("foundEdgeContent " + foundEdge.getTag().getContent());
+                            foundEdge.setScore(foundEdge.getScore() + 1); //给前一个tag的对应edge score+1
                         }
                     }
                 }
@@ -136,17 +139,18 @@ public class TagTrainer {
 
     /**
      * 获取前一个tag
+     *
      * @param source 语句
-     * @param tag 目标tag
-     * @param list 语句的分词列表
+     * @param tag    目标tag
+     * @param list   语句的分词列表
      * @return
      */
-    private Tag getPrevTag(String source,Tag tag,List<String> list){
+    private Tag getPrevTag(String source, Tag tag, List<String> list) {
         int index = source.indexOf(tag.getContent());
         int tmp = 0;
         for (String s : list) {
             tmp += s.length();
-            if (tmp == index){
+            if (tmp == index) {
                 return getTagGraph().find(s);
             }
         }
@@ -155,6 +159,7 @@ public class TagTrainer {
 
     /**
      * 从接口返回值中提取分词内容
+     *
      * @param response
      * @return
      * @throws IOException
@@ -172,40 +177,39 @@ public class TagTrainer {
 
     /**
      * 合并单个词
+     *
      * @param roots graph中的根（也就是所有出现过的词）
      */
     private void mergeSingleTags(List<Tag> roots) {
-        List<Tag> resultTags= new ArrayList<Tag>();
         List<Tag> singleTags = getSingleTags(roots);
         List<MergedTag> mergedTags = getMergedTags(singleTags);
         for (MergedTag mergedTag : mergedTags) {
             String mergedContent = mergedTag.getContent();
-            Tag foundTag =TagUtils.findTagByContent(roots, mergedContent);
-            if (foundTag==null) { // roots中不存在
+            Tag foundTag = TagUtils.findTagByContent(roots, mergedContent);
+            if (foundTag == null) { // roots中不存在
                 //新创建一个tag， 加到结果中
-                resultTags.add(mergedTag);
+                roots.add(mergedTag);
 
                 //如果有root中有第一个词， 那也应该包括合并后的这个词
                 for (Tag root : roots) {
                     Tag firstChildTag = mergedTag.getChildren().get(0);
                     TagEdge foundEdge = root.findEdge(firstChildTag);
-                    if (foundEdge!=null){
-                        TagEdge mergedTagEdge = TagUtils.createTagEdge(mergedTag,roots);
+                    if (foundEdge != null) {
+                        TagEdge mergedTagEdge = TagUtils.createTagEdge(mergedTag, roots);
                         root.getEdges().add(mergedTagEdge);
                     }
                 }
             }
         }
-        roots.addAll(resultTags);
     }
 
     private List<MergedTag> getMergedTags(List<Tag> singleTags) {
         List<MergedTag> mergedTags = new ArrayList<>();
-        while (singleTags.size()>0){
+        while (singleTags.size() > 0) {
             List<Tag> walkedTags = new ArrayList<>();
             Tag startTag = singleTags.get(0);
-            chain(singleTags,walkedTags,startTag);
-            MergedTag mergedTag = TagUtils.createMergedTag(walkedTags,getTagGraph().getTags());
+            chain(singleTags, walkedTags, startTag);
+            MergedTag mergedTag = TagUtils.createMergedTag(walkedTags, getTagGraph().getTags());
             mergedTags.add(mergedTag);
         }
         return mergedTags;
@@ -224,18 +228,19 @@ public class TagTrainer {
 
     /**
      * 串联单个的词， 并从原列表中删除
+     *
      * @param singleTags 原来单个词的列表
      * @param walkedTags 遍历过的tag，防止死循环： 1-2-3-1
-     * @param tag 下一个单个词
+     * @param tag        下一个单个词
      */
-    private void chain(List<Tag> singleTags,List<Tag> walkedTags, Tag tag) {
-        if (walkedTags.contains(tag)){
+    private void chain(List<Tag> singleTags, List<Tag> walkedTags, Tag tag) {
+        if (walkedTags.contains(tag)) {
             return;
         }
         walkedTags.add(tag);
         singleTags.remove(tag);
         if (tag.getEdges().size() == 1) {
-            chain(singleTags,walkedTags, tag.getEdges().get(0).getTag());
+            chain(singleTags, walkedTags, tag.getEdges().get(0).getTag());
         }
     }
 

@@ -19,6 +19,7 @@ import com.beyond.note5.event.HideTodoEditEvent;
 import com.beyond.note5.event.UpdateTodoEvent;
 import com.beyond.note5.predict.AbstractTagCallback;
 import com.beyond.note5.predict.bean.Tag;
+import com.beyond.note5.predict.bean.TimeTag;
 import com.beyond.note5.utils.IDUtil;
 import com.beyond.note5.utils.InputMethodUtil;
 import com.beyond.note5.utils.TimeNLPUtil;
@@ -69,10 +70,6 @@ public class TodoModifySuperFragment extends TodoEditSuperFragment {
             @Override
             public View getView(FlowLayout parent, int position, String s) {
                 TextView tv = new TextView(getContext());
-//                GradientDrawable gradientDrawable = new GradientDrawable();
-//                gradientDrawable.setCornerRadius(13);
-//                gradientDrawable.setStroke(1, ContextCompat.getColor(getContext(), R.color.dark_gray));
-
                 tv.setTextColor(ContextCompat.getColor(getContext(), R.color.white));
                 tv.setBackground(getResources().getDrawable(R.drawable.radius_24dp_blue,null));
                 tv.setText(s);
@@ -140,10 +137,16 @@ public class TodoModifySuperFragment extends TodoEditSuperFragment {
                                 return -o1.getScore()+o2.getScore();
                             }
                         });
-                        if (tags.size()>=5){
-                            tags = tags.subList(0,5);
-                        }
+                        List<TimeTag> timeTags = new ArrayList<>();
                         for (Tag tag : tags) {
+                            if (tag instanceof TimeTag){
+                                timeTags.add((TimeTag) tag);
+                            }
+                        }
+                        if (timeTags.size()>=5){
+                            timeTags = timeTags.subList(0,5);
+                        }
+                        for (Tag tag : timeTags) {
                             tagData.add(tag.getContent());
                         }
                         handler.post(new Runnable() {

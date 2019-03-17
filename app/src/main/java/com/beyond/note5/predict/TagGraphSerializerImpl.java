@@ -85,27 +85,6 @@ public class TagGraphSerializerImpl extends Observable implements TagGraphSerial
                         }
                     }
 
-                    //给 mergedTag 中的 List<Tag> 赋值
-//                    if (tag instanceof MergedTag){
-//                        MergedTag rootMergedTag = (MergedTag) tag;
-//                        List<Integer> childrenIndexes = rootMergedTag.getChildrenIndexes();
-//                        List<Tag> children = new ArrayList<>();
-//                        for (Integer childrenIndex : childrenIndexes) {
-//                            children.add(tags.get(childrenIndex));
-//                        }
-//                        rootMergedTag.setChildren(children);
-//                    }
-//
-//                    if (tag instanceof MergedTimeTag){
-//                        MergedTimeTag rootMergedTimeTag = (MergedTimeTag) tag;
-//                        List<Integer> childrenIndexes = rootMergedTimeTag.getChildrenIndexes();
-//                        List<Tag> children = new ArrayList<>();
-//                        for (Integer childrenIndex : childrenIndexes) {
-//                            children.add(tags.get(childrenIndex));
-//                        }
-//                        rootMergedTimeTag.setChildren(children);
-//                    }
-
                     if (tag instanceof Detachable){
                         Detachable detachable = (Detachable) tag;
                         List<Integer> childrenIndexes = detachable.getChildrenIndexes();
@@ -132,44 +111,8 @@ public class TagGraphSerializerImpl extends Observable implements TagGraphSerial
     /**
      * 序列化到文件
      */
-    @SuppressWarnings("unchecked")
     public synchronized void serialize() {
         try (OutputStream outputStream = new FileOutputStream(file)) {
-
-            List<Tag> tags = tagGraph.getTags();
-            for (Tag tag : tags) {
-                //给 index 赋值
-                List<TagEdge> edges = tag.getEdges();
-                for (TagEdge edge : edges) {
-                    int index = tagGraph.getTags().indexOf(edge.getTag());
-                    edge.setIndex(index);
-                }
-
-                //给 childrenIndexes 赋值
-//                if (tag instanceof MergedTag){
-//                    MergedTag rootMergedTag = (MergedTag) tag;
-//                    List<Tag> children = rootMergedTag.getChildren();
-//                    List<Integer> childrenIndex = new ArrayList<>();
-//                    for (Tag child : children) {
-//                        int index = tagGraph.getTags().indexOf(child);
-//                        childrenIndex.add(index);
-//                    }
-//                    rootMergedTag.setChildrenIndexes(childrenIndex);
-//                }
-
-//                if (tag instanceof Detachable){
-//                    Detachable detachable = (Detachable) tag;
-//                    List<Tag> children = detachable.getChildren();
-//                    List<Integer> childrenIndex = new ArrayList<>();
-//                    for (Tag child : children) {
-//                        int index = tagGraph.getTags().indexOf(child);
-//                        childrenIndex.add(index);
-//                    }
-//                    detachable.setChildrenIndexes(childrenIndex);
-//                }
-            }
-
-
             JSON.writeJSONString(outputStream, tagGraph);
             outputStream.flush();
         } catch (IOException e) {
