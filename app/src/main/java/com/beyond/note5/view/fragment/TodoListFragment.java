@@ -177,7 +177,11 @@ public class TodoListFragment extends AbstractFragmentTodoView {
     public void onReceived(UpdateTodoEvent event) {
         todoPresenter.update(event.get());
         if (event.get().getReminder()!=null) {
-            calendarPresenter.update(event.get());
+            if (event.get().getReminder().getCalendarEventId() == null){
+                calendarPresenter.add(event.get());
+            }else {
+                calendarPresenter.update(event.get());
+            }
         }
     }
 

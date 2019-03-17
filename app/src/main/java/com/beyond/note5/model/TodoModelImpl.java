@@ -2,6 +2,7 @@ package com.beyond.note5.model;
 
 import android.content.Context;
 import com.beyond.note5.MyApplication;
+import com.beyond.note5.bean.Reminder;
 import com.beyond.note5.bean.Todo;
 import com.beyond.note5.model.dao.DaoSession;
 import com.beyond.note5.model.dao.ReminderDao;
@@ -37,7 +38,15 @@ public class TodoModelImpl implements TodoModel {
     public void update(Todo todo) {
         todoDao.update(todo);
         if (todo.getReminder() != null) {
-            reminderDao.update(todo.getReminder());
+            Reminder foundReminder = reminderDao.queryBuilder()
+                    .where(ReminderDao.Properties.Id.eq(todo.getReminderId()))
+                    .build()
+                    .unique();
+            if (foundReminder == null){
+                reminderDao.insert(todo.getReminder());
+            }else {
+                reminderDao.update(todo.getReminder());
+            }
         }
 
         //train
