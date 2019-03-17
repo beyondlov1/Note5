@@ -14,6 +14,7 @@ import org.apache.commons.lang3.StringUtils;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 /**
@@ -45,11 +46,11 @@ public class TagTrainer {
                 .build();
         Call call = okHttpClient.newCall(request);
         call.enqueue(new Callback() {
-            public void onFailure(Call call, IOException e) {
+            public void onFailure(@NonNull Call call, @NonNull IOException e) {
                 System.out.println("fail");
             }
 
-            public void onResponse(Call call, Response response) throws IOException {
+            public void onResponse(@NonNull Call call, @NonNull Response response) throws IOException {
                 List<String> list = getTrainSource(response);
                 if (list == null) return;
                 processMergedWordScore(content,list);
@@ -62,7 +63,13 @@ public class TagTrainer {
         });
     }
 
+    /**
+     * 将含有时间的字符串的tag转为TimeTag模式
+     * @param tags root
+     */
+    @SuppressWarnings("ResultOfMethodCallIgnored")
     private void replaceToTimeTags(List<Tag> tags) {
+
         for (Tag tag : tags) {
             if (tag instanceof TimeTag){
                 continue;
@@ -71,16 +78,27 @@ public class TagTrainer {
                 MergedTag mergedTag = (MergedTag) tag;
                 MergedTimeTag mergedTimeTag = new MergedTimeTag();
                 TagUtils.copyMergedTagTo(mergedTag,mergedTimeTag);
-                tag = mergedTimeTag;//TODO: 替换是个问题
+                Collections.replaceAll(tags,tag,mergedTimeTag);
                 continue;
             }
             TimeUnit timeUnit = TimeNLPUtil.parseForTimeUnit(tag.getContent());
             if (timeUnit != null){
                 TimeTag timeTag = new TimeTag();
                 TagUtils.copyTagTo(tag,timeTag);
-                if (StringUtils.equalsIgnoreCase(tag.getContent(),timeUnit.Origin_Time_Expression))
-                timeTag.setTime(timeUnit.getTime());
-                tag = timeTag; //TODO: 替换是个问题
+                if (StringUtils.equalsIgnoreCase(tag.getContent(),timeUnit.Origin_Time_Expression)){
+                    timeTag.setTime(timeUnit.getTime());
+                }
+                Collections.replaceAll(tags,tag,timeTag);
+            }
+        }
+
+        //因为time替换的原因，要重新给tagEdge赋值
+        for (Tag tag : tags) {
+            List<TagEdge> edges = tag.getEdges();
+            for (TagEdge edge : edges) {
+                if (tags.get(edge.getIndex())!=null){
+                    edge.setTag(tags.get(edge.getIndex()));
+                }
             }
         }
     }
@@ -172,7 +190,7 @@ public class TagTrainer {
                     Tag firstChildTag = mergedTag.getChildren().get(0);
                     TagEdge foundEdge = root.findEdge(firstChildTag);
                     if (foundEdge!=null){
-                        TagEdge mergedTagEdge = TagUtils.createTagEdge(mergedTag);
+                        TagEdge mergedTagEdge = TagUtils.createTagEdge(mergedTag,roots);
                         root.getEdges().add(mergedTagEdge);
                     }
                 }
@@ -187,7 +205,7 @@ public class TagTrainer {
             List<Tag> walkedTags = new ArrayList<>();
             Tag startTag = singleTags.get(0);
             chain(singleTags,walkedTags,startTag);
-            MergedTag mergedTag = MergedTag.create(walkedTags);
+            MergedTag mergedTag = TagUtils.createMergedTag(walkedTags,getTagGraph().getTags());
             mergedTags.add(mergedTag);
         }
         return mergedTags;

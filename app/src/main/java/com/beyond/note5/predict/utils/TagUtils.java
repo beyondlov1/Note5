@@ -5,7 +5,9 @@ import com.beyond.note5.predict.bean.MergedTimeTag;
 import com.beyond.note5.predict.bean.Tag;
 import com.beyond.note5.predict.bean.TagEdge;
 import org.apache.commons.lang3.StringUtils;
+import org.greenrobot.greendao.annotation.NotNull;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 import java.util.regex.Matcher;
@@ -75,11 +77,48 @@ public class TagUtils {
             throw new RuntimeException("content can not be null");
         }
     }
+    @Deprecated
     public static TagEdge createTagEdge(Tag tag){
         TagEdge tagEdge = new TagEdge();
         tagEdge.setId(uuid());
         tagEdge.setTag(tag);
         return tagEdge;
+    }
+
+    public static TagEdge createTagEdge(Tag tag,@NotNull List<Tag> rootTags){
+        TagEdge tagEdge = new TagEdge();
+        tagEdge.setId(uuid());
+        tagEdge.setTag(tag);
+        tagEdge.setIndex(rootTags.indexOf(tag));
+        return tagEdge;
+    }
+
+
+    @Deprecated
+    public static MergedTag createMergedTag(List<Tag> children){
+        MergedTag mergedTag = new MergedTag();
+        if (children.size()<1){
+            throw new RuntimeException("mergedTag can not be empty");
+        }
+        StringBuilder stringBuilder = new StringBuilder();
+        for (Tag tag : children) {
+            stringBuilder.append(tag.getContent());
+        }
+        mergedTag.setId(TagUtils.uuid());
+        mergedTag.setName(stringBuilder.toString());
+        mergedTag.setContent(stringBuilder.toString());
+        mergedTag.setChildren(children);
+        return mergedTag;
+    }
+
+    public static MergedTag createMergedTag(List<Tag> children,List<Tag> rootTags){
+        MergedTag mergedTag = createMergedTag(children);
+        List<Integer> childrenIndexes = new ArrayList<>();
+        for (Tag child : children) {
+            childrenIndexes.add(rootTags.indexOf(child));
+        }
+        mergedTag.setChildrenIndexes(childrenIndexes);
+        return mergedTag;
     }
 
     public static Tag addScore(Tag tag, int i){
@@ -103,6 +142,7 @@ public class TagUtils {
     public static void copyMergedTagTo(MergedTag source, MergedTimeTag target){
         copyTagTo(source,target);
         target.setChildren(source.getChildren());
+        target.setChildrenIndexes(source.getChildrenIndexes());
     }
 
 }

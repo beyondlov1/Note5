@@ -2,10 +2,7 @@ package com.beyond.note5.predict;
 
 import android.util.Log;
 import com.alibaba.fastjson.JSON;
-import com.beyond.note5.predict.bean.MergedTag;
-import com.beyond.note5.predict.bean.Tag;
-import com.beyond.note5.predict.bean.TagEdge;
-import com.beyond.note5.predict.bean.TagGraph;
+import com.beyond.note5.predict.bean.*;
 
 import java.io.*;
 import java.util.ArrayList;
@@ -37,6 +34,7 @@ public class TagGraphSerializerImpl extends Observable implements TagGraphSerial
      * 从文件中读取模型
      * @return
      */
+    @SuppressWarnings("unchecked")
     public TagGraph generate() {
         //如果正在运行循环等待
         while (running.get()){
@@ -88,16 +86,35 @@ public class TagGraphSerializerImpl extends Observable implements TagGraphSerial
                     }
 
                     //给 mergedTag 中的 List<Tag> 赋值
-                    if (tag instanceof MergedTag){
-                        MergedTag rootMergedTag = (MergedTag) tag;
-                        List<Integer> childrenIndexes = rootMergedTag.getChildrenIndexes();
+//                    if (tag instanceof MergedTag){
+//                        MergedTag rootMergedTag = (MergedTag) tag;
+//                        List<Integer> childrenIndexes = rootMergedTag.getChildrenIndexes();
+//                        List<Tag> children = new ArrayList<>();
+//                        for (Integer childrenIndex : childrenIndexes) {
+//                            children.add(tags.get(childrenIndex));
+//                        }
+//                        rootMergedTag.setChildren(children);
+//                    }
+//
+//                    if (tag instanceof MergedTimeTag){
+//                        MergedTimeTag rootMergedTimeTag = (MergedTimeTag) tag;
+//                        List<Integer> childrenIndexes = rootMergedTimeTag.getChildrenIndexes();
+//                        List<Tag> children = new ArrayList<>();
+//                        for (Integer childrenIndex : childrenIndexes) {
+//                            children.add(tags.get(childrenIndex));
+//                        }
+//                        rootMergedTimeTag.setChildren(children);
+//                    }
+
+                    if (tag instanceof Detachable){
+                        Detachable detachable = (Detachable) tag;
+                        List<Integer> childrenIndexes = detachable.getChildrenIndexes();
                         List<Tag> children = new ArrayList<>();
                         for (Integer childrenIndex : childrenIndexes) {
                             children.add(tags.get(childrenIndex));
                         }
-                        rootMergedTag.setChildren(children);
+                        detachable.setChildren(children);
                     }
-
                 }
             }
         } catch (IOException e) {
@@ -115,6 +132,7 @@ public class TagGraphSerializerImpl extends Observable implements TagGraphSerial
     /**
      * 序列化到文件
      */
+    @SuppressWarnings("unchecked")
     public synchronized void serialize() {
         try (OutputStream outputStream = new FileOutputStream(file)) {
 
@@ -128,16 +146,27 @@ public class TagGraphSerializerImpl extends Observable implements TagGraphSerial
                 }
 
                 //给 childrenIndexes 赋值
-                if (tag instanceof MergedTag){
-                    MergedTag rootMergedTag = (MergedTag) tag;
-                    List<Tag> children = rootMergedTag.getChildren();
-                    List<Integer> childrenIndex = new ArrayList<>();
-                    for (Tag child : children) {
-                        int index = tagGraph.getTags().indexOf(child);
-                        childrenIndex.add(index);
-                    }
-                    rootMergedTag.setChildrenIndexes(childrenIndex);
-                }
+//                if (tag instanceof MergedTag){
+//                    MergedTag rootMergedTag = (MergedTag) tag;
+//                    List<Tag> children = rootMergedTag.getChildren();
+//                    List<Integer> childrenIndex = new ArrayList<>();
+//                    for (Tag child : children) {
+//                        int index = tagGraph.getTags().indexOf(child);
+//                        childrenIndex.add(index);
+//                    }
+//                    rootMergedTag.setChildrenIndexes(childrenIndex);
+//                }
+
+//                if (tag instanceof Detachable){
+//                    Detachable detachable = (Detachable) tag;
+//                    List<Tag> children = detachable.getChildren();
+//                    List<Integer> childrenIndex = new ArrayList<>();
+//                    for (Tag child : children) {
+//                        int index = tagGraph.getTags().indexOf(child);
+//                        childrenIndex.add(index);
+//                    }
+//                    detachable.setChildrenIndexes(childrenIndex);
+//                }
             }
 
 

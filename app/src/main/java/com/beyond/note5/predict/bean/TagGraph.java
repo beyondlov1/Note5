@@ -41,11 +41,11 @@ public class TagGraph {
     public String toString() {
         StringBuilder stringBuilder = new StringBuilder();
         for (Tag tag : tags) {
-            stringBuilder.append(tag.getName()).append("-").append(tag.getScore()).append("/");
+            stringBuilder.append(tag.getContent()).append("-").append(tag.getScore()).append("/");
             List<TagEdge> edges = tag.getEdges();
             for (TagEdge edge : edges) {
                 if (edge.getTag()!=null){
-                    stringBuilder.append(edge.getTag().getName()).append("-").append(edge.getScore()).append(" ");
+                    stringBuilder.append(edge.getTag().getContent()).append("-").append(edge.getScore()).append(" ");
                 }
             }
             stringBuilder.append("\n");

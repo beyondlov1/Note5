@@ -50,32 +50,22 @@ public class TagGraphInjectorImpl implements TagGraphInjector {
 
             if (prevTag == null) { //第一个
                 if (currTag == null) { //新词
-                    currTag = new Tag();
-                    currTag.setId(TagUtils.uuid());
-                    currTag.setName(value);
-                    currTag.setContent(value);
+                    currTag = TagUtils.createTag(value);
                     graph.getTags().add(currTag);
                 } else { // 旧词
                     currTag.setScore(currTag.getScore() + 1);
                 }
             } else { // 不是第一个
                 if (currTag == null) { // 新加入一个词
-                    currTag = new Tag();
-                    currTag.setId(TagUtils.uuid());
-                    currTag.setName(value);
-                    currTag.setContent(value);
+                    currTag = TagUtils.createTag(value);
                     graph.getTags().add(currTag);
 
-                    TagEdge tagEdge = new TagEdge();
-                    tagEdge.setId(TagUtils.uuid());
-                    tagEdge.setTag(currTag);
+                    TagEdge tagEdge = TagUtils.createTagEdge(currTag, graph.getTags());
                     prevTag.getEdges().add(tagEdge);
                 } else { // 旧词
                     TagEdge foundEdge = prevTag.findEdge(currTag);
                     if (foundEdge==null){
-                        TagEdge tagEdge = new TagEdge();
-                        tagEdge.setId(TagUtils.uuid());
-                        tagEdge.setTag(currTag);
+                        TagEdge tagEdge = TagUtils.createTagEdge(currTag, graph.getTags());
                         prevTag.getEdges().add(tagEdge);
                     }else{
                         foundEdge.setScore(foundEdge.getScore()+1);
