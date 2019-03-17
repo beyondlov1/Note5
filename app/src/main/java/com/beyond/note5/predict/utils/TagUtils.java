@@ -1,5 +1,7 @@
 package com.beyond.note5.predict.utils;
 
+import com.beyond.note5.predict.bean.MergedTag;
+import com.beyond.note5.predict.bean.MergedTimeTag;
 import com.beyond.note5.predict.bean.Tag;
 import com.beyond.note5.predict.bean.TagEdge;
 import org.apache.commons.lang3.StringUtils;
@@ -88,6 +90,19 @@ public class TagUtils {
     public static TagEdge addScore(TagEdge tagEdge, int i){
         tagEdge.setScore(tagEdge.getScore()+i);
         return tagEdge;
+    }
+
+    public static void copyTagTo(Tag source, Tag target){
+        target.setId(source.getId());
+        target.setName(source.getName());
+        target.setContent(source.getContent());
+        target.setScore(source.getScore());
+        target.setEdges(source.getEdges());
+    }
+
+    public static void copyMergedTagTo(MergedTag source, MergedTimeTag target){
+        copyTagTo(source,target);
+        target.setChildren(source.getChildren());
     }
 
 }

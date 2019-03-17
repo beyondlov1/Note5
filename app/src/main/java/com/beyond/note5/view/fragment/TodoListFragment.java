@@ -193,15 +193,18 @@ public class TodoListFragment extends AbstractFragmentTodoView {
     @Subscribe(threadMode = ThreadMode.MAIN)
     public void onReceived(RefreshTodoListEvent event) {
         todoPresenter.findAll();
-//        //滚动到当前时间的header  //没有用
-//        List<Header> headerData = recyclerViewAdapter.getItemDataGenerator().getHeaderData();
-//        for (final Header headerDatum : headerData) {
-//            if (StringUtils.equalsIgnoreCase(headerDatum.getContent(),
-//                    DateFormatUtils.format(System.currentTimeMillis(),"yyyy-MM-dd"))){
-//                recyclerView.getLayoutManager().scrollToPosition(headerDatum.getPosition());
-//                break;
-//            }
-//        }
+        //滚动到当前时间的header， recyclerView 的scrollTo 滚动只会在item 不在显示范围的时候才会触发（Strange）
+        //所以要用 staggered.. linear..LayoutManager 的scrollToPositionWithOffset 方法 0 代表top
+        String clickContent = event.getClickContent();
+        List<Header> headerData = recyclerViewAdapter.getItemDataGenerator().getHeaderData();
+        for (final Header headerDatum : headerData) {
+            if (StringUtils.equalsIgnoreCase(headerDatum.getContent(),
+                    clickContent!=null?clickContent:DateFormatUtils.format(System.currentTimeMillis(),"yyyy-MM-dd"))){
+                StaggeredGridLayoutManager layoutManager = (StaggeredGridLayoutManager)recyclerView.getLayoutManager();
+                layoutManager.scrollToPositionWithOffset(headerDatum.getPosition(),0);
+                break;
+            }
+        }
     }
 
     @Subscribe(threadMode = ThreadMode.MAIN)

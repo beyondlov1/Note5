@@ -14,6 +14,17 @@ public class TimeNLPUtil {
 
     private static TimeNormalizer normalizer;
 
+    public static TimeUnit parseForTimeUnit(String chineseWithTimeMean) {
+        TimeUnit timeUnit = null;
+        try {
+            TimeUnit[] timeUnits = getNormalizer().parse(chineseWithTimeMean);
+            timeUnit = timeUnits[0];
+        } catch (Exception e) {
+            Log.i("TimeNLPUtil", e.getMessage());
+        }
+        return timeUnit;
+    }
+
     public static Date parse(String chineseWithTimeMean) {
         Date date = null;
         try {

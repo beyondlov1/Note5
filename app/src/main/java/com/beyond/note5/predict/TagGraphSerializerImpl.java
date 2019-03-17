@@ -1,5 +1,6 @@
 package com.beyond.note5.predict;
 
+import android.util.Log;
 import com.alibaba.fastjson.JSON;
 import com.beyond.note5.predict.bean.MergedTag;
 import com.beyond.note5.predict.bean.Tag;
@@ -107,6 +108,7 @@ public class TagGraphSerializerImpl extends Observable implements TagGraphSerial
         setChanged();
         notifyObservers();
         running.set(false);
+        Log.d("afterGenerate",tagGraph.toString());
         return tagGraph;
     }
 

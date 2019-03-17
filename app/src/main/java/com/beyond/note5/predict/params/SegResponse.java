@@ -1,4 +1,4 @@
-package com.beyond.note5.predict.bean;
+package com.beyond.note5.predict.params;
 
 /**
  * 分词响应

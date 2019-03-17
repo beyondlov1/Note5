@@ -9,7 +9,7 @@ import java.util.List;
  * @author beyondlov1
  * @date 2019/03/15
  */
-public class MergedTag extends Tag{
+public class MergedTag extends Tag implements Detachable<Tag>{
 
     @JSONField(serialize = false)
     private List<Tag> children;

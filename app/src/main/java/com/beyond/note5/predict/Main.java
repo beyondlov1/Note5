@@ -1,7 +1,6 @@
 package com.beyond.note5.predict;
 
 
-import com.beyond.note5.predict.bean.Callback;
 import com.beyond.note5.predict.bean.Tag;
 import com.beyond.note5.predict.bean.TagGraph;
 

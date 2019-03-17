@@ -234,6 +234,7 @@ public class CalendarModelImpl implements CalendarModel {
         long endMillis;
         String title;
         String content;
+        String contentWithoutTime;
         Long calendarId = CalendarUtil.getCalendarId(activity);
 
         if (todo.getReminder()==null){
@@ -251,11 +252,12 @@ public class CalendarModelImpl implements CalendarModel {
         }
         title = todo.getTitle();
         content = todo.getContent();
+        contentWithoutTime = todo.getContentWithoutTime();
 
         ContentValues values = new ContentValues();
         values.put(CalendarContract.Events.DTSTART, startMillis);
         values.put(CalendarContract.Events.DTEND, endMillis);
-        values.put(CalendarContract.Events.TITLE, title);
+        values.put(CalendarContract.Events.TITLE, contentWithoutTime);
         values.put(CalendarContract.Events.DESCRIPTION, content);
         values.put(CalendarContract.Events.CALENDAR_ID, calendarId);
         values.put(CalendarContract.Events.EVENT_TIMEZONE, TimeZone.getDefault().getDisplayName());

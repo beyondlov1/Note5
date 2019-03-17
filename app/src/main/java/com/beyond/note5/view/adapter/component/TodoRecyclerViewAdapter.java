@@ -66,7 +66,7 @@ public class TodoRecyclerViewAdapter extends DocumentRecyclerViewAdapter<Todo, T
     }
 
     @Override
-    protected void initHeadEvent(int position, Header header, TodoViewHolder viewHolder) {
+    protected void initHeadEvent(int position, final Header header, TodoViewHolder viewHolder) {
         super.initHeadEvent(position, header, viewHolder);
         viewHolder.title.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -79,7 +79,7 @@ public class TodoRecyclerViewAdapter extends DocumentRecyclerViewAdapter<Todo, T
                     context.getSharedPreferences(MyApplication.SHARED_PREFERENCES_NAME, Context.MODE_PRIVATE).edit()
                             .putBoolean(IS_SHOW_READ_FLAG_DONE, true).apply();
                 }
-                EventBus.getDefault().post(new RefreshTodoListEvent(null));
+                EventBus.getDefault().post(new RefreshTodoListEvent(null,header.getContent()));
             }
         });
     }

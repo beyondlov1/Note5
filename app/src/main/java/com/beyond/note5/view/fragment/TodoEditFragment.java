@@ -120,7 +120,7 @@ public class TodoEditFragment extends DialogFragment {
         }
         Todo todo = new Todo();
         todo.setId(IDUtil.uuid());
-        todo.setTitle(content.length() > 10 ? content.substring(1, 10) : content);
+        todo.setTitle(content.length() > 10 ? content.substring(0, 10) : content);
         todo.setContent(content);
         todo.setCreateTime(new Date());
         todo.setVersion(0);

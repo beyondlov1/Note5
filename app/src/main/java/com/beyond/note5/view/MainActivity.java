@@ -47,12 +47,7 @@ import com.beyond.note5.utils.PreferenceUtil;
 import com.beyond.note5.utils.ToastUtil;
 import com.beyond.note5.view.adapter.component.header.ItemDataGenerator;
 import com.beyond.note5.view.animator.SmoothScalable;
-import com.beyond.note5.view.fragment.NoteDetailSuperFragment;
-import com.beyond.note5.view.fragment.NoteEditFragment;
-import com.beyond.note5.view.fragment.NoteListFragment;
-import com.beyond.note5.view.fragment.TodoEditFragment;
-import com.beyond.note5.view.fragment.TodoListFragment;
-import com.beyond.note5.view.fragment.TodoModifySuperFragment;
+import com.beyond.note5.view.fragment.*;
 import com.beyond.note5.view.listener.OnBackPressListener;
 import com.beyond.note5.view.listener.OnKeyboardChangeListener;
 
@@ -82,7 +77,7 @@ public class MainActivity extends FragmentActivity {
     private Fragment noteDetailFragment;
     private Fragment todoModifyFragment;
 
-    private String[] documentTypes = new String[2];
+    private String[] documentTypes = new String[3];
 
     private String currentType;
 

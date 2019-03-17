@@ -4,9 +4,13 @@ import android.support.annotation.NonNull;
 import android.util.Log;
 import com.alibaba.fastjson.JSON;
 import com.beyond.note5.predict.bean.*;
+import com.beyond.note5.predict.params.SegResponse;
 import com.beyond.note5.predict.utils.TagUtils;
+import com.beyond.note5.utils.TimeNLPUtil;
+import com.time.nlp.TimeUnit;
 import okhttp3.Callback;
 import okhttp3.*;
+import org.apache.commons.lang3.StringUtils;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -51,10 +55,34 @@ public class TagTrainer {
                 processMergedWordScore(content,list);
                 injector.inject(list);
                 mergeSingleTags(tagGraph.getTags());
+                replaceToTimeTags(tagGraph.getTags());
                 Log.d("afterTrain",tagGraph.toString());
                 serializer.serialize();
             }
         });
+    }
+
+    private void replaceToTimeTags(List<Tag> tags) {
+        for (Tag tag : tags) {
+            if (tag instanceof TimeTag){
+                continue;
+            }
+            if (tag instanceof MergedTag){
+                MergedTag mergedTag = (MergedTag) tag;
+                MergedTimeTag mergedTimeTag = new MergedTimeTag();
+                TagUtils.copyMergedTagTo(mergedTag,mergedTimeTag);
+                tag = mergedTimeTag;//TODO: 替换是个问题
+                continue;
+            }
+            TimeUnit timeUnit = TimeNLPUtil.parseForTimeUnit(tag.getContent());
+            if (timeUnit != null){
+                TimeTag timeTag = new TimeTag();
+                TagUtils.copyTagTo(tag,timeTag);
+                if (StringUtils.equalsIgnoreCase(tag.getContent(),timeUnit.Origin_Time_Expression))
+                timeTag.setTime(timeUnit.getTime());
+                tag = timeTag; //TODO: 替换是个问题
+            }
+        }
     }
 
     /**
