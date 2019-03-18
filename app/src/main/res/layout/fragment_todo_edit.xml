@@ -3,7 +3,7 @@
     android:orientation="vertical" android:layout_width="match_parent"
     android:layout_height="match_parent">
 
-    <EditText
+    <android.support.v7.widget.AppCompatEditText
         android:id="@+id/fragment_edit_todo_content"
         android:layout_width="match_parent"
         android:layout_height="0dp"

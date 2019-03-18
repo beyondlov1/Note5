@@ -7,6 +7,7 @@ import android.content.DialogInterface;
 import android.content.SharedPreferences;
 import android.graphics.Color;
 import android.graphics.drawable.ColorDrawable;
+import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
 import android.support.annotation.NonNull;
@@ -15,6 +16,7 @@ import android.support.v4.app.DialogFragment;
 import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AlertDialog;
 import android.text.Editable;
+import android.text.Html;
 import android.text.TextWatcher;
 import android.util.DisplayMetrics;
 import android.view.*;
@@ -44,6 +46,8 @@ import org.greenrobot.eventbus.Subscribe;
 import org.greenrobot.eventbus.ThreadMode;
 
 import java.util.*;
+
+import static android.text.Html.FROM_HTML_MODE_COMPACT;
 
 /**
  * @author: beyond
@@ -174,6 +178,12 @@ public class TodoEditFragment extends DialogFragment {
 
     private void initEvent() {
         contentEditText.addTextChangedListener(new TextWatcher() {
+
+            private String lastStr = null;
+            private int lastSelectionEnd;
+            private int timeExpressionStartIndex;
+            private int timeExpressionEndIndex;
+
             @Override
             public void beforeTextChanged(CharSequence s, int start, int count, int after) {
 
@@ -181,13 +191,51 @@ public class TodoEditFragment extends DialogFragment {
 
             @Override
             public void onTextChanged(final CharSequence s, int start, int before, int count) {
-                createdDocument.setContent(s.toString());
+                String source = s.toString();
+                createdDocument.setContent(source);
                 predictTags(s);
+
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+                    if (StringUtils.equals(lastStr, source)) {
+                        lastStr = null;
+                        contentEditText.setSelection(lastSelectionEnd);
+                        return;
+                    }
+                    if (start < timeExpressionStartIndex
+                            || start > timeExpressionEndIndex) {
+                        lastStr = null;
+                        return;
+                    }
+                    if (before > 0) {
+                        lastStr = null;
+                        return;
+                    }
+                    String html = highlightTimeExpression(source);
+                    if (html == null) {
+                        lastStr = null;
+                        return;
+                    }
+                    lastStr = source;
+                    lastSelectionEnd = contentEditText.getSelectionEnd();
+                    contentEditText.setText(Html.fromHtml(html, FROM_HTML_MODE_COMPACT));
+                }
             }
 
             @Override
             public void afterTextChanged(Editable s) {
 
+            }
+
+            private String highlightTimeExpression(String source) {
+                String timeExpression = StringUtils.trim(TimeNLPUtil.getOriginTimeExpression(StringUtils.trim(source)));
+                if (StringUtils.isNotBlank(timeExpression)) {
+                    timeExpressionStartIndex = source.indexOf(timeExpression);
+                    timeExpressionEndIndex = timeExpressionStartIndex + timeExpression.length();
+                    return source.replace(timeExpression, "<span style='" +
+                            "background:lightgray;'>" +
+                            timeExpression + "</span>");
+                }
+                return null;
             }
         });
         contentEditText.setOnFocusChangeListener(new View.OnFocusChangeListener() {
