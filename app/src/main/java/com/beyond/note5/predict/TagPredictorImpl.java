@@ -25,18 +25,19 @@ public class TagPredictorImpl implements TagPredictor<String,TagGraph>,Observer 
     public TagPredictorImpl(File file){
         TagGraphSerializerImpl serializer = new TagGraphSerializerImpl(file);
         serializer.addObserver(this);
-        TagGraphInjector injector = new TagGraphInjectorImpl(serializer);
 
-        this.tagTrainer = new TagTrainer(serializer,injector);
-        this.tagGraph = tagTrainer.getTagGraph();
+        this.tagTrainer = TagTrainer.create(serializer);
+        this.tagGraph = serializer.generate();
     }
 
     /**
      * 异步方法
-     * @param content
-     * @return
+     * @param content 预测内容
      */
     public void predict(final String content, final Callback<String,TagGraph> callback) {
+        if (isReady.get()&&tagGraph == null){ // 试图解决缓存失效的问题， 不知道管不管用
+            this.tagGraph = getTagTrainer().getTagGraph();
+        }
         executorService.execute(new Runnable() {
             @Override
             public void run() {

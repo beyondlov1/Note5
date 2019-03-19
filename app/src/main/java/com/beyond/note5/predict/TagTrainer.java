@@ -27,10 +27,16 @@ public class TagTrainer {
     private TagGraphInjector injector;
     private OkHttpClient okHttpClient;
 
-    public TagTrainer(TagGraphSerializer serializer, TagGraphInjector injector) {
-        this.serializer = serializer;
-        this.injector = injector;
-        this.okHttpClient = new OkHttpClient();
+    public static TagTrainer create(TagGraphSerializer serializer){
+        TagTrainer tagTrainer = new TagTrainer();
+        tagTrainer.serializer = serializer;
+        tagTrainer.injector = new TagGraphInjectorImpl(serializer);
+        tagTrainer.okHttpClient = new OkHttpClient();
+        return tagTrainer;
+    }
+
+    private TagTrainer() {
+
     }
 
     public void train(final String content) {

@@ -275,7 +275,7 @@ public class TodoEditFragment extends DialogFragment {
     }
 
     private void predictTags(CharSequence s) {
-        MyApplication.getInstance().getTagPredictorImpl().predict(s.toString(), new AbstractTagCallback() {
+        MyApplication.getInstance().getTagPredictor().predict(s.toString(), new AbstractTagCallback() {
 
             @Override
             protected void handleResult(List<Tag> tags) {

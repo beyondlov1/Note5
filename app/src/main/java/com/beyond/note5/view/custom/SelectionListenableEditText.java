@@ -25,7 +25,9 @@ public class SelectionListenableEditText extends android.support.v7.widget.AppCo
     @Override
     protected void onSelectionChanged(int selStart, int selEnd) {
         super.onSelectionChanged(selStart, selEnd);
-        onSelectionChangeListener.onChanged(this.getText().toString(),selStart,selEnd);
+        if(onSelectionChangeListener!=null){
+            onSelectionChangeListener.onChanged(this.getText().toString(),selStart,selEnd);
+        }
     }
 
     public void setOnSelectionChanged(OnSelectionChangeListener onSelectionChangeListener){

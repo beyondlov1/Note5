@@ -148,7 +148,7 @@ public class TodoModifySuperFragment extends TodoEditSuperFragment {
 
                 @Override
                 public void onChanged(String content, int selStart, int selEnd) {
-                    if (content.length()>selStart){
+                    if (content.length()>=selStart){
                         predictTags(content.substring(0,selStart));
                     }
                 }
@@ -245,7 +245,7 @@ public class TodoModifySuperFragment extends TodoEditSuperFragment {
     }
 
     private void predictTags(String source) {
-        MyApplication.getInstance().getTagPredictorImpl().predict(source, new AbstractTagCallback() {
+        MyApplication.getInstance().getTagPredictor().predict(source, new AbstractTagCallback() {
 
             @Override
             protected void handleResult(List<Tag> tags) {

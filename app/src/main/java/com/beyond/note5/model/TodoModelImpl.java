@@ -31,7 +31,7 @@ public class TodoModelImpl implements TodoModel {
         }
 
         //train
-        MyApplication.getInstance().getTagPredictorImpl().getTagTrainer().train(todo.getContent());
+        MyApplication.getInstance().getTagPredictor().getTagTrainer().train(todo.getContent());
     }
 
     @Override
@@ -50,7 +50,7 @@ public class TodoModelImpl implements TodoModel {
         }
 
         //train
-        MyApplication.getInstance().getTagPredictorImpl().getTagTrainer().train(todo.getContent());
+        MyApplication.getInstance().getTagPredictor().getTagTrainer().train(todo.getContent());
     }
 
     @Override
@@ -67,7 +67,7 @@ public class TodoModelImpl implements TodoModel {
 //        todoQueryBuilder
 //                .where(TodoDao.Properties.Type.eq(Document.TODO))
 //                .orderRaw("DATE(LAST_MODIFY_TIME/1000,'unixepoch','localtime') DESC,READ_FLAG ASC, LAST_MODIFY_TIME DESC");
-//        if (MyApplication.getInstance().getSharedPreferences(MyApplication.SHARED_PREFERENCES_NAME, Context.MODE_PRIVATE)
+//        if (MyApplication.create().getSharedPreferences(MyApplication.SHARED_PREFERENCES_NAME, Context.MODE_PRIVATE)
 //                .getBoolean(IS_SHOW_READ_FLAG_DONE, false)) {
 //            return todoQueryBuilder.list();
 //        } else {
