@@ -27,9 +27,9 @@ public abstract class OnSlideListener implements View.OnTouchListener {
                 break;
             case MotionEvent.ACTION_UP:
                 float endX = event.getX();
-                if (endX-startX>200){
+                if (endX-startX>this.getSlideXSensitivity()){
                     onSlideRight();
-                }else if (endX-startX<-200){
+                }else if (endX-startX<-this.getSlideXSensitivity()){
                     onSlideLeft();
                 }
 
@@ -77,6 +77,10 @@ public abstract class OnSlideListener implements View.OnTouchListener {
     });
 
     protected abstract void onDoubleClick(MotionEvent e);
+
+    protected int getSlideXSensitivity(){
+        return 200;
+    }
 
     protected int getSlideYSensitivity(){
         return 300;
