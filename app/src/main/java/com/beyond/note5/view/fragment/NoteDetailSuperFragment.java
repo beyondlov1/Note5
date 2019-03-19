@@ -432,7 +432,7 @@ public class NoteDetailSuperFragment extends DialogFragment implements OnBackPre
 
             @Override
             protected int getSlideXSensitivity() {
-                return 400;
+                return 360;
             }
             @Override
             protected int getSlideYSensitivity() {
