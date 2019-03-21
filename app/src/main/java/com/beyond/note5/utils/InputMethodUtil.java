@@ -26,7 +26,7 @@ public class InputMethodUtil {
                     inputMethodManager.showSoftInput(view, 0);
                 }
             }
-        }, 200);
+        }, 300);
     }
 
     public static void hideKeyboard(final View view){

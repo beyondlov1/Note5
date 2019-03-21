@@ -13,12 +13,10 @@ import android.widget.ImageButton;
 import android.widget.TextView;
 import com.beyond.note5.MyApplication;
 import com.beyond.note5.R;
+import com.beyond.note5.bean.Note;
 import com.beyond.note5.bean.Reminder;
 import com.beyond.note5.bean.Todo;
-import com.beyond.note5.event.DeleteTodoEvent;
-import com.beyond.note5.event.FillTodoModifyEvent;
-import com.beyond.note5.event.HideTodoEditEvent;
-import com.beyond.note5.event.UpdateTodoEvent;
+import com.beyond.note5.event.*;
 import com.beyond.note5.predict.AbstractTagCallback;
 import com.beyond.note5.predict.bean.Tag;
 import com.beyond.note5.utils.IDUtil;
@@ -42,6 +40,7 @@ import static android.text.Html.FROM_HTML_MODE_COMPACT;
 public class TodoModifySuperFragment extends TodoEditSuperFragment {
 
     private ImageButton clearButton;
+    private ImageButton convertButton;
     private ImageButton saveButton;
     private TagFlowLayout flowLayout;
     private TagAdapter<String> tagAdapter;
@@ -59,10 +58,10 @@ public class TodoModifySuperFragment extends TodoEditSuperFragment {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
             if (html != null) {
                 contentEditText.setText(Html.fromHtml(html, FROM_HTML_MODE_COMPACT));
-            }else {
+            } else {
                 contentEditText.setText(createdDocument.getContent());
             }
-        }else {
+        } else {
             contentEditText.setText(createdDocument.getContent());
         }
         contentEditText.setSelection(createdDocument.getContent().length());
@@ -85,6 +84,7 @@ public class TodoModifySuperFragment extends TodoEditSuperFragment {
         ViewStub toolsContainer = view.findViewById(R.id.fragment_edit_todo_view_stub);
         toolsContainer.inflate();
         clearButton = view.findViewById(R.id.fragment_edit_todo_clear);
+        convertButton = view.findViewById(R.id.fragment_edit_to_note);
         saveButton = view.findViewById(R.id.fragment_edit_todo_save);
 
         ViewStub tagsContainer = view.findViewById(R.id.fragment_edit_todo_tag_view_stub);
@@ -110,6 +110,22 @@ public class TodoModifySuperFragment extends TodoEditSuperFragment {
             @Override
             public void onClick(View v) {
                 contentEditText.setText(null);
+            }
+        });
+        convertButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Note note = new Note();
+                note.setId(createdDocument.getId());
+//                note.setTitle(createdDocument.getTitle());
+                note.setContent(createdDocument.getContent());
+                note.setCreateTime(createdDocument.getCreateTime());
+                note.setLastModifyTime(new Date());
+                note.setVersion(createdDocument.getVersion());
+                EventBus.getDefault().post(new AddNoteEvent(note));
+                EventBus.getDefault().post(new DeleteTodoEvent(createdDocument));
+                EventBus.getDefault().post(new HideTodoEditEvent(null));
+                InputMethodUtil.hideKeyboard(contentEditText);
             }
         });
         saveButton.setOnClickListener(new View.OnClickListener() {
@@ -143,13 +159,13 @@ public class TodoModifySuperFragment extends TodoEditSuperFragment {
             }
         });
 
-        if (contentEditText instanceof SelectionListenableEditText){
+        if (contentEditText instanceof SelectionListenableEditText) {
             ((SelectionListenableEditText) contentEditText).setOnSelectionChanged(new SelectionListenableEditText.OnSelectionChangeListener() {
 
                 @Override
                 public void onChanged(String content, int selStart, int selEnd) {
-                    if (content.length()>=selStart){
-                        predictTags(content.substring(0,selStart));
+                    if (content.length() >= selStart) {
+                        predictTags(content.substring(0, selStart));
                     }
                 }
             });

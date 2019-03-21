@@ -19,16 +19,11 @@ import android.webkit.WebView;
 import android.widget.ImageButton;
 import android.widget.TextView;
 import android.widget.Toast;
-
 import com.beyond.note5.R;
 import com.beyond.note5.bean.Note;
+import com.beyond.note5.bean.Todo;
 import com.beyond.note5.constant.DocumentConst;
-import com.beyond.note5.event.DeleteNoteEvent;
-import com.beyond.note5.event.DetailNoteEvent;
-import com.beyond.note5.event.FillNoteModifyEvent;
-import com.beyond.note5.event.HideNoteDetailEvent;
-import com.beyond.note5.event.ModifyNoteDoneEvent;
-import com.beyond.note5.event.UpdateNoteEvent;
+import com.beyond.note5.event.*;
 import com.beyond.note5.utils.ToastUtil;
 import com.beyond.note5.utils.ViewUtil;
 import com.beyond.note5.utils.WebViewUtil;
@@ -37,7 +32,6 @@ import com.beyond.note5.view.animator.SmoothScalable;
 import com.beyond.note5.view.custom.ViewSwitcher;
 import com.beyond.note5.view.listener.OnBackPressListener;
 import com.beyond.note5.view.listener.OnSlideListener;
-
 import org.apache.commons.collections4.CollectionUtils;
 import org.greenrobot.eventbus.EventBus;
 import org.greenrobot.eventbus.Subscribe;
@@ -66,6 +60,7 @@ public class NoteDetailSuperFragment extends DialogFragment implements OnBackPre
     protected View searchButton;
     protected View browserSearchButton;
     protected View stickButton;
+    protected View convertButton;
     private View modifyButton;
     private View hideButton;
 
@@ -111,6 +106,7 @@ public class NoteDetailSuperFragment extends DialogFragment implements OnBackPre
         searchButton = view.findViewById(R.id.fragment_note_detail_operation_search);
         browserSearchButton = view.findViewById(R.id.fragment_note_detail_operation_browser_search);
         stickButton = view.findViewById(R.id.fragment_note_detail_operation_stick);
+        convertButton = view.findViewById(R.id.fragment_note_detail_to_todo);
     }
 
     protected void initView(View view) {
@@ -158,7 +154,7 @@ public class NoteDetailSuperFragment extends DialogFragment implements OnBackPre
                     Note currentNote = data.get(currIndex);
                     EventBus.getDefault().post(new DeleteNoteEvent(currentNote));
                     if (data.isEmpty()) {
-                        hide();
+                        sendHideMessage();
                         return;
                     }
                     if (currIndex == data.size()) {
@@ -252,6 +248,22 @@ public class NoteDetailSuperFragment extends DialogFragment implements OnBackPre
                 }
             }
         });
+        convertButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Note note = data.get(currIndex);
+                Todo todo = new Todo();
+                todo.setId(note.getId());
+                note.setTitle(note.getTitle());
+                todo.setContent(note.getContent());
+                todo.setCreateTime(note.getCreateTime());
+                todo.setLastModifyTime(new Date());
+                todo.setVersion(note.getVersion());
+                EventBus.getDefault().post(new AddTodoEvent(todo));
+                EventBus.getDefault().post(new DeleteNoteEvent(note));
+                sendHideMessage();
+            }
+        });
 
     }
 
@@ -265,7 +277,7 @@ public class NoteDetailSuperFragment extends DialogFragment implements OnBackPre
         hideButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                hide();
+                sendHideMessage();
             }
         });
     }
@@ -432,7 +444,7 @@ public class NoteDetailSuperFragment extends DialogFragment implements OnBackPre
 
             @Override
             protected int getSlideXSensitivity() {
-                return 360;
+                return 350;
             }
             @Override
             protected int getSlideYSensitivity() {
@@ -566,6 +578,9 @@ public class NoteDetailSuperFragment extends DialogFragment implements OnBackPre
         this.smoothScalable.show();
     }
 
+    /**
+     * 不要在本类调用
+     */
     @Override
     public void hide() {
         getActivity().getWindow().setStatusBarColor(getResources().getColor(R.color.google_blue));
