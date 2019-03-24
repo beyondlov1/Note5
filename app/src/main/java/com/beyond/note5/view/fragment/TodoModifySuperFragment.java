@@ -1,5 +1,7 @@
 package com.beyond.note5.view.fragment;
 
+import android.content.Intent;
+import android.net.Uri;
 import android.os.Build;
 import android.os.Handler;
 import android.support.v4.content.ContextCompat;
@@ -20,10 +22,7 @@ import com.beyond.note5.bean.Todo;
 import com.beyond.note5.event.*;
 import com.beyond.note5.predict.AbstractTagCallback;
 import com.beyond.note5.predict.bean.Tag;
-import com.beyond.note5.utils.IDUtil;
-import com.beyond.note5.utils.InputMethodUtil;
-import com.beyond.note5.utils.TimeNLPUtil;
-import com.beyond.note5.utils.ToastUtil;
+import com.beyond.note5.utils.*;
 import com.beyond.note5.view.custom.SelectionListenableEditText;
 import com.zhy.view.flowlayout.FlowLayout;
 import com.zhy.view.flowlayout.TagAdapter;
@@ -43,6 +42,7 @@ public class TodoModifySuperFragment extends TodoEditSuperFragment {
 
     private ImageButton clearButton;
     private ImageButton convertButton;
+    private ImageButton browserSearchButton;
     private ImageButton saveButton;
     private TagFlowLayout flowLayout;
     private TagAdapter<String> tagAdapter;
@@ -83,16 +83,6 @@ public class TodoModifySuperFragment extends TodoEditSuperFragment {
 
             }
         });
-//        String html = highlightTimeExpression(createdDocument.getContent());
-//        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
-//            if (html != null) {
-//                contentEditText.setText(Html.fromHtml(html, FROM_HTML_MODE_COMPACT));
-//            } else {
-//                contentEditText.setText(createdDocument.getContent());
-//            }
-//        } else {
-//            contentEditText.setText(createdDocument.getContent());
-//        }
         contentEditText.setText(createdDocument.getContent());
         contentEditText.setSelection(createdDocument.getContent().length());
     }
@@ -114,7 +104,8 @@ public class TodoModifySuperFragment extends TodoEditSuperFragment {
         ViewStub toolsContainer = view.findViewById(R.id.fragment_edit_todo_view_stub);
         toolsContainer.inflate();
         clearButton = view.findViewById(R.id.fragment_edit_todo_clear);
-        convertButton = view.findViewById(R.id.fragment_edit_to_note);
+        convertButton = view.findViewById(R.id.fragment_edit_todo_to_note);
+        browserSearchButton = view.findViewById(R.id.fragment_edit_todo_browser_search);
         saveButton = view.findViewById(R.id.fragment_edit_todo_save);
 
         ViewStub tagsContainer = view.findViewById(R.id.fragment_edit_todo_tag_view_stub);
@@ -159,6 +150,21 @@ public class TodoModifySuperFragment extends TodoEditSuperFragment {
                 ToastUtil.toast(getContext(),"已转化为NOTE", Toast.LENGTH_SHORT);
             }
         });
+
+        browserSearchButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                String url = WebViewUtil.getUrl(createdDocument);
+                if (url != null) {
+                    Uri uri = Uri.parse(url);
+                    Intent intent = new Intent(Intent.ACTION_VIEW, uri);
+                    startActivity(intent);
+                } else {
+                    ToastUtil.toast(getContext(), "搜索文字不能超过32个字", Toast.LENGTH_SHORT);
+                }
+            }
+        });
+
         saveButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {

@@ -10,6 +10,8 @@ import com.beyond.note5.MyApplication;
 public class ViewUtil {
 
     private static Point screenSize;
+    private static Point screenSizeWithoutNotification ;
+
 
     static {
         screenSize = new Point();
@@ -17,6 +19,10 @@ public class ViewUtil {
         if (systemService!=null){
             systemService.getDefaultDisplay().getSize(screenSize);
         }
+
+        screenSizeWithoutNotification = new Point();
+        screenSizeWithoutNotification.x = screenSize.x;
+        screenSizeWithoutNotification.y = screenSize.y-70;
     }
 
     public static int getXInScreenWithoutNotification(View view){
@@ -44,6 +50,10 @@ public class ViewUtil {
 
     public static Point getScreenSize() {
         return screenSize;
+    }
+
+    public static Point getScreenSizeWithoutNotification() {
+        return screenSizeWithoutNotification;
     }
 
 }

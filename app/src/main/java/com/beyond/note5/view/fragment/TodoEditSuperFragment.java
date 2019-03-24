@@ -20,6 +20,7 @@ import com.beyond.note5.event.HideKeyBoardEvent;
 import com.beyond.note5.event.HideTodoEditEvent;
 import com.beyond.note5.event.ShowKeyBoardEvent;
 import com.beyond.note5.utils.InputMethodUtil;
+import com.beyond.note5.utils.ViewUtil;
 import com.beyond.note5.view.animator.DefaultSmoothScalable;
 import com.beyond.note5.view.animator.SmoothScalable;
 import com.beyond.note5.view.listener.OnBackPressListener;
@@ -112,14 +113,30 @@ public class TodoEditSuperFragment extends DialogFragment implements OnBackPress
     @Subscribe(threadMode = ThreadMode.MAIN)
     public void onEventMainThread(HideKeyBoardEvent event) {
         String type = event.getType();
+        /***************************
+         * TYPE1：输入法隐藏就关闭编辑页面
+         ***************************/
+//        if (StringUtils.equals(Document.TODO, type)){
+//            EventBus.getDefault().post(new HideTodoEditEvent(null));
+//        }
+        /***************************
+         * TYPE2：输入法隐藏后放大到整个屏幕， 再后退关闭编辑页面
+         ***************************/
         if (StringUtils.equals(Document.TODO, type)){
-            EventBus.getDefault().post(new HideTodoEditEvent(null));
+              smoothScalable.getContainer().getLayoutParams().height = ViewUtil.getScreenSizeWithoutNotification().y;
+              smoothScalable.getContainer().setLayoutParams(smoothScalable.getContainer().getLayoutParams());
         }
+
     }
 
     @Override
     public boolean onBackPressed() {
         InputMethodUtil.hideKeyboard(contentEditText);
+        /***************************
+         * TYPE2：输入法隐藏后放大到整个屏幕， 再后退关闭编辑页面
+         ***************************/
+        EventBus.getDefault().post(new HideTodoEditEvent(null));
+
         return true;
     }
 
