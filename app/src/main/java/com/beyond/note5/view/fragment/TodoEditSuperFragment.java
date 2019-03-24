@@ -104,7 +104,7 @@ public class TodoEditSuperFragment extends DialogFragment implements OnBackPress
     @Subscribe(threadMode = ThreadMode.MAIN)
     public void onEventMainThread(ShowKeyBoardEvent event) {
         String type = event.getType();
-        if (StringUtils.equals(Document.TODO, type) && smoothScalable.getContainer()!=null){
+        if (StringUtils.equals(Document.TODO, type) && smoothScalable.getContainer() != null) {
             smoothScalable.getContainer().getLayoutParams().height = InputMethodUtil.getDialogHeightWithSoftInputMethod();
             smoothScalable.getContainer().setLayoutParams(smoothScalable.getContainer().getLayoutParams());
         }
@@ -113,30 +113,25 @@ public class TodoEditSuperFragment extends DialogFragment implements OnBackPress
     @Subscribe(threadMode = ThreadMode.MAIN)
     public void onEventMainThread(HideKeyBoardEvent event) {
         String type = event.getType();
-        /***************************
-         * TYPE1：输入法隐藏就关闭编辑页面
-         ***************************/
-//        if (StringUtils.equals(Document.TODO, type)){
-//            EventBus.getDefault().post(new HideTodoEditEvent(null));
-//        }
-        /***************************
-         * TYPE2：输入法隐藏后放大到整个屏幕， 再后退关闭编辑页面
-         ***************************/
-        if (StringUtils.equals(Document.TODO, type)){
-              smoothScalable.getContainer().getLayoutParams().height = ViewUtil.getScreenSizeWithoutNotification().y;
-              smoothScalable.getContainer().setLayoutParams(smoothScalable.getContainer().getLayoutParams());
+        if (isClosing) { // 后退触发的inputMethod隐藏时, 即要退出
+            if (StringUtils.equals(Document.TODO, type)) {
+                EventBus.getDefault().post(new HideTodoEditEvent(null));
+            }
+        } else { // 不是后退触发的inputMethod隐藏时
+            if (StringUtils.equals(Document.TODO, type)) {
+                smoothScalable.getContainer().getLayoutParams().height = ViewUtil.getScreenSizeWithoutNotification().y;
+                smoothScalable.getContainer().setLayoutParams(smoothScalable.getContainer().getLayoutParams());
+            }
         }
-
+        isClosing = true;
     }
+
+    protected boolean isClosing = true;/**TYPE3: 可控edit页面隐藏*/
 
     @Override
     public boolean onBackPressed() {
         InputMethodUtil.hideKeyboard(contentEditText);
-        /***************************
-         * TYPE2：输入法隐藏后放大到整个屏幕， 再后退关闭编辑页面
-         ***************************/
         EventBus.getDefault().post(new HideTodoEditEvent(null));
-
         return true;
     }
 
@@ -190,7 +185,7 @@ public class TodoEditSuperFragment extends DialogFragment implements OnBackPress
         this.smoothScalable.setOnShownListener(new Runnable() {
             @Override
             public void run() {
-                context.getWindow().setStatusBarColor(ContextCompat.getColor(context,R.color.white));
+                context.getWindow().setStatusBarColor(ContextCompat.getColor(context, R.color.white));
             }
         });
         this.smoothScalable.setOnHiddenListener(new Runnable() {

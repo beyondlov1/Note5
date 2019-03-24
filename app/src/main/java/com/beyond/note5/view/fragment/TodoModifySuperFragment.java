@@ -154,6 +154,7 @@ public class TodoModifySuperFragment extends TodoEditSuperFragment {
         browserSearchButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
+                isClosing = false; /** TYPE3: 混合版， 只有在点击browserSearchButton的时候不隐藏*/
                 String url = WebViewUtil.getUrl(createdDocument);
                 if (url != null) {
                     Uri uri = Uri.parse(url);
