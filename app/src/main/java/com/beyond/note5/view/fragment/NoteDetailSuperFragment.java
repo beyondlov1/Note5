@@ -152,7 +152,7 @@ public class NoteDetailSuperFragment extends DialogFragment implements OnBackPre
                 @Override
                 public void onClick(View v) {
                     Note currentNote = data.get(currIndex);
-                    EventBus.getDefault().post(new DeleteNoteEvent(currentNote));
+                    EventBus.getDefault().post(new DeleteDeepNoteEvent(currentNote));
                     if (data.isEmpty()) {
                         sendHideMessage();
                         return;
@@ -210,7 +210,7 @@ public class NoteDetailSuperFragment extends DialogFragment implements OnBackPre
                 @Override
                 public void onClick(View v) {
                     Note currentNote = data.get(currIndex);
-                    EventBus.getDefault().post(new DeleteNoteEvent(currentNote));
+                    EventBus.getDefault().post(new DeleteDeepNoteEvent(currentNote));
                     if (data.isEmpty()) {
                         sendHideMessage();
                         return;
@@ -262,6 +262,7 @@ public class NoteDetailSuperFragment extends DialogFragment implements OnBackPre
                 EventBus.getDefault().post(new AddTodoEvent(todo));
                 EventBus.getDefault().post(new DeleteNoteEvent(note));
                 sendHideMessage();
+                ToastUtil.toast(getContext(),"已转化为TODO",Toast.LENGTH_SHORT);
             }
         });
 

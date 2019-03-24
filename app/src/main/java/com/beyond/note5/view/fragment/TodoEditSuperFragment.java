@@ -13,7 +13,6 @@ import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.EditText;
-
 import com.beyond.note5.R;
 import com.beyond.note5.bean.Document;
 import com.beyond.note5.bean.Todo;
@@ -24,7 +23,6 @@ import com.beyond.note5.utils.InputMethodUtil;
 import com.beyond.note5.view.animator.DefaultSmoothScalable;
 import com.beyond.note5.view.animator.SmoothScalable;
 import com.beyond.note5.view.listener.OnBackPressListener;
-
 import org.apache.commons.lang3.StringUtils;
 import org.greenrobot.eventbus.EventBus;
 import org.greenrobot.eventbus.Subscribe;

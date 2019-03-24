@@ -11,6 +11,7 @@ import android.view.ViewStub;
 import android.widget.EditText;
 import android.widget.ImageButton;
 import android.widget.TextView;
+import android.widget.Toast;
 import com.beyond.note5.MyApplication;
 import com.beyond.note5.R;
 import com.beyond.note5.bean.Note;
@@ -22,6 +23,7 @@ import com.beyond.note5.predict.bean.Tag;
 import com.beyond.note5.utils.IDUtil;
 import com.beyond.note5.utils.InputMethodUtil;
 import com.beyond.note5.utils.TimeNLPUtil;
+import com.beyond.note5.utils.ToastUtil;
 import com.beyond.note5.view.custom.SelectionListenableEditText;
 import com.zhy.view.flowlayout.FlowLayout;
 import com.zhy.view.flowlayout.TagAdapter;
@@ -54,16 +56,44 @@ public class TodoModifySuperFragment extends TodoEditSuperFragment {
     public void onEventMainThread(FillTodoModifyEvent fillTodoModifyEvent) {
         Todo todo = fillTodoModifyEvent.get();
         createdDocument = ObjectUtils.clone(todo);
-        String html = highlightTimeExpression(createdDocument.getContent());
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
-            if (html != null) {
-                contentEditText.setText(Html.fromHtml(html, FROM_HTML_MODE_COMPACT));
-            } else {
-                contentEditText.setText(createdDocument.getContent());
+        MyApplication.getInstance().getExecutorService().execute(new Runnable() {
+            @Override
+            public void run() {
+                String beforeContent = createdDocument.getContent();
+                final String html = highlightTimeExpression(createdDocument.getContent());
+                String afterContent = createdDocument.getContent();
+                if (!StringUtils.equals(beforeContent, afterContent)) { //加个乐观锁， 不知道对不对
+                    run();
+                }
+                handler.post(new Runnable() {
+                    @Override
+                    public void run() {
+                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+                            if (html != null) {
+                                contentEditText.setText(Html.fromHtml(html, FROM_HTML_MODE_COMPACT));
+                            } else {
+                                contentEditText.setText(createdDocument.getContent());
+                            }
+                        } else {
+                            contentEditText.setText(createdDocument.getContent());
+                        }
+                        contentEditText.setSelection(createdDocument.getContent().length());
+                    }
+                });
+
             }
-        } else {
-            contentEditText.setText(createdDocument.getContent());
-        }
+        });
+//        String html = highlightTimeExpression(createdDocument.getContent());
+//        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+//            if (html != null) {
+//                contentEditText.setText(Html.fromHtml(html, FROM_HTML_MODE_COMPACT));
+//            } else {
+//                contentEditText.setText(createdDocument.getContent());
+//            }
+//        } else {
+//            contentEditText.setText(createdDocument.getContent());
+//        }
+        contentEditText.setText(createdDocument.getContent());
         contentEditText.setSelection(createdDocument.getContent().length());
     }
 
@@ -93,8 +123,8 @@ public class TodoModifySuperFragment extends TodoEditSuperFragment {
         tagAdapter = new TagAdapter<String>(tagData) {
             @Override
             public View getView(FlowLayout parent, int position, String s) {
-                TextView tv = new TextView(getContext());
-                tv.setTextColor(ContextCompat.getColor(getContext(), R.color.white));
+                TextView tv = new TextView(getActivity());
+                tv.setTextColor(ContextCompat.getColor(getActivity(), R.color.white));
                 tv.setBackground(getResources().getDrawable(R.drawable.radius_24dp_blue, null));
                 tv.setText(s);
                 return tv;
@@ -126,6 +156,7 @@ public class TodoModifySuperFragment extends TodoEditSuperFragment {
                 EventBus.getDefault().post(new DeleteTodoEvent(createdDocument));
                 EventBus.getDefault().post(new HideTodoEditEvent(null));
                 InputMethodUtil.hideKeyboard(contentEditText);
+                ToastUtil.toast(getContext(),"已转化为NOTE", Toast.LENGTH_SHORT);
             }
         });
         saveButton.setOnClickListener(new View.OnClickListener() {
@@ -185,7 +216,7 @@ public class TodoModifySuperFragment extends TodoEditSuperFragment {
 
             @Override
             public void onTextChanged(CharSequence s, final int start, int before, int count) {
-                String source = s.toString();
+                final String source = s.toString();
 //                predictTags(source);
 
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
@@ -203,14 +234,25 @@ public class TodoModifySuperFragment extends TodoEditSuperFragment {
                         lastStr = null;
                         return;
                     }
-                    String html = highlightTimeExpression(source);
-                    if (html == null) {
-                        lastStr = null;
-                        return;
-                    }
-                    lastStr = source;
-                    lastSelectionEnd = contentEditText.getSelectionEnd();
-                    contentEditText.setText(Html.fromHtml(html, FROM_HTML_MODE_COMPACT));
+                    MyApplication.getInstance().getExecutorService().execute(new Runnable() {
+                        @Override
+                        public void run() {
+                            final String html = highlightTimeExpression(source);
+                            handler.post(new Runnable() {
+                                @Override
+                                public void run() {
+                                    if (html == null) {
+                                        lastStr = null;
+                                        return;
+                                    }
+                                    lastStr = source;
+                                    lastSelectionEnd = contentEditText.getSelectionEnd();
+                                    contentEditText.setText(Html.fromHtml(html, FROM_HTML_MODE_COMPACT));
+                                }
+                            });
+
+                        }
+                    });
                 }
             }
 
@@ -260,27 +302,29 @@ public class TodoModifySuperFragment extends TodoEditSuperFragment {
         });
     }
 
+    @SuppressWarnings("unchecked")
     private void predictTags(String source) {
-        MyApplication.getInstance().getTagPredictor().predict(source, new AbstractTagCallback() {
+        MyApplication.getInstance().getTagPredictor().predict(StringUtils.trim(source), new AbstractTagCallback() {
 
             @Override
-            protected void handleResult(List<Tag> tags) {
-                tagData.clear();
-                Collections.sort(tags, new Comparator<Tag>() {
-                    @Override
-                    public int compare(Tag o1, Tag o2) {
-                        return -o1.getScore() + o2.getScore();
-                    }
-                });
-                if (tags.size() >= 5) {
-                    tags = tags.subList(0, 5);
-                }
-                for (Tag tag : tags) {
-                    tagData.add(tag.getContent());
-                }
+            protected void handleResult(final List<Tag> tags) {
                 handler.post(new Runnable() {
                     @Override
                     public void run() {
+                        List<Tag> finalTags = tags;
+                        tagData.clear();
+                        Collections.sort(finalTags, new Comparator<Tag>() {
+                            @Override
+                            public int compare(Tag o1, Tag o2) {
+                                return -o1.getScore() + o2.getScore();
+                            }
+                        });
+                        if (finalTags.size() >= 5) {
+                            finalTags = finalTags.subList(0, 5);
+                        }
+                        for (Tag tag : finalTags) {
+                            tagData.add(tag.getContent());
+                        }
                         tagAdapter.notifyDataChanged();
                     }
                 });

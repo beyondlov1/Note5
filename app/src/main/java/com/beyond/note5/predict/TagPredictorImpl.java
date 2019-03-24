@@ -6,7 +6,6 @@ import java.io.File;
 import java.util.Observable;
 import java.util.Observer;
 import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
@@ -18,7 +17,7 @@ public class TagPredictorImpl implements TagPredictor<String,TagGraph>,Observer 
 
     private TagGraph tagGraph;
     private TagTrainer tagTrainer ;
-    private ExecutorService executorService = Executors.newCachedThreadPool();
+    private ExecutorService executorService;
 
     public AtomicBoolean isReady = new AtomicBoolean(false);
 
@@ -61,6 +60,10 @@ public class TagPredictorImpl implements TagPredictor<String,TagGraph>,Observer 
 
     public TagTrainer getTagTrainer() {
         return tagTrainer;
+    }
+
+    public void setExecutorService(ExecutorService executorService) {
+        this.executorService = executorService;
     }
 
     @Override

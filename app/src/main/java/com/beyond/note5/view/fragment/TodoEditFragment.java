@@ -274,27 +274,29 @@ public class TodoEditFragment extends DialogFragment {
 
     }
 
+    @SuppressWarnings({"unchecked"})
     private void predictTags(CharSequence s) {
-        MyApplication.getInstance().getTagPredictor().predict(s.toString(), new AbstractTagCallback() {
+        MyApplication.getInstance().getTagPredictor().predict(StringUtils.trim(s.toString()), new AbstractTagCallback() {
 
             @Override
-            protected void handleResult(List<Tag> tags) {
-                tagData.clear();
-                Collections.sort(tags, new Comparator<Tag>() {
-                    @Override
-                    public int compare(Tag o1, Tag o2) {
-                        return -o1.getScore()+o2.getScore();
-                    }
-                });
-                if (tags.size()>=5){
-                    tags = tags.subList(0,5);
-                }
-                for (Tag tag : tags) {
-                    tagData.add(tag.getContent());
-                }
+            protected void handleResult(final List<Tag> tags) {
                 handler.post(new Runnable() {
                     @Override
                     public void run() {
+                        List<Tag> finalTags = tags;
+                        tagData.clear();
+                        Collections.sort(finalTags, new Comparator<Tag>() {
+                            @Override
+                            public int compare(Tag o1, Tag o2) {
+                                return -o1.getScore() + o2.getScore();
+                            }
+                        });
+                        if (finalTags.size() >= 5) {
+                            finalTags = finalTags.subList(0, 5);
+                        }
+                        for (Tag tag : finalTags) {
+                            tagData.add(tag.getContent());
+                        }
                         tagAdapter.notifyDataChanged();
                     }
                 });

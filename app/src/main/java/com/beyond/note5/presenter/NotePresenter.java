@@ -8,6 +8,5 @@ import com.beyond.note5.bean.Note;
  */
 
 public interface NotePresenter extends DocumentPresenter<Note>{
-
-
+    void deleteDeep(Note note);
 }

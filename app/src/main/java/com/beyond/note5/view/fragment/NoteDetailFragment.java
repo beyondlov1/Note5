@@ -32,7 +32,7 @@ import android.widget.Toast;
 import com.beyond.note5.R;
 import com.beyond.note5.bean.Note;
 import com.beyond.note5.constant.DocumentConst;
-import com.beyond.note5.event.DeleteNoteEvent;
+import com.beyond.note5.event.DeleteDeepNoteEvent;
 import com.beyond.note5.event.DetailNoteEvent;
 import com.beyond.note5.event.FillNoteModifyEvent;
 import com.beyond.note5.event.ModifyNoteDoneEvent;
@@ -150,7 +150,7 @@ public class NoteDetailFragment extends DialogFragment {
                 @Override
                 public void onClick(View v) {
                     Note currentNote = data.get(currIndex);
-                    EventBus.getDefault().post(new DeleteNoteEvent(currentNote));
+                    EventBus.getDefault().post(new DeleteDeepNoteEvent(currentNote));
                     if (data.isEmpty()) {
                         getDialog().dismiss();
                         return;
@@ -208,7 +208,7 @@ public class NoteDetailFragment extends DialogFragment {
                 @Override
                 public void onClick(View v) {
                     Note currentNote = data.get(currIndex);
-                    EventBus.getDefault().post(new DeleteNoteEvent(currentNote));
+                    EventBus.getDefault().post(new DeleteDeepNoteEvent(currentNote));
                     if (data.isEmpty()) {
                         getDialog().dismiss();
                         return;

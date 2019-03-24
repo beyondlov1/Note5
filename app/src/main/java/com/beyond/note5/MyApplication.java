@@ -5,10 +5,13 @@ import android.database.sqlite.SQLiteDatabase;
 import android.os.Environment;
 import com.beyond.note5.model.dao.DaoMaster;
 import com.beyond.note5.model.dao.DaoSession;
+import com.beyond.note5.model.dao.TodoDao;
 import com.beyond.note5.predict.TagPredictor;
 import com.beyond.note5.predict.TagPredictorImpl;
 
 import java.io.File;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 /**
  * @author: beyond
@@ -45,12 +48,24 @@ public class MyApplication extends Application {
         SQLiteDatabase writableDatabase = helper.getWritableDatabase();
         DaoMaster daoMaster = new DaoMaster(writableDatabase);
         daoSession = daoMaster.newSession();
+
+        TodoDao todoDao = daoSession.getTodoDao();
+        todoDao.deleteByKey("f0659e65d4c34dab9fe37a2f61d74dc4");
     }
 
     private void initTagPredict() {
         File storageDir = this.getExternalFilesDir(Environment.DIRECTORY_DOCUMENTS);
         assert storageDir != null;
         tagPredictor = new TagPredictorImpl(new File(storageDir.getAbsolutePath()+File.separator+"model.json"));
+        tagPredictor.setExecutorService(this.getExecutorService());
+    }
+
+    private ExecutorService executorService = Executors.newCachedThreadPool();
+    public ExecutorService getExecutorService() {
+        if (executorService == null){
+            executorService = Executors.newCachedThreadPool();
+        }
+        return executorService;
     }
 
     private TagPredictor tagPredictor;

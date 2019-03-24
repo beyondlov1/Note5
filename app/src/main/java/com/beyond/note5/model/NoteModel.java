@@ -8,4 +8,5 @@ import com.beyond.note5.bean.Note;
  */
 
 public interface NoteModel extends DocumentModel<Note>{
+    void deleteDeep(Note note);
 }

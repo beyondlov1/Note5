@@ -1,5 +1,7 @@
 package com.beyond.note5.model;
 
+import android.database.sqlite.SQLiteConstraintException;
+import android.util.Log;
 import com.beyond.note5.MyApplication;
 import com.beyond.note5.bean.Attachment;
 import com.beyond.note5.bean.Document;
@@ -8,7 +10,6 @@ import com.beyond.note5.model.dao.AttachmentDao;
 import com.beyond.note5.model.dao.DaoSession;
 import com.beyond.note5.model.dao.NoteDao;
 import com.beyond.note5.utils.PhotoUtil;
-
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.io.FileUtils;
 
@@ -37,11 +38,15 @@ public class NoteModelImpl implements NoteModel {
         noteDao.insert(note);
         List<Attachment> attachments = note.getAttachments();
         if (CollectionUtils.isNotEmpty(attachments)) {
-            attachmentDao.insertInTx(attachments);
-
-            //压缩图片
-            for (Attachment attachment : attachments) {
-                PhotoUtil.compressImage(attachment.getPath());
+            try {
+                attachmentDao.insertInTx(attachments);
+                //压缩图片
+                for (Attachment attachment : attachments) {
+                    PhotoUtil.compressImage(attachment.getPath());
+                }
+            }catch (SQLiteConstraintException e){
+                e.printStackTrace();
+                Log.i("NoteModelImpl","attachment主键重复");
             }
         }
 
@@ -59,6 +64,11 @@ public class NoteModelImpl implements NoteModel {
     @Override
     public void delete(Note note) {
         noteDao.delete(note);
+    }
+
+    @Override
+    public void deleteDeep(Note note) {
+        this.delete(note);
         List<Attachment> attachments = note.getAttachments();
         if (CollectionUtils.isNotEmpty(attachments)) {
             for (Attachment attachment : attachments) {
@@ -78,4 +88,6 @@ public class NoteModelImpl implements NoteModel {
                 .orderDesc(NoteDao.Properties.LastModifyTime)
                 .list();
     }
+
+
 }

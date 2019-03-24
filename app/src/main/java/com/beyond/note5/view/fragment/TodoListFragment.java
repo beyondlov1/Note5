@@ -3,7 +3,6 @@ package com.beyond.note5.view.fragment;
 import android.annotation.SuppressLint;
 import android.content.Context;
 import android.os.Bundle;
-import android.os.Handler;
 import android.support.annotation.Nullable;
 import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.StaggeredGridLayoutManager;
@@ -17,7 +16,7 @@ import com.beyond.note5.module.TodoComponent;
 import com.beyond.note5.module.TodoModule;
 import com.beyond.note5.presenter.CalendarPresenter;
 import com.beyond.note5.presenter.TodoPresenter;
-import com.beyond.note5.utils.ViewUtil;
+import com.beyond.note5.utils.TimeNLPUtil;
 import com.beyond.note5.view.adapter.AbstractFragmentTodoView;
 import com.beyond.note5.view.adapter.component.TodoRecyclerViewAdapter;
 import com.beyond.note5.view.adapter.component.header.Header;
@@ -167,22 +166,39 @@ public class TodoListFragment extends AbstractFragmentTodoView {
 
     @Subscribe(threadMode = ThreadMode.MAIN)
     public void onReceived(AddTodoEvent event) {
-        todoPresenter.add(event.get());
-        if (event.get().getReminder()!=null) {
-            calendarPresenter.add(event.get());
+        Todo todo = event.get();
+        this.fillContentWithoutTime(todo);
+        todoPresenter.add(todo);
+        if (todo.getReminder()!=null) {
+            calendarPresenter.add(todo);
         }
     }
 
     @Subscribe(threadMode = ThreadMode.MAIN)
     public void onReceived(UpdateTodoEvent event) {
-        todoPresenter.update(event.get());
-        if (event.get().getReminder()!=null) {
-            if (event.get().getReminder().getCalendarEventId() == null){
-                calendarPresenter.add(event.get());
+        Todo todo = event.get();
+        this.fillContentWithoutTime(todo);
+        todoPresenter.update(todo);
+        if (todo.getReminder()!=null) {
+            if (todo.getReminder().getCalendarEventId() == null){
+                calendarPresenter.add(todo);
             }else {
-                calendarPresenter.update(event.get());
+                calendarPresenter.update(todo);
             }
         }
+    }
+
+    /**
+     * 计算无时间内容
+     * 要不要改成异步， 看情况吧
+     * @param todo 待办
+     */
+    private void fillContentWithoutTime(Todo todo) {
+        String contentWithoutTime = StringUtils.trim(TimeNLPUtil.getOriginExpressionWithoutTime(StringUtils.trim(todo.getContent())));
+        if (StringUtils.isBlank(contentWithoutTime)) {
+            contentWithoutTime = StringUtils.trim(todo.getContent());
+        }
+        todo.setContentWithoutTime(contentWithoutTime);
     }
 
     @Subscribe(threadMode = ThreadMode.MAIN)

@@ -10,12 +10,7 @@ import android.view.ViewGroup;
 
 import com.beyond.note5.R;
 import com.beyond.note5.bean.Note;
-import com.beyond.note5.event.AddNoteEvent;
-import com.beyond.note5.event.DeleteNoteEvent;
-import com.beyond.note5.event.HideFABEvent;
-import com.beyond.note5.event.RefreshNoteListEvent;
-import com.beyond.note5.event.ShowFABEvent;
-import com.beyond.note5.event.UpdateNoteEvent;
+import com.beyond.note5.event.*;
 import com.beyond.note5.module.DaggerNoteComponent;
 import com.beyond.note5.module.NoteComponent;
 import com.beyond.note5.module.NoteModule;
@@ -129,6 +124,10 @@ public class NoteListFragment extends AbstractFragmentNoteView {
     @Subscribe(threadMode = ThreadMode.MAIN)
     public void onReceived(DeleteNoteEvent event) {
         notePresenter.delete(event.get());
+    }
+    @Subscribe(threadMode = ThreadMode.MAIN)
+    public void onReceived(DeleteDeepNoteEvent event) {
+        notePresenter.deleteDeep(event.get());
     }
 
     @Subscribe(threadMode = ThreadMode.MAIN)

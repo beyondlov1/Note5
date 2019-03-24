@@ -4,8 +4,6 @@ import com.beyond.note5.constant.DocumentConst;
 import com.beyond.note5.model.dao.DaoSession;
 import com.beyond.note5.model.dao.ReminderDao;
 import com.beyond.note5.model.dao.TodoDao;
-import com.beyond.note5.utils.TimeNLPUtil;
-import org.apache.commons.lang3.StringUtils;
 import org.greenrobot.greendao.DaoException;
 import org.greenrobot.greendao.annotation.Entity;
 import org.greenrobot.greendao.annotation.Generated;
@@ -88,10 +86,6 @@ public class Todo extends Document {
 
     public void setContent(String content) {
         this.content = content;
-        contentWithoutTime = StringUtils.trim(TimeNLPUtil.getOriginExpressionWithoutTime(StringUtils.trim(content)));
-        if (StringUtils.isBlank(contentWithoutTime)) {
-            contentWithoutTime = StringUtils.trim(content);
-        }
     }
 
     public String getContentWithoutTime() {
