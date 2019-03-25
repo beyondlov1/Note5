@@ -201,6 +201,7 @@ public class TodoEditFragment extends DialogFragment {
                         contentEditText.setSelection(lastSelectionEnd);
                         return;
                     }
+                    String html = highlightTimeExpression(source);
                     if (start < timeExpressionStartIndex
                             || start > timeExpressionEndIndex) {
                         lastStr = null;
@@ -210,7 +211,6 @@ public class TodoEditFragment extends DialogFragment {
                         lastStr = null;
                         return;
                     }
-                    String html = highlightTimeExpression(source);
                     if (html == null) {
                         lastStr = null;
                         return;

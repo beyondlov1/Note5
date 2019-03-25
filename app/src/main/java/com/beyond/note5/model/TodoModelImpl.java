@@ -37,15 +37,17 @@ public class TodoModelImpl implements TodoModel {
     @Override
     public void update(Todo todo) {
         todoDao.update(todo);
-        if (todo.getReminder() != null) {
+
+        Reminder reminder = todo.getReminder();
+        if (todo.getReminderId()!=null) {
             Reminder foundReminder = reminderDao.queryBuilder()
                     .where(ReminderDao.Properties.Id.eq(todo.getReminderId()))
                     .build()
                     .unique();
             if (foundReminder == null){
-                reminderDao.insert(todo.getReminder());
+                reminderDao.insert(reminder);
             }else {
-                reminderDao.update(todo.getReminder());
+                reminderDao.update(reminder);
             }
         }
 
@@ -95,5 +97,13 @@ public class TodoModelImpl implements TodoModel {
             );
         }
 
+    }
+
+    @Override
+    public void deleteReminder(Todo todo) {
+        Reminder reminder = todo.getReminder();
+        if (reminder !=null){
+            reminderDao.delete(reminder);
+        }
     }
 }

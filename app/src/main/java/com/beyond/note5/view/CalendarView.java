@@ -21,11 +21,11 @@ public interface CalendarView {
 
     void onEventUpdateSuccess(Todo todo);
 
-    void onReminderDeleteSuccess(Todo todo);
+    void onCalendarReminderDeleteSuccess(Todo todo);
 
-    void onReminderDeleteFail(Todo todo);
+    void onCalendarReminderDeleteFail(Todo todo);
 
-    void onReminderRestoreSuccess(Todo todo);
+    void onCalendarReminderRestoreSuccess(Todo todo);
 
-    void onReminderRestoreFail(Todo todo);
+    void onCalendarReminderRestoreFail(Todo todo);
 }

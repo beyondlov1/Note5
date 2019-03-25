@@ -190,7 +190,7 @@ public class CalendarModelImpl implements CalendarModel {
     }
 
     @Override
-    public void restoreReminder(final Todo todo) {
+    public void restoreCalendarReminder(final Todo todo) {
         if (todo.getReminder()==null||todo.getReminder().getCalendarEventId()==null){
             return;
         }
@@ -200,7 +200,7 @@ public class CalendarModelImpl implements CalendarModel {
                 PermissionsUtil.requestPermission(activity, new PermissionListener() {
                     @Override
                     public void permissionGranted(@NonNull String[] permission) {
-                        restoreReminder(todo);
+                        restoreCalendarReminder(todo);
                     }
 
                     @Override

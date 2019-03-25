@@ -110,21 +110,21 @@ public class CalendarPresenterImpl implements CalendarPresenter {
         }
         try {
             calendarModel.deleteReminder(todo);
-            this.deleteReminderSuccess(todo);
+            this.deleteCalendarReminderSuccess(todo);
         } catch (Exception e) {
             e.printStackTrace();
-            this.deleteReminderFail(todo);
+            this.deleteCalendarReminderFail(todo);
         }
     }
 
     @Override
-    public void deleteReminderSuccess(Todo todo) {
-        calendarView.onReminderDeleteSuccess(todo);
+    public void deleteCalendarReminderSuccess(Todo todo) {
+        calendarView.onCalendarReminderDeleteSuccess(todo);
     }
 
     @Override
-    public void deleteReminderFail(Todo todo) {
-        calendarView.onReminderDeleteFail(todo);
+    public void deleteCalendarReminderFail(Todo todo) {
+        calendarView.onCalendarReminderDeleteFail(todo);
     }
 
     @Override
@@ -133,7 +133,7 @@ public class CalendarPresenterImpl implements CalendarPresenter {
             return;
         }
         try {
-            calendarModel.restoreReminder(todo);
+            calendarModel.restoreCalendarReminder(todo);
             this.restoreReminderSuccess(todo);
         } catch (Exception e) {
             e.printStackTrace();
@@ -143,12 +143,12 @@ public class CalendarPresenterImpl implements CalendarPresenter {
 
     @Override
     public void restoreReminderSuccess(Todo todo) {
-        calendarView.onReminderRestoreSuccess(todo);
+        calendarView.onCalendarReminderRestoreSuccess(todo);
     }
 
     @Override
     public void restoreReminderFail(Todo todo) {
-        calendarView.onReminderRestoreFail(todo);
+        calendarView.onCalendarReminderRestoreFail(todo);
 
     }
 }

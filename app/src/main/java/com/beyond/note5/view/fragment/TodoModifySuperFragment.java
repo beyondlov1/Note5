@@ -147,7 +147,7 @@ public class TodoModifySuperFragment extends TodoEditSuperFragment {
                 EventBus.getDefault().post(new DeleteTodoEvent(createdDocument));
                 EventBus.getDefault().post(new HideTodoEditEvent(null));
                 InputMethodUtil.hideKeyboard(contentEditText);
-                ToastUtil.toast(getContext(),"已转化为NOTE", Toast.LENGTH_SHORT);
+                ToastUtil.toast(getContext(), "已转化为NOTE", Toast.LENGTH_SHORT);
             }
         });
 
@@ -186,9 +186,10 @@ public class TodoModifySuperFragment extends TodoEditSuperFragment {
                             reminder = new Reminder();
                             reminder.setId(IDUtil.uuid());
                             reminder.setStart(reminderStart);
-                            createdDocument.setReminderId(reminder.getId());
                         }
                         createdDocument.setReminder(reminder);
+                    }else {
+                        EventBus.getDefault().post(new DeleteReminderEvent(createdDocument));
                     }
                     EventBus.getDefault().post(new UpdateTodoEvent(createdDocument));
                 }
@@ -222,45 +223,55 @@ public class TodoModifySuperFragment extends TodoEditSuperFragment {
             }
 
             @Override
-            public void onTextChanged(CharSequence s, final int start, int before, int count) {
+            public void onTextChanged(CharSequence s, final int start, final int before, int count) {
                 final String source = s.toString();
 //                predictTags(source);
 
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
-                    if (StringUtils.equals(lastStr, source)) {
-                        lastStr = null;
-                        contentEditText.setSelection(lastSelectionEnd);
-                        return;
-                    }
-                    if (start < timeExpressionStartIndex
-                            || start > timeExpressionEndIndex) {
-                        lastStr = null;
-                        return;
-                    }
-                    if (before > 0) {
-                        lastStr = null;
-                        return;
-                    }
-                    MyApplication.getInstance().getExecutorService().execute(new Runnable() {
-                        @Override
-                        public void run() {
-                            final String html = highlightTimeExpression(source);
+
+                MyApplication.getInstance().getExecutorService().execute(new Runnable() {
+                    @Override
+                    public void run() {
+
+                        if (StringUtils.equals(lastStr, source)) {
+                            lastStr = null;
                             handler.post(new Runnable() {
                                 @Override
                                 public void run() {
-                                    if (html == null) {
-                                        lastStr = null;
-                                        return;
-                                    }
-                                    lastStr = source;
-                                    lastSelectionEnd = contentEditText.getSelectionEnd();
-                                    contentEditText.setText(Html.fromHtml(html, FROM_HTML_MODE_COMPACT));
+                                    contentEditText.setSelection(lastSelectionEnd);
                                 }
                             });
-
+                            return;
                         }
-                    });
-                }
+                        final String html = highlightTimeExpression(source);
+                        if (start < timeExpressionStartIndex
+                                || start > timeExpressionEndIndex) {
+                            lastStr = null;
+                            return;
+                        }
+                        if (before > 0) {
+                            lastStr = null;
+                            return;
+                        }
+
+                        handler.post(new Runnable() {
+                            @Override
+                            public void run() {
+                                if (html == null) {
+                                    lastStr = null;
+                                    return;
+                                }
+                                lastStr = source;
+                                lastSelectionEnd = contentEditText.getSelectionEnd();
+                                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+                                    contentEditText.setText(Html.fromHtml(html, FROM_HTML_MODE_COMPACT));
+                                }else {
+                                    contentEditText.setText(source);
+                                }
+                            }
+                        });
+
+                    }
+                });
             }
 
             private String highlightTimeExpression(String source) {

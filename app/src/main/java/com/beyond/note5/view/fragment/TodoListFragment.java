@@ -188,6 +188,14 @@ public class TodoListFragment extends AbstractFragmentTodoView {
         }
     }
 
+    @Subscribe(threadMode = ThreadMode.MAIN)
+    public void onReceived(DeleteReminderEvent event) {
+        Todo todo = event.get();
+        calendarPresenter.delete(todo);
+        todoPresenter.deleteReminder(todo);
+        todo.setReminder(null);
+    }
+
     /**
      * 计算无时间内容
      * 要不要改成异步， 看情况吧

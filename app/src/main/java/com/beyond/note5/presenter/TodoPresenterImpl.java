@@ -99,4 +99,25 @@ public class TodoPresenterImpl implements TodoPresenter {
     public void findAllFail() {
         todoView.onFindAllFail();
     }
+
+    @Override
+    public void deleteReminder(Todo todo) {
+        try {
+            todoModel.deleteReminder(todo);
+            this.onDeleteReminderSuccess(todo);
+        }catch (Exception e){
+            e.printStackTrace();
+            this.onDeleteReminderFail(todo);
+        }
+    }
+
+    @Override
+    public void onDeleteReminderSuccess(Todo todo) {
+        todoView.onDeleteReminderSuccess(todo);
+    }
+
+    @Override
+    public void onDeleteReminderFail(Todo todo) {
+        todoView.onDeleteReminderFail(todo);
+    }
 }

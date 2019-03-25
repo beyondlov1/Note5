@@ -50,22 +50,32 @@ public class AbstractFragmentTodoView extends AbstractDocumentFragment<Todo> imp
     }
 
     @Override
-    public void onReminderDeleteSuccess(Todo todo) {
+    public void onCalendarReminderDeleteSuccess(Todo todo) {
         msg("取消提醒成功");
     }
 
     @Override
-    public void onReminderDeleteFail(Todo todo) {
+    public void onCalendarReminderDeleteFail(Todo todo) {
         msg("取消提醒失败");
     }
 
     @Override
-    public void onReminderRestoreSuccess(Todo todo) {
+    public void onCalendarReminderRestoreSuccess(Todo todo) {
         msg("恢复提醒成功");
     }
 
     @Override
-    public void onReminderRestoreFail(Todo todo) {
+    public void onCalendarReminderRestoreFail(Todo todo) {
         msg("恢复提醒失败");
+    }
+
+    @Override
+    public void onDeleteReminderSuccess(Todo todo) {
+        msg("成功删除提醒");
+    }
+
+    @Override
+    public void onDeleteReminderFail(Todo todo) {
+        msg("删除提醒失败");
     }
 }
