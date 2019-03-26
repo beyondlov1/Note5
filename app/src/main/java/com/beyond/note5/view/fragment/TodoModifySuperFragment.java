@@ -36,8 +36,6 @@ import org.greenrobot.eventbus.ThreadMode;
 
 import java.util.*;
 
-import static android.text.Html.FROM_HTML_MODE_COMPACT;
-
 public class TodoModifySuperFragment extends TodoEditSuperFragment {
 
     private ImageButton clearButton;
@@ -54,11 +52,11 @@ public class TodoModifySuperFragment extends TodoEditSuperFragment {
     //回显
     @Subscribe(threadMode = ThreadMode.MAIN, sticky = true)
     public void onEventMainThread(FillTodoModifyEvent fillTodoModifyEvent) {
-        Todo todo = fillTodoModifyEvent.get();
+        final Todo todo = fillTodoModifyEvent.get();
         createdDocument = ObjectUtils.clone(todo);
         MyApplication.getInstance().getExecutorService().execute(new Runnable() {
             @Override
-            public void run() {
+            public void run() { //FIXME
                 String beforeContent = createdDocument.getContent();
                 final String html = highlightTimeExpression(createdDocument.getContent());
                 String afterContent = createdDocument.getContent();
@@ -69,8 +67,8 @@ public class TodoModifySuperFragment extends TodoEditSuperFragment {
                     @Override
                     public void run() {
                         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
-                            if (html != null) {
-                                contentEditText.setText(Html.fromHtml(html, FROM_HTML_MODE_COMPACT));
+                            if (StringUtils.isNotBlank(html)) {
+                                contentEditText.setText(Html.fromHtml(html, Html.FROM_HTML_MODE_COMPACT));
                             } else {
                                 contentEditText.setText(createdDocument.getContent());
                             }
@@ -231,7 +229,10 @@ public class TodoModifySuperFragment extends TodoEditSuperFragment {
                 MyApplication.getInstance().getExecutorService().execute(new Runnable() {
                     @Override
                     public void run() {
-
+                        if (before > 0) {
+                            lastStr = null;
+                            return;
+                        }
                         if (StringUtils.equals(lastStr, source)) {
                             lastStr = null;
                             handler.post(new Runnable() {
@@ -242,31 +243,28 @@ public class TodoModifySuperFragment extends TodoEditSuperFragment {
                             });
                             return;
                         }
+
                         final String html = highlightTimeExpression(source);
                         if (start < timeExpressionStartIndex
                                 || start > timeExpressionEndIndex) {
                             lastStr = null;
                             return;
                         }
-                        if (before > 0) {
+                        if (html == null) {
                             lastStr = null;
                             return;
                         }
-
+                        lastStr = source;
                         handler.post(new Runnable() {
                             @Override
                             public void run() {
-                                if (html == null) {
-                                    lastStr = null;
-                                    return;
-                                }
-                                lastStr = source;
                                 lastSelectionEnd = contentEditText.getSelectionEnd();
                                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
-                                    contentEditText.setText(Html.fromHtml(html, FROM_HTML_MODE_COMPACT));
+                                    contentEditText.setText(Html.fromHtml(html, Html.FROM_HTML_MODE_COMPACT));
                                 }else {
                                     contentEditText.setText(source);
                                 }
+                                contentEditText.setSelection(lastSelectionEnd);
                             }
                         });
 
