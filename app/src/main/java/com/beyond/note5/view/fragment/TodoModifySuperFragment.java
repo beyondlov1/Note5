@@ -5,12 +5,9 @@ import android.net.Uri;
 import android.os.Build;
 import android.os.Handler;
 import android.support.v4.content.ContextCompat;
-import android.text.Editable;
 import android.text.Html;
-import android.text.TextWatcher;
 import android.view.View;
 import android.view.ViewStub;
-import android.widget.EditText;
 import android.widget.ImageButton;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -24,10 +21,11 @@ import com.beyond.note5.predict.AbstractTagCallback;
 import com.beyond.note5.predict.bean.Tag;
 import com.beyond.note5.utils.*;
 import com.beyond.note5.view.custom.SelectionListenableEditText;
+import com.beyond.note5.view.listener.OnTagClick2AppendListener;
+import com.beyond.note5.view.listener.TimeExpressionDetectiveTextWatcher;
 import com.zhy.view.flowlayout.FlowLayout;
 import com.zhy.view.flowlayout.TagAdapter;
 import com.zhy.view.flowlayout.TagFlowLayout;
-import com.zhy.view.flowlayout.TagView;
 import org.apache.commons.lang3.ObjectUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.greenrobot.eventbus.EventBus;
@@ -54,11 +52,17 @@ public class TodoModifySuperFragment extends TodoEditSuperFragment {
     public void onEventMainThread(FillTodoModifyEvent fillTodoModifyEvent) {
         final Todo todo = fillTodoModifyEvent.get();
         createdDocument = ObjectUtils.clone(todo);
+        contentEditText.setText(createdDocument.getContent());
+        contentEditText.setSelection(createdDocument.getContent().length());
+        highlightTimeExpressionAsync();
+    }
+
+    private void highlightTimeExpressionAsync() {
         MyApplication.getInstance().getExecutorService().execute(new Runnable() {
             @Override
-            public void run() { //FIXME
+            public void run() {
                 String beforeContent = createdDocument.getContent();
-                final String html = highlightTimeExpression(createdDocument.getContent());
+                final String html = HighlightUtil.highlightTimeExpression(createdDocument.getContent());
                 String afterContent = createdDocument.getContent();
                 if (!StringUtils.equals(beforeContent, afterContent)) { //加个乐观锁， 不知道对不对
                     run();
@@ -81,20 +85,7 @@ public class TodoModifySuperFragment extends TodoEditSuperFragment {
 
             }
         });
-        contentEditText.setText(createdDocument.getContent());
-        contentEditText.setSelection(createdDocument.getContent().length());
     }
-
-    private String highlightTimeExpression(String source) {
-        String timeExpression = StringUtils.trim(TimeNLPUtil.getOriginTimeExpression(StringUtils.trim(source)));
-        if (StringUtils.isNotBlank(timeExpression)) {
-            return source.replace(timeExpression, "<span style='" +
-                    "background:lightgray;'>" +
-                    timeExpression + "</span>");
-        }
-        return null;
-    }
-
 
     @Override
     protected void initView(View view) {
@@ -136,7 +127,6 @@ public class TodoModifySuperFragment extends TodoEditSuperFragment {
             public void onClick(View v) {
                 Note note = new Note();
                 note.setId(createdDocument.getId());
-//                note.setTitle(createdDocument.getTitle());
                 note.setContent(createdDocument.getContent());
                 note.setCreateTime(createdDocument.getCreateTime());
                 note.setLastModifyTime(new Date());
@@ -175,24 +165,28 @@ public class TodoModifySuperFragment extends TodoEditSuperFragment {
                     createdDocument.setContent(content);
                     createdDocument.setLastModifyTime(new Date());
                     createdDocument.setVersion(createdDocument.getVersion() == null ? 0 : createdDocument.getVersion() + 1);
-                    Reminder reminder = createdDocument.getReminder();
-                    Date reminderStart = TimeNLPUtil.parse(content);
-                    if (reminderStart != null) {
-                        if (reminder != null) {
-                            reminder.setStart(reminderStart);
-                        } else {
-                            reminder = new Reminder();
-                            reminder.setId(IDUtil.uuid());
-                            reminder.setStart(reminderStart);
-                        }
-                        createdDocument.setReminder(reminder);
-                    }else {
-                        EventBus.getDefault().post(new DeleteReminderEvent(createdDocument));
-                    }
-                    EventBus.getDefault().post(new UpdateTodoEvent(createdDocument));
+                    processReminder(content);
                 }
                 EventBus.getDefault().post(new HideTodoEditEvent(null));
                 InputMethodUtil.hideKeyboard(contentEditText);
+            }
+
+            private void processReminder(String content) {
+                Reminder reminder = createdDocument.getReminder();
+                Date reminderStart = TimeNLPUtil.parse(content);
+                if (reminderStart != null) {
+                    if (reminder != null) {
+                        reminder.setStart(reminderStart);
+                    } else {
+                        reminder = new Reminder();
+                        reminder.setId(IDUtil.uuid());
+                        reminder.setStart(reminderStart);
+                    }
+                    createdDocument.setReminder(reminder);
+                }else {
+                    EventBus.getDefault().post(new DeleteReminderEvent(createdDocument));
+                }
+                EventBus.getDefault().post(new UpdateTodoEvent(createdDocument));
             }
         });
 
@@ -202,124 +196,24 @@ public class TodoModifySuperFragment extends TodoEditSuperFragment {
                 @Override
                 public void onChanged(String content, int selStart, int selEnd) {
                     if (content.length() >= selStart) {
-                        predictTags(content.substring(0, selStart));
+                        predictTagsAsync(content.substring(0, selStart));
                     }
                 }
             });
         }
 
-        contentEditText.addTextChangedListener(new TextWatcher() {
+        TimeExpressionDetectiveTextWatcher.Builder builder = new TimeExpressionDetectiveTextWatcher.Builder(contentEditText);
+        contentEditText.addTextChangedListener(
+                builder
+                .handler(handler)
+                .build()
+        );
 
-            private String lastStr = null;
-            private int lastSelectionEnd;
-            private int timeExpressionStartIndex;
-            private int timeExpressionEndIndex;
-
-            @Override
-            public void beforeTextChanged(CharSequence s, int start, int count, int after) {
-
-            }
-
-            @Override
-            public void onTextChanged(CharSequence s, final int start, final int before, int count) {
-                final String source = s.toString();
-//                predictTags(source);
-
-
-                MyApplication.getInstance().getExecutorService().execute(new Runnable() {
-                    @Override
-                    public void run() {
-                        if (before > 0) {
-                            lastStr = null;
-                            return;
-                        }
-                        if (StringUtils.equals(lastStr, source)) {
-                            lastStr = null;
-                            handler.post(new Runnable() {
-                                @Override
-                                public void run() {
-                                    contentEditText.setSelection(lastSelectionEnd);
-                                }
-                            });
-                            return;
-                        }
-
-                        final String html = highlightTimeExpression(source);
-                        if (start < timeExpressionStartIndex
-                                || start > timeExpressionEndIndex) {
-                            lastStr = null;
-                            return;
-                        }
-                        if (html == null) {
-                            lastStr = null;
-                            return;
-                        }
-                        lastStr = source;
-                        handler.post(new Runnable() {
-                            @Override
-                            public void run() {
-                                lastSelectionEnd = contentEditText.getSelectionEnd();
-                                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
-                                    contentEditText.setText(Html.fromHtml(html, Html.FROM_HTML_MODE_COMPACT));
-                                }else {
-                                    contentEditText.setText(source);
-                                }
-                                contentEditText.setSelection(lastSelectionEnd);
-                            }
-                        });
-
-                    }
-                });
-            }
-
-            private String highlightTimeExpression(String source) {
-                String timeExpression = StringUtils.trim(TimeNLPUtil.getOriginTimeExpression(StringUtils.trim(source)));
-                if (StringUtils.isNotBlank(timeExpression)) {
-                    timeExpressionStartIndex = source.indexOf(timeExpression);
-                    timeExpressionEndIndex = timeExpressionStartIndex + timeExpression.length();
-                    return source.replace(timeExpression, "<span style='" +
-                            "background:lightgray;'>" +
-                            timeExpression + "</span>");
-                }
-                return null;
-            }
-
-            @Override
-            public void afterTextChanged(Editable s) {
-
-            }
-        });
-
-        flowLayout.setOnTagClickListener(new TagFlowLayout.OnTagClickListener() {
-            @Override
-            public boolean onTagClick(View view, int position, FlowLayout parent) {
-                if (view instanceof TagView) {
-                    TagView tagView = (TagView) view;
-                    View childView = tagView.getTagView();
-                    if (childView instanceof TextView) {
-                        TextView textView = (TextView) childView;
-                        CharSequence text = textView.getText();
-                        appendToEditText(contentEditText, text);
-                    }
-                }
-                return true;
-            }
-
-            private void appendToEditText(EditText editText, CharSequence source) {
-                int start = editText.getSelectionStart();
-                int end = editText.getSelectionEnd();
-                Editable edit = editText.getEditableText();//获取EditText的文字
-                if (start < 0 || start >= edit.length()) {
-                    edit.append(source);
-                } else {
-                    edit.replace(start, end, source);//光标所在位置插入文字
-                }
-            }
-        });
+        flowLayout.setOnTagClickListener(new OnTagClick2AppendListener(contentEditText));
     }
 
     @SuppressWarnings("unchecked")
-    private void predictTags(String source) {
+    private void predictTagsAsync(String source) {
         MyApplication.getInstance().getTagPredictor().predict(StringUtils.trim(source), new AbstractTagCallback() {
 
             @Override

@@ -32,14 +32,15 @@ import com.beyond.note5.event.HideKeyBoardEvent;
 import com.beyond.note5.event.ShowKeyBoardEvent;
 import com.beyond.note5.predict.AbstractTagCallback;
 import com.beyond.note5.predict.bean.Tag;
+import com.beyond.note5.utils.HighlightUtil;
 import com.beyond.note5.utils.IDUtil;
 import com.beyond.note5.utils.InputMethodUtil;
 import com.beyond.note5.utils.TimeNLPUtil;
 import com.beyond.note5.view.custom.DialogButton;
+import com.beyond.note5.view.listener.OnTagClick2AppendListener;
 import com.zhy.view.flowlayout.FlowLayout;
 import com.zhy.view.flowlayout.TagAdapter;
 import com.zhy.view.flowlayout.TagFlowLayout;
-import com.zhy.view.flowlayout.TagView;
 import org.apache.commons.lang3.StringUtils;
 import org.greenrobot.eventbus.EventBus;
 import org.greenrobot.eventbus.Subscribe;
@@ -193,7 +194,7 @@ public class TodoEditFragment extends DialogFragment {
             public void onTextChanged(final CharSequence s, int start, int before, int count) {
                 String source = s.toString();
                 createdDocument.setContent(source);
-                predictTags(s);
+                predictTagsAsync(s);
 
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
                     if (StringUtils.equals(lastStr, source)) {
@@ -201,7 +202,7 @@ public class TodoEditFragment extends DialogFragment {
                         contentEditText.setSelection(lastSelectionEnd);
                         return;
                     }
-                    String html = highlightTimeExpression(source);
+                    String html = HighlightUtil.highlightTimeExpression(source);
                     if (start < timeExpressionStartIndex
                             || start > timeExpressionEndIndex) {
                         lastStr = null;
@@ -226,56 +227,19 @@ public class TodoEditFragment extends DialogFragment {
 
             }
 
-            private String highlightTimeExpression(String source) {
-                String timeExpression = StringUtils.trim(TimeNLPUtil.getOriginTimeExpression(StringUtils.trim(source)));
-                if (StringUtils.isNotBlank(timeExpression)) {
-                    timeExpressionStartIndex = source.indexOf(timeExpression);
-                    timeExpressionEndIndex = timeExpressionStartIndex + timeExpression.length();
-                    return source.replace(timeExpression, "<span style='" +
-                            "background:lightgray;'>" +
-                            timeExpression + "</span>");
-                }
-                return null;
-            }
         });
         contentEditText.setOnFocusChangeListener(new View.OnFocusChangeListener() {
             @Override
             public void onFocusChange(View v, boolean hasFocus) {
-                predictTags(contentEditText.getText());
+                predictTagsAsync(contentEditText.getText());
             }
         });
-        flowLayout.setOnTagClickListener(new TagFlowLayout.OnTagClickListener() {
-            @Override
-            public boolean onTagClick(View view, int position, FlowLayout parent) {
-                if (view instanceof TagView){
-                    TagView tagView = (TagView) view;
-                    View childView = tagView.getTagView();
-                    if (childView instanceof TextView) {
-                        TextView textView = (TextView) childView;
-                        CharSequence text = textView.getText();
-                        appendToEditText(contentEditText, text);
-                    }
-                }
-
-                return true;
-            }
-
-            private void appendToEditText(EditText editText, CharSequence source) {
-                int start = editText.getSelectionStart();
-                int end = editText.getSelectionEnd();
-                Editable edit = editText.getEditableText();//获取EditText的文字
-                if (start < 0 || start >= edit.length()) {
-                    edit.append(source);
-                } else {
-                    edit.replace(start, end, source);//光标所在位置插入文字
-                }
-            }
-        });
+        flowLayout.setOnTagClickListener(new OnTagClick2AppendListener(contentEditText));
 
     }
 
     @SuppressWarnings({"unchecked"})
-    private void predictTags(CharSequence s) {
+    private void predictTagsAsync(CharSequence s) {
         MyApplication.getInstance().getTagPredictor().predict(StringUtils.trim(s.toString()), new AbstractTagCallback() {
 
             @Override
