@@ -3,8 +3,10 @@ package com.beyond.note5.view.adapter.component;
 import android.content.Context;
 import android.graphics.Paint;
 import android.graphics.drawable.GradientDrawable;
+import android.os.Build;
 import android.support.v4.content.ContextCompat;
 import android.support.v7.widget.StaggeredGridLayoutManager;
+import android.text.Html;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -16,6 +18,7 @@ import com.beyond.note5.constant.DocumentConst;
 import com.beyond.note5.event.*;
 import com.beyond.note5.view.adapter.component.header.Header;
 import com.beyond.note5.view.adapter.component.header.ItemDataGenerator;
+import com.beyond.note5.view.adapter.component.header.TodoHeader;
 import com.beyond.note5.view.adapter.component.viewholder.TodoViewHolder;
 import org.apache.commons.lang3.time.DateFormatUtils;
 import org.apache.commons.lang3.time.DateUtils;
@@ -45,16 +48,7 @@ public class TodoRecyclerViewAdapter extends DocumentRecyclerViewAdapter<Todo, T
         viewHolder.checkbox.setChecked(false);
         viewHolder.title.setVisibility(View.VISIBLE);
         viewHolder.title.setTextColor(ContextCompat.getColor(context,R.color.dark_yellow));
-        try {
-            if (DateUtils.truncatedEquals(new Date(), DateUtils.parseDate(header.getContent(), "yyyy-MM-dd"),
-                    Calendar.DATE)){
-                viewHolder.title.setText(String.format("%s %s", header.getContent(),"<- Now"));
-            }else {
-                viewHolder.title.setText(header.getContent());
-            }
-        } catch (ParseException e) {
-            e.printStackTrace();
-        }
+        processHeaderText(header, viewHolder);
         viewHolder.content.setVisibility(View.GONE);
         viewHolder.content.setPaintFlags(viewHolder.title.getPaintFlags() & (~Paint.STRIKE_THRU_TEXT_FLAG));
         viewHolder.container.setOnClickListener(null);
@@ -63,6 +57,37 @@ public class TodoRecyclerViewAdapter extends DocumentRecyclerViewAdapter<Todo, T
         viewHolder.timeContainer.setVisibility(View.GONE);
         StaggeredGridLayoutManager.LayoutParams layoutParams = (StaggeredGridLayoutManager.LayoutParams) viewHolder.itemView.getLayoutParams();
         layoutParams.setFullSpan(true);
+    }
+
+    private void processHeaderText(Header header, TodoViewHolder viewHolder) {
+        try {
+            if (DateUtils.truncatedEquals(new Date(), DateUtils.parseDate(header.getContent(), "yyyy-MM-dd"),
+                    Calendar.DATE)){
+                if (header instanceof TodoHeader){
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+                        String color = "#EB4537";
+                        long doneTodoCount = ((TodoHeader) header).getDoneTodoCount();
+                        long totalTodoCount = ((TodoHeader) header).getTotalTodoCount();
+                        if (doneTodoCount/totalTodoCount<0.3 && doneTodoCount<5){
+                            color = "#55AF7B";
+                        }
+                        String html = String.format("<span>%s</span>&nbsp;<span>%s</span>" +
+                                        "<span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>" +
+                                        "<span style='color:"+color+";'>[%s/%s]</span>",
+                                header.getContent(),
+                                " &lt;- Now",
+                                doneTodoCount,
+                                totalTodoCount
+                        );
+                        viewHolder.title.setText(Html.fromHtml(html,Html.FROM_HTML_MODE_COMPACT));
+                    }
+                }
+            }else {
+                viewHolder.title.setText(header.getContent());
+            }
+        } catch (ParseException e) {
+            e.printStackTrace();
+        }
     }
 
     @Override
