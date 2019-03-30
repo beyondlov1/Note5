@@ -15,9 +15,16 @@ import android.support.v4.app.DialogFragment;
 import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AlertDialog;
 import android.util.DisplayMetrics;
-import android.view.*;
+import android.view.Gravity;
+import android.view.LayoutInflater;
+import android.view.View;
+import android.view.ViewGroup;
+import android.view.ViewStub;
+import android.view.Window;
+import android.view.WindowManager;
 import android.widget.EditText;
 import android.widget.TextView;
+
 import com.beyond.note5.MyApplication;
 import com.beyond.note5.R;
 import com.beyond.note5.bean.Reminder;
@@ -26,11 +33,16 @@ import com.beyond.note5.constant.DocumentConst;
 import com.beyond.note5.event.AddTodoEvent;
 import com.beyond.note5.event.HideKeyBoardEvent;
 import com.beyond.note5.event.ShowKeyBoardEvent;
-import com.beyond.note5.predict.AbstractTagCallback;
+import com.beyond.note5.module.DaggerPredictComponent;
+import com.beyond.note5.module.PredictComponent;
+import com.beyond.note5.module.PredictModule;
 import com.beyond.note5.predict.bean.Tag;
+import com.beyond.note5.presenter.PredictPresenter;
 import com.beyond.note5.utils.IDUtil;
 import com.beyond.note5.utils.InputMethodUtil;
 import com.beyond.note5.utils.TimeNLPUtil;
+import com.beyond.note5.utils.ToastUtil;
+import com.beyond.note5.view.PredictView;
 import com.beyond.note5.view.custom.DialogButton;
 import com.beyond.note5.view.custom.SelectionListenableEditText;
 import com.beyond.note5.view.listener.OnTagClick2AppendListener;
@@ -38,12 +50,20 @@ import com.beyond.note5.view.listener.TimeExpressionDetectiveTextWatcher;
 import com.zhy.view.flowlayout.FlowLayout;
 import com.zhy.view.flowlayout.TagAdapter;
 import com.zhy.view.flowlayout.TagFlowLayout;
+
 import org.apache.commons.lang3.StringUtils;
 import org.greenrobot.eventbus.EventBus;
 import org.greenrobot.eventbus.Subscribe;
 import org.greenrobot.eventbus.ThreadMode;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.Date;
+import java.util.List;
+import java.util.Objects;
+
+import javax.inject.Inject;
 
 /**
  * @author: beyond
@@ -51,7 +71,7 @@ import java.util.*;
  */
 
 @SuppressWarnings({"Duplicates", "WeakerAccess"})
-public class TodoEditFragment extends DialogFragment {
+public class TodoEditFragment extends DialogFragment implements PredictView {
 
     private static int dialogHeightWithSoftInputMethod;
     private static final String DIALOG_HEIGHT_WITH_SOFT_INPUT_METHOD = "dialogHeightWithSoftInputMethod";
@@ -67,6 +87,9 @@ public class TodoEditFragment extends DialogFragment {
 
     protected Todo createdDocument = new Todo();
 
+    @Inject
+    PredictPresenter predictPresenter;
+
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -76,6 +99,12 @@ public class TodoEditFragment extends DialogFragment {
                     getActivity().getSharedPreferences(MyApplication.SHARED_PREFERENCES_NAME, Context.MODE_PRIVATE)
                             .getInt(DIALOG_HEIGHT_WITH_SOFT_INPUT_METHOD, 0);
         }
+        initInjection();
+    }
+
+    private void initInjection() {
+        PredictComponent predictComponent = DaggerPredictComponent.builder().predictModule(new PredictModule(this)).build();
+        predictComponent.inject(this);
     }
 
     @SuppressLint("InflateParams")
@@ -182,7 +211,7 @@ public class TodoEditFragment extends DialogFragment {
                 @Override
                 public void onChanged(String content, int selStart, int selEnd) {
                     if (content.length() >= selStart) {
-                        predictTagsAsync(content.substring(0, selStart));
+                        predictPresenter.predict(content.substring(0, selStart));
                     }
                 }
             });
@@ -191,43 +220,11 @@ public class TodoEditFragment extends DialogFragment {
         contentEditText.setOnFocusChangeListener(new View.OnFocusChangeListener() {
             @Override
             public void onFocusChange(View v, boolean hasFocus) {
-                predictTagsAsync(contentEditText.getText());
+                predictPresenter.predict(contentEditText.getText().toString());
             }
         });
         flowLayout.setOnTagClickListener(new OnTagClick2AppendListener(contentEditText));
 
-    }
-
-    @SuppressWarnings({"unchecked"})
-    private void predictTagsAsync(CharSequence s) {
-        MyApplication.getInstance().getTagPredictor().predict(StringUtils.trim(s.toString()), new AbstractTagCallback() {
-
-            @Override
-            protected void handleResult(final List<Tag> tags) {
-                handler.post(new Runnable() {
-                    @SuppressWarnings("Duplicates")
-                    @Override
-                    public void run() {
-                        List<Tag> finalTags = tags;
-                        tagData.clear();
-                        Collections.sort(finalTags, new Comparator<Tag>() {
-                            @Override
-                            public int compare(Tag o1, Tag o2) {
-                                return -o1.getScore() + o2.getScore();
-                            }
-                        });
-                        if (finalTags.size() >= 5) {
-                            finalTags = finalTags.subList(0, 5);
-                        }
-                        for (Tag tag : finalTags) {
-                            tagData.add(tag.getContent());
-                        }
-                        tagAdapter.notifyDataChanged();
-                    }
-                });
-            }
-
-        });
     }
 
     @Override
@@ -299,4 +296,43 @@ public class TodoEditFragment extends DialogFragment {
         dismiss();
     }
 
+    @Override
+    public void onPredictSuccess(final List<Tag> data) {
+        handler.post(new Runnable() {
+            @SuppressWarnings("Duplicates")
+            @Override
+            public void run() {
+                List<Tag> finalTags = data;
+                tagData.clear();
+                Collections.sort(finalTags, new Comparator<Tag>() {
+                    @Override
+                    public int compare(Tag o1, Tag o2) {
+                        return -o1.getScore() + o2.getScore();
+                    }
+                });
+                if (finalTags.size() >= 5) {
+                    finalTags = finalTags.subList(0, 5);
+                }
+                for (Tag tag : finalTags) {
+                    tagData.add(tag.getContent());
+                }
+                tagAdapter.notifyDataChanged();
+            }
+        });
+    }
+
+    @Override
+    public void onPredictFail() {
+        ToastUtil.toast(this.getContext(), "预测失败");
+    }
+
+    @Override
+    public void onTrainSuccess() {
+        //do nothing
+    }
+
+    @Override
+    public void onTrainFail() {
+        ToastUtil.toast(this.getContext(), "网络状况不佳");
+    }
 }

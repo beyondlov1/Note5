@@ -6,30 +6,48 @@ import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.StaggeredGridLayoutManager;
-import android.view.*;
+import android.util.Log;
+import android.view.GestureDetector;
+import android.view.LayoutInflater;
+import android.view.MotionEvent;
+import android.view.View;
+import android.view.ViewGroup;
+
 import com.beyond.note5.MyApplication;
 import com.beyond.note5.R;
 import com.beyond.note5.bean.Todo;
-import com.beyond.note5.event.*;
+import com.beyond.note5.event.AddTodoEvent;
+import com.beyond.note5.event.CompleteTodoEvent;
+import com.beyond.note5.event.DeleteReminderEvent;
+import com.beyond.note5.event.DeleteTodoEvent;
+import com.beyond.note5.event.HideFABEvent;
+import com.beyond.note5.event.InCompleteTodoEvent;
+import com.beyond.note5.event.RefreshTodoListEvent;
+import com.beyond.note5.event.ShowFABEvent;
+import com.beyond.note5.event.UpdateTodoEvent;
 import com.beyond.note5.module.DaggerTodoComponent;
+import com.beyond.note5.module.PredictModule;
 import com.beyond.note5.module.TodoComponent;
 import com.beyond.note5.module.TodoModule;
 import com.beyond.note5.presenter.CalendarPresenter;
+import com.beyond.note5.presenter.PredictPresenter;
 import com.beyond.note5.presenter.TodoPresenter;
 import com.beyond.note5.utils.TimeNLPUtil;
 import com.beyond.note5.view.adapter.AbstractFragmentTodoView;
 import com.beyond.note5.view.adapter.component.TodoRecyclerViewAdapter;
 import com.beyond.note5.view.adapter.component.header.Header;
 import com.beyond.note5.view.adapter.component.header.ReminderTimeItemDataGenerator;
+
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.time.DateFormatUtils;
 import org.greenrobot.eventbus.EventBus;
 import org.greenrobot.eventbus.Subscribe;
 import org.greenrobot.eventbus.ThreadMode;
 
-import javax.inject.Inject;
 import java.util.Iterator;
 import java.util.List;
+
+import javax.inject.Inject;
 
 import static com.beyond.note5.model.TodoModelImpl.IS_SHOW_READ_FLAG_DONE;
 
@@ -44,6 +62,8 @@ public class TodoListFragment extends AbstractFragmentTodoView {
     TodoPresenter todoPresenter;
     @Inject
     CalendarPresenter calendarPresenter;
+    @Inject
+    PredictPresenter predictPresenter;
 
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
@@ -53,7 +73,10 @@ public class TodoListFragment extends AbstractFragmentTodoView {
     }
 
     private void initInjection() {
-        TodoComponent todoComponent = DaggerTodoComponent.builder().todoModule(new TodoModule(getActivity(),this,this)).build();
+        TodoComponent todoComponent = DaggerTodoComponent.builder()
+                .todoModule(new TodoModule(getActivity(),this,this))
+                .predictModule(new PredictModule(this))
+                .build();
         todoComponent.inject(this);
     }
 
@@ -172,6 +195,7 @@ public class TodoListFragment extends AbstractFragmentTodoView {
         if (todo.getReminder()!=null) {
             calendarPresenter.add(todo);
         }
+        predictPresenter.train(todo.getContent());
     }
 
     @Subscribe(threadMode = ThreadMode.MAIN)
@@ -260,8 +284,17 @@ public class TodoListFragment extends AbstractFragmentTodoView {
                 data.add(insertIndex, todo);
                 recyclerViewAdapter.notifyInserted(todo);
                 msg("更新成功");
+                //训练
+                if (isNeedTrain(oldT,todo)){
+                    predictPresenter.train(todo.getContent());
+                    Log.d("todoListFragment","predictPresenter"+predictPresenter);
+                }
                 break;
             }
         }
+    }
+
+    private boolean isNeedTrain(Todo oldTodo, Todo newTodo){
+        return !StringUtils.equals(StringUtils.trim(oldTodo.getContent()), StringUtils.trim(newTodo.getContent()));
     }
 }

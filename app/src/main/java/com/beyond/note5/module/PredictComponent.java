@@ -1,17 +1,19 @@
 package com.beyond.note5.module;
 
 import com.beyond.note5.view.fragment.TodoEditFragment;
-import com.beyond.note5.view.fragment.TodoListFragment;
 import com.beyond.note5.view.fragment.TodoModifySuperFragment;
 
 import javax.inject.Singleton;
 
 import dagger.Component;
 
+/**
+ * @author beyondlov1
+ * @date 2019/03/30
+ */
 @Singleton
-@Component(modules = {TodoModule.class,PredictModule.class})
-public interface TodoComponent {
-    void inject(TodoListFragment todoListFragment); // 一个目标只能拿一个Component注入
+@Component(modules = {PredictModule.class})
+public interface PredictComponent {
     void inject(TodoModifySuperFragment todoModifySuperFragment);
     void inject(TodoEditFragment todoEditFragment);
 }

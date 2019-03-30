@@ -2,20 +2,33 @@ package com.beyond.note5.predict;
 
 import android.support.annotation.NonNull;
 import android.util.Log;
+
 import com.alibaba.fastjson.JSON;
-import com.beyond.note5.predict.bean.*;
+import com.beyond.note5.predict.bean.MergedTag;
+import com.beyond.note5.predict.bean.MergedTimeTag;
+import com.beyond.note5.predict.bean.Tag;
+import com.beyond.note5.predict.bean.TagEdge;
+import com.beyond.note5.predict.bean.TagGraph;
+import com.beyond.note5.predict.bean.TimeTag;
 import com.beyond.note5.predict.params.SegResponse;
 import com.beyond.note5.predict.utils.TagUtils;
 import com.beyond.note5.utils.TimeNLPUtil;
 import com.time.nlp.TimeUnit;
-import okhttp3.Callback;
-import okhttp3.*;
+
 import org.apache.commons.lang3.StringUtils;
 
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+
+import okhttp3.Call;
+import okhttp3.Callback;
+import okhttp3.FormBody;
+import okhttp3.OkHttpClient;
+import okhttp3.Request;
+import okhttp3.RequestBody;
+import okhttp3.Response;
 
 /**
  * @author beyondlov1
@@ -68,6 +81,32 @@ public class TagTrainer {
             }
         });
     }
+
+    public void trainSync(final String content) throws Exception {
+        final TagGraph tagGraph = getTagGraph();
+
+        String url = "http://www.sogou.com/labs/webservice/sogou_word_seg.php?q=" + content;
+
+        RequestBody requestBody = new FormBody.Builder().add("q", content).add("fmt", "js").build();
+        final Request request = new Request.Builder()
+                .url(url)
+                .post(requestBody)
+                .addHeader("Content-Type", "application/x-www-form-urlencoded; charset=UTF-8")
+                .build();
+        Call call = okHttpClient.newCall(request);
+        Response response = call.execute();
+        List<String> list = getTrainSource(response);
+        if (list == null) {
+            throw new RuntimeException("分词无返回信息");
+        }
+        processMergedWordScore(content, list);
+        injector.inject(list);
+        mergeSingleTags(tagGraph.getTags());
+        replaceToTimeTags(tagGraph.getTags());
+        Log.d("afterTrain", tagGraph.toString());
+        serializer.serialize();
+    }
+
 
     /**
      * 将含有时间的字符串的tag转为TimeTag模式
@@ -149,7 +188,7 @@ public class TagTrainer {
      * @param source 语句
      * @param tag    目标tag
      * @param list   语句的分词列表
-     * @return
+     * @return prevTag
      */
     private Tag getPrevTag(String source, Tag tag, List<String> list) {
         int index = source.indexOf(tag.getContent());
@@ -166,13 +205,13 @@ public class TagTrainer {
     /**
      * 从接口返回值中提取分词内容
      *
-     * @param response
-     * @return
-     * @throws IOException
+     * @param response 响应
+     * @return 分词内容
+     * @throws IOException IO
      */
     private List<String> getTrainSource(Response response) throws IOException {
         if (response.body() == null) return null;
-        List<String> list = new ArrayList<String>();
+        List<String> list = new ArrayList<>();
         SegResponse segResponse = JSON.parseObject(TagUtils.unicodeToString(response.body().string()), SegResponse.class);
         String[][] result = segResponse.getResult();
         for (String[] strings : result) {
@@ -223,7 +262,7 @@ public class TagTrainer {
 
     @NonNull
     private List<Tag> getSingleTags(List<Tag> roots) {
-        List<Tag> singleTags = new ArrayList<Tag>();
+        List<Tag> singleTags = new ArrayList<>();
         for (Tag next : roots) {
             if (next.getEdges().size() == 1) {
                 singleTags.add(next);
@@ -254,6 +293,7 @@ public class TagTrainer {
         return serializer;
     }
 
+    @SuppressWarnings("WeakerAccess")
     public TagGraph getTagGraph() {
         return serializer.generate();
     }

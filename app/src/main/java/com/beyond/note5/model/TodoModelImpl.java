@@ -1,13 +1,13 @@
 package com.beyond.note5.model;
 
 import android.content.Context;
+
 import com.beyond.note5.MyApplication;
 import com.beyond.note5.bean.Reminder;
 import com.beyond.note5.bean.Todo;
 import com.beyond.note5.model.dao.DaoSession;
 import com.beyond.note5.model.dao.ReminderDao;
 import com.beyond.note5.model.dao.TodoDao;
-import org.apache.commons.lang3.StringUtils;
 
 import java.util.List;
 
@@ -30,9 +30,6 @@ public class TodoModelImpl implements TodoModel {
         if (todo.getReminder() != null) {
             reminderDao.insert(todo.getReminder());
         }
-
-        //train
-        MyApplication.getInstance().getTagPredictor().getTagTrainer().train(todo.getContent());
     }
 
     @Override
@@ -54,12 +51,6 @@ public class TodoModelImpl implements TodoModel {
             }
         }
 
-        if (StringUtils.equals(StringUtils.trim(oldTodo.getContent()),
-                StringUtils.trim(todo.getContent()))){
-            return;
-        }
-        //train
-        MyApplication.getInstance().getTagPredictor().getTagTrainer().train(todo.getContent());
     }
 
     @Override

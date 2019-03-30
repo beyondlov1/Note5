@@ -1,13 +1,15 @@
 package com.beyond.note5.view.adapter;
 
 import com.beyond.note5.bean.Todo;
+import com.beyond.note5.predict.bean.Tag;
 import com.beyond.note5.view.CalendarView;
+import com.beyond.note5.view.PredictView;
 import com.beyond.note5.view.TodoView;
 import com.beyond.note5.view.fragment.AbstractDocumentFragment;
 
 import java.util.List;
 
-public class AbstractFragmentTodoView extends AbstractDocumentFragment<Todo> implements TodoView,CalendarView {
+public class AbstractFragmentTodoView extends AbstractDocumentFragment<Todo> implements TodoView,CalendarView,PredictView {
 
     @Override
     public void onEventAddSuccess(Todo todo) {
@@ -77,5 +79,25 @@ public class AbstractFragmentTodoView extends AbstractDocumentFragment<Todo> imp
     @Override
     public void onDeleteReminderFail(Todo todo) {
         msg("删除提醒失败");
+    }
+
+    @Override
+    public void onPredictSuccess(List<Tag> data) {
+        msg("预测成功");
+    }
+
+    @Override
+    public void onPredictFail() {
+        msg("预测失败");
+    }
+
+    @Override
+    public void onTrainSuccess() {
+        msg("训练成功");
+    }
+
+    @Override
+    public void onTrainFail() {
+        msg("训练失败");
     }
 }

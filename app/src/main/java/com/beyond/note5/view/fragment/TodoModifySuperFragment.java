@@ -2,37 +2,62 @@ package com.beyond.note5.view.fragment;
 
 import android.content.Intent;
 import android.net.Uri;
+import android.os.Bundle;
 import android.os.Handler;
 import android.support.v4.content.ContextCompat;
+import android.util.Log;
 import android.view.View;
 import android.view.ViewStub;
 import android.widget.ImageButton;
 import android.widget.TextView;
 import android.widget.Toast;
+
 import com.beyond.note5.MyApplication;
 import com.beyond.note5.R;
 import com.beyond.note5.bean.Note;
 import com.beyond.note5.bean.Reminder;
 import com.beyond.note5.bean.Todo;
-import com.beyond.note5.event.*;
-import com.beyond.note5.predict.AbstractTagCallback;
+import com.beyond.note5.event.AddNoteEvent;
+import com.beyond.note5.event.DeleteReminderEvent;
+import com.beyond.note5.event.DeleteTodoEvent;
+import com.beyond.note5.event.FillTodoModifyEvent;
+import com.beyond.note5.event.HideTodoEditEvent;
+import com.beyond.note5.event.UpdateTodoEvent;
+import com.beyond.note5.module.DaggerPredictComponent;
+import com.beyond.note5.module.PredictComponent;
+import com.beyond.note5.module.PredictModule;
 import com.beyond.note5.predict.bean.Tag;
-import com.beyond.note5.utils.*;
+import com.beyond.note5.presenter.PredictPresenter;
+import com.beyond.note5.utils.HighlightUtil;
+import com.beyond.note5.utils.HtmlUtil;
+import com.beyond.note5.utils.IDUtil;
+import com.beyond.note5.utils.InputMethodUtil;
+import com.beyond.note5.utils.TimeNLPUtil;
+import com.beyond.note5.utils.ToastUtil;
+import com.beyond.note5.utils.WebViewUtil;
+import com.beyond.note5.view.PredictView;
 import com.beyond.note5.view.custom.SelectionListenableEditText;
 import com.beyond.note5.view.listener.OnTagClick2AppendListener;
 import com.beyond.note5.view.listener.TimeExpressionDetectiveTextWatcher;
 import com.zhy.view.flowlayout.FlowLayout;
 import com.zhy.view.flowlayout.TagAdapter;
 import com.zhy.view.flowlayout.TagFlowLayout;
+
 import org.apache.commons.lang3.ObjectUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.greenrobot.eventbus.EventBus;
 import org.greenrobot.eventbus.Subscribe;
 import org.greenrobot.eventbus.ThreadMode;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.Date;
+import java.util.List;
 
-public class TodoModifySuperFragment extends TodoEditSuperFragment {
+import javax.inject.Inject;
+
+public class TodoModifySuperFragment extends TodoEditSuperFragment implements PredictView {
 
     private ImageButton clearButton;
     private ImageButton convertButton;
@@ -44,6 +69,20 @@ public class TodoModifySuperFragment extends TodoEditSuperFragment {
     private List<String> tagData = new ArrayList<>();
 
     private Handler handler = new Handler();
+
+    @Inject
+    PredictPresenter predictPresenter;
+
+    @Override
+    public void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        initInjection();
+    }
+
+    private void initInjection() {
+        PredictComponent predictComponent = DaggerPredictComponent.builder().predictModule(new PredictModule(this)).build();
+        predictComponent.inject(this);
+    }
 
     //回显
     @Subscribe(threadMode = ThreadMode.MAIN, sticky = true)
@@ -191,7 +230,8 @@ public class TodoModifySuperFragment extends TodoEditSuperFragment {
                 @Override
                 public void onChanged(String content, int selStart, int selEnd) {
                     if (content.length() >= selStart) {
-                        predictTagsAsync(content.substring(0, selStart));
+                        predictPresenter.predict(content.substring(0, selStart));
+                        Log.d("todoModifySuperFragment","predictPresenter"+predictPresenter);
                     }
                 }
             });
@@ -207,35 +247,44 @@ public class TodoModifySuperFragment extends TodoEditSuperFragment {
         flowLayout.setOnTagClickListener(new OnTagClick2AppendListener(contentEditText));
     }
 
-    @SuppressWarnings("unchecked")
-    private void predictTagsAsync(String source) {
-        MyApplication.getInstance().getTagPredictor().predict(StringUtils.trim(source), new AbstractTagCallback() {
 
+    @Override
+    public void onPredictSuccess(final List<Tag> data) {
+        handler.post(new Runnable() {
+            @SuppressWarnings("Duplicates")
             @Override
-            protected void handleResult(final List<Tag> tags) {
-                handler.post(new Runnable() {
-                    @SuppressWarnings("Duplicates")
+            public void run() {
+                List<Tag> finalTags = data;
+                tagData.clear();
+                Collections.sort(finalTags, new Comparator<Tag>() {
                     @Override
-                    public void run() {
-                        List<Tag> finalTags = tags;
-                        tagData.clear();
-                        Collections.sort(finalTags, new Comparator<Tag>() {
-                            @Override
-                            public int compare(Tag o1, Tag o2) {
-                                return -o1.getScore() + o2.getScore();
-                            }
-                        });
-                        if (finalTags.size() >= 5) {
-                            finalTags = finalTags.subList(0, 5);
-                        }
-                        for (Tag tag : finalTags) {
-                            tagData.add(tag.getContent());
-                        }
-                        tagAdapter.notifyDataChanged();
+                    public int compare(Tag o1, Tag o2) {
+                        return -o1.getScore() + o2.getScore();
                     }
                 });
+                if (finalTags.size() >= 5) {
+                    finalTags = finalTags.subList(0, 5);
+                }
+                for (Tag tag : finalTags) {
+                    tagData.add(tag.getContent());
+                }
+                tagAdapter.notifyDataChanged();
             }
-
         });
+    }
+
+    @Override
+    public void onPredictFail() {
+        ToastUtil.toast(this.getContext(), "预测失败");
+    }
+
+    @Override
+    public void onTrainSuccess() {
+        //do nothing
+    }
+
+    @Override
+    public void onTrainFail() {
+        ToastUtil.toast(this.getContext(), "网络状况不佳");
     }
 }

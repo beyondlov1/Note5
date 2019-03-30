@@ -10,7 +10,13 @@ import android.view.ViewGroup;
 
 import com.beyond.note5.R;
 import com.beyond.note5.bean.Note;
-import com.beyond.note5.event.*;
+import com.beyond.note5.event.AddNoteEvent;
+import com.beyond.note5.event.DeleteDeepNoteEvent;
+import com.beyond.note5.event.DeleteNoteEvent;
+import com.beyond.note5.event.HideFABEvent;
+import com.beyond.note5.event.RefreshNoteListEvent;
+import com.beyond.note5.event.ShowFABEvent;
+import com.beyond.note5.event.UpdateNoteEvent;
 import com.beyond.note5.module.DaggerNoteComponent;
 import com.beyond.note5.module.NoteComponent;
 import com.beyond.note5.module.NoteModule;

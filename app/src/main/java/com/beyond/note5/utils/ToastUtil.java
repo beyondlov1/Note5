@@ -15,6 +15,9 @@ public class ToastUtil {
             toast.show();
         }
     }
+    public static void toast(Context context,String msg){
+        toast(context, msg, Toast.LENGTH_SHORT);
+    }
 
     public static void cancel(){
         if (toast!=null){

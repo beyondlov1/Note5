@@ -3,11 +3,15 @@ package com.beyond.note5;
 import android.app.Application;
 import android.database.sqlite.SQLiteDatabase;
 import android.os.Environment;
+
+import com.beyond.note5.model.PredictModel;
+import com.beyond.note5.model.PredictModelImpl;
 import com.beyond.note5.model.dao.DaoMaster;
 import com.beyond.note5.model.dao.DaoSession;
 import com.beyond.note5.model.dao.TodoDao;
 import com.beyond.note5.predict.TagPredictor;
 import com.beyond.note5.predict.TagPredictorImpl;
+import com.beyond.note5.predict.bean.TagGraph;
 
 import java.io.File;
 import java.util.concurrent.ExecutorService;
@@ -54,10 +58,7 @@ public class MyApplication extends Application {
     }
 
     private void initTagPredict() {
-        File storageDir = this.getExternalFilesDir(Environment.DIRECTORY_DOCUMENTS);
-        assert storageDir != null;
-        tagPredictor = new TagPredictorImpl(new File(storageDir.getAbsolutePath()+File.separator+"model.json"));
-        tagPredictor.setExecutorService(this.getExecutorService());
+
     }
 
     private ExecutorService executorService = Executors.newCachedThreadPool();
@@ -68,16 +69,22 @@ public class MyApplication extends Application {
         return executorService;
     }
 
-    private TagPredictor tagPredictor;
-
-    public TagPredictor getTagPredictor() {
-        return tagPredictor;
-    }
-
     private DaoSession daoSession;
 
     public DaoSession getDaoSession() {
         return daoSession;
     }
 
+    private PredictModel predictModel;
+
+    public PredictModel getPredictModel() {
+        if (predictModel == null){
+            File storageDir = this.getExternalFilesDir(Environment.DIRECTORY_DOCUMENTS);
+            assert storageDir != null;
+            TagPredictor<String,TagGraph> tagPredictor = new TagPredictorImpl(new File(storageDir.getAbsolutePath()+File.separator+"model.json"));
+            tagPredictor.setExecutorService(this.getExecutorService());
+            predictModel = new PredictModelImpl(tagPredictor);
+        }
+        return predictModel;
+    }
 }

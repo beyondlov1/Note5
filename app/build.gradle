@@ -6,6 +6,7 @@ android {
     defaultConfig {
         applicationId "com.beyond.note5"
         minSdkVersion 22
+        //noinspection OldTargetApi
         targetSdkVersion 26
         versionCode 1
         versionName "1.0"
@@ -46,6 +47,9 @@ greendao {
 }
 
 dependencies {
+    configurations.all {
+        resolutionStrategy.force 'com.android.support:support-annotations:26.1.0'
+    }
     implementation fileTree(include: ['*.jar'], dir: 'libs')
     implementation 'com.android.support:appcompat-v7:26.1.0'
     implementation 'com.android.support:design:26.1.0'
@@ -59,10 +63,9 @@ dependencies {
     implementation 'net.zetetic:android-database-sqlcipher:3.5.7@aar'
     //common
     implementation 'org.apache.commons:commons-lang3:3.8.1'
-    implementation 'org.apache.commons:commons-collections4:4.1'
+    implementation 'org.apache.commons:commons-collections4:4.3'
     implementation 'commons-io:commons-io:2.6'
     implementation 'commons-beanutils:commons-beanutils:1.9.3'
-
     //dagger2
     implementation 'com.google.dagger:dagger:2.15'
     annotationProcessor 'com.google.dagger:dagger-compiler:2.15'
@@ -85,12 +88,11 @@ dependencies {
     //    implementation 'com.github.AndroidDeveloperLB:AutoFitTextView:4'
     //NLP
     implementation files('libs/Time-NLP.jar')
-
     //flowLayout tag
     implementation 'com.hyman:flowlayout-lib:1.1.2'
-
     //fastjson
     implementation 'com.alibaba:fastjson:1.2.56'
-
+    //inject
+    implementation 'javax.inject:javax.inject:1'
 }
 
