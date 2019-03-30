@@ -4,10 +4,10 @@ import com.beyond.note5.MyApplication;
 import com.beyond.note5.bean.Todo;
 import com.beyond.note5.model.dao.DaoSession;
 import com.beyond.note5.model.dao.TodoDao;
+import com.beyond.note5.utils.DateUtil;
 import org.apache.commons.lang3.time.DateFormatUtils;
 import org.apache.commons.lang3.time.DateUtils;
 
-import java.text.ParseException;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
@@ -16,7 +16,7 @@ import java.util.List;
  * @author beyondlov1
  * @date 2019/03/10
  */
-public class ReminderTimeItemDataGenerator extends AbstractItemDataGenerator<Todo> {
+public class ReminderTimeItemDataGenerator extends AbstractItemDataGenerator<Todo, TodoHeader> {
 
     private TodoDao todoDao;
 
@@ -82,40 +82,33 @@ public class ReminderTimeItemDataGenerator extends AbstractItemDataGenerator<Tod
     @Override
     public void refresh() {
         super.refresh();
-        for (Header headerDatum : headerData) {
-            if (headerDatum instanceof TodoHeader){
-                try {
-                    if (DateUtils.truncatedEquals(new Date(), DateUtils.parseDate(headerDatum.getContent(), "yyyy-MM-dd"),
-                            Calendar.DATE)){
-                        ((TodoHeader) headerDatum).setDoneTodoCount(getTodayDoneCount());
-                        ((TodoHeader) headerDatum).setTotalTodoCount(getTodayTotalCount());
-                    }
-                } catch (ParseException e) {
-                    e.printStackTrace();
-                }
+        for (TodoHeader headerDatum : headerData) {
+            if (DateUtil.isToday(headerDatum.getContent())) {
+                headerDatum.setDoneTodoCount(getTodayDoneCount());
+                headerDatum.setTotalTodoCount(getTodayTotalCount());
             }
         }
     }
 
-    private long getTodayTotalCount(){
+    private long getTodayTotalCount() {
         Date start = DateUtils.truncate(new Date(), Calendar.DATE);
-        Date end = DateUtils.addDays(start,1);
+        Date end = DateUtils.addDays(start, 1);
         return countToday("WHERE T.TYPE = 'todo' AND " +
-                "(T0.START >= "+ start.getTime() + " AND T0.START <" + end.getTime()+
+                "(T0.START >= " + start.getTime() + " AND T0.START <" + end.getTime() +
                 " OR T0.START IS NULL)");
     }
 
-    private long getTodayDoneCount(){
+    private long getTodayDoneCount() {
         Date start = DateUtils.truncate(new Date(), Calendar.DATE);
-        Date end = DateUtils.addDays(start,1);
+        Date end = DateUtils.addDays(start, 1);
         return countToday("WHERE T.TYPE = 'todo' AND T.READ_FLAG = '1' AND " +
-                "(T0.START >= "+ start.getTime() + " AND T0.START <" + end.getTime() +
+                "(T0.START >= " + start.getTime() + " AND T0.START <" + end.getTime() +
                 " OR T0.START IS NULL)");
     }
 
     private long countToday(String where) {
-        List<Todo> todos = todoDao.queryDeep(where );
-        if (todos == null||todos.isEmpty()){
+        List<Todo> todos = todoDao.queryDeep(where);
+        if (todos == null || todos.isEmpty()) {
             return 0;
         }
         return todos.size();

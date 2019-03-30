@@ -7,15 +7,15 @@ import org.apache.commons.lang3.StringUtils;
 import java.util.ArrayList;
 import java.util.List;
 
-public abstract class AbstractItemDataGenerator<T extends Element> implements ItemDataGenerator<T> {
+public abstract class AbstractItemDataGenerator<T extends Element,S extends Header> implements ItemDataGenerator<T,S> {
 
-    protected List<T> contentData; //content
-    protected List<Header> headerData; //header
-    protected List<Element> itemData;  // header+content
+    List<T> contentData; //content
+    List<S> headerData; //header
+    List<Element> itemData;  // header+content
     private List<Integer> singleContentPosition; // single content for full span
 
 
-    public AbstractItemDataGenerator(List<T> contentData) {
+    AbstractItemDataGenerator(List<T> contentData) {
         this.contentData = contentData;
         this.itemData = new ArrayList<>();
         this.headerData = new ArrayList<>();
@@ -67,7 +67,7 @@ public abstract class AbstractItemDataGenerator<T extends Element> implements It
     }
 
     @Override
-    public List<Header> getHeaderData() {
+    public List<S> getHeaderData() {
         return headerData;
     }
 

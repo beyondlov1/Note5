@@ -4,7 +4,7 @@ import com.beyond.note5.bean.Element;
 
 import java.util.List;
 
-public interface ItemDataGenerator<T> {
+public interface ItemDataGenerator<T,S> {
 
     void refresh();
 
@@ -12,7 +12,7 @@ public interface ItemDataGenerator<T> {
 
     List<T> getContentData();
 
-    List<Header> getHeaderData();
+    List<S> getHeaderData();
 
     int getPosition(T t);
 

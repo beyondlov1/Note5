@@ -4,10 +4,10 @@ import android.os.Build;
 import android.os.Handler;
 import android.support.annotation.NonNull;
 import android.text.Editable;
-import android.text.Html;
 import android.text.TextWatcher;
 import android.widget.EditText;
 import com.beyond.note5.MyApplication;
+import com.beyond.note5.utils.HtmlUtil;
 import com.beyond.note5.utils.TimeNLPUtil;
 import org.apache.commons.lang3.StringUtils;
 
@@ -17,6 +17,7 @@ import java.util.concurrent.ExecutorService;
  * @author beyondlov1
  * @date 2019/03/29
  */
+@SuppressWarnings("WeakerAccess")
 public class TimeExpressionDetectiveTextWatcher implements TextWatcher {
 
     private Handler handler;
@@ -72,7 +73,7 @@ public class TimeExpressionDetectiveTextWatcher implements TextWatcher {
                     public void run() {
                         lastSelectionEnd = target.getSelectionEnd();
                         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
-                            target.setText(Html.fromHtml(html, Html.FROM_HTML_MODE_COMPACT));
+                            target.setText(HtmlUtil.fromHtml(html));
                         }else {
                             target.setText(source);
                         }

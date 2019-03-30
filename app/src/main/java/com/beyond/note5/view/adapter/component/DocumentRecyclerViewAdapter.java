@@ -22,9 +22,9 @@ public abstract class DocumentRecyclerViewAdapter<T extends Document, S extends 
 
     protected Context context;
 
-    protected List<Element> itemData;
+    private List<Element> itemData;
 
-    protected ItemDataGenerator<T> itemDataGenerator;
+    ItemDataGenerator<T, ? extends Header> itemDataGenerator;
 
     static final int[] colorResIds = new int[]{
             R.color.google_red,
@@ -33,7 +33,7 @@ public abstract class DocumentRecyclerViewAdapter<T extends Document, S extends 
             R.color.google_green
     };
 
-    public DocumentRecyclerViewAdapter(Context context, ItemDataGenerator<T> itemDataGenerator) {
+    DocumentRecyclerViewAdapter(Context context, ItemDataGenerator<T, ? extends Header> itemDataGenerator) {
         this.context = context;
         this.itemDataGenerator = itemDataGenerator;
         this.itemData = itemDataGenerator.getItemData();
@@ -43,7 +43,7 @@ public abstract class DocumentRecyclerViewAdapter<T extends Document, S extends 
     public RecyclerView.ViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
         return getViewHolder(parent, viewType);
     }
-    
+
     protected abstract S getViewHolder(ViewGroup parent, int viewType);
 
     @SuppressWarnings("unchecked")
@@ -62,14 +62,14 @@ public abstract class DocumentRecyclerViewAdapter<T extends Document, S extends 
         }
     }
 
-    private void initHeaderView(int position, Header header, S viewHolder){
-        initHeaderDisplay(position,header,viewHolder);
-        initHeadEvent(position,header,viewHolder);
+    private void initHeaderView(int position, Header header, S viewHolder) {
+        initHeaderDisplay(position, header, viewHolder);
+        initHeadEvent(position, header, viewHolder);
     }
 
     protected abstract void initHeaderDisplay(int position, Header header, S viewHolder);
 
-    protected void initHeadEvent(int position, Header header, S viewHolder){
+    protected void initHeadEvent(int position, Header header, S viewHolder) {
         //do nothing
     }
 
@@ -78,9 +78,9 @@ public abstract class DocumentRecyclerViewAdapter<T extends Document, S extends 
         initContentEvent(viewHolder, document);
     }
 
-    protected abstract void initContentDisplay(final S viewHolder, T document, int position) ;
+    protected abstract void initContentDisplay(final S viewHolder, T document, int position);
 
-    protected abstract void initContentEvent(S viewHolder, final T t) ;
+    protected abstract void initContentEvent(S viewHolder, final T t);
 
     @Override
     public int getItemCount() {
@@ -100,11 +100,13 @@ public abstract class DocumentRecyclerViewAdapter<T extends Document, S extends 
             notifyItemRangeChanged(insertedPosition + 1, itemDataGenerator.getItemData().size() - insertedPosition - 1);
         }
 
-        if (addedCount >1) {
+        if (addedCount > 1) {
             int insertedPosition = itemDataGenerator.getPosition(t);
-            notifyItemRangeInserted(insertedPosition -addedCount + 1, addedCount);
-            notifyItemRangeChanged(insertedPosition + 1, itemDataGenerator.getItemData().size() - insertedPosition -addedCount);
+            notifyItemRangeInserted(insertedPosition - addedCount + 1, addedCount);
+            notifyItemRangeChanged(insertedPosition + 1, itemDataGenerator.getItemData().size() - insertedPosition - addedCount);
         }
+
+        notifyFullRangeChanged(); // 保证能更新到header， 但是em....
     }
 
     public void notifyFullRangeRemoved() {
@@ -128,12 +130,13 @@ public abstract class DocumentRecyclerViewAdapter<T extends Document, S extends 
 
     }
 
-    public void notifyFullRangeChanged() {
+    private void notifyFullRangeChanged() {
         notifyItemRangeChanged(0, itemDataGenerator.getItemData().size());
     }
 
     /**
      * 刷新itemData
+     *
      * @return 增加的个数
      */
     private int refreshItemData() {

@@ -3,10 +3,10 @@ package com.beyond.note5.view.adapter.component;
 import android.content.Context;
 import android.graphics.Paint;
 import android.graphics.drawable.GradientDrawable;
-import android.os.Build;
 import android.support.v4.content.ContextCompat;
 import android.support.v7.widget.StaggeredGridLayoutManager;
-import android.text.Html;
+import android.text.SpannableString;
+import android.text.Spanned;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -16,23 +16,23 @@ import com.beyond.note5.R;
 import com.beyond.note5.bean.Todo;
 import com.beyond.note5.constant.DocumentConst;
 import com.beyond.note5.event.*;
+import com.beyond.note5.utils.HtmlUtil;
 import com.beyond.note5.view.adapter.component.header.Header;
 import com.beyond.note5.view.adapter.component.header.ItemDataGenerator;
 import com.beyond.note5.view.adapter.component.header.TodoHeader;
 import com.beyond.note5.view.adapter.component.viewholder.TodoViewHolder;
+import com.time.util.DateUtil;
 import org.apache.commons.lang3.time.DateFormatUtils;
 import org.apache.commons.lang3.time.DateUtils;
 import org.greenrobot.eventbus.EventBus;
 
-import java.text.ParseException;
-import java.util.Calendar;
 import java.util.Date;
 
 import static com.beyond.note5.model.TodoModelImpl.IS_SHOW_READ_FLAG_DONE;
 
 public class TodoRecyclerViewAdapter extends DocumentRecyclerViewAdapter<Todo, TodoViewHolder> {
 
-    public TodoRecyclerViewAdapter(Context context, ItemDataGenerator<Todo> itemDataGenerator) {
+    public TodoRecyclerViewAdapter(Context context, ItemDataGenerator<Todo,TodoHeader> itemDataGenerator) {
         super(context, itemDataGenerator);
     }
 
@@ -47,8 +47,8 @@ public class TodoRecyclerViewAdapter extends DocumentRecyclerViewAdapter<Todo, T
         viewHolder.checkbox.setVisibility(View.GONE);
         viewHolder.checkbox.setChecked(false);
         viewHolder.title.setVisibility(View.VISIBLE);
-        viewHolder.title.setTextColor(ContextCompat.getColor(context,R.color.dark_yellow));
-        processHeaderText(header, viewHolder);
+        viewHolder.title.setTextColor(ContextCompat.getColor(context, R.color.dark_yellow));
+        viewHolder.title.setText(getHeaderText(header));
         viewHolder.content.setVisibility(View.GONE);
         viewHolder.content.setPaintFlags(viewHolder.title.getPaintFlags() & (~Paint.STRIKE_THRU_TEXT_FLAG));
         viewHolder.container.setOnClickListener(null);
@@ -59,35 +59,27 @@ public class TodoRecyclerViewAdapter extends DocumentRecyclerViewAdapter<Todo, T
         layoutParams.setFullSpan(true);
     }
 
-    private void processHeaderText(Header header, TodoViewHolder viewHolder) {
-        try {
-            if (DateUtils.truncatedEquals(new Date(), DateUtils.parseDate(header.getContent(), "yyyy-MM-dd"),
-                    Calendar.DATE)){
-                if (header instanceof TodoHeader){
-                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
-                        String color = "#EB4537";
-                        long doneTodoCount = ((TodoHeader) header).getDoneTodoCount();
-                        long totalTodoCount = ((TodoHeader) header).getTotalTodoCount();
-                        if (doneTodoCount/totalTodoCount<0.3 && doneTodoCount<5){
-                            color = "#55AF7B";
-                        }
-                        String html = String.format("<span>%s</span>&nbsp;<span>%s</span>" +
-                                        "<span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>" +
-                                        "<span style='color:"+color+";'>[%s/%s]</span>",
-                                header.getContent(),
-                                " &lt;- Now",
-                                doneTodoCount,
-                                totalTodoCount
-                        );
-                        viewHolder.title.setText(Html.fromHtml(html,Html.FROM_HTML_MODE_COMPACT));
-                    }
+    private Spanned getHeaderText(Header header) {
+        if (DateUtils.isSameDay(new Date(), DateUtil.parseDate(header.getContent()))) {
+            if (header instanceof TodoHeader) {
+                String color = "#EB4537";
+                long doneTodoCount = ((TodoHeader) header).getDoneTodoCount();
+                long totalTodoCount = ((TodoHeader) header).getTotalTodoCount();
+                if (doneTodoCount / totalTodoCount > 0.7 && totalTodoCount - doneTodoCount < 5) {
+                    color = "#55AF7B";
                 }
-            }else {
-                viewHolder.title.setText(header.getContent());
+                String html = String.format(
+                        "<span>%s</span>&nbsp;" +
+                                "<span style='color:" + color + ";'>[%s]</span>" +
+                                "<span>%s</span>",
+                        header.getContent(),
+                        totalTodoCount - doneTodoCount,
+                        " &lt;- Now"
+                );
+                return HtmlUtil.fromHtml(html);
             }
-        } catch (ParseException e) {
-            e.printStackTrace();
         }
+        return new SpannableString(header.getContent());
     }
 
     @Override
@@ -96,6 +88,11 @@ public class TodoRecyclerViewAdapter extends DocumentRecyclerViewAdapter<Todo, T
         viewHolder.title.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
+                toggleReadStatePreference();
+                EventBus.getDefault().post(new RefreshTodoListEvent(null, header.getContent()));
+            }
+
+            private void toggleReadStatePreference() {
                 if (context.getSharedPreferences(MyApplication.SHARED_PREFERENCES_NAME, Context.MODE_PRIVATE)
                         .getBoolean(IS_SHOW_READ_FLAG_DONE, false)) {
                     context.getSharedPreferences(MyApplication.SHARED_PREFERENCES_NAME, Context.MODE_PRIVATE).edit()
@@ -104,7 +101,6 @@ public class TodoRecyclerViewAdapter extends DocumentRecyclerViewAdapter<Todo, T
                     context.getSharedPreferences(MyApplication.SHARED_PREFERENCES_NAME, Context.MODE_PRIVATE).edit()
                             .putBoolean(IS_SHOW_READ_FLAG_DONE, true).apply();
                 }
-                EventBus.getDefault().post(new RefreshTodoListEvent(null,header.getContent()));
             }
         });
     }
@@ -120,12 +116,12 @@ public class TodoRecyclerViewAdapter extends DocumentRecyclerViewAdapter<Todo, T
         if (todo.getReadFlag().equals(DocumentConst.READ_FLAG_DONE)) {
             viewHolder.checkbox.setChecked(true);
             viewHolder.content.setPaintFlags(viewHolder.title.getPaintFlags() | Paint.STRIKE_THRU_TEXT_FLAG);
-            viewHolder.content.setTextColor(context.getResources().getColor(R.color.medium_gray));
+            viewHolder.content.setTextColor(ContextCompat.getColor(context, R.color.medium_gray));
             viewHolder.content.setTextSize(8);
         } else {
             viewHolder.checkbox.setChecked(false);
             viewHolder.content.setPaintFlags(viewHolder.title.getPaintFlags() & (~Paint.STRIKE_THRU_TEXT_FLAG));
-            viewHolder.content.setTextColor(context.getResources().getColor(R.color.darker_gray));
+            viewHolder.content.setTextColor(ContextCompat.getColor(context, R.color.darker_gray));
             viewHolder.content.setTextSize(12);
         }
 
@@ -145,7 +141,7 @@ public class TodoRecyclerViewAdapter extends DocumentRecyclerViewAdapter<Todo, T
                 long x = (long) Math.ceil(duration / (1000 * 60 * 30f));
                 int colorResId = colorResIds[(int) (Math.log(x) / Math.log(2)) > 2 ? 3 : (int) (Math.log(x) / Math.log(2))];
                 viewHolder.time.setTextColor(ContextCompat.getColor(context, colorResId));
-                if (viewHolder.checkbox.isChecked()){ // 完成了的时候
+                if (viewHolder.checkbox.isChecked()) { // 完成了的时候
                     viewHolder.time.setTextColor(ContextCompat.getColor(context, R.color.darker_gray));
                 }
             } else {

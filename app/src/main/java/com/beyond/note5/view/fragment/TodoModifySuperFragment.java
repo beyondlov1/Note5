@@ -2,10 +2,8 @@ package com.beyond.note5.view.fragment;
 
 import android.content.Intent;
 import android.net.Uri;
-import android.os.Build;
 import android.os.Handler;
 import android.support.v4.content.ContextCompat;
-import android.text.Html;
 import android.view.View;
 import android.view.ViewStub;
 import android.widget.ImageButton;
@@ -70,12 +68,8 @@ public class TodoModifySuperFragment extends TodoEditSuperFragment {
                 handler.post(new Runnable() {
                     @Override
                     public void run() {
-                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
-                            if (StringUtils.isNotBlank(html)) {
-                                contentEditText.setText(Html.fromHtml(html, Html.FROM_HTML_MODE_COMPACT));
-                            } else {
-                                contentEditText.setText(createdDocument.getContent());
-                            }
+                        if (StringUtils.isNotBlank(html)) {
+                            contentEditText.setText(HtmlUtil.fromHtml(html));
                         } else {
                             contentEditText.setText(createdDocument.getContent());
                         }
@@ -142,7 +136,7 @@ public class TodoModifySuperFragment extends TodoEditSuperFragment {
         browserSearchButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                isClosing = false; /** TYPE3: 混合版， 只有在点击browserSearchButton的时候不隐藏*/
+                isClosing = false; /* TYPE3: 混合版， 只有在点击browserSearchButton的时候不隐藏*/
                 String url = WebViewUtil.getUrl(createdDocument);
                 if (url != null) {
                     Uri uri = Uri.parse(url);
@@ -157,6 +151,9 @@ public class TodoModifySuperFragment extends TodoEditSuperFragment {
         saveButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
+                EventBus.getDefault().post(new HideTodoEditEvent(null));
+                InputMethodUtil.hideKeyboard(contentEditText);
+
                 String content = contentEditText.getText().toString();
                 if (StringUtils.isBlank(content)) {
                     EventBus.getDefault().post(new DeleteTodoEvent(createdDocument));
@@ -167,8 +164,6 @@ public class TodoModifySuperFragment extends TodoEditSuperFragment {
                     createdDocument.setVersion(createdDocument.getVersion() == null ? 0 : createdDocument.getVersion() + 1);
                     processReminder(content);
                 }
-                EventBus.getDefault().post(new HideTodoEditEvent(null));
-                InputMethodUtil.hideKeyboard(contentEditText);
             }
 
             private void processReminder(String content) {
@@ -183,7 +178,7 @@ public class TodoModifySuperFragment extends TodoEditSuperFragment {
                         reminder.setStart(reminderStart);
                     }
                     createdDocument.setReminder(reminder);
-                }else {
+                } else {
                     EventBus.getDefault().post(new DeleteReminderEvent(createdDocument));
                 }
                 EventBus.getDefault().post(new UpdateTodoEvent(createdDocument));
@@ -205,8 +200,8 @@ public class TodoModifySuperFragment extends TodoEditSuperFragment {
         TimeExpressionDetectiveTextWatcher.Builder builder = new TimeExpressionDetectiveTextWatcher.Builder(contentEditText);
         contentEditText.addTextChangedListener(
                 builder
-                .handler(handler)
-                .build()
+                        .handler(handler)
+                        .build()
         );
 
         flowLayout.setOnTagClickListener(new OnTagClick2AppendListener(contentEditText));
@@ -219,6 +214,7 @@ public class TodoModifySuperFragment extends TodoEditSuperFragment {
             @Override
             protected void handleResult(final List<Tag> tags) {
                 handler.post(new Runnable() {
+                    @SuppressWarnings("Duplicates")
                     @Override
                     public void run() {
                         List<Tag> finalTags = tags;

@@ -9,7 +9,7 @@ import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
 
-public class LastModifyTimeItemDataGenerator<T extends Document> extends AbstractItemDataGenerator<T> {
+public class LastModifyTimeItemDataGenerator<T extends Document> extends AbstractItemDataGenerator<T,Header> {
 
     public LastModifyTimeItemDataGenerator(List<T> contentData) {
         super(contentData);

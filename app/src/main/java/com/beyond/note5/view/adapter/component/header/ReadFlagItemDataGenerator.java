@@ -6,7 +6,7 @@ import com.beyond.note5.constant.ReadFlagEnum;
 import java.util.List;
 import java.util.Objects;
 
-public class ReadFlagItemDataGenerator<T extends Document> extends AbstractItemDataGenerator<T> {
+public class ReadFlagItemDataGenerator<T extends Document> extends AbstractItemDataGenerator<T,Header> {
 
     public ReadFlagItemDataGenerator(List<T> contentData) {
         super(contentData);

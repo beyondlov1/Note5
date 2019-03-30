@@ -29,7 +29,7 @@ import java.util.List;
 public class NoteRecyclerViewAdapter extends DocumentRecyclerViewAdapter<Note,NoteViewHolder> {
 
 
-    public NoteRecyclerViewAdapter(Context context, ItemDataGenerator<Note> itemDataGenerator) {
+    public NoteRecyclerViewAdapter(Context context, ItemDataGenerator<Note,Header> itemDataGenerator) {
         super(context, itemDataGenerator);
     }
 
@@ -43,7 +43,7 @@ public class NoteRecyclerViewAdapter extends DocumentRecyclerViewAdapter<Note,No
     protected void initHeaderDisplay(int position, Header header, NoteViewHolder viewHolder) {
         viewHolder.title.setVisibility(View.VISIBLE);
         viewHolder.title.setText(header.getContent());
-        viewHolder.title.setTextColor(context.getResources().getColor(R.color.dark_yellow));
+        viewHolder.title.setTextColor(ContextCompat.getColor(context,R.color.dark_yellow));
         viewHolder.content.setVisibility(View.GONE);
         viewHolder.content.setText(header.getContent());
         viewHolder.container.setOnClickListener(null);
@@ -52,6 +52,7 @@ public class NoteRecyclerViewAdapter extends DocumentRecyclerViewAdapter<Note,No
         layoutParams.setFullSpan(true);
     }
 
+    @SuppressWarnings("Duplicates")
     @Override
     protected void initContentDisplay(NoteViewHolder viewHolder, Note note, int position) {
         GradientDrawable gradientDrawable = new GradientDrawable();

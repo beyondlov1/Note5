@@ -7,6 +7,7 @@ import com.beyond.note5.bean.Todo;
 import com.beyond.note5.model.dao.DaoSession;
 import com.beyond.note5.model.dao.ReminderDao;
 import com.beyond.note5.model.dao.TodoDao;
+import org.apache.commons.lang3.StringUtils;
 
 import java.util.List;
 
@@ -36,6 +37,8 @@ public class TodoModelImpl implements TodoModel {
 
     @Override
     public void update(Todo todo) {
+        Todo oldTodo = todoDao.load(todo.getId());
+
         todoDao.update(todo);
 
         Reminder reminder = todo.getReminder();
@@ -51,6 +54,10 @@ public class TodoModelImpl implements TodoModel {
             }
         }
 
+        if (StringUtils.equals(StringUtils.trim(oldTodo.getContent()),
+                StringUtils.trim(todo.getContent()))){
+            return;
+        }
         //train
         MyApplication.getInstance().getTagPredictor().getTagTrainer().train(todo.getContent());
     }
