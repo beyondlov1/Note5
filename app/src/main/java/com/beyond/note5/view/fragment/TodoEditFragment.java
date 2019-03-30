@@ -7,7 +7,6 @@ import android.content.DialogInterface;
 import android.content.SharedPreferences;
 import android.graphics.Color;
 import android.graphics.drawable.ColorDrawable;
-import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
 import android.support.annotation.NonNull;
@@ -15,9 +14,6 @@ import android.support.annotation.Nullable;
 import android.support.v4.app.DialogFragment;
 import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AlertDialog;
-import android.text.Editable;
-import android.text.Html;
-import android.text.TextWatcher;
 import android.util.DisplayMetrics;
 import android.view.*;
 import android.widget.EditText;
@@ -32,12 +28,13 @@ import com.beyond.note5.event.HideKeyBoardEvent;
 import com.beyond.note5.event.ShowKeyBoardEvent;
 import com.beyond.note5.predict.AbstractTagCallback;
 import com.beyond.note5.predict.bean.Tag;
-import com.beyond.note5.utils.HighlightUtil;
 import com.beyond.note5.utils.IDUtil;
 import com.beyond.note5.utils.InputMethodUtil;
 import com.beyond.note5.utils.TimeNLPUtil;
 import com.beyond.note5.view.custom.DialogButton;
+import com.beyond.note5.view.custom.SelectionListenableEditText;
 import com.beyond.note5.view.listener.OnTagClick2AppendListener;
+import com.beyond.note5.view.listener.TimeExpressionDetectiveTextWatcher;
 import com.zhy.view.flowlayout.FlowLayout;
 import com.zhy.view.flowlayout.TagAdapter;
 import com.zhy.view.flowlayout.TagFlowLayout;
@@ -48,13 +45,12 @@ import org.greenrobot.eventbus.ThreadMode;
 
 import java.util.*;
 
-import static android.text.Html.FROM_HTML_MODE_COMPACT;
-
 /**
  * @author: beyond
  * @date: 2019/1/31
  */
 
+@SuppressWarnings({"Duplicates", "WeakerAccess"})
 public class TodoEditFragment extends DialogFragment {
 
     private static int dialogHeightWithSoftInputMethod;
@@ -115,7 +111,7 @@ public class TodoEditFragment extends DialogFragment {
     private void processStatusBarColor(AlertDialog dialog) {
         Objects.requireNonNull(dialog.getWindow()).clearFlags(WindowManager.LayoutParams.FLAG_TRANSLUCENT_STATUS);
         dialog.getWindow().addFlags(WindowManager.LayoutParams.FLAG_DRAWS_SYSTEM_BAR_BACKGROUNDS);
-        dialog.getWindow().setStatusBarColor(getResources().getColor(R.color.white));
+        dialog.getWindow().setStatusBarColor(ContextCompat.getColor(this.getContext(),R.color.white));
         dialog.getWindow().getDecorView().setSystemUiVisibility(View.VISIBLE);
     }
 
@@ -178,56 +174,20 @@ public class TodoEditFragment extends DialogFragment {
     }
 
     private void initEvent() {
-        contentEditText.addTextChangedListener(new TextWatcher() {
+        TimeExpressionDetectiveTextWatcher.Builder builder = new TimeExpressionDetectiveTextWatcher.Builder(contentEditText);
+        contentEditText.addTextChangedListener(builder.handler(handler).build());
+        if (contentEditText instanceof SelectionListenableEditText) {
+            ((SelectionListenableEditText) contentEditText).setOnSelectionChanged(new SelectionListenableEditText.OnSelectionChangeListener() {
 
-            private String lastStr = null;
-            private int lastSelectionEnd;
-            private int timeExpressionStartIndex;
-            private int timeExpressionEndIndex;
-
-            @Override
-            public void beforeTextChanged(CharSequence s, int start, int count, int after) {
-
-            }
-
-            @Override
-            public void onTextChanged(final CharSequence s, int start, int before, int count) {
-                String source = s.toString();
-                createdDocument.setContent(source);
-                predictTagsAsync(s);
-
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
-                    if (StringUtils.equals(lastStr, source)) {
-                        lastStr = null;
-                        contentEditText.setSelection(lastSelectionEnd);
-                        return;
+                @Override
+                public void onChanged(String content, int selStart, int selEnd) {
+                    if (content.length() >= selStart) {
+                        predictTagsAsync(content.substring(0, selStart));
                     }
-                    String html = HighlightUtil.highlightTimeExpression(source);
-                    if (start < timeExpressionStartIndex
-                            || start > timeExpressionEndIndex) {
-                        lastStr = null;
-                        return;
-                    }
-                    if (before > 0) {
-                        lastStr = null;
-                        return;
-                    }
-                    if (html == null) {
-                        lastStr = null;
-                        return;
-                    }
-                    lastStr = source;
-                    lastSelectionEnd = contentEditText.getSelectionEnd();
-                    contentEditText.setText(Html.fromHtml(html, FROM_HTML_MODE_COMPACT));
                 }
-            }
-
-            @Override
-            public void afterTextChanged(Editable s) {
-
-            }
-
-        });
+            });
+        }
+        // 刚打开时预测
         contentEditText.setOnFocusChangeListener(new View.OnFocusChangeListener() {
             @Override
             public void onFocusChange(View v, boolean hasFocus) {
@@ -245,6 +205,7 @@ public class TodoEditFragment extends DialogFragment {
             @Override
             protected void handleResult(final List<Tag> tags) {
                 handler.post(new Runnable() {
+                    @SuppressWarnings("Duplicates")
                     @Override
                     public void run() {
                         List<Tag> finalTags = tags;
