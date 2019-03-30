@@ -45,7 +45,7 @@
         android:layout_marginBottom="1dp"
         android:background="@null"
         android:contentDescription="@string/linkDescription"
-        android:alpha="0.5"
-        android:src="@drawable/ic_link_green_600_24dp" />
+        android:alpha="0.3"
+        android:src="@drawable/ic_link_black_24dp" />
 
 </FrameLayout>

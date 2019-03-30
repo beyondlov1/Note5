@@ -12,6 +12,7 @@ import android.view.ViewGroup;
 import com.beyond.note5.R;
 import com.beyond.note5.bean.Note;
 import com.beyond.note5.event.ShowNoteDetailEvent;
+import com.beyond.note5.utils.WebViewUtil;
 import com.beyond.note5.view.adapter.component.header.Header;
 import com.beyond.note5.view.adapter.component.header.ItemDataGenerator;
 import com.beyond.note5.view.adapter.component.viewholder.NoteViewHolder;
@@ -26,10 +27,10 @@ import java.util.List;
  * @date: 2019/2/2
  */
 
-public class NoteRecyclerViewAdapter extends DocumentRecyclerViewAdapter<Note,NoteViewHolder> {
+public class NoteRecyclerViewAdapter extends DocumentRecyclerViewAdapter<Note, NoteViewHolder> {
 
 
-    public NoteRecyclerViewAdapter(Context context, ItemDataGenerator<Note,Header> itemDataGenerator) {
+    public NoteRecyclerViewAdapter(Context context, ItemDataGenerator<Note, Header> itemDataGenerator) {
         super(context, itemDataGenerator);
     }
 
@@ -43,7 +44,7 @@ public class NoteRecyclerViewAdapter extends DocumentRecyclerViewAdapter<Note,No
     protected void initHeaderDisplay(int position, Header header, NoteViewHolder viewHolder) {
         viewHolder.title.setVisibility(View.VISIBLE);
         viewHolder.title.setText(header.getContent());
-        viewHolder.title.setTextColor(ContextCompat.getColor(context,R.color.dark_yellow));
+        viewHolder.title.setTextColor(ContextCompat.getColor(context, R.color.dark_yellow));
         viewHolder.content.setVisibility(View.GONE);
         viewHolder.content.setText(header.getContent());
         viewHolder.container.setOnClickListener(null);
@@ -70,11 +71,10 @@ public class NoteRecyclerViewAdapter extends DocumentRecyclerViewAdapter<Note,No
         viewHolder.content.setVisibility(View.VISIBLE);
         viewHolder.content.setTextSize(12);
         viewHolder.content.setText(StringUtils.trim(note.getContent()));
-        if (StringUtils.containsIgnoreCase(note.getContent(),"http://")
-                ||StringUtils.containsIgnoreCase(note.getContent(),"https://")){
-            viewHolder.link.setVisibility(View.VISIBLE);
-        }else {
+        if (WebViewUtil.getUrl(note) == null) {
             viewHolder.link.setVisibility(View.GONE);
+        } else {
+            viewHolder.link.setVisibility(View.VISIBLE);
         }
 
         StaggeredGridLayoutManager.LayoutParams layoutParams = (StaggeredGridLayoutManager.LayoutParams) viewHolder.itemView.getLayoutParams();
@@ -91,7 +91,7 @@ public class NoteRecyclerViewAdapter extends DocumentRecyclerViewAdapter<Note,No
         viewHolder.itemView.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                showContentDetail(v, itemDataGenerator.getContentData(), note , index);
+                showContentDetail(v, itemDataGenerator.getContentData(), note, index);
             }
         });
         viewHolder.link.setOnClickListener(new View.OnClickListener() {
