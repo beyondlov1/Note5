@@ -48,6 +48,7 @@ public class NoteRecyclerViewAdapter extends DocumentRecyclerViewAdapter<Note,No
         viewHolder.content.setText(header.getContent());
         viewHolder.container.setOnClickListener(null);
         viewHolder.dataContainer.setBackground(null);
+        viewHolder.link.setVisibility(View.GONE);
         StaggeredGridLayoutManager.LayoutParams layoutParams = (StaggeredGridLayoutManager.LayoutParams) viewHolder.itemView.getLayoutParams();
         layoutParams.setFullSpan(true);
     }
@@ -69,6 +70,12 @@ public class NoteRecyclerViewAdapter extends DocumentRecyclerViewAdapter<Note,No
         viewHolder.content.setVisibility(View.VISIBLE);
         viewHolder.content.setTextSize(12);
         viewHolder.content.setText(StringUtils.trim(note.getContent()));
+        if (StringUtils.containsIgnoreCase(note.getContent(),"http://")
+                ||StringUtils.containsIgnoreCase(note.getContent(),"https://")){
+            viewHolder.link.setVisibility(View.VISIBLE);
+        }else {
+            viewHolder.link.setVisibility(View.GONE);
+        }
 
         StaggeredGridLayoutManager.LayoutParams layoutParams = (StaggeredGridLayoutManager.LayoutParams) viewHolder.itemView.getLayoutParams();
         if (itemDataGenerator.getSingleContentPositions().contains(position)) {
@@ -84,16 +91,30 @@ public class NoteRecyclerViewAdapter extends DocumentRecyclerViewAdapter<Note,No
         viewHolder.itemView.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                onItemClick(v, itemDataGenerator.getContentData(), note , index);
+                showContentDetail(v, itemDataGenerator.getContentData(), note , index);
+            }
+        });
+        viewHolder.link.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                showWebDetail(v, index);
             }
         });
     }
 
-    private void onItemClick(View v, List<Note> data, Note note, int index) {
+    private void showContentDetail(View v, List<Note> data, Note note, int index) {
         ShowNoteDetailEvent showNoteDetailEvent = new ShowNoteDetailEvent(v);
         showNoteDetailEvent.setData(data);
         showNoteDetailEvent.setIndex(index);
+        showNoteDetailEvent.setShowType(ShowNoteDetailEvent.ShowType.CONTENT);
         EventBus.getDefault().post(showNoteDetailEvent);
     }
 
+    private void showWebDetail(View v, int index) {
+        ShowNoteDetailEvent showNoteDetailEvent = new ShowNoteDetailEvent(v);
+        showNoteDetailEvent.setData(itemDataGenerator.getContentData());
+        showNoteDetailEvent.setIndex(index);
+        showNoteDetailEvent.setShowType(ShowNoteDetailEvent.ShowType.WEB);
+        EventBus.getDefault().post(showNoteDetailEvent);
+    }
 }

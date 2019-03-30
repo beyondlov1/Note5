@@ -19,6 +19,7 @@ import android.webkit.WebView;
 import android.widget.ImageButton;
 import android.widget.TextView;
 import android.widget.Toast;
+
 import com.beyond.note5.R;
 import com.beyond.note5.bean.Note;
 import com.beyond.note5.bean.Todo;
@@ -32,6 +33,7 @@ import com.beyond.note5.view.animator.SmoothScalable;
 import com.beyond.note5.view.custom.ViewSwitcher;
 import com.beyond.note5.view.listener.OnBackPressListener;
 import com.beyond.note5.view.listener.OnSlideListener;
+
 import org.apache.commons.collections4.CollectionUtils;
 import org.greenrobot.eventbus.EventBus;
 import org.greenrobot.eventbus.Subscribe;
@@ -43,7 +45,7 @@ import java.util.Timer;
 import java.util.TimerTask;
 import java.util.concurrent.atomic.AtomicBoolean;
 
-public class NoteDetailSuperFragment extends DialogFragment implements OnBackPressListener,SmoothScalable {
+public class NoteDetailSuperFragment extends DialogFragment implements OnBackPressListener, SmoothScalable {
     private static final String TAG = "NoteDetailSuperFragment";
     protected Activity context;
     protected View root;
@@ -53,6 +55,7 @@ public class NoteDetailSuperFragment extends DialogFragment implements OnBackPre
 
     protected List<Note> data;
     protected int currIndex;
+    private ShowNoteDetailEvent.ShowType showType;
 
     protected View operationContainer;
     protected View operationItemsContainer;
@@ -75,6 +78,7 @@ public class NoteDetailSuperFragment extends DialogFragment implements OnBackPre
         this.context = getActivity();
     }
 
+    @SuppressLint("InflateParams")
     @Nullable
     @Override
     public View onCreateView(LayoutInflater inflater, @Nullable ViewGroup container, Bundle savedInstanceState) {
@@ -226,13 +230,7 @@ public class NoteDetailSuperFragment extends DialogFragment implements OnBackPre
         searchButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                String url = WebViewUtil.getUrl(data.get(currIndex));
-                if (url != null) {
-                    WebViewUtil.addWebViewProgressBar(new NoteDetailSuperFragment.DetailViewHolder(viewSwitcher.getCurrentView()).displayWebView);
-                    new NoteDetailSuperFragment.DetailViewHolder(viewSwitcher.getCurrentView()).displayWebView.loadUrl(url);
-                } else {
-                    ToastUtil.toast(context, "搜索文字不能超过32个字", Toast.LENGTH_SHORT);
-                }
+                loadWebPage();
             }
         });
         browserSearchButton.setOnClickListener(new View.OnClickListener() {
@@ -262,10 +260,20 @@ public class NoteDetailSuperFragment extends DialogFragment implements OnBackPre
                 EventBus.getDefault().post(new AddTodoEvent(todo));
                 EventBus.getDefault().post(new DeleteNoteEvent(note));
                 sendHideMessage();
-                ToastUtil.toast(getContext(),"已转化为TODO",Toast.LENGTH_SHORT);
+                ToastUtil.toast(getContext(), "已转化为TODO", Toast.LENGTH_SHORT);
             }
         });
 
+    }
+
+    private void loadWebPage() {
+        String url = WebViewUtil.getUrl(data.get(currIndex));
+        if (url != null) {
+            WebViewUtil.addWebViewProgressBar(new DetailViewHolder(viewSwitcher.getCurrentView()).displayWebView);
+            new DetailViewHolder(viewSwitcher.getCurrentView()).displayWebView.loadUrl(url);
+        } else {
+            ToastUtil.toast(context, "搜索文字不能超过32个字", Toast.LENGTH_SHORT);
+        }
     }
 
     protected void initEvent() {
@@ -333,12 +341,13 @@ public class NoteDetailSuperFragment extends DialogFragment implements OnBackPre
     public void onEventMainThread(DetailNoteEvent detailNoteEvent) {
         data = detailNoteEvent.get();
         currIndex = detailNoteEvent.getIndex();
+        showType = detailNoteEvent.getShowType();
         processDetailTools();
         reloadView();
     }
 
     private void processDetailTools() {
-        if (CollectionUtils.isEmpty(data)){
+        if (CollectionUtils.isEmpty(data)) {
             return;
         }
         // 置顶按钮
@@ -399,6 +408,7 @@ public class NoteDetailSuperFragment extends DialogFragment implements OnBackPre
                 return view;
             }
         });
+        openWebPage();
     }
 
     protected void beforeReloadView() {
@@ -414,6 +424,12 @@ public class NoteDetailSuperFragment extends DialogFragment implements OnBackPre
         WebViewUtil.loadWebContent(detailViewHolder.displayWebView, data.get(currIndex));
         String pageCount = String.format("%s/%s", currIndex + 1, data.size());
         pageCountTextView.setText(pageCount);
+    }
+
+    private void openWebPage() {
+        if (showType == ShowNoteDetailEvent.ShowType.WEB) {
+            loadWebPage();
+        }
     }
 
     @SuppressLint("ClickableViewAccessibility")
@@ -447,6 +463,7 @@ public class NoteDetailSuperFragment extends DialogFragment implements OnBackPre
             protected int getSlideXSensitivity() {
                 return 350;
             }
+
             @Override
             protected int getSlideYSensitivity() {
                 return (int) (ViewUtil.getScreenSize().y * 0.33);
@@ -501,24 +518,24 @@ public class NoteDetailSuperFragment extends DialogFragment implements OnBackPre
     @Override
     public boolean onBackPressed() {
         WebView displayWebView = new DetailViewHolder(viewSwitcher.getCurrentView()).displayWebView;
-        if (WebViewUtil.canGoBack(displayWebView)){
+        if (WebViewUtil.canGoBack(displayWebView)) {
             WebViewUtil.goBack(displayWebView);
-        }else {
+        } else {
             WebViewUtil.clearHistory();
             sendHideMessage();
         }
         return true;
     }
 
-    private void sendHideMessage(){
+    private void sendHideMessage() {
         viewSwitcher.removeAllViews();
-        if(data.isEmpty()){
+        if (data.isEmpty()) {
             currIndex = -1;
         }
         EventBus.getDefault().post(new HideNoteDetailEvent(currIndex));
     }
 
-    public void setSmoothScalable(SmoothScalable smoothScalable){
+    public void setSmoothScalable(SmoothScalable smoothScalable) {
         this.smoothScalable = smoothScalable;
     }
 

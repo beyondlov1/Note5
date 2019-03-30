@@ -10,6 +10,7 @@ import android.view.View;
  * @date: 2019/2/2
  */
 
+@SuppressWarnings("ALL")
 public abstract class OnSlideListener implements View.OnTouchListener {
 
     private float startX;
@@ -27,17 +28,22 @@ public abstract class OnSlideListener implements View.OnTouchListener {
                 break;
             case MotionEvent.ACTION_UP:
                 float endX = event.getX();
-                if (endX-startX>this.getSlideXSensitivity()){
-                    onSlideRight();
-                }else if (endX-startX<-this.getSlideXSensitivity()){
-                    onSlideLeft();
-                }
-
                 float endY = event.getY();
-                if (endY-startY>getSlideYSensitivity()){
-                    onSlideDown();
-                }else if (endY-startY<-getSlideYSensitivity()){
-                    onSlideUp();
+                float moveX = endX - startX;
+                float moveY = endY - startY;
+
+                if (Math.abs(moveX)>Math.abs(moveY)){
+                    if (moveX>this.getSlideXSensitivity()){
+                        onSlideRight();
+                    }else if (moveX<-this.getSlideXSensitivity()){
+                        onSlideLeft();
+                    }
+                } else {
+                    if (moveY>getSlideYSensitivity()){
+                        onSlideDown();
+                    }else if (moveY<-getSlideYSensitivity()){
+                        onSlideUp();
+                    }
                 }
 
                 break;

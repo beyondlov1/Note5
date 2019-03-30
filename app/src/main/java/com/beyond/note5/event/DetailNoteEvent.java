@@ -12,6 +12,7 @@ import java.util.List;
 public class DetailNoteEvent extends AbstractEvent<List<Note>> {
 
     private int index;
+    private ShowNoteDetailEvent.ShowType showType;
 
     public DetailNoteEvent(List<Note> notes, int index) {
         super(notes);
@@ -20,5 +21,13 @@ public class DetailNoteEvent extends AbstractEvent<List<Note>> {
 
     public int getIndex(){
         return index;
+    }
+
+    public void setShowType(ShowNoteDetailEvent.ShowType showType) {
+        this.showType = showType;
+    }
+
+    public ShowNoteDetailEvent.ShowType getShowType() {
+        return showType;
     }
 }

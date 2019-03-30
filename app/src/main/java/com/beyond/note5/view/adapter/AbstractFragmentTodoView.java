@@ -9,7 +9,7 @@ import com.beyond.note5.view.fragment.AbstractDocumentFragment;
 
 import java.util.List;
 
-public class AbstractFragmentTodoView extends AbstractDocumentFragment<Todo> implements TodoView,CalendarView,PredictView {
+public class AbstractFragmentTodoView extends AbstractDocumentFragment<Todo> implements TodoView, CalendarView, PredictView {
 
     @Override
     public void onEventAddSuccess(Todo todo) {
@@ -93,11 +93,12 @@ public class AbstractFragmentTodoView extends AbstractDocumentFragment<Todo> imp
 
     @Override
     public void onTrainSuccess() {
-        msg("训练成功");
+        // do nothing
+        // msg("训练成功");
     }
 
     @Override
     public void onTrainFail() {
-        msg("训练失败");
+        msg("网络状况不佳");
     }
 }

@@ -10,6 +10,7 @@ public class ShowNoteDetailEvent extends AbstractEvent<View> {
 
     private List<Note> data;
     private int Index;
+    private ShowType showType;
 
     public ShowNoteDetailEvent(View view) {
         super(view);
@@ -29,5 +30,17 @@ public class ShowNoteDetailEvent extends AbstractEvent<View> {
 
     public void setIndex(int index) {
         Index = index;
+    }
+
+    public ShowType getShowType() {
+        return showType;
+    }
+
+    public void setShowType(ShowType showType) {
+        this.showType = showType;
+    }
+
+    public enum ShowType{
+        CONTENT,WEB
     }
 }

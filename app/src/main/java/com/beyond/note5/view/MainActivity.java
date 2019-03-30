@@ -256,7 +256,7 @@ public class MainActivity extends FragmentActivity {
     private boolean isDetailShow = false;
 
     @Subscribe(threadMode = ThreadMode.MAIN)
-    public void onRecieved(final ShowNoteDetailEvent event) {
+    public void onReceived(final ShowNoteDetailEvent event) {
         noteDetailFragmentContainer.setVisibility(View.VISIBLE);
         EventBus.getDefault().post(new HideFABEvent(null));
 
@@ -268,12 +268,14 @@ public class MainActivity extends FragmentActivity {
         smoothScalable.setShowingView(mainContainer);
 
         smoothScalable.show();
-        EventBus.getDefault().postSticky(new DetailNoteEvent(event.getData(), event.getIndex()));
+        DetailNoteEvent detailNoteEvent = new DetailNoteEvent(event.getData(), event.getIndex());
+        detailNoteEvent.setShowType(event.getShowType());
+        EventBus.getDefault().postSticky(detailNoteEvent);
         isDetailShow = true;
     }
 
     @Subscribe(threadMode = ThreadMode.MAIN)
-    public void onRecieved(HideNoteDetailEvent event) {
+    public void onReceived(HideNoteDetailEvent event) {
         EventBus.getDefault().post(new ShowFABEvent(null));
 
         //获取viewSwitcher划到的位置，获取动画要返回的view
@@ -290,7 +292,7 @@ public class MainActivity extends FragmentActivity {
     private View clickedView = null;
 
     @Subscribe(threadMode = ThreadMode.MAIN)
-    public void onRecieved(final ShowTodoEditEvent event) {
+    public void onReceived(final ShowTodoEditEvent event) {
         todoEditFragmentContainer.setVisibility(View.VISIBLE);
         EventBus.getDefault().post(new HideFABEvent(null));
 
@@ -307,7 +309,7 @@ public class MainActivity extends FragmentActivity {
     }
 
     @Subscribe(threadMode = ThreadMode.MAIN)
-    public void onRecieved(HideTodoEditEvent event) {
+    public void onReceived(HideTodoEditEvent event) {
         EventBus.getDefault().post(new ShowFABEvent(null));
 
         SmoothScalable smoothScalable = (SmoothScalable) todoModifyFragment;
