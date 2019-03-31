@@ -2,16 +2,17 @@ package com.beyond.note5;
 
 import android.app.Application;
 import android.database.sqlite.SQLiteDatabase;
+import android.database.sqlite.SQLiteOpenHelper;
 import android.os.Environment;
 
 import com.beyond.note5.model.PredictModel;
 import com.beyond.note5.model.PredictModelImpl;
 import com.beyond.note5.model.dao.DaoMaster;
 import com.beyond.note5.model.dao.DaoSession;
-import com.beyond.note5.model.dao.TodoDao;
 import com.beyond.note5.predict.TagPredictor;
 import com.beyond.note5.predict.TagPredictorImpl;
 import com.beyond.note5.predict.bean.TagGraph;
+import com.beyond.note5.utils.PreferenceUtil;
 
 import java.io.File;
 import java.util.concurrent.ExecutorService;
@@ -26,6 +27,7 @@ public class MyApplication extends Application {
 
     public static final String SHARED_PREFERENCES_NAME = "note5_preferences";
     public static final String DEFAULT_PAGE = "default_page";
+    public static final String IS_ALTER_SQL_EXECUTED = "IS_ALTER_SQL_EXECUTED";
 
 
     private static MyApplication instance;
@@ -39,7 +41,6 @@ public class MyApplication extends Application {
         super.onCreate();
         instance = this;
         initDaoSession();
-        initTagPredict();
     }
 
     private void initDaoSession() {
@@ -53,15 +54,30 @@ public class MyApplication extends Application {
         DaoMaster daoMaster = new DaoMaster(writableDatabase);
         daoSession = daoMaster.newSession();
 
-        TodoDao todoDao = daoSession.getTodoDao();
-        todoDao.deleteByKey("f0659e65d4c34dab9fe37a2f61d74dc4");
+        addColumnDev("note","PRIORITY","int");
     }
 
-    private void initTagPredict() {
+    @SuppressWarnings("SameParameterValue")
+    private void addColumnDev(String tableName, String column, String columnType){
+        if (PreferenceUtil.getBoolean(IS_ALTER_SQL_EXECUTED)){
+            return;
+        }
+        SQLiteOpenHelper sqLiteOpenHelper = new SQLiteOpenHelper(this,"beyond_not_safe.db",null,1) {
+            @Override
+            public void onCreate(SQLiteDatabase db) {
 
+            }
+
+            @Override
+            public void onUpgrade(SQLiteDatabase db, int oldVersion, int newVersion) {
+
+            }
+        };
+        sqLiteOpenHelper.getWritableDatabase().execSQL("alter table "+tableName+" add column "+column+" "+columnType);
+        PreferenceUtil.put(IS_ALTER_SQL_EXECUTED,true);
     }
 
-    private ExecutorService executorService = Executors.newCachedThreadPool();
+    private ExecutorService executorService;
     public ExecutorService getExecutorService() {
         if (executorService == null){
             executorService = Executors.newCachedThreadPool();
@@ -82,7 +98,7 @@ public class MyApplication extends Application {
             File storageDir = this.getExternalFilesDir(Environment.DIRECTORY_DOCUMENTS);
             assert storageDir != null;
             TagPredictor<String,TagGraph> tagPredictor = new TagPredictorImpl(new File(storageDir.getAbsolutePath()+File.separator+"model.json"));
-            tagPredictor.setExecutorService(this.getExecutorService());
+            tagPredictor.setExecutorService(executorService);
             predictModel = new PredictModelImpl(tagPredictor);
         }
         return predictModel;

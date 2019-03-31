@@ -5,6 +5,7 @@ import com.beyond.note5.bean.Todo;
 import com.beyond.note5.model.dao.DaoSession;
 import com.beyond.note5.model.dao.TodoDao;
 import com.beyond.note5.utils.DateUtil;
+
 import org.apache.commons.lang3.time.DateFormatUtils;
 import org.apache.commons.lang3.time.DateUtils;
 
@@ -56,7 +57,15 @@ public class ReminderTimeItemDataGenerator extends AbstractItemDataGenerator<Tod
             Date reminderTime = todo.getReminder() == null ? TODAY_MAX_TIME : todo.getReminder().getStart();
             Date reminderTime1 = todo1.getReminder() == null ? TODAY_MAX_TIME : todo1.getReminder().getStart();
             if (DateUtils.truncatedEquals(reminderTime1, reminderTime, Calendar.DATE) //判断reminderTime
-                    && todo.getReadFlag() <= todo1.getReadFlag()) { //判断readFlag
+                    && todo.getReadFlag() <= todo1.getReadFlag()    //判断readFlag
+                    && DateUtils.truncatedCompareTo(todo.getLastModifyTime(), todo1.getLastModifyTime(), Calendar.MILLISECOND) >= 0) {
+                if (DateUtils.truncatedCompareTo(reminderTime1, reminderTime, Calendar.MILLISECOND) >= 0) {
+                    return index;
+                }
+            }
+            //如果上边没拦住，说明是readFlag的最后一个，用下面的直接拦住
+            if (DateUtils.truncatedEquals(reminderTime1, reminderTime, Calendar.DATE) //判断reminderTime
+                    && todo.getReadFlag() < (todo1.getReadFlag())) {
                 if (DateUtils.truncatedCompareTo(reminderTime1, reminderTime, Calendar.MILLISECOND) >= 0) {
                     return index;
                 }

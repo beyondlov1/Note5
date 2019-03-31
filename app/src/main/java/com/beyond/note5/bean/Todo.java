@@ -12,6 +12,7 @@ import org.greenrobot.greendao.annotation.ToOne;
 
 import java.util.Date;
 
+@SuppressWarnings("StringEquality")
 @Entity
 public class Todo extends Document {
 
@@ -26,6 +27,7 @@ public class Todo extends Document {
     private Date lastModifyTime;
     private Integer version;
     private Integer readFlag = DocumentConst.READ_FLAG_NORMAL;
+    private Integer priority = DocumentConst.PRIORITY_DEFAULT;
 
     @ToOne(joinProperty = "reminderId")
     private Reminder reminder;
@@ -36,10 +38,10 @@ public class Todo extends Document {
     @Generated(hash = 1860181255)
     private transient TodoDao myDao;
 
-    @Generated(hash = 1318149066)
+    @Generated(hash = 484795332)
     public Todo(String id, String reminderId, String title, String content,
-            String contentWithoutTime, String type, Date createTime,
-            Date lastModifyTime, Integer version, Integer readFlag) {
+            String contentWithoutTime, String type, Date createTime, Date lastModifyTime,
+            Integer version, Integer readFlag, Integer priority) {
         this.id = id;
         this.reminderId = reminderId;
         this.title = title;
@@ -50,6 +52,7 @@ public class Todo extends Document {
         this.lastModifyTime = lastModifyTime;
         this.version = version;
         this.readFlag = readFlag;
+        this.priority = priority;
     }
 
     @Generated(hash = 1698043777)
@@ -209,6 +212,14 @@ public class Todo extends Document {
     public void __setDaoSession(DaoSession daoSession) {
         this.daoSession = daoSession;
         myDao = daoSession != null ? daoSession.getTodoDao() : null;
+    }
+
+    public Integer getPriority() {
+        return this.priority;
+    }
+
+    public void setPriority(Integer priority) {
+        this.priority = priority;
     }
 
 }

@@ -409,6 +409,7 @@ public class NoteDetailSuperFragment extends DialogFragment implements OnBackPre
             }
         });
         openWebPage();
+        resetShowType();
     }
 
     protected void beforeReloadView() {
@@ -432,6 +433,10 @@ public class NoteDetailSuperFragment extends DialogFragment implements OnBackPre
         }
     }
 
+    private void resetShowType() {
+        this.showType = ShowNoteDetailEvent.ShowType.CONTENT;
+    }
+
     @SuppressLint("ClickableViewAccessibility")
     private void initCommonDetailContentEvent(final NoteDetailSuperFragment.DetailViewHolder detailViewHolder) {
         detailViewHolder.displayWebView.setOnTouchListener(new OnSlideListener(context) {
@@ -447,7 +452,6 @@ public class NoteDetailSuperFragment extends DialogFragment implements OnBackPre
 
             @Override
             protected void onSlideUp() {
-//                hide();
             }
 
             @Override
@@ -538,6 +542,7 @@ public class NoteDetailSuperFragment extends DialogFragment implements OnBackPre
     public void setSmoothScalable(SmoothScalable smoothScalable) {
         this.smoothScalable = smoothScalable;
     }
+
 
     @Override
     public void setContainer(View view) {

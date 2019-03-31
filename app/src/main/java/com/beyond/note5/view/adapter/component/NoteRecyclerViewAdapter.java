@@ -11,7 +11,10 @@ import android.view.ViewGroup;
 
 import com.beyond.note5.R;
 import com.beyond.note5.bean.Note;
+import com.beyond.note5.constant.DocumentConst;
 import com.beyond.note5.event.ShowNoteDetailEvent;
+import com.beyond.note5.event.UpdateNoteEvent;
+import com.beyond.note5.utils.PreferenceUtil;
 import com.beyond.note5.utils.WebViewUtil;
 import com.beyond.note5.view.adapter.component.header.Header;
 import com.beyond.note5.view.adapter.component.header.ItemDataGenerator;
@@ -29,9 +32,13 @@ import java.util.List;
 
 public class NoteRecyclerViewAdapter extends DocumentRecyclerViewAdapter<Note, NoteViewHolder> {
 
+    private static final String SHOULD_SHOW_LINK = "shouldShowLink";
+    private boolean shouldLinkShow = false;
+
 
     public NoteRecyclerViewAdapter(Context context, ItemDataGenerator<Note, Header> itemDataGenerator) {
         super(context, itemDataGenerator);
+        refreshShouldShowLink();
     }
 
     @Override
@@ -54,12 +61,36 @@ public class NoteRecyclerViewAdapter extends DocumentRecyclerViewAdapter<Note, N
         layoutParams.setFullSpan(true);
     }
 
+    @Override
+    protected void initHeadEvent(int position, Header header, NoteViewHolder viewHolder) {
+        super.initHeadEvent(position, header, viewHolder);
+        viewHolder.title.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                if (shouldLinkShow) {
+                    PreferenceUtil.put(SHOULD_SHOW_LINK, false);
+                } else {
+                    PreferenceUtil.put(SHOULD_SHOW_LINK, true);
+                }
+                refreshShouldShowLink();
+                notifyFullRangeChanged();
+            }
+        });
+    }
+
+    private void refreshShouldShowLink() {
+        shouldLinkShow = PreferenceUtil.getBoolean(SHOULD_SHOW_LINK);
+    }
+
     @SuppressWarnings("Duplicates")
     @Override
     protected void initContentDisplay(NoteViewHolder viewHolder, Note note, int position) {
         GradientDrawable gradientDrawable = new GradientDrawable();
         gradientDrawable.setCornerRadius(13);
         gradientDrawable.setStroke(1, ContextCompat.getColor(context, R.color.dark_gray));
+        if (note.getPriority() != null && note.getPriority() > 0) {
+            gradientDrawable.setStroke(2, ContextCompat.getColor(context, R.color.google_red));
+        }
         viewHolder.dataContainer.setBackground(gradientDrawable);
         if (StringUtils.isNotBlank(note.getTitle())) {
             viewHolder.title.setText(StringUtils.trim(note.getTitle()));
@@ -71,10 +102,11 @@ public class NoteRecyclerViewAdapter extends DocumentRecyclerViewAdapter<Note, N
         viewHolder.content.setVisibility(View.VISIBLE);
         viewHolder.content.setTextSize(12);
         viewHolder.content.setText(StringUtils.trim(note.getContent()));
-        if (WebViewUtil.getUrl(note) == null) {
-            viewHolder.link.setVisibility(View.GONE);
-        } else {
+
+        if (shouldLinkShow && WebViewUtil.getUrl(note) != null) {
             viewHolder.link.setVisibility(View.VISIBLE);
+        } else {
+            viewHolder.link.setVisibility(View.GONE);
         }
 
         StaggeredGridLayoutManager.LayoutParams layoutParams = (StaggeredGridLayoutManager.LayoutParams) viewHolder.itemView.getLayoutParams();
@@ -92,6 +124,18 @@ public class NoteRecyclerViewAdapter extends DocumentRecyclerViewAdapter<Note, N
             @Override
             public void onClick(View v) {
                 showContentDetail(v, itemDataGenerator.getContentData(), note, index);
+            }
+        });
+        viewHolder.itemView.setOnLongClickListener(new View.OnLongClickListener() {
+            @Override
+            public boolean onLongClick(View v) {
+                if (note.getPriority() == null || note.getPriority() == 0) {
+                    note.setPriority(DocumentConst.PRIORITY_FOCUS);
+                } else {
+                    note.setPriority(DocumentConst.PRIORITY_DEFAULT);
+                }
+                EventBus.getDefault().post(new UpdateNoteEvent(note));
+                return true;
             }
         });
         viewHolder.link.setOnClickListener(new View.OnClickListener() {

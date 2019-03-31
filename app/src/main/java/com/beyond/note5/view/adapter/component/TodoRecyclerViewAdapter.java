@@ -110,6 +110,10 @@ public class TodoRecyclerViewAdapter extends DocumentRecyclerViewAdapter<Todo, T
         GradientDrawable gradientDrawable = new GradientDrawable();
         gradientDrawable.setCornerRadius(13);
         gradientDrawable.setStroke(1, ContextCompat.getColor(context, R.color.dark_gray));
+        if (todo.getPriority() != null&&todo.getPriority() > 0
+                &&!todo.getReadFlag().equals(DocumentConst.READ_FLAG_DONE)){
+            gradientDrawable.setStroke(2, ContextCompat.getColor(context, R.color.google_red));
+        }
         viewHolder.dataContainer.setBackground(gradientDrawable);
         viewHolder.checkbox.setVisibility(View.VISIBLE);
         viewHolder.title.setVisibility(View.GONE);
@@ -174,6 +178,19 @@ public class TodoRecyclerViewAdapter extends DocumentRecyclerViewAdapter<Todo, T
                 ShowTodoEditEvent showTodoEditEvent = new ShowTodoEditEvent(v);
                 EventBus.getDefault().post(showTodoEditEvent);
                 EventBus.getDefault().post(new FillTodoModifyEvent(todo));
+            }
+        });
+
+        viewHolder.container.setOnLongClickListener(new View.OnLongClickListener() {
+            @Override
+            public boolean onLongClick(View v) {
+                if (todo.getPriority()==null||todo.getPriority()==0){
+                    todo.setPriority(DocumentConst.PRIORITY_FOCUS);
+                }else {
+                    todo.setPriority(DocumentConst.PRIORITY_DEFAULT);
+                }
+                EventBus.getDefault().post(new UpdateTodoEvent(todo));
+                return true;
             }
         });
     }

@@ -34,8 +34,6 @@ public class TodoModelImpl implements TodoModel {
 
     @Override
     public void update(Todo todo) {
-        Todo oldTodo = todoDao.load(todo.getId());
-
         todoDao.update(todo);
 
         Reminder reminder = todo.getReminder();

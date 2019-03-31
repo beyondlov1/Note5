@@ -3,6 +3,9 @@ package com.beyond.note5.view.adapter.component.header;
 import com.beyond.note5.bean.Document;
 import com.beyond.note5.constant.ReadFlagEnum;
 
+import org.apache.commons.lang3.time.DateUtils;
+
+import java.util.Calendar;
 import java.util.List;
 import java.util.Objects;
 
@@ -33,7 +36,8 @@ public class ReadFlagItemDataGenerator<T extends Document> extends AbstractItemD
     public int getInsertIndex(T t) {
         int index = 0;
         for (T document : contentData) {
-            if (Objects.equals(document.getReadFlag(),t.getReadFlag())){
+            if (Objects.equals(document.getReadFlag(),t.getReadFlag())
+                    && DateUtils.truncatedCompareTo(t.getLastModifyTime(),document.getLastModifyTime(),Calendar.MILLISECOND)>=0){
                 return index;
             }
             index++;

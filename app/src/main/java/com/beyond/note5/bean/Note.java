@@ -26,6 +26,7 @@ public class Note extends Document {
     private Date lastModifyTime;
     private Integer version;
     private Integer readFlag = DocumentConst.READ_FLAG_NORMAL;
+    private Integer priority = DocumentConst.PRIORITY_DEFAULT;
 
     @ToMany(referencedJoinProperty = "noteId")
     private List<Attachment> attachments;
@@ -39,10 +40,9 @@ public class Note extends Document {
     public Note() {
     }
 
-    @Generated(hash = 988450006)
-    public Note(String id, String title, String content, String type,
-            Date createTime, Date lastModifyTime, Integer version,
-            Integer readFlag) {
+    @Generated(hash = 152564598)
+    public Note(String id, String title, String content, String type, Date createTime,
+            Date lastModifyTime, Integer version, Integer readFlag, Integer priority) {
         this.id = id;
         this.title = title;
         this.content = content;
@@ -51,6 +51,7 @@ public class Note extends Document {
         this.lastModifyTime = lastModifyTime;
         this.version = version;
         this.readFlag = readFlag;
+        this.priority = priority;
     }
 
     @Override
@@ -206,6 +207,14 @@ public class Note extends Document {
             }
         }
         return attachments;
+    }
+
+    public Integer getPriority() {
+        return this.priority;
+    }
+
+    public void setPriority(Integer priority) {
+        this.priority = priority;
     }
 
 

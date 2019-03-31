@@ -130,7 +130,8 @@ public abstract class DocumentRecyclerViewAdapter<T extends Document, S extends 
 
     }
 
-    private void notifyFullRangeChanged() {
+    @SuppressWarnings("WeakerAccess")
+    public void notifyFullRangeChanged() {
         notifyItemRangeChanged(0, itemDataGenerator.getItemData().size());
     }
 
