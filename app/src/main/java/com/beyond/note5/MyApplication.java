@@ -9,9 +9,13 @@ import com.beyond.note5.model.PredictModel;
 import com.beyond.note5.model.PredictModelImpl;
 import com.beyond.note5.model.dao.DaoMaster;
 import com.beyond.note5.model.dao.DaoSession;
+import com.beyond.note5.predict.FilterableTagTrainer;
 import com.beyond.note5.predict.TagPredictor;
 import com.beyond.note5.predict.TagPredictorImpl;
+import com.beyond.note5.predict.TagTrainer;
 import com.beyond.note5.predict.bean.TagGraph;
+import com.beyond.note5.predict.filter.train.TimeExpressionTrainFilter;
+import com.beyond.note5.predict.filter.train.UrlTrainFilter;
 import com.beyond.note5.utils.PreferenceUtil;
 
 import java.io.File;
@@ -97,7 +101,13 @@ public class MyApplication extends Application {
         if (predictModel == null){
             File storageDir = this.getExternalFilesDir(Environment.DIRECTORY_DOCUMENTS);
             assert storageDir != null;
-            TagPredictor<String,TagGraph> tagPredictor = new TagPredictorImpl(new File(storageDir.getAbsolutePath()+File.separator+"model.json"));
+            TagPredictor<String,TagGraph> tagPredictor = new TagPredictorImpl(
+                    new File(storageDir.getAbsolutePath()+File.separator+"model.json"),true);
+            TagTrainer tagTrainer = tagPredictor.getTagTrainer();
+            if (tagTrainer instanceof FilterableTagTrainer){
+                ((FilterableTagTrainer) tagTrainer).addFilter(new UrlTrainFilter());
+                ((FilterableTagTrainer) tagTrainer).addFilter(new TimeExpressionTrainFilter());
+            }
             tagPredictor.setExecutorService(executorService);
             predictModel = new PredictModelImpl(tagPredictor);
         }

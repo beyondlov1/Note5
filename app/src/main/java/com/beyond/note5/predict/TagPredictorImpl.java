@@ -19,6 +19,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
  * @author beyondlov1
  * @date 2019/03/11
  */
+@SuppressWarnings("WeakerAccess")
 public class TagPredictorImpl implements TagPredictor<String, TagGraph>, Observer {
 
     private TagGraph tagGraph;
@@ -31,7 +32,20 @@ public class TagPredictorImpl implements TagPredictor<String, TagGraph>, Observe
         TagGraphSerializerImpl serializer = new TagGraphSerializerImpl(file);
         serializer.addObserver(this);
 
-        this.tagTrainer = TagTrainer.create(serializer);
+        this.tagTrainer = TagTrainerImpl.create(serializer);
+        this.tagGraph = serializer.generate();
+    }
+
+    public TagPredictorImpl(File file,boolean isFilterable) {
+        TagGraphSerializerImpl serializer = new TagGraphSerializerImpl(file);
+        serializer.addObserver(this);
+
+        TagTrainer tagTrainer = TagTrainerImpl.create(serializer);
+        if (isFilterable){
+            this.tagTrainer = new FilterableTagTrainer(tagTrainer);
+        }else {
+            this.tagTrainer = tagTrainer;
+        }
         this.tagGraph = serializer.generate();
     }
 

@@ -20,7 +20,7 @@ import java.util.List;
 /** 
  * DAO for table "TODO".
 */
-@SuppressWarnings({"WeakerAccess", "PointlessArithmeticExpression", "UnnecessaryLocalVariable", "TryFinallyCanBeTryWithResources", "Convert2Diamond"})
+@SuppressWarnings("ALL")
 public class TodoDao extends AbstractDao<Todo, String> {
 
     public static final String TABLENAME = "TODO";

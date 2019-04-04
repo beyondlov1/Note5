@@ -15,7 +15,7 @@ import org.greenrobot.greendao.internal.DaoConfig;
 /** 
  * DAO for table "NOTE".
 */
-@SuppressWarnings({"WeakerAccess", "PointlessArithmeticExpression", "UnnecessaryLocalVariable"})
+@SuppressWarnings("ALL")
 public class NoteDao extends AbstractDao<Note, String> {
 
     public static final String TABLENAME = "NOTE";

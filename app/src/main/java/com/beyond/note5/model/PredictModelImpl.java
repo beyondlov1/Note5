@@ -3,6 +3,7 @@ package com.beyond.note5.model;
 import com.beyond.note5.predict.TagPredictor;
 import com.beyond.note5.predict.bean.Tag;
 import com.beyond.note5.predict.bean.TagGraph;
+import com.beyond.note5.predict.filter.target.TrainTarget;
 
 import java.util.List;
 
@@ -27,6 +28,6 @@ public class PredictModelImpl implements PredictModel{
 
     @Override
     public void train(String source) throws Exception {
-        tagPredictor.getTagTrainer().trainSync(source);
+        tagPredictor.getTagTrainer().trainSync(new TrainTarget(source));
     }
 }
