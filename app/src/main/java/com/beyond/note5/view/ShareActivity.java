@@ -93,6 +93,9 @@ public class ShareActivity extends AbstractActivityNoteView {
         Note note = new Note();
         note.setId(IDUtil.uuid());
         note.setTitle(title);
+        if (content.startsWith("null ")){
+            content = content.substring(5);
+        }
         note.setContent(content);
         note.setCreateTime(currDate);
         note.setLastModifyTime(currDate);
