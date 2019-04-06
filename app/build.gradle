@@ -95,5 +95,8 @@ dependencies {
     implementation 'com.alibaba:fastjson:1.2.56'
     //inject
     implementation 'javax.inject:javax.inject:1'
+    //html parse
+    implementation 'org.jsoup:jsoup:1.11.3'
+
 }
 

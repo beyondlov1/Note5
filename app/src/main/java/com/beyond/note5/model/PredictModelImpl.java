@@ -15,8 +15,6 @@ public class PredictModelImpl implements PredictModel{
 
     private TagPredictor<String, TagGraph> tagPredictor;
 
-    private int predictFailCount;
-
     public PredictModelImpl(TagPredictor<String, TagGraph> tagPredictor) {
         this.tagPredictor = tagPredictor;
     }

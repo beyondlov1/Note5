@@ -92,16 +92,15 @@ public class NoteRecyclerViewAdapter extends DocumentRecyclerViewAdapter<Note, N
             gradientDrawable.setStroke(2, ContextCompat.getColor(context, R.color.google_red));
         }
         viewHolder.dataContainer.setBackground(gradientDrawable);
-        if (StringUtils.isNotBlank(note.getTitle())) {
-            viewHolder.title.setText(StringUtils.trim(note.getTitle()));
-            viewHolder.title.setVisibility(View.VISIBLE);
-        } else {
-            viewHolder.title.setVisibility(View.GONE);
-        }
+        viewHolder.title.setVisibility(View.GONE);
         viewHolder.title.setTextColor(Color.DKGRAY);
         viewHolder.content.setVisibility(View.VISIBLE);
         viewHolder.content.setTextSize(12);
-        viewHolder.content.setText(StringUtils.trim(note.getContent()));
+        if (StringUtils.isNotBlank(note.getTitle())){
+            viewHolder.content.setText(StringUtils.trim(note.getTitle()));
+        }else {
+            viewHolder.content.setText(StringUtils.trim(note.getContent()));
+        }
 
         if (shouldLinkShow && WebViewUtil.getUrl(note) != null) {
             viewHolder.link.setVisibility(View.VISIBLE);

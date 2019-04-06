@@ -14,6 +14,7 @@ import com.beyond.note5.event.AddNoteEvent;
 import com.beyond.note5.event.DeleteDeepNoteEvent;
 import com.beyond.note5.event.DeleteNoteEvent;
 import com.beyond.note5.event.HideFABEvent;
+import com.beyond.note5.event.ModifyNoteDoneEvent;
 import com.beyond.note5.event.RefreshNoteListEvent;
 import com.beyond.note5.event.ShowFABEvent;
 import com.beyond.note5.event.UpdateNoteEvent;
@@ -187,5 +188,6 @@ public class NoteListFragment extends AbstractFragmentNoteView {
                 break;
             }
         }
+        EventBus.getDefault().post(new ModifyNoteDoneEvent(note));
     }
 }

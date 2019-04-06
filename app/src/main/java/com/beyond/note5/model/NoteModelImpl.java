@@ -2,6 +2,7 @@ package com.beyond.note5.model;
 
 import android.database.sqlite.SQLiteConstraintException;
 import android.util.Log;
+
 import com.beyond.note5.MyApplication;
 import com.beyond.note5.bean.Attachment;
 import com.beyond.note5.bean.Document;
@@ -10,6 +11,7 @@ import com.beyond.note5.model.dao.AttachmentDao;
 import com.beyond.note5.model.dao.DaoSession;
 import com.beyond.note5.model.dao.NoteDao;
 import com.beyond.note5.utils.PhotoUtil;
+
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.io.FileUtils;
 
