@@ -98,5 +98,9 @@ dependencies {
     //html parse
     implementation 'org.jsoup:jsoup:1.11.3'
 
+    //qrCode
+    implementation 'com.journeyapps:zxing-android-embedded:3.6.0'
+
+
 }
 

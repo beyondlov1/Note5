@@ -4,6 +4,8 @@ import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.StaggeredGridLayoutManager;
+import android.util.Base64;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -21,7 +23,10 @@ import com.beyond.note5.event.UpdateNoteEvent;
 import com.beyond.note5.module.DaggerNoteComponent;
 import com.beyond.note5.module.NoteComponent;
 import com.beyond.note5.module.NoteModule;
+import com.beyond.note5.ocr.OCRCallBack;
+import com.beyond.note5.ocr.OCRTask;
 import com.beyond.note5.presenter.NotePresenter;
+import com.beyond.note5.view.MainActivity;
 import com.beyond.note5.view.adapter.AbstractFragmentNoteView;
 import com.beyond.note5.view.adapter.component.NoteRecyclerViewAdapter;
 import com.beyond.note5.view.adapter.component.header.ReadFlagItemDataGenerator;
@@ -31,6 +36,8 @@ import org.greenrobot.eventbus.EventBus;
 import org.greenrobot.eventbus.Subscribe;
 import org.greenrobot.eventbus.ThreadMode;
 
+import java.io.FileInputStream;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
@@ -150,6 +157,32 @@ public class NoteListFragment extends AbstractFragmentNoteView {
         noteRecyclerViewAdapter.notifyInserted(note);
         noteRecyclerView.scrollToPosition(insertIndex);
         msg("添加成功");
+
+//        testOcr(note);
+    }
+
+    private void testOcr(Note note) {
+        if (note.getAttachments()==null||note.getAttachments().isEmpty()){
+            return;
+        }
+        try (FileInputStream fileInputStream = new FileInputStream(note.getAttachments().get(0).getPath())){
+            byte[] bytes=new byte[fileInputStream.available()];
+            fileInputStream.read(bytes);
+            String base64String = Base64.encodeToString(bytes, Base64.DEFAULT);
+            base64String = "data:image/jpeg;base64,"+base64String;
+            Log.d(MainActivity.class.getName(),base64String);
+            OCRTask ocrTask = new OCRTask("2dcb07678f88957", false, base64String, "eng", new OCRCallBack() {
+
+                @Override
+                public void getOCRCallBackResult(String response) {
+                    Log.d(MainActivity.class.getName(),response);
+                }
+            });
+            ocrTask.execute();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
     }
 
     @Override

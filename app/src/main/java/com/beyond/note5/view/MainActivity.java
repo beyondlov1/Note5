@@ -21,6 +21,7 @@ import android.support.v4.view.ViewPager;
 import android.util.Log;
 import android.view.View;
 import android.widget.FrameLayout;
+import android.widget.Toast;
 
 import com.beyond.note5.MyApplication;
 import com.beyond.note5.R;
@@ -55,6 +56,8 @@ import com.beyond.note5.view.fragment.TodoListFragment;
 import com.beyond.note5.view.fragment.TodoModifySuperFragment;
 import com.beyond.note5.view.listener.OnBackPressListener;
 import com.beyond.note5.view.listener.OnKeyboardChangeListener;
+import com.google.zxing.integration.android.IntentIntegrator;
+import com.google.zxing.integration.android.IntentResult;
 
 import org.apache.commons.lang3.StringUtils;
 import org.greenrobot.eventbus.EventBus;
@@ -239,7 +242,8 @@ public class MainActivity extends FragmentActivity {
             @Override
             public boolean onLongClick(View v) {
                 if (StringUtils.equals(currentType, Document.NOTE)) {
-                    takePhoto();
+//                    takePhoto();
+                    new IntentIntegrator(MainActivity.this).initiateScan();
                     return true;
                 }
                 return false;
@@ -422,7 +426,31 @@ public class MainActivity extends FragmentActivity {
         if (resultCode == RESULT_OK && requestCode == TAKE_PHOTO_REQUEST_CODE) {
             addPhotoNote();
         }
+
+        IntentResult result = IntentIntegrator.parseActivityResult(requestCode, resultCode, data);
+        if(result != null) {
+            if(result.getContents() == null) {
+                ToastUtil.toast(this, "Cancelled", Toast.LENGTH_LONG);
+            } else {
+                addQRCodeNote(result.getContents());
+                ToastUtil.toast(this, "Scanned: " + result.getContents(), Toast.LENGTH_LONG);
+            }
+        } else {
+            super.onActivityResult(requestCode, resultCode, data);
+        }
     }
+
+    private void addQRCodeNote(String content) {
+        Date currDate = new Date();
+        Note note = new Note();
+        note.setId(IDUtil.uuid());
+        note.setContent(content);
+        note.setCreateTime(currDate);
+        note.setLastModifyTime(currDate);
+
+        EventBus.getDefault().post(new AddNoteEvent(note));
+    }
+
 
     private String currPhotoPath;
 
