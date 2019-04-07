@@ -236,7 +236,7 @@ public class NoteDetailSuperFragment extends DialogFragment implements OnBackPre
         browserSearchButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                String url = WebViewUtil.getUrl(data.get(currIndex));
+                String url = WebViewUtil.getUrlOrSearchUrl(data.get(currIndex));
                 if (url != null) {
                     Uri uri = Uri.parse(url);
                     Intent intent = new Intent(Intent.ACTION_VIEW, uri);
@@ -267,7 +267,7 @@ public class NoteDetailSuperFragment extends DialogFragment implements OnBackPre
     }
 
     private void loadWebPage() {
-        String url = WebViewUtil.getUrl(data.get(currIndex));
+        String url = WebViewUtil.getUrlOrSearchUrl(data.get(currIndex));
         if (url != null) {
             WebViewUtil.addWebViewProgressBar(new DetailViewHolder(viewSwitcher.getCurrentView()).displayWebView);
             new DetailViewHolder(viewSwitcher.getCurrentView()).displayWebView.loadUrl(url);
@@ -465,7 +465,7 @@ public class NoteDetailSuperFragment extends DialogFragment implements OnBackPre
 
             @Override
             protected int getSlideXSensitivity() {
-                return 350;
+                return 250;
             }
 
             @Override

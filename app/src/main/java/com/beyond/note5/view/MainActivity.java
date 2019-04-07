@@ -10,16 +10,35 @@ import android.os.Build;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.support.design.widget.FloatingActionButton;
-import android.support.v4.app.*;
+import android.support.v4.app.DialogFragment;
+import android.support.v4.app.Fragment;
+import android.support.v4.app.FragmentActivity;
+import android.support.v4.app.FragmentManager;
+import android.support.v4.app.FragmentPagerAdapter;
+import android.support.v4.app.FragmentTransaction;
 import android.support.v4.view.PagerTabStrip;
 import android.support.v4.view.ViewPager;
 import android.util.Log;
 import android.view.View;
 import android.widget.FrameLayout;
+
 import com.beyond.note5.MyApplication;
 import com.beyond.note5.R;
-import com.beyond.note5.bean.*;
-import com.beyond.note5.event.*;
+import com.beyond.note5.bean.Attachment;
+import com.beyond.note5.bean.Document;
+import com.beyond.note5.bean.Note;
+import com.beyond.note5.bean.Reminder;
+import com.beyond.note5.bean.Todo;
+import com.beyond.note5.event.AddNoteEvent;
+import com.beyond.note5.event.DetailNoteEvent;
+import com.beyond.note5.event.HideFABEvent;
+import com.beyond.note5.event.HideKeyBoardEvent;
+import com.beyond.note5.event.HideNoteDetailEvent;
+import com.beyond.note5.event.HideTodoEditEvent;
+import com.beyond.note5.event.ShowFABEvent;
+import com.beyond.note5.event.ShowKeyBoardEvent;
+import com.beyond.note5.event.ShowNoteDetailEvent;
+import com.beyond.note5.event.ShowTodoEditEvent;
 import com.beyond.note5.model.CalendarModel;
 import com.beyond.note5.model.CalendarModelImpl;
 import com.beyond.note5.utils.IDUtil;
@@ -28,9 +47,16 @@ import com.beyond.note5.utils.PreferenceUtil;
 import com.beyond.note5.utils.ToastUtil;
 import com.beyond.note5.view.adapter.component.header.ItemDataGenerator;
 import com.beyond.note5.view.animator.SmoothScalable;
-import com.beyond.note5.view.fragment.*;
+import com.beyond.note5.view.fragment.NoteDetailSuperFragment;
+import com.beyond.note5.view.fragment.NoteEditFragment;
+import com.beyond.note5.view.fragment.NoteListFragment;
+import com.beyond.note5.view.fragment.TodoEditFragment;
+import com.beyond.note5.view.fragment.TodoListFragment;
+import com.beyond.note5.view.fragment.TodoModifySuperFragment;
 import com.beyond.note5.view.listener.OnBackPressListener;
 import com.beyond.note5.view.listener.OnKeyboardChangeListener;
+
+import org.apache.commons.lang3.StringUtils;
 import org.greenrobot.eventbus.EventBus;
 import org.greenrobot.eventbus.Subscribe;
 import org.greenrobot.eventbus.ThreadMode;
@@ -47,6 +73,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
  */
 public class MainActivity extends FragmentActivity {
 
+    private static final int TAKE_PHOTO_REQUEST_CODE = 1;
     public View mainContainer;
     private ViewPager mainViewPager;
     private View noteDetailFragmentContainer;
@@ -75,7 +102,7 @@ public class MainActivity extends FragmentActivity {
 
     }
 
-    private void test(){
+    private void test() {
         CalendarModel calendarModel = new CalendarModelImpl(this);
         Todo todo = new Todo();
         todo.setId(IDUtil.uuid());
@@ -208,6 +235,16 @@ public class MainActivity extends FragmentActivity {
                 dialog.show(getSupportFragmentManager(), "editDialog");
             }
         });
+        addDocumentButton.setOnLongClickListener(new View.OnLongClickListener() {
+            @Override
+            public boolean onLongClick(View v) {
+                if (StringUtils.equals(currentType, Document.NOTE)) {
+                    takePhoto();
+                    return true;
+                }
+                return false;
+            }
+        });
     }
 
     private AtomicBoolean isFabShown = new AtomicBoolean(true);
@@ -222,7 +259,7 @@ public class MainActivity extends FragmentActivity {
     }
 
     @Subscribe(threadMode = ThreadMode.MAIN)
-    public void onRecievedHideFABCommand(HideFABEvent hideFABEvent) {
+    public void onReceivedHideFABCommand(HideFABEvent hideFABEvent) {
         if (isFabShown.get()) {
             hideAnimatorSet.setTarget(addDocumentButton);
             hideAnimatorSet.start();
@@ -239,7 +276,7 @@ public class MainActivity extends FragmentActivity {
 
 
     @Subscribe(threadMode = ThreadMode.MAIN)
-    public void onRecievedShowFABCommand(ShowFABEvent showFABEvent) {
+    public void onReceivedShowFABCommand(ShowFABEvent showFABEvent) {
         if (!isFabShown.get()) {
             showAnimatorSet.setTarget(addDocumentButton);
             showAnimatorSet.start();
@@ -313,7 +350,7 @@ public class MainActivity extends FragmentActivity {
         EventBus.getDefault().post(new ShowFABEvent(null));
 
         SmoothScalable smoothScalable = (SmoothScalable) todoModifyFragment;
-        smoothScalable.setEndView(clickedView == null?getViewToReturn(-1):clickedView);
+        smoothScalable.setEndView(clickedView == null ? getViewToReturn(-1) : clickedView);
         smoothScalable.hide();
         isTodoEditShow = false;
     }
@@ -355,8 +392,8 @@ public class MainActivity extends FragmentActivity {
     @Override
     protected void onDestroy() {
         int currentItem = mainViewPager.getCurrentItem();
-        PreferenceUtil.put(MyApplication.DEFAULT_PAGE,currentItem);
-        Log.d("MainActivity",currentItem+"");
+        PreferenceUtil.put(MyApplication.DEFAULT_PAGE, currentItem);
+        Log.d("MainActivity", currentItem + "");
         super.onDestroy();
     }
 
@@ -382,17 +419,15 @@ public class MainActivity extends FragmentActivity {
 
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
-        if (resultCode == RESULT_OK) {
-            if (requestCode == 1) {
-                addPhotoNote();
-            }
+        if (resultCode == RESULT_OK && requestCode == TAKE_PHOTO_REQUEST_CODE) {
+            addPhotoNote();
         }
     }
 
     private String currPhotoPath;
 
     private void takePhoto() {
-        File file = PhotoUtil.takePhoto(this, 1);
+        File file = PhotoUtil.takePhoto(this, TAKE_PHOTO_REQUEST_CODE);
         if (file != null) {
             currPhotoPath = file.getAbsolutePath();
         }

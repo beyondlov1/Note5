@@ -8,13 +8,13 @@ import com.beyond.note5.bean.Note;
 import com.beyond.note5.model.NoteModel;
 import com.beyond.note5.model.NoteModelImpl;
 import com.beyond.note5.utils.HtmlUtil;
-import com.beyond.note5.utils.WebViewUtil;
 import com.beyond.note5.view.NoteView;
 
 import org.apache.commons.lang3.StringUtils;
 
 import java.util.List;
 import java.util.concurrent.ExecutorService;
+import java.util.concurrent.TimeUnit;
 
 import okhttp3.Call;
 import okhttp3.OkHttpClient;
@@ -38,7 +38,10 @@ public class NotePresenterImpl implements NotePresenter {
         this.noteView = noteView;
         this.noteModel = new NoteModelImpl();
         this.executorService = MyApplication.getInstance().getExecutorService();
-        this.okHttpClient = new OkHttpClient();
+        OkHttpClient.Builder httpBuilder = new OkHttpClient.Builder();
+        httpBuilder.connectTimeout(3000,TimeUnit.MILLISECONDS);
+        httpBuilder.readTimeout(3000,TimeUnit.MILLISECONDS);
+        this.okHttpClient = httpBuilder.build();
         this.handler = new Handler();
     }
 
@@ -169,13 +172,18 @@ public class NotePresenterImpl implements NotePresenter {
         noteView.onFindAllFail();
     }
 
-    private void processBeforeIn(Note note) throws Exception {
-        processTitle(note);
+    private void processBeforeIn(Note note) {
+        try {
+            processTitle(note);
+        } catch (Exception e) {
+            e.printStackTrace();
+            Log.d("NotePresenterImpl","处理title出错",e);
+        }
     }
 
     private void processTitle(Note note) throws Exception {
 
-        String url = WebViewUtil.getUrl(note);
+        String url = HtmlUtil.getUrl(note.getContent());
         if (StringUtils.isBlank(url)) {
             return;
         }

@@ -102,7 +102,7 @@ public class NoteRecyclerViewAdapter extends DocumentRecyclerViewAdapter<Note, N
             viewHolder.content.setText(StringUtils.trim(note.getContent()));
         }
 
-        if (shouldLinkShow && WebViewUtil.getUrl(note) != null) {
+        if (shouldLinkShow && WebViewUtil.getUrlOrSearchUrl(note) != null) {
             viewHolder.link.setVisibility(View.VISIBLE);
         } else {
             viewHolder.link.setVisibility(View.GONE);

@@ -154,11 +154,11 @@ public class WebViewUtil {
         webView.removeAllViews();
     }
 
-    public static String getUrl(Document document){
-        return getUrl(document.getContent());
+    public static String getUrlOrSearchUrl(Document document){
+        return getUrlOrSearchUrl(document.getContent());
     }
 
-    public static String getUrl(String content) {
+    public static String getUrlOrSearchUrl(String content) {
         String urlWeGet = null;
         if (content.contains("http://") || content.contains("https://")) {
             //含网址的获取网址

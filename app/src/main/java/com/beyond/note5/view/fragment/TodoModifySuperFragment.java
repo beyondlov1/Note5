@@ -176,7 +176,7 @@ public class TodoModifySuperFragment extends TodoEditSuperFragment implements Pr
             @Override
             public void onClick(View v) {
                 isClosing = false; /* TYPE3: 混合版， 只有在点击browserSearchButton的时候不隐藏*/
-                String url = WebViewUtil.getUrl(createdDocument);
+                String url = WebViewUtil.getUrlOrSearchUrl(createdDocument);
                 if (url != null) {
                     Uri uri = Uri.parse(url);
                     Intent intent = new Intent(Intent.ACTION_VIEW, uri);
