@@ -39,37 +39,22 @@ public class NotePresenterImpl implements NotePresenter {
         this.noteModel = new NoteModelImpl();
         this.executorService = MyApplication.getInstance().getExecutorService();
         OkHttpClient.Builder httpBuilder = new OkHttpClient.Builder();
-        httpBuilder.connectTimeout(3000,TimeUnit.MILLISECONDS);
-        httpBuilder.readTimeout(3000,TimeUnit.MILLISECONDS);
+        httpBuilder.connectTimeout(3000, TimeUnit.MILLISECONDS);
+        httpBuilder.readTimeout(3000, TimeUnit.MILLISECONDS);
         this.okHttpClient = httpBuilder.build();
         this.handler = new Handler();
     }
 
     @Override
     public void add(final Note note) {
-        executorService.execute(new Runnable() {
-            @Override
-            public void run() {
-                try {
-                    processBeforeIn(note);
-                    noteModel.add(note);
-                    handler.post(new Runnable() {
-                        @Override
-                        public void run() {
-                            addSuccess(note);
-                        }
-                    });
-                } catch (Exception e) {
-                    e.printStackTrace();
-                    handler.post(new Runnable() {
-                        @Override
-                        public void run() {
-                            addFail(note);
-                        }
-                    });
-                }
-            }
-        });
+        try {
+            noteModel.add(note);
+            addSuccess(note);
+            updateTitleAsync(note);
+        } catch (Exception e) {
+            e.printStackTrace();
+            addFail(note);
+        }
     }
 
     @Override
@@ -84,29 +69,15 @@ public class NotePresenterImpl implements NotePresenter {
 
     @Override
     public void update(final Note note) {
-        executorService.execute(new Runnable() {
-            @Override
-            public void run() {
-                try {
-                    processBeforeIn(note);
-                    noteModel.update(note);
-                    handler.post(new Runnable() {
-                        @Override
-                        public void run() {
-                            updateSuccess(note);
-                        }
-                    });
-                } catch (Exception e) {
-                    e.printStackTrace();
-                    handler.post(new Runnable() {
-                        @Override
-                        public void run() {
-                            updateFail(note);
-                        }
-                    });
-                }
-            }
-        });
+        try {
+            noteModel.update(note);
+            updateSuccess(note);
+            updateTitleAsync(note);
+        } catch (Exception e) {
+            e.printStackTrace();
+            updateFail(note);
+        }
+
     }
 
     @Override
@@ -172,20 +143,41 @@ public class NotePresenterImpl implements NotePresenter {
         noteView.onFindAllFail();
     }
 
-    private void processBeforeIn(Note note) {
-        try {
-            processTitle(note);
-        } catch (Exception e) {
-            e.printStackTrace();
-            Log.d("NotePresenterImpl","处理title出错",e);
-        }
+    private void updateTitleAsync(final Note note) {
+        executorService.execute(new Runnable() {
+            @Override
+            public void run() {
+                boolean isNeedUpdate = false;
+                try {
+                    isNeedUpdate = processTitle(note);
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+                if (isNeedUpdate) {
+                    handler.post(new Runnable() {
+                        @Override
+                        public void run() {
+                            update(note);
+                        }
+                    });
+                }
+            }
+        });
     }
 
-    private void processTitle(Note note) throws Exception {
+
+    /**
+     * 生曾title
+     *
+     * @param note note
+     * @return 是否需要更新
+     * @throws Exception 异常
+     */
+    private boolean processTitle(Note note) throws Exception {
 
         String url = HtmlUtil.getUrl(note.getContent());
         if (StringUtils.isBlank(url)) {
-            return;
+            return false;
         }
 
         final Request request = new Request.Builder()
@@ -194,16 +186,21 @@ public class NotePresenterImpl implements NotePresenter {
                 .build();
         Call call = okHttpClient.newCall(request);
         Response response = call.execute();
-        if (!response.isSuccessful()){
-            return;
+        if (!response.isSuccessful()) {
+            return false;
         }
         if (response.body() == null) {
-            return;
+            return false;
         }
         String titleFromHtml = HtmlUtil.getTitleFromHtml(response.body().string());
-        Log.d("NotePresenterImpl", titleFromHtml+"");
+        Log.d("NotePresenterImpl", titleFromHtml + "");
         if (StringUtils.isNotBlank(titleFromHtml)) {
+            if (StringUtils.equals(titleFromHtml, note.getTitle())) {
+                return false;
+            }
             note.setTitle(titleFromHtml);
+            return true;
         }
+        return false;
     }
 }

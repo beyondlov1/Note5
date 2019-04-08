@@ -157,10 +157,10 @@ public class NoteListFragment extends AbstractFragmentNoteView {
         noteRecyclerViewAdapter.notifyInserted(note);
         noteRecyclerView.scrollToPosition(insertIndex);
         msg("添加成功");
-
-//        testOcr(note);
     }
 
+    @SuppressWarnings({"ResultOfMethodCallIgnored", "unchecked"})
+    @Deprecated
     private void testOcr(Note note) {
         if (note.getAttachments()==null||note.getAttachments().isEmpty()){
             return;

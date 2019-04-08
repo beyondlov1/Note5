@@ -22,7 +22,6 @@ import com.beyond.note5.utils.converter.MarkdownHtml2HtmlConverter;
 import org.apache.commons.lang3.StringUtils;
 
 import java.util.Stack;
-import java.util.regex.Pattern;
 
 
 /**
@@ -89,7 +88,7 @@ public class WebViewUtil {
                 if (lastUrl != null && !StringUtils.equals(lastUrl, url)) {
                     historyUrlStack.push(lastUrl);
                 }
-                if (!StringUtils.containsIgnoreCase(url,"redirect=http")){
+                if (!StringUtils.containsIgnoreCase(url, "redirect=http")) {
                     lastUrl = url;
                 }
                 return false;
@@ -154,48 +153,32 @@ public class WebViewUtil {
         webView.removeAllViews();
     }
 
-    public static String getUrlOrSearchUrl(Document document){
+    public static String getUrlOrSearchUrl(Document document) {
         return getUrlOrSearchUrl(document.getContent());
     }
 
     public static String getUrlOrSearchUrl(String content) {
-        String urlWeGet = null;
-        if (content.contains("http://") || content.contains("https://")) {
-            //含网址的获取网址
-            //网址正则式
-            Pattern pattern = Pattern.compile("^(http|https|ftp)\\://([a-zA-Z0-9\\.\\-]+(\\:[a-zA-Z0-9\\.&%\\$\\-]+)*@)?((25[0-5]|2[0-4][0-9]|[0-1]{1}[0-9]{2}|[1-9]{1}[0-9]{1}|[1-9])\\.(25[0-5]|2[0-4][0-9]|[0-1]{1}[0-9]{2}|[1-9]{1}[0-9]{1}|[1-9]|0)\\.(25[0-5]|2[0-4][0-9]|[0-1]{1}[0-9]{2}|[1-9]{1}[0-9]{1}|[1-9]|0)\\.(25[0-5]|2[0-4][0-9]|[0-1]{1}[0-9]{2}|[1-9]{1}[0-9]{1}|[0-9])|([a-zA-Z0-9\\-]+\\.)*[a-zA-Z0-9\\-]+\\.[a-zA-Z]{2,4})(\\:[0-9]+)?(/[^/][a-zA-Z0-9\\.\\,\\?\\'\\\\/\\+&%\\$#\\=~_\\-@]*)*$");
 
-            if (content.length() < 200) {
-                //小于200有网址的获取网址
-                if (pattern.matcher(content.substring(content.indexOf("http"), content.length())).matches()) {
-                    urlWeGet = content.substring(content.indexOf("http"), content.length());
-                } else {
-                    for (int i = content.length(); !pattern.matcher(content.substring(content.indexOf("http"), i)).matches(); i--) {
-                        urlWeGet = content.substring(content.indexOf("http"), i);
-                    }
-                }
-            } else {
-                //大于200的有网址的获取网址
-                String shortThings = content.substring(0, 200);
-                for (int i = shortThings.length(); !pattern.matcher(content.substring(shortThings.indexOf("http"), i)).matches(); i--) {
-                    urlWeGet = shortThings.substring(shortThings.indexOf("http"), i);
-                }
-            }
-        } else if (content.contains("content://")) {
+        String url = HtmlUtil.getUrl(content);
+        if (StringUtils.isNotBlank(url)) {
+            return url;
+        }
+
+        if (content.contains("content://")) {
             Uri uri = Uri.parse(content);
 
-            urlWeGet = content;
+            url = content;
 
         } else {
             //不含网址的搜索
             if (removeSpecialChars(content).length() > 32) {
-                urlWeGet = null;
+                url = null;
             } else {
-                urlWeGet = "https://www.bing.com/search?q=" + removeSpecialChars(content);
+                url = "https://www.bing.com/search?q=" + removeSpecialChars(content);
             }
         }
 
-        return urlWeGet;
+        return url;
     }
 
     public static String removeSpecialChars(String source) {
