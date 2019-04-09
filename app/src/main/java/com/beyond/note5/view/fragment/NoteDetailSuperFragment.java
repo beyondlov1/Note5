@@ -280,15 +280,6 @@ public class NoteDetailSuperFragment extends DialogFragment implements OnBackPre
             WebView currentWebView = new DetailViewHolder(viewSwitcher.getCurrentView()).displayWebView;
             WebViewUtil.addWebViewProgressBar(currentWebView);
             currentWebView.loadUrl(url);
-
-            // 尝试在每次打开网页的时候更新title， 但是有问题， 生成title的这一次不能打开网页， 只能更新（因为会刷新webview）
-//            if (StringUtils.isNotBlank(data.get(currIndex).getTitle())){
-//                return;
-//            }
-//            String urlFromContent = HtmlUtil.getUrl(data.get(currIndex).getContent());
-//            if (StringUtils.isNotBlank(urlFromContent)){
-//                EventBus.getDefault().post(new UpdateNoteEvent(data.get(currIndex)));
-//            }
         } else {
             ToastUtil.toast(context, "搜索文字不能超过32个字", Toast.LENGTH_SHORT);
         }
