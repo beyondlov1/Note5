@@ -77,7 +77,8 @@ public class TimeExpressionDetectiveTextWatcher implements TextWatcher {
                         }else {
                             target.setText(source);
                         }
-                        target.setSelection(lastSelectionEnd);
+                        int length = target.getText().length();
+                        target.setSelection(lastSelectionEnd< length ?lastSelectionEnd: length); // 两个空格挨在一起在html化的过程中会变成一个
                     }
                 });
 

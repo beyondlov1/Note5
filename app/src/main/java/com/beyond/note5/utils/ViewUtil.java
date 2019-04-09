@@ -25,15 +25,28 @@ public class ViewUtil {
         screenSizeWithoutNotification.y = screenSize.y-70;
     }
 
+    private static int getX(View view){
+        if (view == null){
+            return 0;
+        }
+        return (int) view.getX();
+    }
+    private static int getY(View view){
+        if (view == null){
+            return 0;
+        }
+        return (int) view.getY();
+    }
+
     public static int getXInScreenWithoutNotification(View view){
         int[] xy = new int[2];
         view.getLocationInWindow(xy);
-        return xy[0];
+        return xy[0] == 0?getX(view):xy[0];
     }
     public static int getYInScreenWithoutNotification(View view){
         int[] xy = new int[2];
         view.getLocationInWindow(xy);
-        return xy[1]-75;
+        return (xy[1] == 0?getY(view):xy[1])-75;
     }
     public static int getWidth(View view){
         if (view == null){

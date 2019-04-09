@@ -24,7 +24,15 @@ import com.beyond.note5.R;
 import com.beyond.note5.bean.Note;
 import com.beyond.note5.bean.Todo;
 import com.beyond.note5.constant.DocumentConst;
-import com.beyond.note5.event.*;
+import com.beyond.note5.event.AddTodoEvent;
+import com.beyond.note5.event.DeleteDeepNoteEvent;
+import com.beyond.note5.event.DeleteNoteEvent;
+import com.beyond.note5.event.DetailNoteEvent;
+import com.beyond.note5.event.FillNoteModifyEvent;
+import com.beyond.note5.event.HideNoteDetailEvent;
+import com.beyond.note5.event.ModifyNoteDoneEvent;
+import com.beyond.note5.event.ShowNoteDetailEvent;
+import com.beyond.note5.event.UpdateNoteEvent;
 import com.beyond.note5.utils.ToastUtil;
 import com.beyond.note5.utils.ViewUtil;
 import com.beyond.note5.utils.WebViewUtil;
@@ -269,8 +277,18 @@ public class NoteDetailSuperFragment extends DialogFragment implements OnBackPre
     private void loadWebPage() {
         String url = WebViewUtil.getUrlOrSearchUrl(data.get(currIndex));
         if (url != null) {
-            WebViewUtil.addWebViewProgressBar(new DetailViewHolder(viewSwitcher.getCurrentView()).displayWebView);
-            new DetailViewHolder(viewSwitcher.getCurrentView()).displayWebView.loadUrl(url);
+            WebView currentWebView = new DetailViewHolder(viewSwitcher.getCurrentView()).displayWebView;
+            WebViewUtil.addWebViewProgressBar(currentWebView);
+            currentWebView.loadUrl(url);
+
+            // 尝试在每次打开网页的时候更新title， 但是有问题， 生成title的这一次不能打开网页， 只能更新（因为会刷新webview）
+//            if (StringUtils.isNotBlank(data.get(currIndex).getTitle())){
+//                return;
+//            }
+//            String urlFromContent = HtmlUtil.getUrl(data.get(currIndex).getContent());
+//            if (StringUtils.isNotBlank(urlFromContent)){
+//                EventBus.getDefault().post(new UpdateNoteEvent(data.get(currIndex)));
+//            }
         } else {
             ToastUtil.toast(context, "搜索文字不能超过32个字", Toast.LENGTH_SHORT);
         }

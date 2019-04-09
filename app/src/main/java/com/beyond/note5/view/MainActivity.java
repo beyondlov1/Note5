@@ -46,6 +46,7 @@ import com.beyond.note5.utils.IDUtil;
 import com.beyond.note5.utils.PhotoUtil;
 import com.beyond.note5.utils.PreferenceUtil;
 import com.beyond.note5.utils.ToastUtil;
+import com.beyond.note5.utils.ViewUtil;
 import com.beyond.note5.view.adapter.component.header.ItemDataGenerator;
 import com.beyond.note5.view.animator.SmoothScalable;
 import com.beyond.note5.view.fragment.NoteDetailSuperFragment;
@@ -377,6 +378,15 @@ public class MainActivity extends FragmentActivity {
             int position = itemDataGenerator.getPosition(note);
             fragment.noteRecyclerView.scrollToPosition(position);
             view = fragment.noteRecyclerView.getLayoutManager().findViewByPosition(position);
+            if (view == null){
+                view = new View(this);
+                FrameLayout.LayoutParams layoutParams = new FrameLayout.LayoutParams(mainContainer.getLayoutParams());
+                layoutParams.width = 0;
+                layoutParams.height = 0;
+                view.setLayoutParams(layoutParams);
+                view.setX(ViewUtil.getScreenSizeWithoutNotification().x);
+                view.setY(ViewUtil.getScreenSizeWithoutNotification().y);
+            }
         }
         return view;
     }
