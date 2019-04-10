@@ -43,7 +43,6 @@ import com.beyond.note5.view.listener.OnBackPressListener;
 import com.beyond.note5.view.listener.OnSlideListener;
 
 import org.apache.commons.collections4.CollectionUtils;
-import org.apache.commons.lang3.StringUtils;
 import org.greenrobot.eventbus.EventBus;
 import org.greenrobot.eventbus.Subscribe;
 import org.greenrobot.eventbus.ThreadMode;
@@ -276,7 +275,6 @@ public class NoteDetailSuperFragment extends DialogFragment implements OnBackPre
 
     }
 
-    private ShowNoteDetailEvent.ShowType reloadShowType;
     private void loadWebPage() {
         Note currNote = data.get(currIndex);
         String url = WebViewUtil.getUrlOrSearchUrl(currNote);
@@ -284,14 +282,6 @@ public class NoteDetailSuperFragment extends DialogFragment implements OnBackPre
             WebView currentWebView = new DetailViewHolder(viewSwitcher.getCurrentView()).displayWebView;
             WebViewUtil.addWebViewProgressBar(currentWebView);
             currentWebView.loadUrl(url);
-            WebViewUtil.TitleReceivableWebChromeClient webChromeClient = WebViewUtil.webChromeClient;
-            String title = webChromeClient.getTitle();
-            if (StringUtils.isNotBlank(title)
-                    && StringUtils.isBlank(currNote.getTitle())){
-                currNote.setTitle(title);
-                reloadShowType = ShowNoteDetailEvent.ShowType.WEB;
-                EventBus.getDefault().post(new UpdateNoteEvent(currNote));
-            }
         } else {
             ToastUtil.toast(context, "搜索文字不能超过32个字", Toast.LENGTH_SHORT);
         }
@@ -450,9 +440,8 @@ public class NoteDetailSuperFragment extends DialogFragment implements OnBackPre
     }
 
     private void openWebPage() {
-        if (reloadShowType!=null||showType == ShowNoteDetailEvent.ShowType.WEB) {
+        if (showType == ShowNoteDetailEvent.ShowType.WEB) {
             loadWebPage();
-            reloadShowType = null;
         }
     }
 
