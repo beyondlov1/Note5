@@ -67,6 +67,9 @@ public class WebViewUtil {
         Log.d(TAG, content);
     }
 
+    private static WebViewClient webViewClient;
+    public static TitleReceivableWebChromeClient webChromeClient;
+
     private static String lastUrl;
 
     public static void configWebView(final WebView webView) {
@@ -75,31 +78,10 @@ public class WebViewUtil {
         webSettings.setAllowFileAccess(true);
         webSettings.setAllowFileAccessFromFileURLs(true);
         webSettings.setCacheMode(WebSettings.LOAD_CACHE_ELSE_NETWORK);
-        webView.setWebViewClient(new WebViewClient() {
-
-            @Override
-            public boolean shouldOverrideUrlLoading(WebView view, WebResourceRequest request) {
-                return super.shouldOverrideUrlLoading(view, request);
-            }
-
-            @Override
-            public boolean shouldOverrideUrlLoading(WebView view, String url) {
-                Log.d("webviewUtil", url);
-                if (lastUrl != null && !StringUtils.equals(lastUrl, url)) {
-                    historyUrlStack.push(lastUrl);
-                }
-                if (!StringUtils.containsIgnoreCase(url, "redirect=http")) {
-                    lastUrl = url;
-                }
-                return false;
-            }
-
-            @Override
-            public void onPageFinished(WebView view, String url) {
-                super.onPageFinished(view, url);
-                removeWebViewAllViews(view);
-            }
-        });
+        webViewClient = webViewClient == null?new BackableWebViewClient():webViewClient;
+        webView.setWebViewClient(webViewClient);
+        webChromeClient = webChromeClient == null?new TitleReceivableWebChromeClient():webChromeClient;
+        webView.setWebChromeClient(webChromeClient);
     }
 
     public static boolean canGoBack(WebView webView) {
@@ -188,4 +170,46 @@ public class WebViewUtil {
                 .replaceAll("\\s+", "+");
     }
 
+
+    public static class TitleReceivableWebChromeClient extends WebChromeClient{
+
+        private String title;
+
+        @Override
+        public void onReceivedTitle(WebView view, String title) {
+            super.onReceivedTitle(view, title);
+            this.title = title;
+        }
+
+        public String getTitle() {
+            return title;
+        }
+
+    }
+
+    public static class BackableWebViewClient extends WebViewClient{
+
+        @Override
+        public boolean shouldOverrideUrlLoading(WebView view, WebResourceRequest request) {
+            return super.shouldOverrideUrlLoading(view, request);
+        }
+
+        @Override
+        public boolean shouldOverrideUrlLoading(WebView view, String url) {
+            Log.d("webviewUtil", url);
+            if (lastUrl != null && !StringUtils.equals(lastUrl, url)) {
+                historyUrlStack.push(lastUrl);
+            }
+            if (!StringUtils.containsIgnoreCase(url, "redirect=http")) {
+                lastUrl = url;
+            }
+            return false;
+        }
+
+        @Override
+        public void onPageFinished(WebView view, String url) {
+            super.onPageFinished(view, url);
+            removeWebViewAllViews(view);
+        }
+    }
 }

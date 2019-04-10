@@ -8,6 +8,7 @@ import android.content.Intent;
 import android.graphics.Point;
 import android.os.Build;
 import android.os.Bundle;
+import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.design.widget.FloatingActionButton;
 import android.support.v4.app.DialogFragment;
@@ -322,7 +323,8 @@ public class MainActivity extends FragmentActivity {
 
         //获取viewSwitcher划到的位置，获取动画要返回的view
         Integer currIndex = event.get();
-        View view = getViewToReturn(currIndex);
+        int firstIndex = event.getFirstIndex();
+        View view = getViewToReturn(currIndex,firstIndex);
 
         SmoothScalable smoothScalable = (SmoothScalable) noteDetailFragment;
         smoothScalable.setEndView(view);
@@ -360,17 +362,11 @@ public class MainActivity extends FragmentActivity {
         isTodoEditShow = false;
     }
 
-    @SuppressWarnings("unchecked")
+    @SuppressWarnings({"unchecked", "SameParameterValue"})
     private View getViewToReturn(Integer currIndex) {
         View view;
         if (currIndex == -1) {
-            view = new View(this);
-            FrameLayout.LayoutParams layoutParams = new FrameLayout.LayoutParams(mainContainer.getLayoutParams());
-            layoutParams.width = 0;
-            layoutParams.height = 0;
-            view.setLayoutParams(layoutParams);
-            view.setX(0);
-            view.setY(0);
+            view = getLeftTopView();
         } else {
             NoteListFragment fragment = (NoteListFragment) fragments.get(0);
             ItemDataGenerator itemDataGenerator = fragment.noteRecyclerViewAdapter.getItemDataGenerator();
@@ -379,15 +375,56 @@ public class MainActivity extends FragmentActivity {
             fragment.noteRecyclerView.scrollToPosition(position);
             view = fragment.noteRecyclerView.getLayoutManager().findViewByPosition(position);
             if (view == null){
-                view = new View(this);
-                FrameLayout.LayoutParams layoutParams = new FrameLayout.LayoutParams(mainContainer.getLayoutParams());
-                layoutParams.width = 0;
-                layoutParams.height = 0;
-                view.setLayoutParams(layoutParams);
-                view.setX(ViewUtil.getScreenSizeWithoutNotification().x);
-                view.setY(ViewUtil.getScreenSizeWithoutNotification().y);
+                view = getRightBottomView();
             }
         }
+        return view;
+    }
+
+    @SuppressWarnings("unchecked")
+    private View getViewToReturn(Integer currIndex, Integer firstIndex) {
+        View view;
+        if (currIndex == -1) {
+            view = getLeftTopView();
+        } else {
+            NoteListFragment fragment = (NoteListFragment) fragments.get(0);
+            ItemDataGenerator itemDataGenerator = fragment.noteRecyclerViewAdapter.getItemDataGenerator();
+            Object note = itemDataGenerator.getContentData().get(currIndex);
+            int position = itemDataGenerator.getPosition(note);
+            fragment.noteRecyclerView.scrollToPosition(position);
+            view = fragment.noteRecyclerView.getLayoutManager().findViewByPosition(position);
+            if (view == null&& firstIndex<currIndex){
+                view = getRightBottomView();
+            }else if (view == null&&firstIndex > currIndex){
+                view = getLeftTopView();
+            }
+        }
+        return view;
+    }
+
+    @NonNull
+    private View getRightBottomView() {
+        View view;
+        view = new View(this);
+        FrameLayout.LayoutParams layoutParams = new FrameLayout.LayoutParams(mainContainer.getLayoutParams());
+        layoutParams.width = 0;
+        layoutParams.height = 0;
+        view.setLayoutParams(layoutParams);
+        view.setX(ViewUtil.getScreenSizeWithoutNotification().x);
+        view.setY(ViewUtil.getScreenSizeWithoutNotification().y);
+        return view;
+    }
+
+    @NonNull
+    private View getLeftTopView() {
+        View view;
+        view = new View(this);
+        FrameLayout.LayoutParams layoutParams = new FrameLayout.LayoutParams(mainContainer.getLayoutParams());
+        layoutParams.width = 0;
+        layoutParams.height = 0;
+        view.setLayoutParams(layoutParams);
+        view.setX(0);
+        view.setY(0);
         return view;
     }
 

@@ -39,8 +39,8 @@ public class NotePresenterImpl implements NotePresenter {
         this.noteModel = new NoteModelImpl();
         this.executorService = MyApplication.getInstance().getExecutorService();
         OkHttpClient.Builder httpBuilder = new OkHttpClient.Builder();
-        httpBuilder.connectTimeout(3000, TimeUnit.MILLISECONDS);
-        httpBuilder.readTimeout(3000, TimeUnit.MILLISECONDS);
+        httpBuilder.connectTimeout(10000, TimeUnit.MILLISECONDS);
+        httpBuilder.readTimeout(10000, TimeUnit.MILLISECONDS);
         this.okHttpClient = httpBuilder.build();
         this.handler = new Handler();
     }

@@ -12,5 +12,4 @@ public class UpdateNoteEvent extends AbstractEvent<Note> {
     public UpdateNoteEvent(Note note) {
         super(note);
     }
-
 }
