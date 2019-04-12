@@ -63,7 +63,7 @@ public class NoteDetailSuperFragment extends DialogFragment implements OnBackPre
 
     protected List<Note> data;
     protected int currIndex;
-    private int firstIndex;
+    private int firstInIndex;
     private ShowNoteDetailEvent.ShowType showType;
 
     protected View operationContainer;
@@ -340,6 +340,18 @@ public class NoteDetailSuperFragment extends DialogFragment implements OnBackPre
     }
 
     @Override
+    public void onSaveInstanceState(Bundle outState) {
+        super.onSaveInstanceState(outState);
+        System.out.println("onSaveInstanceState");
+    }
+
+    @Override
+    public void onViewStateRestored(@Nullable Bundle savedInstanceState) {
+        super.onViewStateRestored(savedInstanceState);
+        System.out.println("onViewStateRestored");
+    }
+
+    @Override
     public void onStop() {
         System.out.println("onStop");
 
@@ -350,12 +362,16 @@ public class NoteDetailSuperFragment extends DialogFragment implements OnBackPre
 
     @Subscribe(threadMode = ThreadMode.MAIN, sticky = true)
     public void onEventMainThread(DetailNoteEvent detailNoteEvent) {
+        if (detailNoteEvent.isConsumed()){
+            return;
+        }
         data = detailNoteEvent.get();
         currIndex = detailNoteEvent.getIndex();
-        firstIndex = currIndex;
+        firstInIndex = currIndex;
         showType = detailNoteEvent.getShowType();
         processDetailTools();
         reloadView();
+        detailNoteEvent.setConsumed(true);
     }
 
     private void processDetailTools() {
@@ -549,7 +565,7 @@ public class NoteDetailSuperFragment extends DialogFragment implements OnBackPre
             currIndex = -1;
         }
         HideNoteDetailEvent event = new HideNoteDetailEvent(currIndex);
-        event.setFirstIndex(firstIndex);
+        event.setFirstIndex(firstInIndex);
         EventBus.getDefault().post(event);
     }
 

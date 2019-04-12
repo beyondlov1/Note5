@@ -302,6 +302,10 @@ public class TodoEditFragment extends DialogFragment implements PredictView {
             @SuppressWarnings("Duplicates")
             @Override
             public void run() {
+                if (data == null||data.isEmpty()){
+                    predictPresenter.predict(null);
+                    return;
+                }
                 List<Tag> finalTags = data;
                 tagData.clear();
                 Collections.sort(finalTags, new Comparator<Tag>() {

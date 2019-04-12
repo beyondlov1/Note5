@@ -13,6 +13,7 @@ public class DetailNoteEvent extends AbstractEvent<List<Note>> {
 
     private int index;
     private ShowNoteDetailEvent.ShowType showType;
+    private boolean consumed;
 
     public DetailNoteEvent(List<Note> notes, int index) {
         super(notes);
@@ -29,5 +30,13 @@ public class DetailNoteEvent extends AbstractEvent<List<Note>> {
 
     public ShowNoteDetailEvent.ShowType getShowType() {
         return showType;
+    }
+
+    public boolean isConsumed() {
+        return consumed;
+    }
+
+    public void setConsumed(boolean consumed) {
+        this.consumed = consumed;
     }
 }
