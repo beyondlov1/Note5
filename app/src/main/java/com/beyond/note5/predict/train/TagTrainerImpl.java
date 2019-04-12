@@ -1,16 +1,19 @@
-package com.beyond.note5.predict;
+package com.beyond.note5.predict.train;
 
 import android.support.annotation.NonNull;
 import android.util.Log;
 
 import com.alibaba.fastjson.JSON;
+import com.beyond.note5.predict.train.injector.TagGraphInjector;
+import com.beyond.note5.predict.train.injector.TagGraphInjectorImpl;
+import com.beyond.note5.predict.serializer.TagGraphSerializer;
 import com.beyond.note5.predict.bean.MergedTag;
 import com.beyond.note5.predict.bean.MergedTimeTag;
 import com.beyond.note5.predict.bean.Tag;
 import com.beyond.note5.predict.bean.TagEdge;
 import com.beyond.note5.predict.bean.TagGraph;
 import com.beyond.note5.predict.bean.TimeTag;
-import com.beyond.note5.predict.filter.target.TrainTarget;
+import com.beyond.note5.predict.train.target.TrainTagTarget;
 import com.beyond.note5.predict.params.SegResponse;
 import com.beyond.note5.predict.utils.TagUtils;
 import com.beyond.note5.utils.TimeNLPUtil;
@@ -53,7 +56,14 @@ public class TagTrainerImpl implements TagTrainer{
 
     }
 
-    public void train(final String content) {
+    @Override
+    public void trainSync(TrainTagTarget target) throws Exception{
+        trainSync(target.getTarget());
+    }
+
+    @Override
+    public void trainAsync(TrainTagTarget target) throws Exception {
+        final String content = target.getTarget();
         if (StringUtils.isBlank(content)){
             return;
         }
@@ -85,11 +95,6 @@ public class TagTrainerImpl implements TagTrainer{
                 serializer.serialize();
             }
         });
-    }
-
-    @Override
-    public void trainSync(TrainTarget target) throws Exception{
-        trainSync(target.getTarget());
     }
 
     private void trainSync(final String content) throws Exception {

@@ -9,13 +9,11 @@ import com.beyond.note5.model.PredictModel;
 import com.beyond.note5.model.PredictModelImpl;
 import com.beyond.note5.model.dao.DaoMaster;
 import com.beyond.note5.model.dao.DaoSession;
-import com.beyond.note5.predict.FilterableTagTrainer;
 import com.beyond.note5.predict.TagPredictor;
 import com.beyond.note5.predict.TagPredictorImpl;
-import com.beyond.note5.predict.TagTrainer;
 import com.beyond.note5.predict.bean.TagGraph;
-import com.beyond.note5.predict.filter.train.TimeExpressionTrainFilter;
-import com.beyond.note5.predict.filter.train.UrlTrainFilter;
+import com.beyond.note5.predict.train.filter.TimeExpressionTrainTagFilter;
+import com.beyond.note5.predict.train.filter.UrlTrainTagFilter;
 import com.beyond.note5.utils.PreferenceUtil;
 
 import java.io.File;
@@ -29,6 +27,7 @@ import java.util.concurrent.Executors;
 
 public class MyApplication extends Application {
 
+    //FIXME: Constrain Preference
     public static final String SHARED_PREFERENCES_NAME = "note5_preferences";
     public static final String DEFAULT_PAGE = "default_page";
     public static final String IS_ALTER_SQL_EXECUTED = "IS_ALTER_SQL_EXECUTED";
@@ -61,6 +60,7 @@ public class MyApplication extends Application {
         addColumnDev("note","PRIORITY","int");
     }
 
+    //FIXME
     @SuppressWarnings("SameParameterValue")
     private void addColumnDev(String tableName, String column, String columnType){
         if (PreferenceUtil.getBoolean(IS_ALTER_SQL_EXECUTED)){
@@ -103,11 +103,8 @@ public class MyApplication extends Application {
             assert storageDir != null;
             TagPredictor<String,TagGraph> tagPredictor = new TagPredictorImpl(
                     new File(storageDir.getAbsolutePath()+File.separator+"model.json"),true);
-            TagTrainer tagTrainer = tagPredictor.getTagTrainer();
-            if (tagTrainer instanceof FilterableTagTrainer){
-                ((FilterableTagTrainer) tagTrainer).addFilter(new UrlTrainFilter());
-                ((FilterableTagTrainer) tagTrainer).addFilter(new TimeExpressionTrainFilter());
-            }
+            tagPredictor.addTrainFilter(new UrlTrainTagFilter());
+            tagPredictor.addTrainFilter(new TimeExpressionTrainTagFilter());
             tagPredictor.setExecutorService(executorService);
             predictModel = new PredictModelImpl(tagPredictor);
         }

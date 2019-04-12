@@ -1,4 +1,4 @@
-package com.beyond.note5.predict;
+package com.beyond.note5.predict.train.injector;
 
 import java.util.List;
 

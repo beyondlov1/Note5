@@ -3,6 +3,7 @@ package com.beyond.note5.predict;
 
 import com.beyond.note5.predict.bean.Tag;
 import com.beyond.note5.predict.bean.TagGraph;
+import com.beyond.note5.predict.params.TagPredictCallback;
 
 import java.io.File;
 import java.util.List;
@@ -46,7 +47,7 @@ public class Main {
 
         TagPredictorImpl tagPredictorImpl = new TagPredictorImpl(file);
 //        tagPredictorImpl.getTagTrainer().train(source);
-        tagPredictorImpl.predict("统计法", new Callback<String, TagGraph>() {
+        tagPredictorImpl.predictAsync("统计法", new TagPredictCallback<String, TagGraph>() {
             @Override
             public void onSuccess(String s, TagGraph tagGraph) {
                 List<Tag> result = tagGraph.predict(s);

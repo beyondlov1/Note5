@@ -1,7 +1,16 @@
 package com.beyond.note5.predict;
 
+import android.util.Log;
+
 import com.beyond.note5.predict.bean.Tag;
 import com.beyond.note5.predict.bean.TagGraph;
+import com.beyond.note5.predict.params.TagPredictCallback;
+import com.beyond.note5.predict.serializer.TagGraphSerializerImpl;
+import com.beyond.note5.predict.train.FilterableTagTrainer;
+import com.beyond.note5.predict.train.TagTrainer;
+import com.beyond.note5.predict.train.TagTrainerImpl;
+import com.beyond.note5.predict.train.filter.AbstractTrainTagFilter;
+import com.beyond.note5.predict.train.target.TrainTagTarget;
 
 import org.apache.commons.lang3.StringUtils;
 
@@ -54,9 +63,9 @@ public class TagPredictorImpl implements TagPredictor<String, TagGraph>, Observe
      *
      * @param content 预测内容
      */
-    public void predict(final String content, final Callback<String, TagGraph> callback) {
+    public void predictAsync(final String content, final TagPredictCallback<String, TagGraph> tagPredictCallback) {
         if (isReady.get() && tagGraph == null) { // 试图解决缓存失效的问题， 不知道管不管用
-            this.tagGraph = getTagTrainer().getTagGraph();
+            this.tagGraph = tagTrainer.getTagGraph();
         }
         executorService.execute(new Runnable() {
             @Override
@@ -71,16 +80,16 @@ public class TagPredictorImpl implements TagPredictor<String, TagGraph>, Observe
                     count++;
                 }
                 if (count < 80) {
-                    callback.onSuccess(content, tagGraph);
+                    tagPredictCallback.onSuccess(content, tagGraph);
                 } else {
-                    callback.onFail();
+                    tagPredictCallback.onFail();
                 }
             }
         });
     }
 
     @Override
-    public List<Tag> predict(String source) {
+    public List<Tag> predictSync(String source) {
         int count = 0;
         while (!isReady.get() && count < 80) {
             try {
@@ -106,8 +115,23 @@ public class TagPredictorImpl implements TagPredictor<String, TagGraph>, Observe
         }
     }
 
-    public TagTrainer getTagTrainer() {
-        return tagTrainer;
+    @Override
+    public void addTrainFilter(AbstractTrainTagFilter filter) {
+        if (tagTrainer instanceof FilterableTagTrainer){
+            ((FilterableTagTrainer) tagTrainer).addFilter(filter);
+        }else {
+            Log.w("TagPredictImpl","not filterableTagTrainer, can not add filter");
+        }
+    }
+
+    @Override
+    public void trainSync(TrainTagTarget trainTagTarget) throws Exception {
+        tagTrainer.trainSync(trainTagTarget);
+    }
+
+    @Override
+    public void trainAsync(TrainTagTarget trainTagTarget) throws Exception {
+        tagTrainer.trainAsync(trainTagTarget);
     }
 
     public void setExecutorService(ExecutorService executorService) {

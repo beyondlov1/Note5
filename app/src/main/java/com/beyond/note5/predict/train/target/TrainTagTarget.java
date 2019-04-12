@@ -1,16 +1,16 @@
-package com.beyond.note5.predict.filter.target;
+package com.beyond.note5.predict.train.target;
 
-import com.beyond.note5.predict.filter.Target;
+import com.beyond.note5.predict.params.TagTarget;
 
-public class TrainTarget implements Target<String> {
+public class TrainTagTarget implements TagTarget<String> {
 
     private String target;
 
-    public TrainTarget(){
+    public TrainTagTarget(){
 
     }
 
-    public TrainTarget(String target) {
+    public TrainTagTarget(String target) {
         this.target = target;
     }
 

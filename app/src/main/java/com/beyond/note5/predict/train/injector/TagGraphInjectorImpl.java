@@ -1,5 +1,6 @@
-package com.beyond.note5.predict;
+package com.beyond.note5.predict.train.injector;
 
+import com.beyond.note5.predict.serializer.TagGraphSerializer;
 import com.beyond.note5.predict.bean.Tag;
 import com.beyond.note5.predict.bean.TagEdge;
 import com.beyond.note5.predict.bean.TagGraph;

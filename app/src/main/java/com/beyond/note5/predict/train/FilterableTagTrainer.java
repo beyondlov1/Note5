@@ -1,8 +1,8 @@
-package com.beyond.note5.predict;
+package com.beyond.note5.predict.train;
 
 import com.beyond.note5.predict.bean.TagGraph;
-import com.beyond.note5.predict.filter.target.TrainTarget;
-import com.beyond.note5.predict.filter.train.AbstractTrainFilter;
+import com.beyond.note5.predict.train.filter.AbstractTrainTagFilter;
+import com.beyond.note5.predict.train.target.TrainTagTarget;
 
 import java.util.LinkedList;
 import java.util.List;
@@ -12,7 +12,7 @@ public class FilterableTagTrainer implements TagTrainer {
 
     private final TagTrainer tagTrainer;
 
-    private List<AbstractTrainFilter> filters;
+    private List<AbstractTrainTagFilter> filters;
 
 
     public FilterableTagTrainer(TagTrainer tagTrainer) {
@@ -20,12 +20,17 @@ public class FilterableTagTrainer implements TagTrainer {
     }
 
     @Override
-    public void trainSync(TrainTarget target) throws Exception {
+    public void trainSync(TrainTagTarget target) throws Exception {
 
-        for (AbstractTrainFilter filter : filters) {
+        for (AbstractTrainTagFilter filter : filters) {
             filter.doFilter(target);
         }
         tagTrainer.trainSync(target);
+    }
+
+    @Override
+    public void trainAsync(TrainTagTarget target) throws Exception {
+        tagTrainer.trainAsync(target);
     }
 
     @Override
@@ -33,22 +38,22 @@ public class FilterableTagTrainer implements TagTrainer {
         return tagTrainer.getTagGraph();
     }
 
-    public List<AbstractTrainFilter> getFilters() {
+    public List<AbstractTrainTagFilter> getFilters() {
         return filters;
     }
 
-    public void setFilters(List<AbstractTrainFilter> filters) {
+    public void setFilters(List<AbstractTrainTagFilter> filters) {
         this.filters = filters;
     }
 
-    public void addFilter(AbstractTrainFilter filter) {
+    public void addFilter(AbstractTrainTagFilter filter) {
         if (filters == null) {
             filters = new LinkedList<>();
         }
         filters.add(filter);
     }
 
-    public void removeFilter(AbstractTrainFilter filter){
+    public void removeFilter(AbstractTrainTagFilter filter){
         if (filters != null) {
             filters.add(filter);
         }
