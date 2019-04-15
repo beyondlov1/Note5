@@ -97,14 +97,6 @@ public class NoteRecyclerViewAdapter extends DocumentRecyclerViewAdapter<Note, N
         }
 
         viewHolder.dataContainer.setBackground(gradientDrawable);
-
-//        AnimatedVectorDrawable animatedVectorDrawable = (AnimatedVectorDrawable) context.getResources().getDrawable(R.drawable.animated_vector_rect, null);
-//        if (note.getPriority() != null && note.getPriority() > 0) {
-//            viewHolder.dataContainer.setBackground(gradientDrawable);
-//        } else {
-//            viewHolder.dataContainer.setBackground(animatedVectorDrawable);
-//        }
-
         viewHolder.title.setVisibility(View.GONE);
         viewHolder.title.setTextColor(Color.DKGRAY);
         viewHolder.content.setVisibility(View.VISIBLE);
@@ -142,10 +134,10 @@ public class NoteRecyclerViewAdapter extends DocumentRecyclerViewAdapter<Note, N
             @Override
             public boolean onLongClick(View v) {
                 AnimatedVectorDrawable animatedVectorDrawable;
-                if (note.getPriority() != null && note.getPriority() > 0) {
-                    animatedVectorDrawable = (AnimatedVectorDrawable) context.getResources().getDrawable(R.drawable.animated_vector_rect_reserve, null);
-                } else {
+                if (isDefaultPriority(note)) {
                     animatedVectorDrawable = (AnimatedVectorDrawable) context.getResources().getDrawable(R.drawable.animated_vector_rect, null);
+                } else {
+                    animatedVectorDrawable = (AnimatedVectorDrawable) context.getResources().getDrawable(R.drawable.animated_vector_rect_reserve, null);
                 }
                 viewHolder.dataContainer.setBackground(animatedVectorDrawable);
                 animatedVectorDrawable.start();
@@ -154,7 +146,7 @@ public class NoteRecyclerViewAdapter extends DocumentRecyclerViewAdapter<Note, N
                         @Override
                         public void onAnimationEnd(Drawable drawable) {
                             super.onAnimationEnd(drawable);
-                            if (note.getPriority() == null || note.getPriority() == 0) {
+                            if (isDefaultPriority(note)) {
                                 note.setPriority(DocumentConst.PRIORITY_FOCUS);
                             } else {
                                 note.setPriority(DocumentConst.PRIORITY_DEFAULT);

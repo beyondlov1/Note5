@@ -23,4 +23,8 @@ public interface DocumentView<T> {
     void onUpdateFail(T document);
 
     void onUpdateSuccess(T document);
+
+    void onUpdatePrioritySuccess(T document);
+
+    void onUpdatePriorityFail(T document);
 }

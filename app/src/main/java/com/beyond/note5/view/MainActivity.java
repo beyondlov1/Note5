@@ -369,7 +369,7 @@ public class MainActivity extends FragmentActivity {
             view = getLeftTopView();
         } else {
             NoteListFragment fragment = (NoteListFragment) fragments.get(0);
-            ItemDataGenerator itemDataGenerator = fragment.noteRecyclerViewAdapter.getItemDataGenerator();
+            ItemDataGenerator itemDataGenerator = fragment.getRecyclerViewAdapter().getItemDataGenerator();
             Object note = itemDataGenerator.getContentData().get(currIndex);
             int position = itemDataGenerator.getPosition(note);
             fragment.noteRecyclerView.scrollToPosition(position);
@@ -388,7 +388,7 @@ public class MainActivity extends FragmentActivity {
             view = getLeftTopView();
         } else {
             NoteListFragment fragment = (NoteListFragment) fragments.get(0);
-            ItemDataGenerator itemDataGenerator = fragment.noteRecyclerViewAdapter.getItemDataGenerator();
+            ItemDataGenerator itemDataGenerator = fragment.getRecyclerViewAdapter().getItemDataGenerator();
             Object note = itemDataGenerator.getContentData().get(currIndex);
             int position = itemDataGenerator.getPosition(note);
             fragment.noteRecyclerView.scrollToPosition(position);

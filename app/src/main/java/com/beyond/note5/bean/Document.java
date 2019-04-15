@@ -1,5 +1,7 @@
 package com.beyond.note5.bean;
 
+import com.beyond.note5.constant.DocumentConst;
+
 import org.greenrobot.greendao.annotation.Entity;
 import org.greenrobot.greendao.annotation.Generated;
 import org.greenrobot.greendao.annotation.Id;
@@ -21,6 +23,7 @@ public class Document implements Element, Cloneable{
     private Date lastModifyTime;
     private Integer version;
     private Integer readFlag;
+    private Integer priority = DocumentConst.PRIORITY_DEFAULT;
 
     public Document() {
     }
@@ -30,10 +33,10 @@ public class Document implements Element, Cloneable{
         this.content = content;
     }
 
-    @Generated(hash = 2075388908)
+    @Generated(hash = 287362452)
     public Document(String id, String title, String content, String type,
-            Date createTime, Date lastModifyTime, Integer version,
-            Integer readFlag) {
+            Date createTime, Date lastModifyTime, Integer version, Integer readFlag,
+            Integer priority) {
         this.id = id;
         this.title = title;
         this.content = content;
@@ -42,6 +45,7 @@ public class Document implements Element, Cloneable{
         this.lastModifyTime = lastModifyTime;
         this.version = version;
         this.readFlag = readFlag;
+        this.priority = priority;
     }
 
     public String getId() {
@@ -111,5 +115,13 @@ public class Document implements Element, Cloneable{
 
     public void setReadFlag(Integer readFlag) {
         this.readFlag = readFlag;
+    }
+
+    public Integer getPriority() {
+        return priority;
+    }
+
+    public void setPriority(Integer priority) {
+        this.priority = priority;
     }
 }

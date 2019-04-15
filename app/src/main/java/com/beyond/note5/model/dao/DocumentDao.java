@@ -32,6 +32,7 @@ public class DocumentDao extends AbstractDao<Document, String> {
         public final static Property LastModifyTime = new Property(5, java.util.Date.class, "lastModifyTime", false, "LAST_MODIFY_TIME");
         public final static Property Version = new Property(6, Integer.class, "version", false, "VERSION");
         public final static Property ReadFlag = new Property(7, Integer.class, "readFlag", false, "READ_FLAG");
+        public final static Property Priority = new Property(8, Integer.class, "priority", false, "PRIORITY");
     }
 
 
@@ -54,7 +55,8 @@ public class DocumentDao extends AbstractDao<Document, String> {
                 "\"CREATE_TIME\" INTEGER," + // 4: createTime
                 "\"LAST_MODIFY_TIME\" INTEGER," + // 5: lastModifyTime
                 "\"VERSION\" INTEGER," + // 6: version
-                "\"READ_FLAG\" INTEGER);"); // 7: readFlag
+                "\"READ_FLAG\" INTEGER," + // 7: readFlag
+                "\"PRIORITY\" INTEGER);"); // 8: priority
     }
 
     /** Drops the underlying database table. */
@@ -106,6 +108,11 @@ public class DocumentDao extends AbstractDao<Document, String> {
         if (readFlag != null) {
             stmt.bindLong(8, readFlag);
         }
+ 
+        Integer priority = entity.getPriority();
+        if (priority != null) {
+            stmt.bindLong(9, priority);
+        }
     }
 
     @Override
@@ -151,6 +158,11 @@ public class DocumentDao extends AbstractDao<Document, String> {
         if (readFlag != null) {
             stmt.bindLong(8, readFlag);
         }
+ 
+        Integer priority = entity.getPriority();
+        if (priority != null) {
+            stmt.bindLong(9, priority);
+        }
     }
 
     @Override
@@ -168,7 +180,8 @@ public class DocumentDao extends AbstractDao<Document, String> {
             cursor.isNull(offset + 4) ? null : new java.util.Date(cursor.getLong(offset + 4)), // createTime
             cursor.isNull(offset + 5) ? null : new java.util.Date(cursor.getLong(offset + 5)), // lastModifyTime
             cursor.isNull(offset + 6) ? null : cursor.getInt(offset + 6), // version
-            cursor.isNull(offset + 7) ? null : cursor.getInt(offset + 7) // readFlag
+            cursor.isNull(offset + 7) ? null : cursor.getInt(offset + 7), // readFlag
+            cursor.isNull(offset + 8) ? null : cursor.getInt(offset + 8) // priority
         );
         return entity;
     }
@@ -183,6 +196,7 @@ public class DocumentDao extends AbstractDao<Document, String> {
         entity.setLastModifyTime(cursor.isNull(offset + 5) ? null : new java.util.Date(cursor.getLong(offset + 5)));
         entity.setVersion(cursor.isNull(offset + 6) ? null : cursor.getInt(offset + 6));
         entity.setReadFlag(cursor.isNull(offset + 7) ? null : cursor.getInt(offset + 7));
+        entity.setPriority(cursor.isNull(offset + 8) ? null : cursor.getInt(offset + 8));
      }
     
     @Override

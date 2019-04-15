@@ -21,7 +21,7 @@ public class TodoPresenterImpl implements TodoPresenter {
         try {
             todoModel.add(note);
             this.addSuccess(note);
-        }catch (Exception e){
+        } catch (Exception e) {
             e.printStackTrace();
             this.addFail(note);
         }
@@ -42,7 +42,7 @@ public class TodoPresenterImpl implements TodoPresenter {
         try {
             todoModel.update(note);
             this.updateSuccess(note);
-        }catch (Exception e){
+        } catch (Exception e) {
             e.printStackTrace();
             this.updateFail(note);
         }
@@ -59,11 +59,32 @@ public class TodoPresenterImpl implements TodoPresenter {
     }
 
     @Override
+    public void updatePriority(Todo document) {
+        try {
+            todoModel.update(document);
+            this.updatePrioritySuccess(document);
+        } catch (Exception e) {
+            e.printStackTrace();
+            this.updatePriorityFail(document);
+        }
+    }
+
+    @Override
+    public void updatePrioritySuccess(Todo document) {
+        todoView.onUpdatePrioritySuccess(document);
+    }
+
+    @Override
+    public void updatePriorityFail(Todo document) {
+        todoView.onUpdatePriorityFail(document);
+    }
+
+    @Override
     public void delete(Todo note) {
         try {
             todoModel.delete(note);
             this.deleteSuccess(note);
-        }catch (Exception e){
+        } catch (Exception e) {
             e.printStackTrace();
             this.deleteFail(note);
         }
@@ -84,7 +105,7 @@ public class TodoPresenterImpl implements TodoPresenter {
         try {
             List<Todo> allTodo = todoModel.findAll();
             this.findAllSuccess(allTodo);
-        }catch (Exception e){
+        } catch (Exception e) {
             e.printStackTrace();
             this.findAllFail();
         }
@@ -105,7 +126,7 @@ public class TodoPresenterImpl implements TodoPresenter {
         try {
             todoModel.deleteReminder(todo);
             this.onDeleteReminderSuccess(todo);
-        }catch (Exception e){
+        } catch (Exception e) {
             e.printStackTrace();
             this.onDeleteReminderFail(todo);
         }

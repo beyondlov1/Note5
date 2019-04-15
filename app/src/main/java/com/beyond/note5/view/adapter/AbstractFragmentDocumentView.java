@@ -27,7 +27,6 @@ public abstract class AbstractFragmentDocumentView<T> extends Fragment implement
 
     @Override
     public void onFindAllSuccess(List<T> allT) {
-
     }
 
     @Override
@@ -36,13 +35,13 @@ public abstract class AbstractFragmentDocumentView<T> extends Fragment implement
     }
 
     @Override
-    public void onDeleteFail(T note) {
-        msg("删除失败");
+    public void onDeleteSuccess(T note) {
+
     }
 
     @Override
-    public void onDeleteSuccess(T note) {
-
+    public void onDeleteFail(T note) {
+        msg("删除失败");
     }
 
     @Override
@@ -52,7 +51,17 @@ public abstract class AbstractFragmentDocumentView<T> extends Fragment implement
 
     @Override
     public void onUpdateFail(T note) {
+        msg("更新失败");
+    }
 
+    @Override
+    public void onUpdatePrioritySuccess(T document) {
+
+    }
+
+    @Override
+    public void onUpdatePriorityFail(T document) {
+        msg("更新失败");
     }
 
     protected void msg(String msg) {

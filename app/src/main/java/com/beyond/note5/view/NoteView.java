@@ -9,7 +9,4 @@ import com.beyond.note5.bean.Note;
 
 public interface NoteView extends DocumentView<Note>{
 
-    void updatePrioritySuccess(Note note);
-
-    void updatePriorityFail(Note note);
 }

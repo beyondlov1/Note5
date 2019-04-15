@@ -2,7 +2,11 @@ package com.beyond.note5.view.adapter.component;
 
 import android.content.Context;
 import android.graphics.Paint;
+import android.graphics.drawable.Animatable2;
+import android.graphics.drawable.AnimatedVectorDrawable;
+import android.graphics.drawable.Drawable;
 import android.graphics.drawable.GradientDrawable;
+import android.os.Build;
 import android.support.v4.content.ContextCompat;
 import android.support.v7.widget.StaggeredGridLayoutManager;
 import android.text.SpannableString;
@@ -11,17 +15,24 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.CheckBox;
+
 import com.beyond.note5.MyApplication;
 import com.beyond.note5.R;
 import com.beyond.note5.bean.Todo;
 import com.beyond.note5.constant.DocumentConst;
-import com.beyond.note5.event.*;
+import com.beyond.note5.event.CompleteTodoEvent;
+import com.beyond.note5.event.FillTodoModifyEvent;
+import com.beyond.note5.event.InCompleteTodoEvent;
+import com.beyond.note5.event.RefreshTodoListEvent;
+import com.beyond.note5.event.ShowTodoEditEvent;
+import com.beyond.note5.event.UpdateTodoPriorityEvent;
 import com.beyond.note5.utils.HtmlUtil;
 import com.beyond.note5.view.adapter.component.header.Header;
 import com.beyond.note5.view.adapter.component.header.ItemDataGenerator;
 import com.beyond.note5.view.adapter.component.header.TodoHeader;
 import com.beyond.note5.view.adapter.component.viewholder.TodoViewHolder;
 import com.time.util.DateUtil;
+
 import org.apache.commons.lang3.time.DateFormatUtils;
 import org.apache.commons.lang3.time.DateUtils;
 import org.greenrobot.eventbus.EventBus;
@@ -184,12 +195,30 @@ public class TodoRecyclerViewAdapter extends DocumentRecyclerViewAdapter<Todo, T
         viewHolder.container.setOnLongClickListener(new View.OnLongClickListener() {
             @Override
             public boolean onLongClick(View v) {
-                if (todo.getPriority()==null||todo.getPriority()==0){
-                    todo.setPriority(DocumentConst.PRIORITY_FOCUS);
-                }else {
-                    todo.setPriority(DocumentConst.PRIORITY_DEFAULT);
+
+                AnimatedVectorDrawable animatedVectorDrawable;
+                if (isDefaultPriority(todo)) {
+                    animatedVectorDrawable = (AnimatedVectorDrawable) context.getResources().getDrawable(R.drawable.animated_vector_rect_large, null);
+                } else {
+                    animatedVectorDrawable = (AnimatedVectorDrawable) context.getResources().getDrawable(R.drawable.animated_vector_rect_reserve_large, null);
                 }
-                EventBus.getDefault().post(new UpdateTodoEvent(todo));
+                viewHolder.dataContainer.setBackground(animatedVectorDrawable);
+                animatedVectorDrawable.start();
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                    animatedVectorDrawable.registerAnimationCallback(new Animatable2.AnimationCallback() {
+                        @Override
+                        public void onAnimationEnd(Drawable drawable) {
+                            super.onAnimationEnd(drawable);
+                            if (isDefaultPriority(todo)) {
+                                todo.setPriority(DocumentConst.PRIORITY_FOCUS);
+                            } else {
+                                todo.setPriority(DocumentConst.PRIORITY_DEFAULT);
+                            }
+                            EventBus.getDefault().post(new UpdateTodoPriorityEvent(todo));
+                        }
+                    });
+                }
+
                 return true;
             }
         });

@@ -10,12 +10,12 @@ import com.beyond.note5.view.NoteView;
 
 public abstract class AbstractActivityNoteView extends AbstractActivityDocumentView<Note> implements NoteView {
     @Override
-    public void updatePrioritySuccess(Note note){
-       msg("更新成功");
+    public void onUpdatePrioritySuccess(Note note){
+
     }
 
     @Override
-    public void updatePriorityFail(Note note) {
+    public void onUpdatePriorityFail(Note note) {
         msg("更新失败");
     }
 }

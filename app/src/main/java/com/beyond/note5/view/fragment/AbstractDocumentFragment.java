@@ -98,4 +98,19 @@ public abstract class AbstractDocumentFragment<T extends Document> extends Abstr
             }
         }
     }
+
+    @SuppressWarnings("unchecked")
+    @Override
+    public void onUpdatePrioritySuccess(T t) {
+        for (T oldT : data) {
+            if (StringUtils.equals(oldT.getId(), t.getId())) {
+                recyclerViewAdapter.notifyChanged(t);
+                break;
+            }
+        }
+    }
+
+    public DocumentRecyclerViewAdapter getRecyclerViewAdapter() {
+        return recyclerViewAdapter;
+    }
 }

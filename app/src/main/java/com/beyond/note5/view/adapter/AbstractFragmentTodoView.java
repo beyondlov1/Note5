@@ -101,4 +101,5 @@ public class AbstractFragmentTodoView extends AbstractDocumentFragment<Todo> imp
     public void onTrainFail() {
         msg("网络状况不佳");
     }
+
 }

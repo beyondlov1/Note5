@@ -25,6 +25,7 @@ import com.beyond.note5.event.InCompleteTodoEvent;
 import com.beyond.note5.event.RefreshTodoListEvent;
 import com.beyond.note5.event.ShowFABEvent;
 import com.beyond.note5.event.UpdateTodoEvent;
+import com.beyond.note5.event.UpdateTodoPriorityEvent;
 import com.beyond.note5.module.DaggerTodoComponent;
 import com.beyond.note5.module.PredictModule;
 import com.beyond.note5.module.TodoComponent;
@@ -210,6 +211,11 @@ public class TodoListFragment extends AbstractFragmentTodoView {
                 calendarPresenter.update(todo);
             }
         }
+    }
+    @Subscribe(threadMode = ThreadMode.MAIN)
+    public void onReceived(UpdateTodoPriorityEvent event) {
+        Todo todo = event.get();
+        todoPresenter.updatePriority(todo);
     }
 
     @Subscribe(threadMode = ThreadMode.MAIN)

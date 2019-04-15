@@ -27,7 +27,6 @@ import com.beyond.note5.module.NoteModule;
 import com.beyond.note5.ocr.OCRCallBack;
 import com.beyond.note5.ocr.OCRTask;
 import com.beyond.note5.presenter.NotePresenter;
-import com.beyond.note5.utils.ToastUtil;
 import com.beyond.note5.view.MainActivity;
 import com.beyond.note5.view.adapter.AbstractFragmentNoteView;
 import com.beyond.note5.view.adapter.component.NoteRecyclerViewAdapter;
@@ -40,7 +39,6 @@ import org.greenrobot.eventbus.ThreadMode;
 
 import java.io.FileInputStream;
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 
@@ -53,11 +51,8 @@ import javax.inject.Inject;
 
 public class NoteListFragment extends AbstractFragmentNoteView {
 
-    private List<Note> data = new ArrayList<>();
-
     public RecyclerView noteRecyclerView;
 
-    public NoteRecyclerViewAdapter noteRecyclerViewAdapter;
 
     @Inject
     NotePresenter notePresenter;
@@ -65,7 +60,7 @@ public class NoteListFragment extends AbstractFragmentNoteView {
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        noteRecyclerViewAdapter = new NoteRecyclerViewAdapter(this.getContext(), new ReadFlagItemDataGenerator<>(data));
+        recyclerViewAdapter = new NoteRecyclerViewAdapter(this.getContext(), new ReadFlagItemDataGenerator<>(data));
         initInjection();
     }
 
@@ -121,7 +116,7 @@ public class NoteListFragment extends AbstractFragmentNoteView {
 
     private void initView(ViewGroup viewGroup) {
         noteRecyclerView = viewGroup.findViewById(R.id.note_recycler_view);
-        noteRecyclerView.setAdapter(noteRecyclerViewAdapter);
+        noteRecyclerView.setAdapter(recyclerViewAdapter);
         //设置显示格式
         final StaggeredGridLayoutManager staggeredGridLayoutManager = new StaggeredGridLayoutManager(2, StaggeredGridLayoutManager.VERTICAL);
         noteRecyclerView.setLayoutManager(staggeredGridLayoutManager);
@@ -158,9 +153,9 @@ public class NoteListFragment extends AbstractFragmentNoteView {
     @SuppressWarnings("unchecked")
     @Override
     public void onAddSuccess(Note note) {
-        int insertIndex = noteRecyclerViewAdapter.getItemDataGenerator().getInsertIndex(note);
+        int insertIndex = recyclerViewAdapter.getItemDataGenerator().getInsertIndex(note);
         data.add(insertIndex, note);
-        noteRecyclerViewAdapter.notifyInserted(note);
+        recyclerViewAdapter.notifyInserted(note);
         noteRecyclerView.scrollToPosition(insertIndex);
         msg("添加成功");
     }
@@ -194,18 +189,18 @@ public class NoteListFragment extends AbstractFragmentNoteView {
     @Override
     public void onFindAllSuccess(List<Note> allNote) {
         data.clear();
-        noteRecyclerViewAdapter.notifyFullRangeRemoved();
+        recyclerViewAdapter.notifyFullRangeRemoved();
         data.addAll(allNote);
-        noteRecyclerViewAdapter.notifyFullRangeInserted();
+        recyclerViewAdapter.notifyFullRangeInserted();
     }
 
     @SuppressWarnings("unchecked")
     @Override
     public void onDeleteSuccess(Note note) {
-        int index = noteRecyclerViewAdapter.getItemDataGenerator().getIndex(note);
+        int index = recyclerViewAdapter.getItemDataGenerator().getIndex(note);
         if (index!=-1){
             data.remove(note);
-            noteRecyclerViewAdapter.notifyRemoved(note);
+            recyclerViewAdapter.notifyRemoved(note);
             msg("删除成功");
         }
     }
@@ -218,10 +213,10 @@ public class NoteListFragment extends AbstractFragmentNoteView {
             Note oldNote = iterator.next();
             if (StringUtils.equals(oldNote.getId(), note.getId())) {
                 iterator.remove();
-                noteRecyclerViewAdapter.notifyRemoved(oldNote);
-                int insertIndex = noteRecyclerViewAdapter.getItemDataGenerator().getInsertIndex(note);
+                recyclerViewAdapter.notifyRemoved(oldNote);
+                int insertIndex = recyclerViewAdapter.getItemDataGenerator().getInsertIndex(note);
                 data.add(insertIndex, note);
-                noteRecyclerViewAdapter.notifyInserted(note);
+                recyclerViewAdapter.notifyInserted(note);
                 noteRecyclerView.scrollToPosition(insertIndex);
                 msg("更新成功");
                 break;
@@ -230,19 +225,4 @@ public class NoteListFragment extends AbstractFragmentNoteView {
         EventBus.getDefault().post(new ModifyNoteDoneEvent(note));
     }
 
-    @Override
-    public void updatePrioritySuccess(Note note) {
-        for (Note oldNote : data) {
-            if (StringUtils.equals(oldNote.getId(), note.getId())) {
-                noteRecyclerViewAdapter.notifyChanged(note);
-                msg("更新成功");
-                break;
-            }
-        }
-    }
-
-    @Override
-    public void updatePriorityFail(Note note) {
-        ToastUtil.toast(getContext(),"更新失败");
-    }
 }

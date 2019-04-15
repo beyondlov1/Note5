@@ -123,12 +123,14 @@ public class NotePresenterImpl implements NotePresenter {
         }
     }
 
-    private void updatePrioritySuccess(Note note) {
-        noteView.updatePrioritySuccess(note);
+    @Override
+    public void updatePrioritySuccess(Note note) {
+        noteView.onUpdatePrioritySuccess(note);
     }
 
-    private void updatePriorityFail(Note note) {
-        noteView.updatePriorityFail(note);
+    @Override
+    public void updatePriorityFail(Note note) {
+        noteView.onUpdatePriorityFail(note);
     }
 
     @Override

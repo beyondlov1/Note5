@@ -159,4 +159,8 @@ public abstract class DocumentRecyclerViewAdapter<T extends Document, S extends 
         return itemDataGenerator;
     }
 
+    boolean isDefaultPriority(T t) {
+        return t.getPriority() == null || t.getPriority() == 0;
+    }
+
 }
