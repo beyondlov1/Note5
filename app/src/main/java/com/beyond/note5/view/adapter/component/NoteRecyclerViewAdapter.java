@@ -2,7 +2,11 @@ package com.beyond.note5.view.adapter.component;
 
 import android.content.Context;
 import android.graphics.Color;
+import android.graphics.drawable.Animatable2;
+import android.graphics.drawable.AnimatedVectorDrawable;
+import android.graphics.drawable.Drawable;
 import android.graphics.drawable.GradientDrawable;
+import android.os.Build;
 import android.support.v4.content.ContextCompat;
 import android.support.v7.widget.StaggeredGridLayoutManager;
 import android.view.LayoutInflater;
@@ -13,7 +17,7 @@ import com.beyond.note5.R;
 import com.beyond.note5.bean.Note;
 import com.beyond.note5.constant.DocumentConst;
 import com.beyond.note5.event.ShowNoteDetailEvent;
-import com.beyond.note5.event.UpdateNoteEvent;
+import com.beyond.note5.event.UpdateNotePriorityEvent;
 import com.beyond.note5.utils.PreferenceUtil;
 import com.beyond.note5.utils.WebViewUtil;
 import com.beyond.note5.view.adapter.component.header.Header;
@@ -91,14 +95,23 @@ public class NoteRecyclerViewAdapter extends DocumentRecyclerViewAdapter<Note, N
         if (note.getPriority() != null && note.getPriority() > 0) {
             gradientDrawable.setStroke(2, ContextCompat.getColor(context, R.color.google_red));
         }
+
         viewHolder.dataContainer.setBackground(gradientDrawable);
+
+//        AnimatedVectorDrawable animatedVectorDrawable = (AnimatedVectorDrawable) context.getResources().getDrawable(R.drawable.animated_vector_rect, null);
+//        if (note.getPriority() != null && note.getPriority() > 0) {
+//            viewHolder.dataContainer.setBackground(gradientDrawable);
+//        } else {
+//            viewHolder.dataContainer.setBackground(animatedVectorDrawable);
+//        }
+
         viewHolder.title.setVisibility(View.GONE);
         viewHolder.title.setTextColor(Color.DKGRAY);
         viewHolder.content.setVisibility(View.VISIBLE);
         viewHolder.content.setTextSize(12);
-        if (StringUtils.isNotBlank(note.getTitle())){
+        if (StringUtils.isNotBlank(note.getTitle())) {
             viewHolder.content.setText(StringUtils.trim(note.getTitle()));
-        }else {
+        } else {
             viewHolder.content.setText(StringUtils.trim(note.getContent()));
         }
 
@@ -117,7 +130,7 @@ public class NoteRecyclerViewAdapter extends DocumentRecyclerViewAdapter<Note, N
     }
 
     @Override
-    protected void initContentEvent(NoteViewHolder viewHolder, final Note note) {
+    protected void initContentEvent(final NoteViewHolder viewHolder, final Note note) {
         final int index = itemDataGenerator.getIndex(note);
         viewHolder.itemView.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -128,12 +141,29 @@ public class NoteRecyclerViewAdapter extends DocumentRecyclerViewAdapter<Note, N
         viewHolder.itemView.setOnLongClickListener(new View.OnLongClickListener() {
             @Override
             public boolean onLongClick(View v) {
-                if (note.getPriority() == null || note.getPriority() == 0) {
-                    note.setPriority(DocumentConst.PRIORITY_FOCUS);
+                AnimatedVectorDrawable animatedVectorDrawable;
+                if (note.getPriority() != null && note.getPriority() > 0) {
+                    animatedVectorDrawable = (AnimatedVectorDrawable) context.getResources().getDrawable(R.drawable.animated_vector_rect_reserve, null);
                 } else {
-                    note.setPriority(DocumentConst.PRIORITY_DEFAULT);
+                    animatedVectorDrawable = (AnimatedVectorDrawable) context.getResources().getDrawable(R.drawable.animated_vector_rect, null);
                 }
-                EventBus.getDefault().post(new UpdateNoteEvent(note));
+                viewHolder.dataContainer.setBackground(animatedVectorDrawable);
+                animatedVectorDrawable.start();
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                    animatedVectorDrawable.registerAnimationCallback(new Animatable2.AnimationCallback() {
+                        @Override
+                        public void onAnimationEnd(Drawable drawable) {
+                            super.onAnimationEnd(drawable);
+                            if (note.getPriority() == null || note.getPriority() == 0) {
+                                note.setPriority(DocumentConst.PRIORITY_FOCUS);
+                            } else {
+                                note.setPriority(DocumentConst.PRIORITY_DEFAULT);
+                            }
+                            EventBus.getDefault().post(new UpdateNotePriorityEvent(note));
+                        }
+                    });
+                }
+
                 return true;
             }
         });

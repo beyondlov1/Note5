@@ -200,4 +200,5 @@ public class ShareActivity extends AbstractActivityNoteView {
             finish();
         }
     }
+
 }

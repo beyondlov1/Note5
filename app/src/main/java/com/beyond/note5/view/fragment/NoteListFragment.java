@@ -20,12 +20,14 @@ import com.beyond.note5.event.ModifyNoteDoneEvent;
 import com.beyond.note5.event.RefreshNoteListEvent;
 import com.beyond.note5.event.ShowFABEvent;
 import com.beyond.note5.event.UpdateNoteEvent;
+import com.beyond.note5.event.UpdateNotePriorityEvent;
 import com.beyond.note5.module.DaggerNoteComponent;
 import com.beyond.note5.module.NoteComponent;
 import com.beyond.note5.module.NoteModule;
 import com.beyond.note5.ocr.OCRCallBack;
 import com.beyond.note5.ocr.OCRTask;
 import com.beyond.note5.presenter.NotePresenter;
+import com.beyond.note5.utils.ToastUtil;
 import com.beyond.note5.view.MainActivity;
 import com.beyond.note5.view.adapter.AbstractFragmentNoteView;
 import com.beyond.note5.view.adapter.component.NoteRecyclerViewAdapter;
@@ -134,6 +136,10 @@ public class NoteListFragment extends AbstractFragmentNoteView {
     public void onReceived(UpdateNoteEvent event) {
         notePresenter.update(event.get());
     }
+    @Subscribe(threadMode = ThreadMode.MAIN)
+    public void onReceived(UpdateNotePriorityEvent event) {
+        notePresenter.updatePriority(event.get());
+    }
 
     @Subscribe(threadMode = ThreadMode.MAIN)
     public void onReceived(DeleteNoteEvent event) {
@@ -222,5 +228,21 @@ public class NoteListFragment extends AbstractFragmentNoteView {
             }
         }
         EventBus.getDefault().post(new ModifyNoteDoneEvent(note));
+    }
+
+    @Override
+    public void updatePrioritySuccess(Note note) {
+        for (Note oldNote : data) {
+            if (StringUtils.equals(oldNote.getId(), note.getId())) {
+                noteRecyclerViewAdapter.notifyChanged(note);
+                msg("更新成功");
+                break;
+            }
+        }
+    }
+
+    @Override
+    public void updatePriorityFail(Note note) {
+        ToastUtil.toast(getContext(),"更新失败");
     }
 }

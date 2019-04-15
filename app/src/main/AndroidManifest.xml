@@ -55,6 +55,8 @@
                 <data android:mimeType="image/*" />
             </intent-filter>
         </activity>
+        <activity android:name=".view.TestActivity" />
+
         <provider
             android:authorities="com.beyond.note5"
         android:name="android.support.v4.content.FileProvider"

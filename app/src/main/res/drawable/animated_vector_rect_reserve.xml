@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<animated-vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:drawable="@drawable/vector_rect_reverse">
+    <target
+        android:animation="@animator/trim_stroke_shorter"
+        android:name="rect_red_top"/>
+    <target
+        android:animation="@animator/trim_stroke_shorter"
+        android:name="rect_red_right"/>
+    <target
+        android:animation="@animator/trim_stroke_shorter"
+        android:name="rect_red_bottom"/>
+    <target
+        android:animation="@animator/trim_stroke_shorter"
+        android:name="rect_red_left"/>
+
+</animated-vector>

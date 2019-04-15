@@ -101,6 +101,7 @@ dependencies {
     //qrCode
     implementation 'com.journeyapps:zxing-android-embedded:3.6.0'
 
-
+    //svg
+    implementation 'com.caverock:androidsvg-aar:1.3'
 }
 

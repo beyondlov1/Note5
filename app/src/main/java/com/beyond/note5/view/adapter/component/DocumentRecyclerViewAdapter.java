@@ -136,6 +136,15 @@ public abstract class DocumentRecyclerViewAdapter<T extends Document, S extends 
     }
 
     /**
+     * 在位置不变的情况下更新视图
+     * @param t note
+     */
+    public void notifyChanged(T t){
+        int position = itemDataGenerator.getPosition(t);
+        notifyItemChanged(position);
+    }
+
+    /**
      * 刷新itemData
      *
      * @return 增加的个数

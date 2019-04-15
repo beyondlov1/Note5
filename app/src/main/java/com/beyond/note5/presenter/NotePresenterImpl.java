@@ -113,6 +113,25 @@ public class NotePresenterImpl implements NotePresenter {
     }
 
     @Override
+    public void updatePriority(Note note) {
+        try {
+            noteModel.update(note);
+            updatePrioritySuccess(note);
+        } catch (Exception e) {
+            e.printStackTrace();
+            updatePriorityFail(note);
+        }
+    }
+
+    private void updatePrioritySuccess(Note note) {
+        noteView.updatePrioritySuccess(note);
+    }
+
+    private void updatePriorityFail(Note note) {
+        noteView.updatePriorityFail(note);
+    }
+
+    @Override
     public void deleteSuccess(Note note) {
         noteView.onDeleteSuccess(note);
     }
