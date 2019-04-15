@@ -73,6 +73,7 @@ public class NoteDetailSuperFragment extends DialogFragment implements OnBackPre
     protected View browserSearchButton;
     protected View stickButton;
     protected View convertButton;
+    protected View doneButton;
     private View modifyButton;
     private View hideButton;
 
@@ -120,6 +121,7 @@ public class NoteDetailSuperFragment extends DialogFragment implements OnBackPre
         browserSearchButton = view.findViewById(R.id.fragment_note_detail_operation_browser_search);
         stickButton = view.findViewById(R.id.fragment_note_detail_operation_stick);
         convertButton = view.findViewById(R.id.fragment_note_detail_to_todo);
+        doneButton = view.findViewById(R.id.fragment_note_detail_operation_done);
     }
 
     protected void initView(View view) {
@@ -406,6 +408,41 @@ public class NoteDetailSuperFragment extends DialogFragment implements OnBackPre
             }
         });
 
+
+        // 置顶按钮
+        if (data.get(currIndex).getReadFlag() > 0) { // 置顶
+            ((ImageButton) doneButton).setImageDrawable(getResources().getDrawable(R.drawable.ic_done_blue_24dp, null));
+        } else { //其他
+            ((ImageButton) doneButton).setImageDrawable(getResources().getDrawable(R.drawable.ic_done_grey_600_24dp, null));
+
+        }
+        doneButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Note note = data.get(currIndex);
+                note.setLastModifyTime(new Date());
+                if (data.get(currIndex).getReadFlag() > 0) {
+
+                    Note currentNote = data.get(currIndex);
+                    currentNote.setReadFlag(DocumentConst.READ_FLAG_NORMAL);
+                    EventBus.getDefault().post(new UpdateNoteEvent(currentNote));
+                    ToastUtil.toast(context, "取消已读", Toast.LENGTH_SHORT);
+                    viewSwitcher.removeAllViews();
+                    reloadView();
+                    ((ImageButton) doneButton).setImageDrawable(getResources().getDrawable(R.drawable.ic_done_grey_600_24dp, null));
+                } else { //其他
+                    Note currentNote = data.get(currIndex);
+                    currentNote.setReadFlag(DocumentConst.READ_FLAG_DONE );
+                    int oldIndex = currIndex;
+                    EventBus.getDefault().post(new UpdateNoteEvent(currentNote));
+                    currIndex = oldIndex;
+                    ToastUtil.toast(context, "已读", Toast.LENGTH_SHORT);
+                    viewSwitcher.removeAllViews();
+                    reloadView();
+                    //((ImageButton) doneButton).setImageDrawable(getResources().getDrawable(R.drawable.ic_done_blue_24dp, null));
+                }
+            }
+        });
     }
 
     @Subscribe(threadMode = ThreadMode.MAIN)
@@ -572,7 +609,6 @@ public class NoteDetailSuperFragment extends DialogFragment implements OnBackPre
     public void setSmoothScalable(SmoothScalable smoothScalable) {
         this.smoothScalable = smoothScalable;
     }
-
 
     @Override
     public void setContainer(View view) {

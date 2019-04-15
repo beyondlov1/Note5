@@ -65,6 +65,19 @@
             android:src="@drawable/ic_swap_horiz_teal_300_24dp" />
 
         <ImageButton
+            android:id="@+id/fragment_note_detail_operation_done"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center_horizontal"
+            android:layout_marginLeft="20dp"
+            android:layout_marginTop="2dp"
+            android:layout_marginBottom="2dp"
+            android:layout_toEndOf="@+id/fragment_note_detail_to_todo"
+            android:background="@drawable/circle_24dp_white"
+            android:elevation="5dp"
+            android:src="@drawable/ic_done_blue_24dp" />
+
+        <ImageButton
             android:id="@+id/fragment_note_detail_operation_delete"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"

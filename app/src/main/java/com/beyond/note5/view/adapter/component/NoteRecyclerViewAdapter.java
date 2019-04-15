@@ -122,7 +122,7 @@ public class NoteRecyclerViewAdapter extends DocumentRecyclerViewAdapter<Note, N
     }
 
     @Override
-    protected void initContentEvent(final NoteViewHolder viewHolder, final Note note) {
+    protected void initContentEvent(final NoteViewHolder viewHolder, final Note note, final int position) {
         final int index = itemDataGenerator.getIndex(note);
         viewHolder.itemView.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -133,11 +133,24 @@ public class NoteRecyclerViewAdapter extends DocumentRecyclerViewAdapter<Note, N
         viewHolder.itemView.setOnLongClickListener(new View.OnLongClickListener() {
             @Override
             public boolean onLongClick(View v) {
+
+                //横跨屏幕时，动画区分大小
+                int animatedVectorRectResId;
+                int animatedVectorRectReserveResId;
+                if (itemDataGenerator.getSingleContentPositions().contains(position)){
+                    animatedVectorRectResId = R.drawable.animated_vector_rect_large;
+                    animatedVectorRectReserveResId = R.drawable.animated_vector_rect_reserve_large;
+                }else {
+                    animatedVectorRectResId = R.drawable.animated_vector_rect;
+                    animatedVectorRectReserveResId = R.drawable.animated_vector_rect_reserve;
+                }
+
                 AnimatedVectorDrawable animatedVectorDrawable;
                 if (isDefaultPriority(note)) {
-                    animatedVectorDrawable = (AnimatedVectorDrawable) context.getResources().getDrawable(R.drawable.animated_vector_rect, null);
+                    animatedVectorDrawable = (AnimatedVectorDrawable) context.getResources().getDrawable(animatedVectorRectResId, null);
                 } else {
-                    animatedVectorDrawable = (AnimatedVectorDrawable) context.getResources().getDrawable(R.drawable.animated_vector_rect_reserve, null);
+
+                    animatedVectorDrawable = (AnimatedVectorDrawable) context.getResources().getDrawable(animatedVectorRectReserveResId, null);
                 }
                 viewHolder.dataContainer.setBackground(animatedVectorDrawable);
                 animatedVectorDrawable.start();

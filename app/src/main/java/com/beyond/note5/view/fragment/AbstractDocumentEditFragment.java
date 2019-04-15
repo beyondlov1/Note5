@@ -34,6 +34,7 @@ import com.beyond.note5.event.ShowKeyBoardEvent;
 import com.beyond.note5.utils.InputMethodUtil;
 import com.beyond.note5.utils.WebViewUtil;
 import com.beyond.note5.view.custom.DialogButton;
+import com.beyond.note5.view.listener.OnClickToInsertBeforeLineListener;
 
 import org.greenrobot.eventbus.EventBus;
 import org.greenrobot.eventbus.Subscribe;
@@ -136,9 +137,12 @@ public abstract class AbstractDocumentEditFragment<T extends Document> extends D
         View markdownToolContainer = view.findViewById(R.id.keyboard_top_tool_tip_container);
 
         OnMarkdownToolItemClickListener onMarkdownToolItemClickListener = new OnMarkdownToolItemClickListener(contentEditText);
-        markdownToolHead.setOnClickListener(onMarkdownToolItemClickListener);
-        markdownToolHead3.setOnClickListener(onMarkdownToolItemClickListener);
-        markdownToolList.setOnClickListener(onMarkdownToolItemClickListener);
+        OnClickToInsertBeforeLineListener onClickToInsertBeforeLineListener = new OnClickToInsertBeforeLineListener(contentEditText);
+
+        markdownToolHead.setOnClickListener(onClickToInsertBeforeLineListener);
+        markdownToolHead3.setOnClickListener(onClickToInsertBeforeLineListener);
+        markdownToolList.setOnClickListener(onClickToInsertBeforeLineListener);
+
         markdownToolEnterList.setOnClickListener(onMarkdownToolItemClickListener);
         markdownToolLine.setOnClickListener(onMarkdownToolItemClickListener);
         markdownToolBracketsLeft.setOnClickListener(onMarkdownToolItemClickListener);

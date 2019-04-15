@@ -37,7 +37,7 @@ import com.beyond.note5.utils.ToastUtil;
 import com.beyond.note5.utils.WebViewUtil;
 import com.beyond.note5.view.PredictView;
 import com.beyond.note5.view.custom.SelectionListenableEditText;
-import com.beyond.note5.view.listener.OnTagClick2AppendListener;
+import com.beyond.note5.view.listener.OnTagClickToAppendListener;
 import com.beyond.note5.view.listener.TimeExpressionDetectiveTextWatcher;
 import com.zhy.view.flowlayout.FlowLayout;
 import com.zhy.view.flowlayout.TagAdapter;
@@ -244,7 +244,7 @@ public class TodoModifySuperFragment extends TodoEditSuperFragment implements Pr
                         .build()
         );
 
-        flowLayout.setOnTagClickListener(new OnTagClick2AppendListener(contentEditText));
+        flowLayout.setOnTagClickListener(new OnTagClickToAppendListener(contentEditText));
     }
 
 

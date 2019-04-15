@@ -12,11 +12,11 @@ import com.zhy.view.flowlayout.TagView;
  * @author beyondlov1
  * @date 2019/03/29
  */
-public class OnTagClick2AppendListener implements TagFlowLayout.OnTagClickListener {
+public class OnTagClickToAppendListener implements TagFlowLayout.OnTagClickListener {
 
     private EditText target;
 
-    public OnTagClick2AppendListener(EditText target) {
+    public OnTagClickToAppendListener(EditText target) {
         this.target = target;
     }
 

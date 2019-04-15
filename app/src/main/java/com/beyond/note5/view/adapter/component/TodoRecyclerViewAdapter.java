@@ -169,7 +169,7 @@ public class TodoRecyclerViewAdapter extends DocumentRecyclerViewAdapter<Todo, T
     }
 
     @Override
-    protected void initContentEvent(final TodoViewHolder viewHolder, final Todo todo) {
+    protected void initContentEvent(final TodoViewHolder viewHolder, final Todo todo, int position) {
         viewHolder.checkbox.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {

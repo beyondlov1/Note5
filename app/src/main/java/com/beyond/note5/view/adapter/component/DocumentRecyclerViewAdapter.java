@@ -75,12 +75,12 @@ public abstract class DocumentRecyclerViewAdapter<T extends Document, S extends 
 
     private void initContentView(int position, T document, S viewHolder) {
         initContentDisplay(viewHolder, document, position);
-        initContentEvent(viewHolder, document);
+        initContentEvent(viewHolder, document,position);
     }
 
     protected abstract void initContentDisplay(final S viewHolder, T document, int position);
 
-    protected abstract void initContentEvent(S viewHolder, final T t);
+    protected abstract void initContentEvent(S viewHolder, final T t, int position);
 
     @Override
     public int getItemCount() {

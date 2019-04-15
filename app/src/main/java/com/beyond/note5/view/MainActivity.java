@@ -397,8 +397,23 @@ public class MainActivity extends FragmentActivity {
                 view = getRightBottomView();
             }else if (view == null&&firstIndex > currIndex){
                 view = getLeftTopView();
+            }else if (view == null){
+                view = getBottomView(); //FIXME
             }
         }
+        return view;
+    }
+
+    @NonNull
+    private View getBottomView() {
+        View view;
+        view = new View(this);
+        FrameLayout.LayoutParams layoutParams = new FrameLayout.LayoutParams(mainContainer.getLayoutParams());
+        layoutParams.width = 600;
+        layoutParams.height = 0;
+        view.setLayoutParams(layoutParams);
+        view.setX(ViewUtil.getScreenSizeWithoutNotification().x);
+        view.setY(ViewUtil.getScreenSizeWithoutNotification().y);
         return view;
     }
 
