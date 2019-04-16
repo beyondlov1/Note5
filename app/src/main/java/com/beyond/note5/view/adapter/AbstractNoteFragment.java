@@ -14,7 +14,6 @@ import com.beyond.note5.presenter.NotePresenter;
 import com.beyond.note5.view.NoteView;
 import com.beyond.note5.view.adapter.component.NoteRecyclerViewAdapter;
 import com.beyond.note5.view.adapter.component.header.ReadFlagItemDataGenerator;
-import com.beyond.note5.view.fragment.AbstractDocumentFragment;
 
 import javax.inject.Inject;
 
@@ -23,7 +22,7 @@ import javax.inject.Inject;
  * @date: 2019/2/6
  */
 
-public abstract class AbstractNoteViewFragment extends AbstractDocumentFragment<Note> implements NoteView{
+public abstract class AbstractNoteFragment extends AbstractDocumentFragment<Note> implements NoteView{
 
     @Inject
     protected NotePresenter notePresenter;
@@ -47,7 +46,7 @@ public abstract class AbstractNoteViewFragment extends AbstractDocumentFragment<
     public View onCreateView(LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
         viewGroup = initViewGroup(inflater, container, savedInstanceState);
         initView();
-        initListener();
+        initEvent();
         //显示所有Note
         notePresenter.findAll();
         return viewGroup;
@@ -57,5 +56,5 @@ public abstract class AbstractNoteViewFragment extends AbstractDocumentFragment<
 
     protected abstract void initView();
 
-    protected abstract void initListener();
+    protected abstract void initEvent();
 }

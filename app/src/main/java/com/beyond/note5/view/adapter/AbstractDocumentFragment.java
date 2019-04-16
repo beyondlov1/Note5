@@ -1,13 +1,14 @@
-package com.beyond.note5.view.fragment;
+package com.beyond.note5.view.adapter;
 
 
 import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.support.v7.widget.RecyclerView;
+import android.view.View;
 
 import com.beyond.note5.bean.Document;
-import com.beyond.note5.view.adapter.AbstractDocumentViewFragment;
 import com.beyond.note5.view.adapter.component.DocumentRecyclerViewAdapter;
+import com.beyond.note5.view.adapter.component.header.ItemDataGenerator;
 
 import org.apache.commons.lang3.StringUtils;
 import org.greenrobot.eventbus.EventBus;
@@ -96,7 +97,29 @@ public abstract class AbstractDocumentFragment<T extends Document> extends Abstr
         recyclerViewAdapter.notifyFullRangeInserted();
     }
 
+    public void scrollTo(Integer index) {
+        ItemDataGenerator itemDataGenerator = this.getRecyclerViewAdapter().getItemDataGenerator();
+        Object note = itemDataGenerator.getContentData().get(index);
+        int position = itemDataGenerator.getPosition(note);
+        this.getRecyclerView().scrollToPosition(position);
+    }
+
+    public View findViewBy(Integer index) {
+        ItemDataGenerator itemDataGenerator = this.getRecyclerViewAdapter().getItemDataGenerator();
+        Object note = itemDataGenerator.getContentData().get(index);
+        int position = itemDataGenerator.getPosition(note);
+        return this.getRecyclerView().getLayoutManager().findViewByPosition(position);
+    }
+
     public DocumentRecyclerViewAdapter getRecyclerViewAdapter() {
         return recyclerViewAdapter;
+    }
+
+    public RecyclerView getRecyclerView() {
+        return recyclerView;
+    }
+
+    public List<T> getData() {
+        return data;
     }
 }

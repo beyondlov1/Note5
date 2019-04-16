@@ -24,26 +24,21 @@ import com.beyond.note5.event.UpdateNotePriorityEvent;
 import com.beyond.note5.ocr.OCRCallBack;
 import com.beyond.note5.ocr.OCRTask;
 import com.beyond.note5.view.MainActivity;
-import com.beyond.note5.view.adapter.AbstractNoteViewFragment;
+import com.beyond.note5.view.adapter.AbstractNoteFragment;
 
-import org.apache.commons.lang3.StringUtils;
 import org.greenrobot.eventbus.EventBus;
 import org.greenrobot.eventbus.Subscribe;
 import org.greenrobot.eventbus.ThreadMode;
 
 import java.io.FileInputStream;
 import java.io.IOException;
-import java.util.Iterator;
-import java.util.List;
 
 /**
  * @author: beyond
  * @date: 2019/1/30
  */
 @SuppressWarnings("unchecked")
-public class NoteListFragment extends AbstractNoteViewFragment {
-
-    public RecyclerView noteRecyclerView;
+public class NoteListFragment extends AbstractNoteFragment {
 
     @Override
     protected ViewGroup initViewGroup(LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
@@ -52,16 +47,16 @@ public class NoteListFragment extends AbstractNoteViewFragment {
 
     @Override
     protected void initView() {
-        noteRecyclerView = viewGroup.findViewById(R.id.note_recycler_view);
-        noteRecyclerView.setAdapter(recyclerViewAdapter);
+        recyclerView = viewGroup.findViewById(R.id.note_recycler_view);
+        recyclerView.setAdapter(recyclerViewAdapter);
         //设置显示格式
         final StaggeredGridLayoutManager staggeredGridLayoutManager = new StaggeredGridLayoutManager(2, StaggeredGridLayoutManager.VERTICAL);
-        noteRecyclerView.setLayoutManager(staggeredGridLayoutManager);
+        recyclerView.setLayoutManager(staggeredGridLayoutManager);
     }
 
     @Override
-    protected void initListener() {
-        noteRecyclerView.setOnFlingListener(new RecyclerView.OnFlingListener() {
+    protected void initEvent() {
+        recyclerView.setOnFlingListener(new RecyclerView.OnFlingListener() {
             @Override
             public boolean onFling(int velocityX, int velocityY) {
                 //上划
@@ -71,7 +66,7 @@ public class NoteListFragment extends AbstractNoteViewFragment {
                 return false;
             }
         });
-        noteRecyclerView.addOnScrollListener(new RecyclerView.OnScrollListener() {
+        recyclerView.addOnScrollListener(new RecyclerView.OnScrollListener() {
             @Override
             public void onScrollStateChanged(RecyclerView recyclerView, int newState) {
                 super.onScrollStateChanged(recyclerView, newState);
@@ -121,51 +116,10 @@ public class NoteListFragment extends AbstractNoteViewFragment {
     }
 
     @Override
-    public void onAddSuccess(Note note) {
-        int insertIndex = recyclerViewAdapter.getItemDataGenerator().getInsertIndex(note);
-        data.add(insertIndex, note);
-        recyclerViewAdapter.notifyInserted(note);
-        noteRecyclerView.scrollToPosition(insertIndex);
-        msg("添加成功");
-    }
-
-    @Override
-    public void onDeleteSuccess(Note note) {
-        int index = recyclerViewAdapter.getItemDataGenerator().getIndex(note);
-        if (index!=-1){
-            data.remove(note);
-            recyclerViewAdapter.notifyRemoved(note);
-            msg("删除成功");
-        }
-    }
-
-    @Override
     public void onUpdateSuccess(Note note) {
-        Iterator<Note> iterator = data.iterator();
-        while (iterator.hasNext()) {
-            Note oldNote = iterator.next();
-            if (StringUtils.equals(oldNote.getId(), note.getId())) {
-                iterator.remove();
-                recyclerViewAdapter.notifyRemoved(oldNote);
-                int insertIndex = recyclerViewAdapter.getItemDataGenerator().getInsertIndex(note);
-                data.add(insertIndex, note);
-                recyclerViewAdapter.notifyInserted(note);
-                noteRecyclerView.scrollToPosition(insertIndex);
-                msg("更新成功");
-                break;
-            }
-        }
+        super.onUpdateSuccess(note);
         EventBus.getDefault().post(new ModifyNoteDoneEvent(note));
     }
-
-    @Override
-    public void onFindAllSuccess(List<Note> allNote) {
-        data.clear();
-        recyclerViewAdapter.notifyFullRangeRemoved();
-        data.addAll(allNote);
-        recyclerViewAdapter.notifyFullRangeInserted();
-    }
-
 
     @Subscribe(threadMode = ThreadMode.MAIN)
     public void onReceived(AddNoteEvent event) {
@@ -201,6 +155,7 @@ public class NoteListFragment extends AbstractNoteViewFragment {
     public void onReceived(ScrollToNoteEvent event){
         Note note = event.get();
         int position = recyclerViewAdapter.getItemDataGenerator().getPosition(note);
-        noteRecyclerView.scrollToPosition(position);
+        recyclerView.scrollToPosition(position);
     }
+
 }

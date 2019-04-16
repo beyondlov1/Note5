@@ -1,15 +1,72 @@
 package com.beyond.note5.view.adapter;
 
+import android.os.Bundle;
+import android.support.annotation.Nullable;
+import android.view.LayoutInflater;
+import android.view.View;
+import android.view.ViewGroup;
+
 import com.beyond.note5.bean.Todo;
+import com.beyond.note5.module.DaggerTodoComponent;
+import com.beyond.note5.module.PredictModule;
+import com.beyond.note5.module.TodoComponent;
+import com.beyond.note5.module.TodoModule;
 import com.beyond.note5.predict.bean.Tag;
+import com.beyond.note5.presenter.CalendarPresenter;
+import com.beyond.note5.presenter.PredictPresenter;
+import com.beyond.note5.presenter.TodoPresenter;
 import com.beyond.note5.view.CalendarView;
 import com.beyond.note5.view.PredictView;
 import com.beyond.note5.view.TodoView;
-import com.beyond.note5.view.fragment.AbstractDocumentFragment;
+import com.beyond.note5.view.adapter.component.TodoRecyclerViewAdapter;
+import com.beyond.note5.view.adapter.component.header.ReminderTimeItemDataGenerator;
 
 import java.util.List;
 
-public class AbstractTodoViewFragment extends AbstractDocumentFragment<Todo> implements TodoView, CalendarView, PredictView {
+import javax.inject.Inject;
+
+public abstract class AbstractTodoFragment extends AbstractDocumentFragment<Todo> implements TodoView, CalendarView, PredictView {
+
+    protected ViewGroup viewGroup;
+
+    @Inject
+    protected TodoPresenter todoPresenter;
+    @Inject
+    protected CalendarPresenter calendarPresenter;
+    @Inject
+    protected PredictPresenter predictPresenter;
+
+
+    @Override
+    public void onCreate(@Nullable Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        recyclerViewAdapter = new TodoRecyclerViewAdapter(this.getActivity(), new ReminderTimeItemDataGenerator(data));
+        initInjection();
+    }
+
+    private void initInjection() {
+        TodoComponent todoComponent = DaggerTodoComponent.builder()
+                .todoModule(new TodoModule(getActivity(),this,this))
+                .predictModule(new PredictModule(this))
+                .build();
+        todoComponent.inject(this);
+    }
+
+    @Nullable
+    @Override
+    public View onCreateView(LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
+        viewGroup = initViewGroup(inflater,container,savedInstanceState);
+        initView();
+        initEvent();
+        todoPresenter.findAll();
+        return viewGroup;
+    }
+
+    protected abstract void initView();
+
+    protected abstract void initEvent();
+
+    protected abstract ViewGroup initViewGroup(LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState);
 
     @Override
     public void onEventAddSuccess(Todo todo) {

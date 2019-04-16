@@ -26,18 +26,9 @@ import com.beyond.note5.event.RefreshTodoListEvent;
 import com.beyond.note5.event.ShowFABEvent;
 import com.beyond.note5.event.UpdateTodoEvent;
 import com.beyond.note5.event.UpdateTodoPriorityEvent;
-import com.beyond.note5.module.DaggerTodoComponent;
-import com.beyond.note5.module.PredictModule;
-import com.beyond.note5.module.TodoComponent;
-import com.beyond.note5.module.TodoModule;
-import com.beyond.note5.presenter.CalendarPresenter;
-import com.beyond.note5.presenter.PredictPresenter;
-import com.beyond.note5.presenter.TodoPresenter;
 import com.beyond.note5.utils.TimeNLPUtil;
-import com.beyond.note5.view.adapter.AbstractTodoViewFragment;
-import com.beyond.note5.view.adapter.component.TodoRecyclerViewAdapter;
+import com.beyond.note5.view.adapter.AbstractTodoFragment;
 import com.beyond.note5.view.adapter.component.header.Header;
-import com.beyond.note5.view.adapter.component.header.ReminderTimeItemDataGenerator;
 
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.time.DateFormatUtils;
@@ -48,85 +39,22 @@ import org.greenrobot.eventbus.ThreadMode;
 import java.util.Iterator;
 import java.util.List;
 
-import javax.inject.Inject;
-
 import static com.beyond.note5.model.TodoModelImpl.IS_SHOW_READ_FLAG_DONE;
 
 /**
  * @author: beyond
  * @date: 2019/1/30
  */
-
-public class TodoListFragment extends AbstractTodoViewFragment {
-
-    @Inject
-    TodoPresenter todoPresenter;
-    @Inject
-    CalendarPresenter calendarPresenter;
-    @Inject
-    PredictPresenter predictPresenter;
+@SuppressWarnings("unchecked")
+public class TodoListFragment extends AbstractTodoFragment {
 
     @Override
-    public void onCreate(@Nullable Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-        recyclerViewAdapter = new TodoRecyclerViewAdapter(this.getActivity(), new ReminderTimeItemDataGenerator(data));
-        initInjection();
+    protected ViewGroup initViewGroup(LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
+        return (ViewGroup) inflater.inflate(R.layout.fragment_todo_list, container, false);
     }
 
-    private void initInjection() {
-        TodoComponent todoComponent = DaggerTodoComponent.builder()
-                .todoModule(new TodoModule(getActivity(),this,this))
-                .predictModule(new PredictModule(this))
-                .build();
-        todoComponent.inject(this);
-    }
-
-    @Nullable
     @Override
-    public View onCreateView(LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
-        ViewGroup viewGroup = (ViewGroup) inflater.inflate(R.layout.fragment_todo_list, container, false);
-        initView(viewGroup);
-        todoPresenter.findAll();
-        initEvent();
-        initOnScrollListener();
-        return viewGroup;
-    }
-
-    private void initOnScrollListener() {
-        recyclerView.setOnFlingListener(new RecyclerView.OnFlingListener() {
-            @Override
-            public boolean onFling(int velocityX, int velocityY) {
-                //上划
-                if (velocityY < 0) {
-                    EventBus.getDefault().post(new ShowFABEvent(R.id.todo_recycler_view));
-                }
-                return false;
-            }
-        });
-        recyclerView.addOnScrollListener(new RecyclerView.OnScrollListener() {
-            @Override
-            public void onScrollStateChanged(RecyclerView recyclerView, int newState) {
-                super.onScrollStateChanged(recyclerView, newState);
-                //未到滚动的高度
-                if (!recyclerView.canScrollVertically(1) && !recyclerView.canScrollVertically(-1)) {
-                    EventBus.getDefault().post(new ShowFABEvent(R.id.todo_recycler_view));
-                    return;
-                }
-                //下划到底
-                if (!recyclerView.canScrollVertically(1)) {
-                    EventBus.getDefault().post(new HideFABEvent(R.id.todo_recycler_view));
-                }
-                //上划到顶
-                if (!recyclerView.canScrollVertically(-1)) {
-                    EventBus.getDefault().post(new ShowFABEvent(R.id.todo_recycler_view));
-                }
-
-            }
-
-        });
-    }
-
-    private void initView(ViewGroup viewGroup) {
+    protected void initView() {
         recyclerView = viewGroup.findViewById(R.id.todo_recycler_view);
         recyclerView.setAdapter(recyclerViewAdapter);
         //设置显示格式
@@ -135,7 +63,7 @@ public class TodoListFragment extends AbstractTodoViewFragment {
     }
 
     @SuppressLint("ClickableViewAccessibility")
-    private void initEvent(){
+    protected void initEvent(){
 
         // 点击切换显示模式（是否显示已读）
         recyclerView.setOnTouchListener(new View.OnTouchListener() {
@@ -186,6 +114,38 @@ public class TodoListFragment extends AbstractTodoViewFragment {
                 return gestureDetector.onTouchEvent(event);
             }
         });
+
+        recyclerView.setOnFlingListener(new RecyclerView.OnFlingListener() {
+            @Override
+            public boolean onFling(int velocityX, int velocityY) {
+                //上划
+                if (velocityY < 0) {
+                    EventBus.getDefault().post(new ShowFABEvent(R.id.todo_recycler_view));
+                }
+                return false;
+            }
+        });
+        recyclerView.addOnScrollListener(new RecyclerView.OnScrollListener() {
+            @Override
+            public void onScrollStateChanged(RecyclerView recyclerView, int newState) {
+                super.onScrollStateChanged(recyclerView, newState);
+                //未到滚动的高度
+                if (!recyclerView.canScrollVertically(1) && !recyclerView.canScrollVertically(-1)) {
+                    EventBus.getDefault().post(new ShowFABEvent(R.id.todo_recycler_view));
+                    return;
+                }
+                //下划到底
+                if (!recyclerView.canScrollVertically(1)) {
+                    EventBus.getDefault().post(new HideFABEvent(R.id.todo_recycler_view));
+                }
+                //上划到顶
+                if (!recyclerView.canScrollVertically(-1)) {
+                    EventBus.getDefault().post(new ShowFABEvent(R.id.todo_recycler_view));
+                }
+
+            }
+
+        });
     }
 
     @Subscribe(threadMode = ThreadMode.MAIN)
@@ -212,6 +172,7 @@ public class TodoListFragment extends AbstractTodoViewFragment {
             }
         }
     }
+
     @Subscribe(threadMode = ThreadMode.MAIN)
     public void onReceived(UpdateTodoPriorityEvent event) {
         Todo todo = event.get();
@@ -226,19 +187,6 @@ public class TodoListFragment extends AbstractTodoViewFragment {
         todo.setReminder(null);
     }
 
-    /**
-     * 计算无时间内容
-     * 要不要改成异步， 看情况吧
-     * @param todo 待办
-     */
-    private void fillContentWithoutTime(Todo todo) {
-        String contentWithoutTime = StringUtils.trim(TimeNLPUtil.getOriginExpressionWithoutTime(StringUtils.trim(todo.getContent())));
-        if (StringUtils.isBlank(contentWithoutTime)) {
-            contentWithoutTime = StringUtils.trim(todo.getContent());
-        }
-        todo.setContentWithoutTime(contentWithoutTime);
-    }
-
     @Subscribe(threadMode = ThreadMode.MAIN)
     public void onReceived(DeleteTodoEvent event) {
         todoPresenter.delete(event.get());
@@ -247,7 +195,6 @@ public class TodoListFragment extends AbstractTodoViewFragment {
         }
     }
 
-    @SuppressWarnings("unchecked")
     @Subscribe(threadMode = ThreadMode.MAIN)
     public void onReceived(RefreshTodoListEvent event) {
         todoPresenter.findAll();
@@ -277,7 +224,6 @@ public class TodoListFragment extends AbstractTodoViewFragment {
         calendarPresenter.restoreReminder(event.get());
     }
 
-    @SuppressWarnings("unchecked")
     @Override
     public void onUpdateSuccess(Todo todo) {
         Iterator<Todo> iterator = data.iterator();
@@ -298,6 +244,19 @@ public class TodoListFragment extends AbstractTodoViewFragment {
                 break;
             }
         }
+    }
+
+    /**
+     * 计算无时间内容
+     * 要不要改成异步， 看情况吧
+     * @param todo 待办
+     */
+    private void fillContentWithoutTime(Todo todo) {
+        String contentWithoutTime = StringUtils.trim(TimeNLPUtil.getOriginExpressionWithoutTime(StringUtils.trim(todo.getContent())));
+        if (StringUtils.isBlank(contentWithoutTime)) {
+            contentWithoutTime = StringUtils.trim(todo.getContent());
+        }
+        todo.setContentWithoutTime(contentWithoutTime);
     }
 
     private boolean isNeedTrain(Todo oldTodo, Todo newTodo){

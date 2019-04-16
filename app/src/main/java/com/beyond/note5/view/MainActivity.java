@@ -29,8 +29,6 @@ import com.beyond.note5.R;
 import com.beyond.note5.bean.Attachment;
 import com.beyond.note5.bean.Document;
 import com.beyond.note5.bean.Note;
-import com.beyond.note5.bean.Reminder;
-import com.beyond.note5.bean.Todo;
 import com.beyond.note5.event.AddNoteEvent;
 import com.beyond.note5.event.DetailNoteEvent;
 import com.beyond.note5.event.HideFABEvent;
@@ -41,14 +39,11 @@ import com.beyond.note5.event.ShowFABEvent;
 import com.beyond.note5.event.ShowKeyBoardEvent;
 import com.beyond.note5.event.ShowNoteDetailEvent;
 import com.beyond.note5.event.ShowTodoEditEvent;
-import com.beyond.note5.model.CalendarModel;
-import com.beyond.note5.model.CalendarModelImpl;
 import com.beyond.note5.utils.IDUtil;
 import com.beyond.note5.utils.PhotoUtil;
 import com.beyond.note5.utils.PreferenceUtil;
 import com.beyond.note5.utils.ToastUtil;
 import com.beyond.note5.utils.ViewUtil;
-import com.beyond.note5.view.adapter.component.header.ItemDataGenerator;
 import com.beyond.note5.view.animator.SmoothScalable;
 import com.beyond.note5.view.fragment.NoteDetailSuperFragment;
 import com.beyond.note5.view.fragment.NoteEditFragment;
@@ -61,7 +56,6 @@ import com.beyond.note5.view.listener.OnKeyboardChangeListener;
 import com.google.zxing.integration.android.IntentIntegrator;
 import com.google.zxing.integration.android.IntentResult;
 
-import org.apache.commons.lang3.StringUtils;
 import org.greenrobot.eventbus.EventBus;
 import org.greenrobot.eventbus.Subscribe;
 import org.greenrobot.eventbus.ThreadMode;
@@ -79,6 +73,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 public class MainActivity extends FragmentActivity {
 
     private static final int TAKE_PHOTO_REQUEST_CODE = 1;
+
     public View mainContainer;
     private ViewPager mainViewPager;
     private View noteDetailFragmentContainer;
@@ -93,6 +88,8 @@ public class MainActivity extends FragmentActivity {
 
     private String currentType;
 
+    private StaticViewHolder staticViewHolder = new StaticViewHolder();
+
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -105,21 +102,6 @@ public class MainActivity extends FragmentActivity {
         initNoteDetailFragmentContainer();
         initTodoEditFragmentContainer();
 
-    }
-
-    private void test() {
-        CalendarModel calendarModel = new CalendarModelImpl(this);
-        Todo todo = new Todo();
-        todo.setId(IDUtil.uuid());
-        todo.setTitle("hahah");
-        todo.setContent("content");
-        Reminder reminder = new Reminder();
-        String reminderId = IDUtil.uuid();
-        reminder.setId(reminderId);
-        reminder.setStart(new Date());
-        todo.setReminderId(reminderId);
-        todo.setReminder(reminder);
-        calendarModel.add(todo);
     }
 
     private void initNoteDetailFragmentContainer() {
@@ -243,12 +225,9 @@ public class MainActivity extends FragmentActivity {
         addDocumentButton.setOnLongClickListener(new View.OnLongClickListener() {
             @Override
             public boolean onLongClick(View v) {
-                if (StringUtils.equals(currentType, Document.NOTE)) {
 //                    takePhoto();
-                    new IntentIntegrator(MainActivity.this).initiateScan();
-                    return true;
-                }
-                return false;
+                new IntentIntegrator(MainActivity.this).initiateScan();
+                return true;
             }
         });
     }
@@ -324,7 +303,7 @@ public class MainActivity extends FragmentActivity {
         //获取viewSwitcher划到的位置，获取动画要返回的view
         Integer currIndex = event.get();
         int firstIndex = event.getFirstIndex();
-        View view = getViewToReturn(currIndex,firstIndex);
+        View view = getViewToReturn(currIndex, firstIndex);
 
         SmoothScalable smoothScalable = (SmoothScalable) noteDetailFragment;
         smoothScalable.setEndView(view);
@@ -357,89 +336,28 @@ public class MainActivity extends FragmentActivity {
         EventBus.getDefault().post(new ShowFABEvent(null));
 
         SmoothScalable smoothScalable = (SmoothScalable) todoModifyFragment;
-        smoothScalable.setEndView(clickedView == null ? getViewToReturn(-1) : clickedView);
+        smoothScalable.setEndView(clickedView == null ? staticViewHolder.leftTopView : clickedView);
         smoothScalable.hide();
         isTodoEditShow = false;
-    }
-
-    @SuppressWarnings({"unchecked", "SameParameterValue"})
-    private View getViewToReturn(Integer currIndex) {
-        View view;
-        if (currIndex == -1) {
-            view = getLeftTopView();
-        } else {
-            NoteListFragment fragment = (NoteListFragment) fragments.get(0);
-            ItemDataGenerator itemDataGenerator = fragment.getRecyclerViewAdapter().getItemDataGenerator();
-            Object note = itemDataGenerator.getContentData().get(currIndex);
-            int position = itemDataGenerator.getPosition(note);
-            fragment.noteRecyclerView.scrollToPosition(position);
-            view = fragment.noteRecyclerView.getLayoutManager().findViewByPosition(position);
-            if (view == null){
-                view = getRightBottomView();
-            }
-        }
-        return view;
     }
 
     @SuppressWarnings("unchecked")
     private View getViewToReturn(Integer currIndex, Integer firstIndex) {
         View view;
         if (currIndex == -1) {
-            view = getLeftTopView();
+            view = staticViewHolder.leftTopView;
         } else {
             NoteListFragment fragment = (NoteListFragment) fragments.get(0);
-            ItemDataGenerator itemDataGenerator = fragment.getRecyclerViewAdapter().getItemDataGenerator();
-            Object note = itemDataGenerator.getContentData().get(currIndex);
-            int position = itemDataGenerator.getPosition(note);
-            fragment.noteRecyclerView.scrollToPosition(position);
-            view = fragment.noteRecyclerView.getLayoutManager().findViewByPosition(position);
-            if (view == null&& firstIndex<currIndex){
-                view = getRightBottomView();
-            }else if (view == null&&firstIndex > currIndex){
-                view = getLeftTopView();
-            }else if (view == null){
-                view = getBottomView(); //FIXME
+            fragment.scrollTo(currIndex);
+            view = fragment.findViewBy(currIndex);
+            if (view == null && firstIndex < currIndex) {
+                view = staticViewHolder.rightBottomView;
+            } else if (view == null && firstIndex > currIndex) {
+                view = staticViewHolder.getLeftTopView();
+            } else if (view == null) {
+                view = staticViewHolder.getRightBottomView(); // 正常情况下不会执行
             }
         }
-        return view;
-    }
-
-    @NonNull
-    private View getBottomView() {
-        View view;
-        view = new View(this);
-        FrameLayout.LayoutParams layoutParams = new FrameLayout.LayoutParams(mainContainer.getLayoutParams());
-        layoutParams.width = 600;
-        layoutParams.height = 0;
-        view.setLayoutParams(layoutParams);
-        view.setX(ViewUtil.getScreenSizeWithoutNotification().x);
-        view.setY(ViewUtil.getScreenSizeWithoutNotification().y);
-        return view;
-    }
-
-    @NonNull
-    private View getRightBottomView() {
-        View view;
-        view = new View(this);
-        FrameLayout.LayoutParams layoutParams = new FrameLayout.LayoutParams(mainContainer.getLayoutParams());
-        layoutParams.width = 0;
-        layoutParams.height = 0;
-        view.setLayoutParams(layoutParams);
-        view.setX(ViewUtil.getScreenSizeWithoutNotification().x);
-        view.setY(ViewUtil.getScreenSizeWithoutNotification().y);
-        return view;
-    }
-
-    @NonNull
-    private View getLeftTopView() {
-        View view;
-        view = new View(this);
-        FrameLayout.LayoutParams layoutParams = new FrameLayout.LayoutParams(mainContainer.getLayoutParams());
-        layoutParams.width = 0;
-        layoutParams.height = 0;
-        view.setLayoutParams(layoutParams);
-        view.setX(0);
-        view.setY(0);
         return view;
     }
 
@@ -490,11 +408,14 @@ public class MainActivity extends FragmentActivity {
         }
 
         IntentResult result = IntentIntegrator.parseActivityResult(requestCode, resultCode, data);
-        if(result != null) {
-            if(result.getContents() == null) {
+        if (result != null) {
+            if (result.getContents() == null) {
                 ToastUtil.toast(this, "Cancelled", Toast.LENGTH_LONG);
             } else {
                 addQRCodeNote(result.getContents());
+                if (!Document.NOTE.equals(currentType)){
+                    mainViewPager.setCurrentItem(0);
+                }
                 ToastUtil.toast(this, "Scanned: " + result.getContents(), Toast.LENGTH_LONG);
             }
         } else {
@@ -549,4 +470,40 @@ public class MainActivity extends FragmentActivity {
         EventBus.getDefault().post(new AddNoteEvent(note));
     }
 
+
+    private class StaticViewHolder {
+
+        private View rightBottomView;
+        private View leftTopView;
+
+        @NonNull
+        private View getRightBottomView() {
+            if (rightBottomView != null) {
+                return rightBottomView;
+            }
+            rightBottomView = new View(MainActivity.this);
+            FrameLayout.LayoutParams layoutParams = new FrameLayout.LayoutParams(mainContainer.getLayoutParams());
+            layoutParams.width = 0;
+            layoutParams.height = 0;
+            rightBottomView.setLayoutParams(layoutParams);
+            rightBottomView.setX(ViewUtil.getScreenSizeWithoutNotification().x);
+            rightBottomView.setY(ViewUtil.getScreenSizeWithoutNotification().y);
+            return rightBottomView;
+        }
+
+        @NonNull
+        private View getLeftTopView() {
+            if (leftTopView != null) {
+                return leftTopView;
+            }
+            leftTopView = new View(MainActivity.this);
+            FrameLayout.LayoutParams layoutParams = new FrameLayout.LayoutParams(mainContainer.getLayoutParams());
+            layoutParams.width = 0;
+            layoutParams.height = 0;
+            leftTopView.setLayoutParams(layoutParams);
+            leftTopView.setX(0);
+            leftTopView.setY(0);
+            return leftTopView;
+        }
+    }
 }
