@@ -19,6 +19,10 @@ public class DefaultSmoothScalable implements SmoothScalable {
     protected Runnable onShownListener;
     protected Runnable onHiddenListener;
 
+    private AnimatorSet showAnimatorSet = new AnimatorSet();
+    private AnimatorSet hideAnimatorSet = new AnimatorSet();
+    private DecelerateInterpolator decelerateInterpolator = new DecelerateInterpolator();
+
     @Override
     public View getContainer() {
         return container;
@@ -76,11 +80,10 @@ public class DefaultSmoothScalable implements SmoothScalable {
         container.setY(clickItemY);
 
         //出现动画
-        AnimatorSet animatorSet = new AnimatorSet();
         ValueAnimator valueAnimator = ValueAnimator.ofFloat(0, 1f).setDuration(300);
-        animatorSet.setInterpolator(new DecelerateInterpolator());
-        animatorSet.playTogether(valueAnimator);
-        animatorSet.start();
+        showAnimatorSet.setInterpolator(decelerateInterpolator);
+        showAnimatorSet.playTogether(valueAnimator);
+        showAnimatorSet.start();
         valueAnimator.addUpdateListener(new ValueAnimator.AnimatorUpdateListener() {
             @Override
             public void onAnimationUpdate(ValueAnimator animation) {
@@ -114,10 +117,9 @@ public class DefaultSmoothScalable implements SmoothScalable {
         final int containerHeight = ViewUtil.getHeight(showingView);
 
         //出现动画
-        AnimatorSet animatorSet = new AnimatorSet();
         ValueAnimator valueAnimator = ValueAnimator.ofFloat(1f, 0).setDuration(300);
-        animatorSet.playTogether(valueAnimator);
-        animatorSet.start();
+        hideAnimatorSet.playTogether(valueAnimator);
+        hideAnimatorSet.start();
         valueAnimator.addUpdateListener(new ValueAnimator.AnimatorUpdateListener() {
             @Override
             public void onAnimationUpdate(ValueAnimator animation) {
@@ -133,7 +135,7 @@ public class DefaultSmoothScalable implements SmoothScalable {
             }
         });
 
-        animatorSet.addListener(new AnimatorListenerAdapter() {
+        hideAnimatorSet.addListener(new AnimatorListenerAdapter() {
             @Override
             public void onAnimationEnd(Animator animation) {
                 super.onAnimationEnd(animation);
