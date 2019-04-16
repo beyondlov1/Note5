@@ -34,7 +34,7 @@ import com.beyond.note5.presenter.CalendarPresenter;
 import com.beyond.note5.presenter.PredictPresenter;
 import com.beyond.note5.presenter.TodoPresenter;
 import com.beyond.note5.utils.TimeNLPUtil;
-import com.beyond.note5.view.adapter.AbstractFragmentTodoView;
+import com.beyond.note5.view.adapter.AbstractTodoViewFragment;
 import com.beyond.note5.view.adapter.component.TodoRecyclerViewAdapter;
 import com.beyond.note5.view.adapter.component.header.Header;
 import com.beyond.note5.view.adapter.component.header.ReminderTimeItemDataGenerator;
@@ -57,7 +57,7 @@ import static com.beyond.note5.model.TodoModelImpl.IS_SHOW_READ_FLAG_DONE;
  * @date: 2019/1/30
  */
 
-public class TodoListFragment extends AbstractFragmentTodoView {
+public class TodoListFragment extends AbstractTodoViewFragment {
 
     @Inject
     TodoPresenter todoPresenter;

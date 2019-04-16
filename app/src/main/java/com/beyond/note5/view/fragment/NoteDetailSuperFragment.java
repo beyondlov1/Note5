@@ -31,6 +31,7 @@ import com.beyond.note5.event.DetailNoteEvent;
 import com.beyond.note5.event.FillNoteModifyEvent;
 import com.beyond.note5.event.HideNoteDetailEvent;
 import com.beyond.note5.event.ModifyNoteDoneEvent;
+import com.beyond.note5.event.ScrollToNoteEvent;
 import com.beyond.note5.event.ShowNoteDetailEvent;
 import com.beyond.note5.event.UpdateNoteEvent;
 import com.beyond.note5.utils.ToastUtil;
@@ -175,7 +176,6 @@ public class NoteDetailSuperFragment extends DialogFragment implements OnBackPre
                     if (currIndex == data.size()) {
                         currIndex--;
                     }
-                    viewSwitcher.removeAllViews();
                     reloadView();
 
                     if (!isCanceled.get()) {
@@ -233,7 +233,6 @@ public class NoteDetailSuperFragment extends DialogFragment implements OnBackPre
                     if (currIndex == data.size()) {
                         currIndex--;
                     }
-                    viewSwitcher.removeAllViews();
                     reloadView();
                 }
             });
@@ -427,7 +426,6 @@ public class NoteDetailSuperFragment extends DialogFragment implements OnBackPre
                     currentNote.setReadFlag(DocumentConst.READ_FLAG_NORMAL);
                     EventBus.getDefault().post(new UpdateNoteEvent(currentNote));
                     ToastUtil.toast(context, "取消已读", Toast.LENGTH_SHORT);
-                    viewSwitcher.removeAllViews();
                     reloadView();
                     ((ImageButton) doneButton).setImageDrawable(getResources().getDrawable(R.drawable.ic_done_grey_600_24dp, null));
                 } else { //其他
@@ -437,7 +435,6 @@ public class NoteDetailSuperFragment extends DialogFragment implements OnBackPre
                     EventBus.getDefault().post(new UpdateNoteEvent(currentNote));
                     currIndex = oldIndex;
                     ToastUtil.toast(context, "已读", Toast.LENGTH_SHORT);
-                    viewSwitcher.removeAllViews();
                     reloadView();
                     //((ImageButton) doneButton).setImageDrawable(getResources().getDrawable(R.drawable.ic_done_blue_24dp, null));
                 }
@@ -475,6 +472,11 @@ public class NoteDetailSuperFragment extends DialogFragment implements OnBackPre
         });
         openWebPage();
         resetShowType();
+        scrollRecyclerViewTo(data.get(currIndex));
+    }
+
+    private void scrollRecyclerViewTo(Note note) {
+        EventBus.getDefault().post(new ScrollToNoteEvent(note));
     }
 
     protected void beforeReloadView() {

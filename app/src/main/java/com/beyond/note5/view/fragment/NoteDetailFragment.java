@@ -158,7 +158,6 @@ public class NoteDetailFragment extends DialogFragment {
                     if (currIndex == data.size()) {
                         currIndex--;
                     }
-                    viewSwitcher.removeAllViews();
                     reloadView();
 
                     if (!isCanceled.get()) {
@@ -216,7 +215,6 @@ public class NoteDetailFragment extends DialogFragment {
                     if (currIndex == data.size()) {
                         currIndex--;
                     }
-                    viewSwitcher.removeAllViews();
                     reloadView();
                 }
             });
@@ -373,12 +371,12 @@ public class NoteDetailFragment extends DialogFragment {
         Note note = modifyNoteDoneEvent.get();
         int index = data.indexOf(note);
         currIndex = index == -1 ? 0 : index;
-        viewSwitcher.removeAllViews();
         reloadView();
     }
 
     @SuppressWarnings("ConstantConditions")
     private void reloadView() {
+        viewSwitcher.removeAllViews();
         // 默认情况下，dialog布局中设置EditText，在点击EditText后输入法不能弹出来, 将此标志位清除，则可以显示输入法
         this.getDialog().getWindow().clearFlags(WindowManager.LayoutParams.FLAG_ALT_FOCUSABLE_IM);
         viewSwitcher.setFactory(new ViewSwitcher.ViewFactory() {

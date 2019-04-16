@@ -6,19 +6,12 @@ import android.widget.Toast;
 import com.beyond.note5.utils.ToastUtil;
 import com.beyond.note5.view.DocumentView;
 
-import java.util.List;
-
 /**
  * @author: beyond
  * @date: 2019/2/6
  */
 
-public abstract class AbstractFragmentDocumentView<T> extends Fragment implements DocumentView<T> {
-
-    @Override
-    public void onAddSuccess(T note) {
-        msg("添加成功");
-    }
+public abstract class AbstractDocumentViewFragment<T> extends Fragment implements DocumentView<T> {
 
     @Override
     public void onAddFail(T note) {
@@ -26,18 +19,10 @@ public abstract class AbstractFragmentDocumentView<T> extends Fragment implement
     }
 
     @Override
-    public void onFindAllSuccess(List<T> allT) {
-    }
-
-    @Override
     public void onFindAllFail() {
         msg("查找失败");
     }
 
-    @Override
-    public void onDeleteSuccess(T note) {
-
-    }
 
     @Override
     public void onDeleteFail(T note) {
@@ -45,18 +30,8 @@ public abstract class AbstractFragmentDocumentView<T> extends Fragment implement
     }
 
     @Override
-    public void onUpdateSuccess(T note) {
-
-    }
-
-    @Override
     public void onUpdateFail(T note) {
         msg("更新失败");
-    }
-
-    @Override
-    public void onUpdatePrioritySuccess(T document) {
-
     }
 
     @Override

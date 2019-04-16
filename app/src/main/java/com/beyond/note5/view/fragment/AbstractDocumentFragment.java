@@ -6,7 +6,7 @@ import android.support.annotation.Nullable;
 import android.support.v7.widget.RecyclerView;
 
 import com.beyond.note5.bean.Document;
-import com.beyond.note5.view.adapter.AbstractFragmentDocumentView;
+import com.beyond.note5.view.adapter.AbstractDocumentViewFragment;
 import com.beyond.note5.view.adapter.component.DocumentRecyclerViewAdapter;
 
 import org.apache.commons.lang3.StringUtils;
@@ -20,8 +20,8 @@ import java.util.List;
  * @author: beyond
  * @date: 2019/1/31
  */
-
-public abstract class AbstractDocumentFragment<T extends Document> extends AbstractFragmentDocumentView<T> {
+@SuppressWarnings("unchecked")
+public abstract class AbstractDocumentFragment<T extends Document> extends AbstractDocumentViewFragment<T> {
 
     protected RecyclerView recyclerView;
 
@@ -36,22 +36,11 @@ public abstract class AbstractDocumentFragment<T extends Document> extends Abstr
     }
 
     @Override
-    public void onStart() {
-        super.onStart();
-    }
-
-    @Override
-    public void onStop() {
-        super.onStop();
-    }
-
-    @Override
     public void onDestroy() {
         super.onDestroy();
         EventBus.getDefault().unregister(this);
     }
 
-    @SuppressWarnings("unchecked")
     @Override
     public void onAddSuccess(T t) {
         int insertIndex = recyclerViewAdapter.getItemDataGenerator().getInsertIndex(t);
@@ -62,15 +51,6 @@ public abstract class AbstractDocumentFragment<T extends Document> extends Abstr
     }
 
     @Override
-    public void onFindAllSuccess(List<T> allT) {
-        data.clear();
-        recyclerViewAdapter.notifyFullRangeRemoved();
-        data.addAll(allT);
-        recyclerViewAdapter.notifyFullRangeInserted();
-    }
-
-    @SuppressWarnings("unchecked")
-    @Override
     public void onDeleteSuccess(T t) {
         int index = recyclerViewAdapter.getItemDataGenerator().getIndexById(t);
         if (index!=-1){
@@ -80,7 +60,6 @@ public abstract class AbstractDocumentFragment<T extends Document> extends Abstr
         }
     }
 
-    @SuppressWarnings("unchecked")
     @Override
     public void onUpdateSuccess(T t) {
         Iterator<T> iterator = data.iterator();
@@ -99,7 +78,6 @@ public abstract class AbstractDocumentFragment<T extends Document> extends Abstr
         }
     }
 
-    @SuppressWarnings("unchecked")
     @Override
     public void onUpdatePrioritySuccess(T t) {
         for (T oldT : data) {
@@ -108,6 +86,14 @@ public abstract class AbstractDocumentFragment<T extends Document> extends Abstr
                 break;
             }
         }
+    }
+
+    @Override
+    public void onFindAllSuccess(List<T> allT) {
+        data.clear();
+        recyclerViewAdapter.notifyFullRangeRemoved();
+        data.addAll(allT);
+        recyclerViewAdapter.notifyFullRangeInserted();
     }
 
     public DocumentRecyclerViewAdapter getRecyclerViewAdapter() {

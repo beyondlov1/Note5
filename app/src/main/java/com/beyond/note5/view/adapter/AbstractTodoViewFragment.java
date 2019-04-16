@@ -9,7 +9,7 @@ import com.beyond.note5.view.fragment.AbstractDocumentFragment;
 
 import java.util.List;
 
-public class AbstractFragmentTodoView extends AbstractDocumentFragment<Todo> implements TodoView, CalendarView, PredictView {
+public class AbstractTodoViewFragment extends AbstractDocumentFragment<Todo> implements TodoView, CalendarView, PredictView {
 
     @Override
     public void onEventAddSuccess(Todo todo) {
