@@ -227,13 +227,13 @@ public class TodoListFragment extends AbstractTodoFragment {
         calendarPresenter.restoreReminder(event.get());
     }
 
-
     @Subscribe(threadMode = ThreadMode.MAIN)
     public void onReceived(ScrollToTodoEvent event){
         Todo todo = event.get();
         int position = recyclerViewAdapter.getItemDataGenerator().getPosition(todo);
         recyclerView.scrollToPosition(position);
     }
+
     @Subscribe(threadMode = ThreadMode.MAIN)
     public void onReceived(ScrollToTodoByDateEvent event){
         Date changedRemindStart = event.get();
