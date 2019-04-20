@@ -169,7 +169,7 @@ public class TodoRecyclerViewAdapter extends DocumentRecyclerViewAdapter<Todo, T
     }
 
     @Override
-    protected void initContentEvent(final TodoViewHolder viewHolder, final Todo todo, int position) {
+    protected void initContentEvent(final TodoViewHolder viewHolder, final Todo todo, final int position) {
         viewHolder.checkbox.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -188,7 +188,9 @@ public class TodoRecyclerViewAdapter extends DocumentRecyclerViewAdapter<Todo, T
             public void onClick(View v) {
                 ShowTodoEditEvent showTodoEditEvent = new ShowTodoEditEvent(v);
                 EventBus.getDefault().post(showTodoEditEvent);
-                EventBus.getDefault().post(new FillTodoModifyEvent(todo));
+                FillTodoModifyEvent event = new FillTodoModifyEvent(todo);
+                event.setIndex(itemDataGenerator.getIndex(todo));
+                EventBus.getDefault().post(event);
             }
         });
 

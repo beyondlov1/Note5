@@ -23,6 +23,8 @@ import com.beyond.note5.event.DeleteTodoEvent;
 import com.beyond.note5.event.HideFABEvent;
 import com.beyond.note5.event.InCompleteTodoEvent;
 import com.beyond.note5.event.RefreshTodoListEvent;
+import com.beyond.note5.event.ScrollToTodoByDateEvent;
+import com.beyond.note5.event.ScrollToTodoEvent;
 import com.beyond.note5.event.ShowFABEvent;
 import com.beyond.note5.event.UpdateTodoEvent;
 import com.beyond.note5.event.UpdateTodoPriorityEvent;
@@ -36,6 +38,7 @@ import org.greenrobot.eventbus.EventBus;
 import org.greenrobot.eventbus.Subscribe;
 import org.greenrobot.eventbus.ThreadMode;
 
+import java.util.Date;
 import java.util.Iterator;
 import java.util.List;
 
@@ -222,6 +225,29 @@ public class TodoListFragment extends AbstractTodoFragment {
     public void onReceived(InCompleteTodoEvent event) {
         todoPresenter.update(event.get());
         calendarPresenter.restoreReminder(event.get());
+    }
+
+
+    @Subscribe(threadMode = ThreadMode.MAIN)
+    public void onReceived(ScrollToTodoEvent event){
+        Todo todo = event.get();
+        int position = recyclerViewAdapter.getItemDataGenerator().getPosition(todo);
+        recyclerView.scrollToPosition(position);
+    }
+    @Subscribe(threadMode = ThreadMode.MAIN)
+    public void onReceived(ScrollToTodoByDateEvent event){
+        Date changedRemindStart = event.get();
+        List headerData = recyclerViewAdapter.getItemDataGenerator().getHeaderData();
+        for (Object headerDatum : headerData) {
+            if (headerDatum instanceof Header){
+                String content = ((Header) headerDatum).getContent();
+                if (StringUtils.equals(DateFormatUtils.format(changedRemindStart,"yyyy-MM-dd"),content)){
+                    StaggeredGridLayoutManager layoutManager = (StaggeredGridLayoutManager)recyclerView.getLayoutManager();
+                    layoutManager.scrollToPositionWithOffset(((Header) headerDatum).getPosition(),0);
+                    break;
+                }
+            }
+        }
     }
 
     @Override

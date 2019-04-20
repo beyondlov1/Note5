@@ -3,6 +3,7 @@ package com.beyond.note5.utils;
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.os.Handler;
+import android.support.annotation.NonNull;
 import android.view.View;
 import android.view.inputmethod.InputMethodManager;
 
@@ -48,7 +49,8 @@ public class InputMethodUtil {
     }
 
     // 如果不想隐藏输入法的时候发送event， 可以设置成null， 默认会发送HideKeyBoardEvent， 在MainActivity中写的
-    public static void hideKeyboard(final View view, Event event){
+    public static void hideKeyboard(final View view, @NonNull Event event){
+        System.out.println(event);
         EventBus.getDefault().post(new OnKeyBoardHideEventContainer(event));
         hideKeyboard(view);
     }

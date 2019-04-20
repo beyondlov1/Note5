@@ -22,6 +22,8 @@ import com.beyond.note5.event.DeleteReminderEvent;
 import com.beyond.note5.event.DeleteTodoEvent;
 import com.beyond.note5.event.FillTodoModifyEvent;
 import com.beyond.note5.event.HideTodoEditEvent;
+import com.beyond.note5.event.NullEventFactory;
+import com.beyond.note5.event.ScrollToTodoByDateEvent;
 import com.beyond.note5.event.UpdateTodoEvent;
 import com.beyond.note5.module.DaggerPredictComponent;
 import com.beyond.note5.module.PredictComponent;
@@ -92,6 +94,7 @@ public class TodoModifySuperFragment extends TodoEditSuperFragment implements Pr
     @Subscribe(threadMode = ThreadMode.MAIN, sticky = true)
     public void onEventMainThread(FillTodoModifyEvent fillTodoModifyEvent) {
         final Todo todo = fillTodoModifyEvent.get();
+        index = fillTodoModifyEvent.getIndex();
         createdDocument = ObjectUtils.clone(todo);
         contentEditText.setText(createdDocument.getContent());
         contentEditText.setSelection(createdDocument.getContent().length());
@@ -170,8 +173,8 @@ public class TodoModifySuperFragment extends TodoEditSuperFragment implements Pr
                 note.setVersion(createdDocument.getVersion());
                 EventBus.getDefault().post(new AddNoteEvent(note));
                 EventBus.getDefault().post(new DeleteTodoEvent(createdDocument));
-                EventBus.getDefault().post(new HideTodoEditEvent(null));
-                InputMethodUtil.hideKeyboard(contentEditText,null);
+                EventBus.getDefault().post(new HideTodoEditEvent(index));
+                InputMethodUtil.hideKeyboard(contentEditText, NullEventFactory.getInstance());
                 ToastUtil.toast(getContext(), "已转化为NOTE", Toast.LENGTH_SHORT);
             }
         });
@@ -194,10 +197,7 @@ public class TodoModifySuperFragment extends TodoEditSuperFragment implements Pr
         saveButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                HideTodoEditEvent event = new HideTodoEditEvent(null);
-                event.setChangedReminderStartOnTyping(changedReminderStartOnTyping);
-                EventBus.getDefault().post(event);
-                InputMethodUtil.hideKeyboard(contentEditText,null);
+                InputMethodUtil.hideKeyboard(contentEditText);
 
                 String content = contentEditText.getText().toString();
                 if (StringUtils.isBlank(content)) {
@@ -251,9 +251,15 @@ public class TodoModifySuperFragment extends TodoEditSuperFragment implements Pr
                     public void handle(TimeUnit timeUnit) {
                         Date changedStart = timeUnit.getTime();
                         Reminder reminder = createdDocument.getReminder();
+                        if (reminder == null){
+                            changedReminderStartOnTyping = null;
+                            return;
+                        }
                         Date start = reminder.getStart();
                         if (!DateUtils.isSameDay(start,changedStart)){
                             changedReminderStartOnTyping = changedStart;
+                            ScrollToTodoByDateEvent event = new ScrollToTodoByDateEvent(changedStart);
+                            EventBus.getDefault().post(event);
                         }else {
                             changedReminderStartOnTyping = null;
                         }

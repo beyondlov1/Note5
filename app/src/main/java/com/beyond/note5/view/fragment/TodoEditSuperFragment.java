@@ -39,6 +39,7 @@ public class TodoEditSuperFragment extends DialogFragment implements OnBackPress
     private SmoothScalable smoothScalable = new DefaultSmoothScalable();
 
     protected Todo createdDocument = new Todo();
+    protected int index;
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -115,7 +116,7 @@ public class TodoEditSuperFragment extends DialogFragment implements OnBackPress
         String type = event.getType();
         if (isClosing) { // 后退触发的inputMethod隐藏时, 即要退出
             if (StringUtils.equals(Document.TODO, type)) {
-                EventBus.getDefault().post(new HideTodoEditEvent(null));
+                EventBus.getDefault().post(new HideTodoEditEvent(index));
             }
         } else { // 不是后退触发的inputMethod隐藏时
             if (StringUtils.equals(Document.TODO, type)) {
@@ -131,7 +132,7 @@ public class TodoEditSuperFragment extends DialogFragment implements OnBackPress
     @Override
     public boolean onBackPressed() {
         InputMethodUtil.hideKeyboard(contentEditText,new HideKeyBoardEvent(Document.TODO));
-        EventBus.getDefault().post(new HideTodoEditEvent(null));
+        EventBus.getDefault().post(new HideTodoEditEvent(index));
         return true;
     }
 

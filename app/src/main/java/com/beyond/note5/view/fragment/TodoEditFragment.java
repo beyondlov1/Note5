@@ -32,6 +32,7 @@ import com.beyond.note5.bean.Todo;
 import com.beyond.note5.constant.DocumentConst;
 import com.beyond.note5.event.AddTodoEvent;
 import com.beyond.note5.event.HideKeyBoardEvent;
+import com.beyond.note5.event.NullEventFactory;
 import com.beyond.note5.event.ShowKeyBoardEvent;
 import com.beyond.note5.module.DaggerPredictComponent;
 import com.beyond.note5.module.PredictComponent;
@@ -122,7 +123,7 @@ public class TodoEditFragment extends DialogFragment implements PredictView {
                                 String content = contentEditText.getText().toString();
                                 sendEventsOnOKClick(content);
                                 dialog.dismiss();
-                                InputMethodUtil.hideKeyboard(contentEditText,null);
+                                InputMethodUtil.hideKeyboard(contentEditText, NullEventFactory.getInstance());
                             }
                         }).setNegativeButton("Cancel", null);
          neutralButton = initNeutralButton();

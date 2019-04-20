@@ -90,8 +90,6 @@ public class MainActivity extends FragmentActivity {
 
     private String currentType;
 
-    private Event onKeyBoardHideEvent;
-
     private StaticViewHolder staticViewHolder = new StaticViewHolder();
 
     @Override
@@ -106,9 +104,6 @@ public class MainActivity extends FragmentActivity {
         initNoteDetailFragmentContainer();
         initTodoEditFragmentContainer();
 
-        HideKeyBoardEvent hideKeyBoardEvent = new HideKeyBoardEvent(null);
-        hideKeyBoardEvent.setType(currentType);
-        onKeyBoardHideEvent = hideKeyBoardEvent;
     }
 
     private void initNoteDetailFragmentContainer() {
@@ -181,6 +176,9 @@ public class MainActivity extends FragmentActivity {
         //监控输入法
         this.getWindow().getDecorView().getViewTreeObserver()
                 .addOnGlobalLayoutListener(new OnKeyboardChangeListener(this) {
+
+                    private Event onKeyBoardHideEvent;
+
                     @Override
                     protected void onKeyBoardShow(int x, int y) {
                         super.onKeyBoardShow(x, y);
@@ -192,13 +190,17 @@ public class MainActivity extends FragmentActivity {
                     @Override
                     protected void onKeyBoardHide() {
                         super.onKeyBoardHide();
-                        if (onKeyBoardHideEvent!=null){
-                            EventBus.getDefault().post(onKeyBoardHideEvent);
-                        }else {
-                            HideKeyBoardEvent hideKeyBoardEvent = new HideKeyBoardEvent(null);
-                            hideKeyBoardEvent.setType(currentType);
-                            onKeyBoardHideEvent = hideKeyBoardEvent;
+                        if (onKeyBoardHideEvent == null){
+                            onKeyBoardHideEvent = new HideKeyBoardEvent(null);
+                            ((HideKeyBoardEvent) onKeyBoardHideEvent).setType(currentType);
                         }
+                        EventBus.getDefault().post(onKeyBoardHideEvent);
+                        onKeyBoardHideEvent = null;
+                    }
+
+                    @Subscribe(threadMode = ThreadMode.MAIN)
+                    public void onReceived(OnKeyBoardHideEventContainer eventContainer) {
+                        onKeyBoardHideEvent = eventContainer.get();
                     }
                 });
 
@@ -314,7 +316,7 @@ public class MainActivity extends FragmentActivity {
         //获取viewSwitcher划到的位置，获取动画要返回的view
         Integer currIndex = event.get();
         int firstIndex = event.getFirstIndex();
-        View view = getViewToReturn(currIndex, firstIndex);
+        View view = getNoteViewToReturn(currIndex, firstIndex);
 
         SmoothScalable smoothScalable = (SmoothScalable) noteDetailFragment;
         smoothScalable.setEndView(view);
@@ -347,22 +349,16 @@ public class MainActivity extends FragmentActivity {
         EventBus.getDefault().post(new ShowFABEvent(null));
 
         SmoothScalable smoothScalable = (SmoothScalable) todoModifyFragment;
-        smoothScalable.setEndView(
-                (clickedView == null || event.getChangedReminderStartOnTyping() != null)
-                        ? staticViewHolder.getLeftTopView() : clickedView);
+//        smoothScalable.setEndView(
+//                (clickedView == null || event.getChangedReminderStartOnTyping() != null)
+//                        ? staticViewHolder.getLeftTopView() : clickedView);
+        smoothScalable.setEndView(getTodoViewToReturn(event.get()));
         smoothScalable.hide();
         isTodoEditShow = false;
     }
 
-
-    @Subscribe(threadMode = ThreadMode.MAIN)
-    public void onReceived(OnKeyBoardHideEventContainer eventContainer) {
-        this.onKeyBoardHideEvent = eventContainer.get();
-    }
-
-
     @SuppressWarnings("unchecked")
-    private View getViewToReturn(Integer currIndex, Integer firstIndex) {
+    private View getNoteViewToReturn(Integer currIndex, Integer firstIndex) {
         View view;
         if (currIndex == -1) {
             view = staticViewHolder.getLeftTopView();
@@ -376,6 +372,22 @@ public class MainActivity extends FragmentActivity {
                 view = staticViewHolder.getLeftTopView();
             } else if (view == null) {
                 view = staticViewHolder.getRightBottomView(); // 正常情况下不会执行
+            }
+        }
+        return view;
+    }
+
+    @SuppressWarnings("unchecked")
+    private View getTodoViewToReturn(Integer currIndex) {
+        View view;
+        if (currIndex == -1) {
+            view = staticViewHolder.getLeftTopView();
+        } else {
+            TodoListFragment fragment = (TodoListFragment) fragments.get(1);
+//            fragment.scrollTo(currIndex);
+            view = fragment.findViewBy(currIndex);
+            if (view == null) {
+                view = staticViewHolder.getRightBottomView();
             }
         }
         return view;
@@ -433,7 +445,7 @@ public class MainActivity extends FragmentActivity {
                 ToastUtil.toast(this, "Cancelled", Toast.LENGTH_LONG);
             } else {
                 addQRCodeNote(result.getContents());
-                if (!Document.NOTE.equals(currentType)){
+                if (!Document.NOTE.equals(currentType)) {
                     mainViewPager.setCurrentItem(0);
                 }
                 ToastUtil.toast(this, "Scanned: " + result.getContents(), Toast.LENGTH_LONG);
@@ -453,7 +465,6 @@ public class MainActivity extends FragmentActivity {
 
         EventBus.getDefault().post(new AddNoteEvent(note));
     }
-
 
     private String currPhotoPath;
 
@@ -489,7 +500,6 @@ public class MainActivity extends FragmentActivity {
 
         EventBus.getDefault().post(new AddNoteEvent(note));
     }
-
 
     private class StaticViewHolder {
 
