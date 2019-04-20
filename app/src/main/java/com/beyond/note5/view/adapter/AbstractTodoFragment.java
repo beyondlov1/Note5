@@ -139,7 +139,7 @@ public abstract class AbstractTodoFragment extends AbstractDocumentFragment<Todo
     }
 
     @Override
-    public void onPredictSuccess(List<Tag> data) {
+    public void onPredictSuccess(List<Tag> data, String source) {
         msg("预测成功");
     }
 

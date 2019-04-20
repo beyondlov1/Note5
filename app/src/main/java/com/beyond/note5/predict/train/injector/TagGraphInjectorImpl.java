@@ -45,6 +45,7 @@ public class TagGraphInjectorImpl implements TagGraphInjector {
             }
         }
         String lastValue = null;
+        int i = 0;
         for (String value : values) {
             Tag prevTag = graph.find(lastValue);
             Tag currTag = graph.find(value);
@@ -75,6 +76,11 @@ public class TagGraphInjectorImpl implements TagGraphInjector {
                 }
             }
 
+            if (i != 0&&currTag.isFirst()){
+                currTag.setFirst(false);
+            }
+
+            i++;
             lastValue = value;
         }
     }

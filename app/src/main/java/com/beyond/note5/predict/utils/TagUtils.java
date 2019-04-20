@@ -107,6 +107,7 @@ public class TagUtils {
         mergedTag.setId(TagUtils.uuid());
         mergedTag.setName(stringBuilder.toString());
         mergedTag.setContent(stringBuilder.toString());
+        mergedTag.setFirst(children.get(0).isFirst());
         mergedTag.setChildren(children);
         return mergedTag;
     }
@@ -136,6 +137,7 @@ public class TagUtils {
         target.setName(source.getName());
         target.setContent(source.getContent());
         target.setScore(source.getScore());
+        target.setFirst(source.isFirst());
         target.setEdges(source.getEdges());
     }
 

@@ -7,6 +7,10 @@ import android.view.View;
 import android.view.inputmethod.InputMethodManager;
 
 import com.beyond.note5.MyApplication;
+import com.beyond.note5.event.Event;
+import com.beyond.note5.event.OnKeyBoardHideEventContainer;
+
+import org.greenrobot.eventbus.EventBus;
 
 /**
  * @author: beyond
@@ -41,6 +45,12 @@ public class InputMethodUtil {
                 }
             }
         }, 300);
+    }
+
+    // 如果不想隐藏输入法的时候发送event， 可以设置成null， 默认会发送HideKeyBoardEvent， 在MainActivity中写的
+    public static void hideKeyboard(final View view, Event event){
+        EventBus.getDefault().post(new OnKeyBoardHideEventContainer(event));
+        hideKeyboard(view);
     }
 
     private static int dialogHeightWithSoftInputMethod = 0;

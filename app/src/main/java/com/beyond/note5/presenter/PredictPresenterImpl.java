@@ -36,15 +36,15 @@ public class PredictPresenterImpl implements PredictPresenter {
                 if (data == null){
                     onPredictFail();
                 }else {
-                    onPredictSuccess(data);
+                    onPredictSuccess(data,source);
                 }
             }
         });
     }
 
     @Override
-    public void onPredictSuccess(List<Tag> data) {
-        predictView.onPredictSuccess(data);
+    public void onPredictSuccess(List<Tag> data,String source) {
+        predictView.onPredictSuccess(data,source);
     }
 
     @Override

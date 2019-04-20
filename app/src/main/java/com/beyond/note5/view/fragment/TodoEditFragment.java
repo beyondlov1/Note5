@@ -60,6 +60,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.Date;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Objects;
 
@@ -121,7 +122,7 @@ public class TodoEditFragment extends DialogFragment implements PredictView {
                                 String content = contentEditText.getText().toString();
                                 sendEventsOnOKClick(content);
                                 dialog.dismiss();
-                                InputMethodUtil.hideKeyboard(contentEditText);
+                                InputMethodUtil.hideKeyboard(contentEditText,null);
                             }
                         }).setNegativeButton("Cancel", null);
          neutralButton = initNeutralButton();
@@ -297,7 +298,7 @@ public class TodoEditFragment extends DialogFragment implements PredictView {
     }
 
     @Override
-    public void onPredictSuccess(final List<Tag> data) {
+    public void onPredictSuccess(final List<Tag> data, final String source) {
         handler.post(new Runnable() {
             @SuppressWarnings("Duplicates")
             @Override
@@ -308,6 +309,15 @@ public class TodoEditFragment extends DialogFragment implements PredictView {
                 }
                 List<Tag> finalTags = data;
                 tagData.clear();
+                if (StringUtils.isBlank(source)){
+                    Iterator<Tag> iterator = finalTags.iterator();
+                    while (iterator.hasNext()) {
+                        Tag tag = iterator.next();
+                        if (!tag.isFirst()){
+                            iterator.remove();
+                        }
+                    }
+                }
                 Collections.sort(finalTags, new Comparator<Tag>() {
                     @Override
                     public int compare(Tag o1, Tag o2) {

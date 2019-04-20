@@ -16,6 +16,7 @@ public class Tag {
     private String name;
     private String content;
     private int score;
+    private boolean first = true;
     private List<TagEdge> edges = new LinkedList<TagEdge>();
 
     public String getId() {
@@ -48,6 +49,14 @@ public class Tag {
 
     public void setScore(int score) {
         this.score = score;
+    }
+
+    public boolean isFirst() {
+        return first;
+    }
+
+    public void setFirst(boolean first) {
+        this.first = first;
     }
 
     public List<TagEdge> getEdges() {

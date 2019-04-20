@@ -31,10 +31,12 @@ import com.beyond.note5.bean.Document;
 import com.beyond.note5.bean.Note;
 import com.beyond.note5.event.AddNoteEvent;
 import com.beyond.note5.event.DetailNoteEvent;
+import com.beyond.note5.event.Event;
 import com.beyond.note5.event.HideFABEvent;
 import com.beyond.note5.event.HideKeyBoardEvent;
 import com.beyond.note5.event.HideNoteDetailEvent;
 import com.beyond.note5.event.HideTodoEditEvent;
+import com.beyond.note5.event.OnKeyBoardHideEventContainer;
 import com.beyond.note5.event.ShowFABEvent;
 import com.beyond.note5.event.ShowKeyBoardEvent;
 import com.beyond.note5.event.ShowNoteDetailEvent;
@@ -88,6 +90,8 @@ public class MainActivity extends FragmentActivity {
 
     private String currentType;
 
+    private Event onKeyBoardHideEvent;
+
     private StaticViewHolder staticViewHolder = new StaticViewHolder();
 
     @Override
@@ -102,6 +106,9 @@ public class MainActivity extends FragmentActivity {
         initNoteDetailFragmentContainer();
         initTodoEditFragmentContainer();
 
+        HideKeyBoardEvent hideKeyBoardEvent = new HideKeyBoardEvent(null);
+        hideKeyBoardEvent.setType(currentType);
+        onKeyBoardHideEvent = hideKeyBoardEvent;
     }
 
     private void initNoteDetailFragmentContainer() {
@@ -185,9 +192,13 @@ public class MainActivity extends FragmentActivity {
                     @Override
                     protected void onKeyBoardHide() {
                         super.onKeyBoardHide();
-                        HideKeyBoardEvent hideKeyBoardEvent = new HideKeyBoardEvent(null);
-                        hideKeyBoardEvent.setType(currentType);
-                        EventBus.getDefault().post(hideKeyBoardEvent);
+                        if (onKeyBoardHideEvent!=null){
+                            EventBus.getDefault().post(onKeyBoardHideEvent);
+                        }else {
+                            HideKeyBoardEvent hideKeyBoardEvent = new HideKeyBoardEvent(null);
+                            hideKeyBoardEvent.setType(currentType);
+                            onKeyBoardHideEvent = hideKeyBoardEvent;
+                        }
                     }
                 });
 
@@ -336,22 +347,31 @@ public class MainActivity extends FragmentActivity {
         EventBus.getDefault().post(new ShowFABEvent(null));
 
         SmoothScalable smoothScalable = (SmoothScalable) todoModifyFragment;
-        smoothScalable.setEndView(clickedView == null ? staticViewHolder.leftTopView : clickedView);
+        smoothScalable.setEndView(
+                (clickedView == null || event.getChangedReminderStartOnTyping() != null)
+                        ? staticViewHolder.getLeftTopView() : clickedView);
         smoothScalable.hide();
         isTodoEditShow = false;
     }
+
+
+    @Subscribe(threadMode = ThreadMode.MAIN)
+    public void onReceived(OnKeyBoardHideEventContainer eventContainer) {
+        this.onKeyBoardHideEvent = eventContainer.get();
+    }
+
 
     @SuppressWarnings("unchecked")
     private View getViewToReturn(Integer currIndex, Integer firstIndex) {
         View view;
         if (currIndex == -1) {
-            view = staticViewHolder.leftTopView;
+            view = staticViewHolder.getLeftTopView();
         } else {
             NoteListFragment fragment = (NoteListFragment) fragments.get(0);
             fragment.scrollTo(currIndex);
             view = fragment.findViewBy(currIndex);
             if (view == null && firstIndex < currIndex) {
-                view = staticViewHolder.rightBottomView;
+                view = staticViewHolder.getRightBottomView();
             } else if (view == null && firstIndex > currIndex) {
                 view = staticViewHolder.getLeftTopView();
             } else if (view == null) {

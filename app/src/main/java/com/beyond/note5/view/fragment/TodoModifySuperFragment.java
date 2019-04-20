@@ -39,12 +39,14 @@ import com.beyond.note5.view.PredictView;
 import com.beyond.note5.view.custom.SelectionListenableEditText;
 import com.beyond.note5.view.listener.OnTagClickToAppendListener;
 import com.beyond.note5.view.listener.TimeExpressionDetectiveTextWatcher;
+import com.time.nlp.TimeUnit;
 import com.zhy.view.flowlayout.FlowLayout;
 import com.zhy.view.flowlayout.TagAdapter;
 import com.zhy.view.flowlayout.TagFlowLayout;
 
 import org.apache.commons.lang3.ObjectUtils;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.time.DateUtils;
 import org.greenrobot.eventbus.EventBus;
 import org.greenrobot.eventbus.Subscribe;
 import org.greenrobot.eventbus.ThreadMode;
@@ -53,6 +55,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.Date;
+import java.util.Iterator;
 import java.util.List;
 
 import javax.inject.Inject;
@@ -69,6 +72,7 @@ public class TodoModifySuperFragment extends TodoEditSuperFragment implements Pr
     private List<String> tagData = new ArrayList<>();
 
     private Handler handler = new Handler();
+    private Date changedReminderStartOnTyping;
 
     @Inject
     PredictPresenter predictPresenter;
@@ -167,7 +171,7 @@ public class TodoModifySuperFragment extends TodoEditSuperFragment implements Pr
                 EventBus.getDefault().post(new AddNoteEvent(note));
                 EventBus.getDefault().post(new DeleteTodoEvent(createdDocument));
                 EventBus.getDefault().post(new HideTodoEditEvent(null));
-                InputMethodUtil.hideKeyboard(contentEditText);
+                InputMethodUtil.hideKeyboard(contentEditText,null);
                 ToastUtil.toast(getContext(), "已转化为NOTE", Toast.LENGTH_SHORT);
             }
         });
@@ -190,8 +194,10 @@ public class TodoModifySuperFragment extends TodoEditSuperFragment implements Pr
         saveButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                EventBus.getDefault().post(new HideTodoEditEvent(null));
-                InputMethodUtil.hideKeyboard(contentEditText);
+                HideTodoEditEvent event = new HideTodoEditEvent(null);
+                event.setChangedReminderStartOnTyping(changedReminderStartOnTyping);
+                EventBus.getDefault().post(event);
+                InputMethodUtil.hideKeyboard(contentEditText,null);
 
                 String content = contentEditText.getText().toString();
                 if (StringUtils.isBlank(content)) {
@@ -203,6 +209,7 @@ public class TodoModifySuperFragment extends TodoEditSuperFragment implements Pr
                     createdDocument.setVersion(createdDocument.getVersion() == null ? 0 : createdDocument.getVersion() + 1);
                     processReminder(content);
                 }
+                changedReminderStartOnTyping = null;
             }
 
             private void processReminder(String content) {
@@ -238,9 +245,24 @@ public class TodoModifySuperFragment extends TodoEditSuperFragment implements Pr
         }
 
         TimeExpressionDetectiveTextWatcher.Builder builder = new TimeExpressionDetectiveTextWatcher.Builder(contentEditText);
+        TimeExpressionDetectiveTextWatcher.OnTimeExpressionChangedHandler onTimeExpressionChangedHandler =
+                new TimeExpressionDetectiveTextWatcher.OnTimeExpressionChangedHandler() {
+                    @Override
+                    public void handle(TimeUnit timeUnit) {
+                        Date changedStart = timeUnit.getTime();
+                        Reminder reminder = createdDocument.getReminder();
+                        Date start = reminder.getStart();
+                        if (!DateUtils.isSameDay(start,changedStart)){
+                            changedReminderStartOnTyping = changedStart;
+                        }else {
+                            changedReminderStartOnTyping = null;
+                        }
+                    }
+                };
         contentEditText.addTextChangedListener(
                 builder
                         .handler(handler)
+                        .timeExpressionChangedHandler(onTimeExpressionChangedHandler)
                         .build()
         );
 
@@ -249,7 +271,7 @@ public class TodoModifySuperFragment extends TodoEditSuperFragment implements Pr
 
 
     @Override
-    public void onPredictSuccess(final List<Tag> data) {
+    public void onPredictSuccess(final List<Tag> data, final String source) {
         handler.post(new Runnable() {
             @SuppressWarnings("Duplicates")
             @Override
@@ -260,6 +282,15 @@ public class TodoModifySuperFragment extends TodoEditSuperFragment implements Pr
                 }
                 List<Tag> finalTags = data;
                 tagData.clear();
+                if (StringUtils.isBlank(source)){
+                    Iterator<Tag> iterator = finalTags.iterator();
+                    while (iterator.hasNext()) {
+                        Tag tag = iterator.next();
+                        if (!tag.isFirst()){
+                            iterator.remove();
+                        }
+                    }
+                }
                 Collections.sort(finalTags, new Comparator<Tag>() {
                     @Override
                     public int compare(Tag o1, Tag o2) {

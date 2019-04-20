@@ -10,7 +10,7 @@ import java.util.List;
  */
 public interface PredictPresenter {
     void predict(String source);
-    void onPredictSuccess(List<Tag> data);
+    void onPredictSuccess(List<Tag> data,String source);
     void onPredictFail();
 
     void train(String source);
