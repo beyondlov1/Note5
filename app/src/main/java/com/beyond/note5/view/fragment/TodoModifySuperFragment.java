@@ -22,7 +22,6 @@ import com.beyond.note5.event.DeleteReminderEvent;
 import com.beyond.note5.event.DeleteTodoEvent;
 import com.beyond.note5.event.FillTodoModifyEvent;
 import com.beyond.note5.event.HideTodoEditEvent;
-import com.beyond.note5.event.NullEventFactory;
 import com.beyond.note5.event.ScrollToTodoByDateEvent;
 import com.beyond.note5.event.UpdateTodoEvent;
 import com.beyond.note5.module.DaggerPredictComponent;
@@ -74,7 +73,6 @@ public class TodoModifySuperFragment extends TodoEditSuperFragment implements Pr
     private List<String> tagData = new ArrayList<>();
 
     private Handler handler = new Handler();
-    private Date changedReminderStartOnTyping;
 
     @Inject
     PredictPresenter predictPresenter;
@@ -174,7 +172,7 @@ public class TodoModifySuperFragment extends TodoEditSuperFragment implements Pr
                 EventBus.getDefault().post(new AddNoteEvent(note));
                 EventBus.getDefault().post(new DeleteTodoEvent(createdDocument));
                 EventBus.getDefault().post(new HideTodoEditEvent(index));
-                InputMethodUtil.hideKeyboard(contentEditText, NullEventFactory.getInstance());
+                InputMethodUtil.hideKeyboard(contentEditText);
                 ToastUtil.toast(getContext(), "已转化为NOTE", Toast.LENGTH_SHORT);
             }
         });
@@ -209,7 +207,6 @@ public class TodoModifySuperFragment extends TodoEditSuperFragment implements Pr
                     createdDocument.setVersion(createdDocument.getVersion() == null ? 0 : createdDocument.getVersion() + 1);
                     processReminder(content);
                 }
-                changedReminderStartOnTyping = null;
             }
 
             private void processReminder(String content) {
@@ -252,16 +249,12 @@ public class TodoModifySuperFragment extends TodoEditSuperFragment implements Pr
                         Date changedStart = timeUnit.getTime();
                         Reminder reminder = createdDocument.getReminder();
                         if (reminder == null){
-                            changedReminderStartOnTyping = null;
                             return;
                         }
                         Date start = reminder.getStart();
                         if (!DateUtils.isSameDay(start,changedStart)){
-                            changedReminderStartOnTyping = changedStart;
                             ScrollToTodoByDateEvent event = new ScrollToTodoByDateEvent(changedStart);
                             EventBus.getDefault().post(event);
-                        }else {
-                            changedReminderStartOnTyping = null;
                         }
                     }
                 };

@@ -36,7 +36,6 @@ import com.beyond.note5.event.HideFABEvent;
 import com.beyond.note5.event.HideKeyBoardEvent;
 import com.beyond.note5.event.HideNoteDetailEvent;
 import com.beyond.note5.event.HideTodoEditEvent;
-import com.beyond.note5.event.OnKeyBoardHideEventContainer;
 import com.beyond.note5.event.ShowFABEvent;
 import com.beyond.note5.event.ShowKeyBoardEvent;
 import com.beyond.note5.event.ShowNoteDetailEvent;
@@ -195,12 +194,6 @@ public class MainActivity extends FragmentActivity {
                             ((HideKeyBoardEvent) onKeyBoardHideEvent).setType(currentType);
                         }
                         EventBus.getDefault().post(onKeyBoardHideEvent);
-                        onKeyBoardHideEvent = null;
-                    }
-
-                    @Subscribe(threadMode = ThreadMode.MAIN)
-                    public void onReceived(OnKeyBoardHideEventContainer eventContainer) {
-                        onKeyBoardHideEvent = eventContainer.get();
                     }
                 });
 
@@ -325,7 +318,6 @@ public class MainActivity extends FragmentActivity {
     }
 
     private boolean isTodoEditShow = false;
-    private View clickedView = null;
 
     @Subscribe(threadMode = ThreadMode.MAIN)
     public void onReceived(final ShowTodoEditEvent event) {
@@ -333,7 +325,6 @@ public class MainActivity extends FragmentActivity {
         EventBus.getDefault().post(new HideFABEvent(null));
 
         View view = event.get();
-        clickedView = view;
 
         SmoothScalable smoothScalable = (SmoothScalable) this.todoModifyFragment;
         smoothScalable.setContainer(todoEditFragmentContainer);
@@ -349,9 +340,6 @@ public class MainActivity extends FragmentActivity {
         EventBus.getDefault().post(new ShowFABEvent(null));
 
         SmoothScalable smoothScalable = (SmoothScalable) todoModifyFragment;
-//        smoothScalable.setEndView(
-//                (clickedView == null || event.getChangedReminderStartOnTyping() != null)
-//                        ? staticViewHolder.getLeftTopView() : clickedView);
         smoothScalable.setEndView(getTodoViewToReturn(event.get()));
         smoothScalable.hide();
         isTodoEditShow = false;

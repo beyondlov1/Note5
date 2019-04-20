@@ -32,7 +32,6 @@ import com.beyond.note5.bean.Todo;
 import com.beyond.note5.constant.DocumentConst;
 import com.beyond.note5.event.AddTodoEvent;
 import com.beyond.note5.event.HideKeyBoardEvent;
-import com.beyond.note5.event.NullEventFactory;
 import com.beyond.note5.event.ShowKeyBoardEvent;
 import com.beyond.note5.module.DaggerPredictComponent;
 import com.beyond.note5.module.PredictComponent;
@@ -123,7 +122,7 @@ public class TodoEditFragment extends DialogFragment implements PredictView {
                                 String content = contentEditText.getText().toString();
                                 sendEventsOnOKClick(content);
                                 dialog.dismiss();
-                                InputMethodUtil.hideKeyboard(contentEditText, NullEventFactory.getInstance());
+                                InputMethodUtil.hideKeyboard(contentEditText);
                             }
                         }).setNegativeButton("Cancel", null);
          neutralButton = initNeutralButton();
@@ -188,9 +187,9 @@ public class TodoEditFragment extends DialogFragment implements PredictView {
         tagAdapter = new TagAdapter<String>(tagData) {
             @Override
             public View getView(FlowLayout parent, int position, String s) {
-                TextView tv = new TextView(getContext());
-                tv.setTextColor(ContextCompat.getColor(getContext(), R.color.white));
-                tv.setBackground(getResources().getDrawable(R.drawable.radius_24dp_blue,null));
+                TextView tv = new TextView(parent.getContext());
+                tv.setTextColor(ContextCompat.getColor(parent.getContext(), R.color.white));
+                tv.setBackground(parent.getResources().getDrawable(R.drawable.radius_24dp_blue,null));
                 tv.setText(s);
                 return tv;
             }
