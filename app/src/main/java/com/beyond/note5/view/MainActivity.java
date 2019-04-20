@@ -191,8 +191,8 @@ public class MainActivity extends FragmentActivity {
                         super.onKeyBoardHide();
                         if (onKeyBoardHideEvent == null){
                             onKeyBoardHideEvent = new HideKeyBoardEvent(null);
-                            ((HideKeyBoardEvent) onKeyBoardHideEvent).setType(currentType);
                         }
+                        ((HideKeyBoardEvent) onKeyBoardHideEvent).setType(currentType);
                         EventBus.getDefault().post(onKeyBoardHideEvent);
                     }
                 });
