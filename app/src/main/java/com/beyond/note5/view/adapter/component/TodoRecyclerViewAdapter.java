@@ -3,10 +3,10 @@ package com.beyond.note5.view.adapter.component;
 import android.content.Context;
 import android.graphics.Paint;
 import android.graphics.drawable.Animatable2;
-import android.graphics.drawable.AnimatedVectorDrawable;
 import android.graphics.drawable.Drawable;
 import android.graphics.drawable.GradientDrawable;
 import android.os.Build;
+import android.support.annotation.RequiresApi;
 import android.support.v4.content.ContextCompat;
 import android.support.v7.widget.StaggeredGridLayoutManager;
 import android.text.SpannableString;
@@ -31,6 +31,8 @@ import com.beyond.note5.view.adapter.component.header.Header;
 import com.beyond.note5.view.adapter.component.header.ItemDataGenerator;
 import com.beyond.note5.view.adapter.component.header.TodoHeader;
 import com.beyond.note5.view.adapter.component.viewholder.TodoViewHolder;
+import com.beyond.note5.view.animator.svg.VectorAnimation;
+import com.beyond.note5.view.animator.svg.VectorAnimationImpl;
 import com.time.util.DateUtil;
 
 import org.apache.commons.lang3.time.DateFormatUtils;
@@ -43,8 +45,11 @@ import static com.beyond.note5.model.TodoModelImpl.IS_SHOW_READ_FLAG_DONE;
 
 public class TodoRecyclerViewAdapter extends DocumentRecyclerViewAdapter<Todo, TodoViewHolder> {
 
-    public TodoRecyclerViewAdapter(Context context, ItemDataGenerator<Todo,TodoHeader> itemDataGenerator) {
+    private VectorAnimation longClickAnimation;
+
+    public TodoRecyclerViewAdapter(Context context, ItemDataGenerator<Todo, TodoHeader> itemDataGenerator) {
         super(context, itemDataGenerator);
+        longClickAnimation = new VectorAnimationImpl(context);
     }
 
     @Override
@@ -54,7 +59,7 @@ public class TodoRecyclerViewAdapter extends DocumentRecyclerViewAdapter<Todo, T
     }
 
     @Override
-    protected void initHeaderDisplay(int position, Header header, TodoViewHolder viewHolder) {
+    protected void initHeaderView(int position, Header header, TodoViewHolder viewHolder) {
         viewHolder.checkbox.setVisibility(View.GONE);
         viewHolder.checkbox.setChecked(false);
         viewHolder.title.setVisibility(View.VISIBLE);
@@ -117,12 +122,12 @@ public class TodoRecyclerViewAdapter extends DocumentRecyclerViewAdapter<Todo, T
     }
 
     @Override
-    protected void initContentDisplay(TodoViewHolder viewHolder, Todo todo, int position) {
+    protected void initContentView(TodoViewHolder viewHolder, Todo todo, int position) {
         GradientDrawable gradientDrawable = new GradientDrawable();
         gradientDrawable.setCornerRadius(13);
         gradientDrawable.setStroke(1, ContextCompat.getColor(context, R.color.dark_gray));
-        if (todo.getPriority() != null&&todo.getPriority() > 0
-                &&!todo.getReadFlag().equals(DocumentConst.READ_FLAG_DONE)){
+        if (todo.getPriority() != null && todo.getPriority() > 0
+                && !todo.getReadFlag().equals(DocumentConst.READ_FLAG_DONE)) {
             gradientDrawable.setStroke(2, ContextCompat.getColor(context, R.color.google_red));
         }
         viewHolder.dataContainer.setBackground(gradientDrawable);
@@ -195,31 +200,29 @@ public class TodoRecyclerViewAdapter extends DocumentRecyclerViewAdapter<Todo, T
         });
 
         viewHolder.container.setOnLongClickListener(new View.OnLongClickListener() {
+            @RequiresApi(api = Build.VERSION_CODES.M)
             @Override
             public boolean onLongClick(View v) {
 
-                AnimatedVectorDrawable animatedVectorDrawable;
+                longClickAnimation.setTarget(viewHolder.dataContainer);
                 if (isDefaultPriority(todo)) {
-                    animatedVectorDrawable = (AnimatedVectorDrawable) context.getResources().getDrawable(R.drawable.animated_vector_rect_large, null);
+                    longClickAnimation.setVectorDrawable(R.drawable.animated_vector_rect_large);
                 } else {
-                    animatedVectorDrawable = (AnimatedVectorDrawable) context.getResources().getDrawable(R.drawable.animated_vector_rect_reserve_large, null);
+                    longClickAnimation.setVectorDrawable(R.drawable.animated_vector_rect_reserve_large);
                 }
-                viewHolder.dataContainer.setBackground(animatedVectorDrawable);
-                animatedVectorDrawable.start();
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-                    animatedVectorDrawable.registerAnimationCallback(new Animatable2.AnimationCallback() {
-                        @Override
-                        public void onAnimationEnd(Drawable drawable) {
-                            super.onAnimationEnd(drawable);
-                            if (isDefaultPriority(todo)) {
-                                todo.setPriority(DocumentConst.PRIORITY_FOCUS);
-                            } else {
-                                todo.setPriority(DocumentConst.PRIORITY_DEFAULT);
-                            }
-                            EventBus.getDefault().post(new UpdateTodoPriorityEvent(todo));
+                longClickAnimation.registerAnimationCallback(new Animatable2.AnimationCallback() {
+                    @Override
+                    public void onAnimationEnd(Drawable drawable) {
+                        super.onAnimationEnd(drawable);
+                        if (isDefaultPriority(todo)) {
+                            todo.setPriority(DocumentConst.PRIORITY_FOCUS);
+                        } else {
+                            todo.setPriority(DocumentConst.PRIORITY_DEFAULT);
                         }
-                    });
-                }
+                        EventBus.getDefault().post(new UpdateTodoPriorityEvent(todo));
+                    }
+                });
+                longClickAnimation.start();
 
                 return true;
             }

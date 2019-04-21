@@ -1,14 +1,10 @@
 package com.beyond.note5.view.fragment;
 
-import android.animation.Animator;
-import android.animation.AnimatorInflater;
-import android.animation.AnimatorListenerAdapter;
 import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.content.Intent;
 import android.net.Uri;
 import android.os.Bundle;
-import android.os.Handler;
 import android.support.annotation.Nullable;
 import android.support.v4.app.DialogFragment;
 import android.view.LayoutInflater;
@@ -50,12 +46,10 @@ import org.greenrobot.eventbus.ThreadMode;
 
 import java.util.Date;
 import java.util.List;
-import java.util.Timer;
-import java.util.TimerTask;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 public class NoteDetailSuperFragment extends DialogFragment implements OnBackPressListener, SmoothScalable {
-    private static final String TAG = "NoteDetailSuperFragment";
+    private static final String TAG = NoteDetailSuperFragment.class.getSimpleName();
     protected Activity context;
     protected View root;
     protected ViewSwitcher viewSwitcher;
@@ -65,6 +59,7 @@ public class NoteDetailSuperFragment extends DialogFragment implements OnBackPre
     protected List<Note> data;
     protected int currIndex;
     private int firstInIndex;
+
     private ShowNoteDetailEvent.ShowType showType;
 
     protected View operationContainer;
@@ -98,21 +93,12 @@ public class NoteDetailSuperFragment extends DialogFragment implements OnBackPre
         if (root == null) {
             root = LayoutInflater.from(context).inflate(R.layout.fragment_note_detail, null);
         }
-//        root = inflater.inflate(R.layout.fragment_note_detail, container, false);
-        initCommonView(root);
-        initCommonEvent(root);
         initView(root);
-        initEvent();
+        initEvent(root);
         return root;
     }
 
-    @Override
-    public void onViewCreated(View view, @Nullable Bundle savedInstanceState) {
-        super.onViewCreated(view, savedInstanceState);
-        System.out.println("onViewCreated");
-    }
-
-    private void initCommonView(View view) {
+    protected void initView(View view) {
         viewSwitcher = view.findViewById(R.id.fragment_note_detail_view_switcher);
         pageCountTextView = view.findViewById(R.id.fragment_note_detail_page_count);
         operationContainer = view.findViewById(R.id.fragment_note_detail_operation_container);
@@ -123,9 +109,6 @@ public class NoteDetailSuperFragment extends DialogFragment implements OnBackPre
         stickButton = view.findViewById(R.id.fragment_note_detail_operation_stick);
         convertButton = view.findViewById(R.id.fragment_note_detail_to_todo);
         doneButton = view.findViewById(R.id.fragment_note_detail_operation_done);
-    }
-
-    protected void initView(View view) {
         modifyButton = view.findViewById(R.id.fragment_note_detail_modify);
         modifyButton.setVisibility(View.GONE);
         hideButton = view.findViewById(R.id.fragment_note_detail_hide);
@@ -134,10 +117,7 @@ public class NoteDetailSuperFragment extends DialogFragment implements OnBackPre
         pageCountTextView.setLayoutParams(pageCountTextView.getLayoutParams());
     }
 
-    private static final boolean IS_OPERATION_AUTO_HIDE = false;
-    private Timer operationItemsTimer;
-
-    private void initCommonEvent(View view) {
+    protected void initEvent(View view) {
         //防止事件向下传递
         view.setOnTouchListener(new View.OnTouchListener() {
             @SuppressLint("ClickableViewAccessibility")
@@ -146,97 +126,21 @@ public class NoteDetailSuperFragment extends DialogFragment implements OnBackPre
                 return true;
             }
         });
-        //Operation
-        if (IS_OPERATION_AUTO_HIDE) {
-            final Handler handler = new Handler();
-            operationItemsTimer = new Timer();
-            final AtomicBoolean isCanceled = new AtomicBoolean(true);
-            class HideOperationTimerTask extends TimerTask {
-                @Override
-                public void run() {
-                    handler.post(new Runnable() {
-                        @Override
-                        public void run() {
-                            hideOperation();
-                        }
-                    });
-                    isCanceled.set(true);
+        deleteButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Note currentNote = data.get(currIndex);
+                EventBus.getDefault().post(new DeleteDeepNoteEvent(currentNote));
+                if (data.isEmpty()) {
+                    sendHideMessage();
+                    return;
                 }
+                if (currIndex == data.size()) {
+                    currIndex--;
+                }
+                reloadView();
             }
-
-            deleteButton.setOnClickListener(new View.OnClickListener() {
-                @Override
-                public void onClick(View v) {
-                    Note currentNote = data.get(currIndex);
-                    EventBus.getDefault().post(new DeleteDeepNoteEvent(currentNote));
-                    if (data.isEmpty()) {
-                        sendHideMessage();
-                        return;
-                    }
-                    if (currIndex == data.size()) {
-                        currIndex--;
-                    }
-                    reloadView();
-
-                    if (!isCanceled.get()) {
-                        operationItemsTimer.cancel();
-                    }
-                    operationItemsTimer = new Timer();
-                    operationItemsTimer.schedule(new HideOperationTimerTask(), 5000);
-                }
-            });
-
-            operationContainer.setOnClickListener(new View.OnClickListener() {
-                @Override
-                public void onClick(View v) {
-                }
-            });
-            operationContainer.setOnTouchListener(new OnSlideListener(context) {
-                @Override
-                protected void onSlideLeft() {
-
-                }
-
-                @Override
-                protected void onSlideRight() {
-
-                }
-
-                @Override
-                protected void onSlideUp() {
-                    hideOperation();
-                    isCanceled.set(true);
-                }
-
-                @Override
-                protected void onSlideDown() {
-                    showOperation();
-                    operationItemsTimer.schedule(new HideOperationTimerTask(), 5000);
-                    isCanceled.set(false);
-                }
-
-                @Override
-                protected void onDoubleClick(MotionEvent e) {
-
-                }
-            });
-        } else {
-            deleteButton.setOnClickListener(new View.OnClickListener() {
-                @Override
-                public void onClick(View v) {
-                    Note currentNote = data.get(currIndex);
-                    EventBus.getDefault().post(new DeleteDeepNoteEvent(currentNote));
-                    if (data.isEmpty()) {
-                        sendHideMessage();
-                        return;
-                    }
-                    if (currIndex == data.size()) {
-                        currIndex--;
-                    }
-                    reloadView();
-                }
-            });
-        }
+        });
         searchButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -273,22 +177,6 @@ public class NoteDetailSuperFragment extends DialogFragment implements OnBackPre
                 ToastUtil.toast(getContext(), "已转化为TODO", Toast.LENGTH_SHORT);
             }
         });
-
-    }
-
-    private void loadWebPage() {
-        Note currNote = data.get(currIndex);
-        String url = WebViewUtil.getUrlOrSearchUrl(currNote);
-        if (url != null) {
-            WebView currentWebView = new DetailViewHolder(viewSwitcher.getCurrentView()).displayWebView;
-            WebViewUtil.addWebViewProgressBar(currentWebView);
-            currentWebView.loadUrl(url);
-        } else {
-            ToastUtil.toast(context, "搜索文字不能超过32个字", Toast.LENGTH_SHORT);
-        }
-    }
-
-    protected void initEvent() {
         modifyButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -303,28 +191,16 @@ public class NoteDetailSuperFragment extends DialogFragment implements OnBackPre
         });
     }
 
-    private void showOperation() {
-        operationItemsContainer.setVisibility(View.VISIBLE);
-        Animator animator = AnimatorInflater.loadAnimator(context, R.animator.fade_in);
-        animator.setTarget(operationItemsContainer);
-        animator.start();
-    }
-
-    private void hideOperation() {
-        Animator animator = AnimatorInflater.loadAnimator(context, R.animator.fade_out);
-        animator.setTarget(operationItemsContainer);
-        animator.start();
-        animator.addListener(new AnimatorListenerAdapter() {
-            @Override
-            public void onAnimationEnd(Animator animation) {
-                super.onAnimationEnd(animation);
-                operationItemsContainer.setVisibility(View.INVISIBLE);
-            }
-        });
-    }
-
-    private void msg(String msg) {
-        ToastUtil.toast(context, msg, Toast.LENGTH_SHORT);
+    private void loadWebPage() {
+        Note currNote = data.get(currIndex);
+        String url = WebViewUtil.getUrlOrSearchUrl(currNote);
+        if (url != null) {
+            WebView currentWebView = new DetailViewHolder(viewSwitcher.getCurrentView()).displayWebView;
+            WebViewUtil.addWebViewProgressBar(currentWebView);
+            currentWebView.loadUrl(url);
+        } else {
+            ToastUtil.toast(context, "搜索文字不能超过32个字", Toast.LENGTH_SHORT);
+        }
     }
 
     @Override
@@ -334,22 +210,6 @@ public class NoteDetailSuperFragment extends DialogFragment implements OnBackPre
 
         EventBus.getDefault().register(this);
         isShowing.set(true);
-        initDialogButtonEvent();
-    }
-
-    protected void initDialogButtonEvent() {
-    }
-
-    @Override
-    public void onSaveInstanceState(Bundle outState) {
-        super.onSaveInstanceState(outState);
-        System.out.println("onSaveInstanceState");
-    }
-
-    @Override
-    public void onViewStateRestored(@Nullable Bundle savedInstanceState) {
-        super.onViewStateRestored(savedInstanceState);
-        System.out.println("onViewStateRestored");
     }
 
     @Override
@@ -363,19 +223,21 @@ public class NoteDetailSuperFragment extends DialogFragment implements OnBackPre
 
     @Subscribe(threadMode = ThreadMode.MAIN, sticky = true)
     public void onEventMainThread(DetailNoteEvent detailNoteEvent) {
-        if (detailNoteEvent.isConsumed()){
+        if (detailNoteEvent.isConsumed()) {
             return;
         }
         data = detailNoteEvent.get();
         currIndex = detailNoteEvent.getIndex();
         firstInIndex = currIndex;
         showType = detailNoteEvent.getShowType();
-        processDetailTools();
         reloadView();
         detailNoteEvent.setConsumed(true);
     }
 
-    private void processDetailTools() {
+    /**
+     * 处理可变的按钮
+     */
+    private void processVariableTools() {
         if (CollectionUtils.isEmpty(data)) {
             return;
         }
@@ -430,13 +292,12 @@ public class NoteDetailSuperFragment extends DialogFragment implements OnBackPre
                     ((ImageButton) doneButton).setImageDrawable(getResources().getDrawable(R.drawable.ic_done_grey_600_24dp, null));
                 } else { //其他
                     Note currentNote = data.get(currIndex);
-                    currentNote.setReadFlag(DocumentConst.READ_FLAG_DONE );
+                    currentNote.setReadFlag(DocumentConst.READ_FLAG_DONE);
                     int oldIndex = currIndex;
                     EventBus.getDefault().post(new UpdateNoteEvent(currentNote));
                     currIndex = oldIndex;
                     ToastUtil.toast(context, "已读", Toast.LENGTH_SHORT);
                     reloadView();
-                    //((ImageButton) doneButton).setImageDrawable(getResources().getDrawable(R.drawable.ic_done_blue_24dp, null));
                 }
             }
         });
@@ -452,7 +313,7 @@ public class NoteDetailSuperFragment extends DialogFragment implements OnBackPre
 
     @SuppressWarnings("ConstantConditions")
     private void reloadView() {
-        beforeReloadView();
+        processVariableTools();
         viewSwitcher.removeAllViews();
         viewSwitcher.setFactory(new ViewSwitcher.ViewFactory() {
             @Override
@@ -462,10 +323,9 @@ public class NoteDetailSuperFragment extends DialogFragment implements OnBackPre
 
                 detailViewHolder = new NoteDetailSuperFragment.DetailViewHolder(view);
 
-                initDetailContentConfig(detailViewHolder);
-                initDetailContentData(detailViewHolder);
-                initCommonDetailContentEvent(detailViewHolder);
-                initDetailContentEvent(detailViewHolder);
+                initContentConfig(detailViewHolder);
+                initContentData(detailViewHolder);
+                initContentEvent(detailViewHolder);
 
                 return view;
             }
@@ -475,18 +335,11 @@ public class NoteDetailSuperFragment extends DialogFragment implements OnBackPre
         scrollRecyclerViewTo(data.get(currIndex));
     }
 
-    private void scrollRecyclerViewTo(Note note) {
-        EventBus.getDefault().post(new ScrollToNoteEvent(note));
-    }
-
-    protected void beforeReloadView() {
-    }
-
-    private void initDetailContentConfig(NoteDetailSuperFragment.DetailViewHolder detailViewHolder) {
+    private void initContentConfig(NoteDetailSuperFragment.DetailViewHolder detailViewHolder) {
         WebViewUtil.configWebView(detailViewHolder.displayWebView);
     }
 
-    private void initDetailContentData(NoteDetailSuperFragment.DetailViewHolder detailViewHolder) {
+    private void initContentData(NoteDetailSuperFragment.DetailViewHolder detailViewHolder) {
         this.detailViewHolder = detailViewHolder;
         WebViewUtil.clearHistory();
         WebViewUtil.loadWebContent(detailViewHolder.displayWebView, data.get(currIndex));
@@ -494,18 +347,8 @@ public class NoteDetailSuperFragment extends DialogFragment implements OnBackPre
         pageCountTextView.setText(pageCount);
     }
 
-    private void openWebPage() {
-        if (showType == ShowNoteDetailEvent.ShowType.WEB) {
-            loadWebPage();
-        }
-    }
-
-    private void resetShowType() {
-        this.showType = ShowNoteDetailEvent.ShowType.CONTENT;
-    }
-
     @SuppressLint("ClickableViewAccessibility")
-    private void initCommonDetailContentEvent(final NoteDetailSuperFragment.DetailViewHolder detailViewHolder) {
+    private void initContentEvent(final NoteDetailSuperFragment.DetailViewHolder detailViewHolder) {
         detailViewHolder.displayWebView.setOnTouchListener(new OnSlideListener(context) {
             @Override
             protected void onSlideLeft() {
@@ -540,16 +383,26 @@ public class NoteDetailSuperFragment extends DialogFragment implements OnBackPre
                 return (int) (ViewUtil.getScreenSize().y * 0.33);
             }
         });
-    }
-
-    @SuppressLint("ClickableViewAccessibility")
-    protected void initDetailContentEvent(DetailViewHolder detailViewHolder) {
         pageCountTextView.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 sendHideMessage();
             }
         });
+    }
+
+    private void openWebPage() {
+        if (showType == ShowNoteDetailEvent.ShowType.WEB) {
+            loadWebPage();
+        }
+    }
+
+    private void scrollRecyclerViewTo(Note note) {
+        EventBus.getDefault().post(new ScrollToNoteEvent(note));
+    }
+
+    private void resetShowType() {
+        this.showType = ShowNoteDetailEvent.ShowType.CONTENT;
     }
 
     private void next() {
@@ -560,9 +413,9 @@ public class NoteDetailSuperFragment extends DialogFragment implements OnBackPre
             currIndex++;
             viewSwitcher.setInAnimation(context, R.anim.slide_in_right);
             viewSwitcher.setOutAnimation(context, R.anim.slide_out_left);
-            initDetailContentData(new NoteDetailSuperFragment.DetailViewHolder(viewSwitcher.getNextView()));
+            initContentData(new NoteDetailSuperFragment.DetailViewHolder(viewSwitcher.getNextView()));
             viewSwitcher.showNext();
-            processDetailTools();
+            processVariableTools();
         }
     }
 
@@ -574,9 +427,9 @@ public class NoteDetailSuperFragment extends DialogFragment implements OnBackPre
             currIndex--;
             viewSwitcher.setInAnimation(context, R.anim.slide_in_left);
             viewSwitcher.setOutAnimation(context, R.anim.slide_out_right);
-            initDetailContentData(new NoteDetailSuperFragment.DetailViewHolder(viewSwitcher.getNextView()));
+            initContentData(new NoteDetailSuperFragment.DetailViewHolder(viewSwitcher.getNextView()));
             viewSwitcher.showPrevious();
-            processDetailTools();
+            processVariableTools();
         }
     }
 
@@ -686,6 +539,10 @@ public class NoteDetailSuperFragment extends DialogFragment implements OnBackPre
     @Override
     public void setOnHiddenListener(Runnable onHiddenListener) {
         //do nothing
+    }
+
+    private void msg(String msg) {
+        ToastUtil.toast(context, msg, Toast.LENGTH_SHORT);
     }
 
     class DetailViewHolder {

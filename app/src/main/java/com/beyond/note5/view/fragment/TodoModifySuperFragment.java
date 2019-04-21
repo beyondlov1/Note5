@@ -269,7 +269,7 @@ public class TodoModifySuperFragment extends TodoEditSuperFragment implements Pr
         contentEditText.addTextChangedListener(
                 builder
                         .handler(handler)
-                        .timeExpressionChangedHandler(onTimeExpressionChangedHandler)
+//                        .timeExpressionChangedHandler(onTimeExpressionChangedHandler)
                         .build()
         );
 

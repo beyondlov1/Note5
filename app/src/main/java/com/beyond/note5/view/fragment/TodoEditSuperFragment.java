@@ -51,6 +51,7 @@ public class TodoEditSuperFragment extends DialogFragment implements OnBackPress
         this.context = getActivity();
     }
 
+    @SuppressLint("InflateParams")
     @Nullable
     @Override
     public View onCreateView(LayoutInflater inflater, @Nullable ViewGroup container, Bundle savedInstanceState) {

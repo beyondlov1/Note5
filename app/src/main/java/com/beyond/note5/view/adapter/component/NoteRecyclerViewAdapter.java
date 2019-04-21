@@ -3,7 +3,6 @@ package com.beyond.note5.view.adapter.component;
 import android.content.Context;
 import android.graphics.Color;
 import android.graphics.drawable.Animatable2;
-import android.graphics.drawable.AnimatedVectorDrawable;
 import android.graphics.drawable.Drawable;
 import android.graphics.drawable.GradientDrawable;
 import android.os.Build;
@@ -23,6 +22,8 @@ import com.beyond.note5.utils.WebViewUtil;
 import com.beyond.note5.view.adapter.component.header.Header;
 import com.beyond.note5.view.adapter.component.header.ItemDataGenerator;
 import com.beyond.note5.view.adapter.component.viewholder.NoteViewHolder;
+import com.beyond.note5.view.animator.svg.VectorAnimation;
+import com.beyond.note5.view.animator.svg.VectorAnimationImpl;
 
 import org.apache.commons.lang3.StringUtils;
 import org.greenrobot.eventbus.EventBus;
@@ -38,11 +39,13 @@ public class NoteRecyclerViewAdapter extends DocumentRecyclerViewAdapter<Note, N
 
     private static final String SHOULD_SHOW_LINK = "shouldShowLink";
     private boolean shouldLinkShow = false;
+    private VectorAnimation longClickAnimation ;
 
 
     public NoteRecyclerViewAdapter(Context context, ItemDataGenerator<Note, Header> itemDataGenerator) {
         super(context, itemDataGenerator);
         refreshShouldShowLink();
+        longClickAnimation = new VectorAnimationImpl(context);
     }
 
     @Override
@@ -52,7 +55,7 @@ public class NoteRecyclerViewAdapter extends DocumentRecyclerViewAdapter<Note, N
     }
 
     @Override
-    protected void initHeaderDisplay(int position, Header header, NoteViewHolder viewHolder) {
+    protected void initHeaderView(int position, Header header, NoteViewHolder viewHolder) {
         viewHolder.title.setVisibility(View.VISIBLE);
         viewHolder.title.setText(header.getContent());
         viewHolder.title.setTextColor(ContextCompat.getColor(context, R.color.dark_yellow));
@@ -88,7 +91,7 @@ public class NoteRecyclerViewAdapter extends DocumentRecyclerViewAdapter<Note, N
 
     @SuppressWarnings("Duplicates")
     @Override
-    protected void initContentDisplay(NoteViewHolder viewHolder, Note note, int position) {
+    protected void initContentView(NoteViewHolder viewHolder, Note note, int position) {
         GradientDrawable gradientDrawable = new GradientDrawable();
         gradientDrawable.setCornerRadius(13);
         gradientDrawable.setStroke(1, ContextCompat.getColor(context, R.color.dark_gray));
@@ -134,6 +137,7 @@ public class NoteRecyclerViewAdapter extends DocumentRecyclerViewAdapter<Note, N
             @Override
             public boolean onLongClick(View v) {
 
+                longClickAnimation.setTarget(viewHolder.dataContainer);
                 //横跨屏幕时，动画区分大小
                 int animatedVectorRectResId;
                 int animatedVectorRectReserveResId;
@@ -144,18 +148,13 @@ public class NoteRecyclerViewAdapter extends DocumentRecyclerViewAdapter<Note, N
                     animatedVectorRectResId = R.drawable.animated_vector_rect;
                     animatedVectorRectReserveResId = R.drawable.animated_vector_rect_reserve;
                 }
-
-                AnimatedVectorDrawable animatedVectorDrawable;
                 if (isDefaultPriority(note)) {
-                    animatedVectorDrawable = (AnimatedVectorDrawable) context.getResources().getDrawable(animatedVectorRectResId, null);
+                    longClickAnimation.setVectorDrawable(animatedVectorRectResId);
                 } else {
-
-                    animatedVectorDrawable = (AnimatedVectorDrawable) context.getResources().getDrawable(animatedVectorRectReserveResId, null);
+                    longClickAnimation.setVectorDrawable(animatedVectorRectReserveResId);
                 }
-                viewHolder.dataContainer.setBackground(animatedVectorDrawable);
-                animatedVectorDrawable.start();
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-                    animatedVectorDrawable.registerAnimationCallback(new Animatable2.AnimationCallback() {
+                    longClickAnimation.registerAnimationCallback(new Animatable2.AnimationCallback() {
                         @Override
                         public void onAnimationEnd(Drawable drawable) {
                             super.onAnimationEnd(drawable);
@@ -168,7 +167,7 @@ public class NoteRecyclerViewAdapter extends DocumentRecyclerViewAdapter<Note, N
                         }
                     });
                 }
-
+                longClickAnimation.start();
                 return true;
             }
         });

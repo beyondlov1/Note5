@@ -55,30 +55,30 @@ public abstract class DocumentRecyclerViewAdapter<T extends Document, S extends 
         S viewHolder = (S) holder;
         if (itemData.get(position) instanceof Header) {
             Header header = (Header) itemData.get(position);
-            initHeaderView(position, header, viewHolder);
+            initHeader(position, header, viewHolder);
         } else if (itemData.get(position) instanceof Document) {
             T document = (T) itemData.get(position);
-            initContentView(position, document, viewHolder);
+            initContent(position, document, viewHolder);
         }
     }
 
-    private void initHeaderView(int position, Header header, S viewHolder) {
-        initHeaderDisplay(position, header, viewHolder);
+    private void initHeader(int position, Header header, S viewHolder) {
+        initHeaderView(position, header, viewHolder);
         initHeadEvent(position, header, viewHolder);
     }
 
-    protected abstract void initHeaderDisplay(int position, Header header, S viewHolder);
+    protected abstract void initHeaderView(int position, Header header, S viewHolder);
 
     protected void initHeadEvent(int position, Header header, S viewHolder) {
         //do nothing
     }
 
-    private void initContentView(int position, T document, S viewHolder) {
-        initContentDisplay(viewHolder, document, position);
+    private void initContent(int position, T document, S viewHolder) {
+        initContentView(viewHolder, document, position);
         initContentEvent(viewHolder, document,position);
     }
 
-    protected abstract void initContentDisplay(final S viewHolder, T document, int position);
+    protected abstract void initContentView(final S viewHolder, T document, int position);
 
     protected abstract void initContentEvent(S viewHolder, final T t, int position);
 
