@@ -3,15 +3,11 @@ package com.beyond.note5.utils;
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.os.Handler;
-import android.support.annotation.NonNull;
 import android.view.View;
 import android.view.inputmethod.InputMethodManager;
 
 import com.beyond.note5.MyApplication;
-import com.beyond.note5.event.Event;
-import com.beyond.note5.event.OnKeyBoardHideEventContainer;
-
-import org.greenrobot.eventbus.EventBus;
+import com.beyond.note5.view.listener.OnKeyboardChangeListener;
 
 /**
  * @author: beyond
@@ -49,10 +45,19 @@ public class InputMethodUtil {
     }
 
     // 如果不想隐藏输入法的时候发送event， 可以设置成null， 默认会发送HideKeyBoardEvent， 在MainActivity中写的
-    public static void hideKeyboard(final View view, @NonNull Event event){
-        System.out.println(event);
-        EventBus.getDefault().post(new OnKeyBoardHideEventContainer(event));
-        hideKeyboard(view);
+    public static void hideKeyboard(final View view, final OnKeyboardChangeListener onKeyboardChangeListener, boolean executeHideCallback){
+        onKeyboardChangeListener.setExecuteHideCallback(executeHideCallback);
+        Handler handler = new Handler();
+        handler.post(new Runnable() {
+            @Override
+            public void run() {
+                InputMethodManager inputMethodManager = (InputMethodManager) view.getContext().getSystemService(Context.INPUT_METHOD_SERVICE);
+                if (inputMethodManager != null) {
+                    inputMethodManager.hideSoftInputFromWindow(view.getWindowToken(), 0);
+                }
+            }
+        });
+        // 输入法关闭是在300ms之后， 所以不能直接写， 也要推迟一下
     }
 
     private static int dialogHeightWithSoftInputMethod = 0;

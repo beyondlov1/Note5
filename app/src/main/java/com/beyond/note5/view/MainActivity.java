@@ -31,9 +31,8 @@ import com.beyond.note5.bean.Document;
 import com.beyond.note5.bean.Note;
 import com.beyond.note5.event.AddNoteEvent;
 import com.beyond.note5.event.DetailNoteEvent;
-import com.beyond.note5.event.Event;
 import com.beyond.note5.event.HideFABEvent;
-import com.beyond.note5.event.HideKeyBoardEvent;
+import com.beyond.note5.event.HideKeyBoardEvent2;
 import com.beyond.note5.event.HideNoteDetailEvent;
 import com.beyond.note5.event.HideTodoEditEvent;
 import com.beyond.note5.event.ShowFABEvent;
@@ -173,30 +172,29 @@ public class MainActivity extends FragmentActivity {
 
     private void initEvent() {
         //监控输入法
+        OnKeyboardChangeListener onKeyboardChangeListener = new OnKeyboardChangeListener(this) {
+
+            @Override
+            protected void onKeyBoardShow(int x, int y) {
+                ShowKeyBoardEvent showKeyBoardEvent = new ShowKeyBoardEvent(y);
+                showKeyBoardEvent.setType(currentType);
+                EventBus.getDefault().post(showKeyBoardEvent);
+            }
+
+            @Override
+            protected void onKeyBoardHide() {
+                //Event 为消耗品， 每次都要新建
+                HideKeyBoardEvent2 hideKeyBoardEvent = new HideKeyBoardEvent2(this);
+                hideKeyBoardEvent.setType(currentType);
+                EventBus.getDefault().post(hideKeyBoardEvent);
+                if (isExecuteHideCallback()&&getHideCallback()!=null){
+                    getHideCallback().run();
+                }
+                setExecuteHideCallback(true);
+            }
+        };
         this.getWindow().getDecorView().getViewTreeObserver()
-                .addOnGlobalLayoutListener(new OnKeyboardChangeListener(this) {
-
-                    private Event onKeyBoardHideEvent;
-
-                    @Override
-                    protected void onKeyBoardShow(int x, int y) {
-                        super.onKeyBoardShow(x, y);
-                        ShowKeyBoardEvent showKeyBoardEvent = new ShowKeyBoardEvent(y);
-                        showKeyBoardEvent.setType(currentType);
-                        EventBus.getDefault().post(showKeyBoardEvent);
-                    }
-
-                    @Override
-                    protected void onKeyBoardHide() {
-                        super.onKeyBoardHide();
-                        if (onKeyBoardHideEvent == null){
-                            onKeyBoardHideEvent = new HideKeyBoardEvent(null);
-                        }
-                        ((HideKeyBoardEvent) onKeyBoardHideEvent).setType(currentType);
-                        EventBus.getDefault().post(onKeyBoardHideEvent);
-                    }
-                });
-
+                .addOnGlobalLayoutListener(onKeyboardChangeListener);
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
             mainViewPager.setOnScrollChangeListener(new View.OnScrollChangeListener() {
                 @Override

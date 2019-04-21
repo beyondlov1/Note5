@@ -13,10 +13,11 @@ import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.EditText;
+
 import com.beyond.note5.R;
 import com.beyond.note5.bean.Document;
 import com.beyond.note5.bean.Todo;
-import com.beyond.note5.event.HideKeyBoardEvent;
+import com.beyond.note5.event.HideKeyBoardEvent2;
 import com.beyond.note5.event.HideTodoEditEvent;
 import com.beyond.note5.event.ShowKeyBoardEvent;
 import com.beyond.note5.utils.InputMethodUtil;
@@ -24,6 +25,8 @@ import com.beyond.note5.utils.ViewUtil;
 import com.beyond.note5.view.animator.DefaultSmoothScalable;
 import com.beyond.note5.view.animator.SmoothScalable;
 import com.beyond.note5.view.listener.OnBackPressListener;
+import com.beyond.note5.view.listener.OnKeyboardChangeListener;
+
 import org.apache.commons.lang3.StringUtils;
 import org.greenrobot.eventbus.EventBus;
 import org.greenrobot.eventbus.Subscribe;
@@ -36,10 +39,12 @@ public class TodoEditSuperFragment extends DialogFragment implements OnBackPress
     protected View root;
     protected EditText contentEditText;
 
-    private SmoothScalable smoothScalable = new DefaultSmoothScalable();
+    protected SmoothScalable smoothScalable = new DefaultSmoothScalable();
 
     protected Todo createdDocument = new Todo();
     protected int index;
+
+    protected OnKeyboardChangeListener onKeyboardChangeListener;
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -102,6 +107,11 @@ public class TodoEditSuperFragment extends DialogFragment implements OnBackPress
         super.onStop();
     }
 
+    @Subscribe(threadMode = ThreadMode.MAIN,sticky = true)
+    public void initOnKeyboardChangeListener(OnKeyboardChangeListener onKeyboardChangeListener){
+        this.onKeyboardChangeListener = onKeyboardChangeListener;
+    }
+
     @Subscribe(threadMode = ThreadMode.MAIN)
     public void onEventMainThread(ShowKeyBoardEvent event) {
         String type = event.getType();
@@ -112,22 +122,32 @@ public class TodoEditSuperFragment extends DialogFragment implements OnBackPress
     }
 
     @Subscribe(threadMode = ThreadMode.MAIN)
-    public void onEventMainThread(HideKeyBoardEvent event) {
-        String type = event.getType();
-        if (isClosing) { // 后退触发的inputMethod隐藏时, 即要退出
-            if (StringUtils.equals(Document.TODO, type)) {
-                EventBus.getDefault().post(new HideTodoEditEvent(index));
+    public void onEventMainThread(final HideKeyBoardEvent2 event) {
+        final String type = event.getType();
+        event.get().setHideCallback(new Runnable() {
+            @Override
+            public void run() {
+                if (isClosing) { // 后退触发的inputMethod隐藏时, 即要退出
+                    if (StringUtils.equals(Document.TODO, type)) {
+                        EventBus.getDefault().post(new HideTodoEditEvent(index));
+                    }
+                } else { // 不是后退触发的inputMethod隐藏时
+                    if (StringUtils.equals(Document.TODO, type)) {
+                        smoothScalable.getContainer().getLayoutParams().height = ViewUtil.getScreenSizeWithoutNotification().y;
+                        smoothScalable.getContainer().setLayoutParams(smoothScalable.getContainer().getLayoutParams());
+                    }
+                }
+                isClosing = true;
             }
-        } else { // 不是后退触发的inputMethod隐藏时
-            if (StringUtils.equals(Document.TODO, type)) {
-                smoothScalable.getContainer().getLayoutParams().height = ViewUtil.getScreenSizeWithoutNotification().y;
-                smoothScalable.getContainer().setLayoutParams(smoothScalable.getContainer().getLayoutParams());
-            }
-        }
-        isClosing = true;
+        });
+
     }
 
-    protected boolean isClosing = true;/**TYPE3: 可控edit页面隐藏*/
+    protected boolean isClosing = true;
+
+    /**
+     * TYPE3: 可控edit页面隐藏
+     */
 
     @Override
     public boolean onBackPressed() {

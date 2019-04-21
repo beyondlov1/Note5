@@ -6,6 +6,7 @@ package com.beyond.note5.event;
  */
 
 public abstract class AbstractEvent<T> implements Event{
+
     private T t;
 
     AbstractEvent(T t){
@@ -14,5 +15,9 @@ public abstract class AbstractEvent<T> implements Event{
 
     public T get(){
         return t;
+    }
+
+    public void set(T t) {
+        this.t = t;
     }
 }

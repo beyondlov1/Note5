@@ -189,13 +189,17 @@ public class TodoModifySuperFragment extends TodoEditSuperFragment implements Pr
                 } else {
                     ToastUtil.toast(getContext(), "搜索文字不能超过32个字", Toast.LENGTH_SHORT);
                 }
+
+//                onKeyboardChangeListener.setExecuteHideCallback(false);
+//                smoothScalable.getContainer().getLayoutParams().height = ViewUtil.getScreenSizeWithoutNotification().y;
+//                smoothScalable.getContainer().setLayoutParams(smoothScalable.getContainer().getLayoutParams());
             }
         });
 
         saveButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                InputMethodUtil.hideKeyboard(contentEditText);
+                InputMethodUtil.hideKeyboard(contentEditText, onKeyboardChangeListener, false);
 
                 String content = contentEditText.getText().toString();
                 if (StringUtils.isBlank(content)) {
@@ -207,6 +211,8 @@ public class TodoModifySuperFragment extends TodoEditSuperFragment implements Pr
                     createdDocument.setVersion(createdDocument.getVersion() == null ? 0 : createdDocument.getVersion() + 1);
                     processReminder(content);
                 }
+
+
             }
 
             private void processReminder(String content) {
@@ -235,7 +241,7 @@ public class TodoModifySuperFragment extends TodoEditSuperFragment implements Pr
                 public void onChanged(String content, int selStart, int selEnd) {
                     if (content.length() >= selStart) {
                         predictPresenter.predict(content.substring(0, selStart));
-                        Log.d("todoModifySuperFragment","predictPresenter"+predictPresenter);
+                        Log.d("todoModifySuperFragment", "predictPresenter" + predictPresenter);
                     }
                 }
             });
@@ -248,11 +254,11 @@ public class TodoModifySuperFragment extends TodoEditSuperFragment implements Pr
                     public void handle(TimeUnit timeUnit) {
                         Date changedStart = timeUnit.getTime();
                         Reminder reminder = createdDocument.getReminder();
-                        if (reminder == null){
+                        if (reminder == null) {
                             return;
                         }
                         Date start = reminder.getStart();
-                        if (!DateUtils.isSameDay(start,changedStart)){
+                        if (!DateUtils.isSameDay(start, changedStart)) {
                             ScrollToTodoByDateEvent event = new ScrollToTodoByDateEvent(changedStart);
                             EventBus.getDefault().post(event);
                         }
@@ -268,24 +274,23 @@ public class TodoModifySuperFragment extends TodoEditSuperFragment implements Pr
         flowLayout.setOnTagClickListener(new OnTagClickToAppendListener(contentEditText));
     }
 
-
     @Override
     public void onPredictSuccess(final List<Tag> data, final String source) {
         handler.post(new Runnable() {
             @SuppressWarnings("Duplicates")
             @Override
             public void run() {
-                if (data == null||data.isEmpty()){
+                if (data == null || data.isEmpty()) {
                     predictPresenter.predict(null);
                     return;
                 }
                 List<Tag> finalTags = data;
                 tagData.clear();
-                if (StringUtils.isBlank(source)){
+                if (StringUtils.isBlank(source)) {
                     Iterator<Tag> iterator = finalTags.iterator();
                     while (iterator.hasNext()) {
                         Tag tag = iterator.next();
-                        if (!tag.isFirst()){
+                        if (!tag.isFirst()) {
                             iterator.remove();
                         }
                     }

@@ -27,11 +27,12 @@ import android.widget.TextView;
 
 import com.beyond.note5.MyApplication;
 import com.beyond.note5.R;
+import com.beyond.note5.bean.Document;
 import com.beyond.note5.bean.Reminder;
 import com.beyond.note5.bean.Todo;
 import com.beyond.note5.constant.DocumentConst;
 import com.beyond.note5.event.AddTodoEvent;
-import com.beyond.note5.event.HideKeyBoardEvent;
+import com.beyond.note5.event.HideKeyBoardEvent2;
 import com.beyond.note5.event.ShowKeyBoardEvent;
 import com.beyond.note5.module.DaggerPredictComponent;
 import com.beyond.note5.module.PredictComponent;
@@ -293,8 +294,10 @@ public class TodoEditFragment extends DialogFragment implements PredictView {
     }
 
     @Subscribe(threadMode = ThreadMode.MAIN)
-    public void onEventMainThread(HideKeyBoardEvent event) {
-        dismiss();
+    public void onEventMainThread(HideKeyBoardEvent2 event) {
+        if (Document.TODO.equals(event.getType())){
+            dismiss();
+        }
     }
 
     @Override

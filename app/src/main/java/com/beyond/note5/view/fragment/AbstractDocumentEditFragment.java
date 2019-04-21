@@ -29,7 +29,7 @@ import android.widget.TextView;
 import com.beyond.note5.R;
 import com.beyond.note5.bean.Document;
 import com.beyond.note5.event.Event;
-import com.beyond.note5.event.HideKeyBoardEvent;
+import com.beyond.note5.event.HideKeyBoardEvent2;
 import com.beyond.note5.event.ShowKeyBoardEvent;
 import com.beyond.note5.utils.InputMethodUtil;
 import com.beyond.note5.utils.WebViewUtil;
@@ -251,7 +251,7 @@ public abstract class AbstractDocumentEditFragment<T extends Document> extends D
     }
 
     @Subscribe(threadMode = ThreadMode.MAIN)
-    public void onEventMainThread(HideKeyBoardEvent event) {
+    public void onEventMainThread(HideKeyBoardEvent2 event) {
         dismiss();
     }
 

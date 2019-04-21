@@ -8,6 +8,8 @@ import android.view.inputmethod.InputMethodManager;
 
 import com.beyond.note5.utils.ViewUtil;
 
+import org.greenrobot.eventbus.EventBus;
+
 /**
  * @author: beyond
  * @date: 2019/2/4
@@ -18,9 +20,12 @@ public class OnKeyboardChangeListener implements ViewTreeObserver.OnGlobalLayout
     public Activity context;
 
     private boolean isShow = false;
+    private boolean executeHideCallback = true;
+    private Runnable hideCallback;
 
     public OnKeyboardChangeListener(Activity context){
         this.context = context;
+        EventBus.getDefault().postSticky(this);
     }
 
     @Override
@@ -49,7 +54,6 @@ public class OnKeyboardChangeListener implements ViewTreeObserver.OnGlobalLayout
     }
 
     protected void onKeyBoardShow(int x, int y) {
-
     }
 
     protected void onKeyBoardHide() {
@@ -64,4 +68,21 @@ public class OnKeyboardChangeListener implements ViewTreeObserver.OnGlobalLayout
             throw new RuntimeException("获取输入法管理器失败");
         }
     }
+
+    public Runnable getHideCallback() {
+        return hideCallback;
+    }
+
+    public void setHideCallback(Runnable hideCallback) {
+        this.hideCallback = hideCallback;
+    }
+
+    public boolean isExecuteHideCallback() {
+        return executeHideCallback;
+    }
+
+    public void setExecuteHideCallback(boolean executeHideCallback) {
+        this.executeHideCallback = executeHideCallback;
+    }
+
 }

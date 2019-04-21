@@ -9,8 +9,8 @@ public class ShowKeyBoardEvent extends AbstractEvent<Integer> {
 
     private String type;
 
-    public ShowKeyBoardEvent(Integer y) {
-        super(y);
+    public ShowKeyBoardEvent(Integer integer) {
+        super(integer);
     }
 
     public String getType() {
