@@ -35,6 +35,7 @@ import com.beyond.note5.utils.IDUtil;
 import com.beyond.note5.utils.InputMethodUtil;
 import com.beyond.note5.utils.TimeNLPUtil;
 import com.beyond.note5.utils.ToastUtil;
+import com.beyond.note5.utils.ViewUtil;
 import com.beyond.note5.utils.WebViewUtil;
 import com.beyond.note5.view.PredictView;
 import com.beyond.note5.view.custom.SelectionListenableEditText;
@@ -180,7 +181,6 @@ public class TodoModifySuperFragment extends TodoEditSuperFragment implements Pr
         browserSearchButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                isClosing = false; /* TYPE3: 混合版， 只有在点击browserSearchButton的时候不隐藏*/
                 String url = WebViewUtil.getUrlOrSearchUrl(createdDocument);
                 if (url != null) {
                     Uri uri = Uri.parse(url);
@@ -190,15 +190,17 @@ public class TodoModifySuperFragment extends TodoEditSuperFragment implements Pr
                     ToastUtil.toast(getContext(), "搜索文字不能超过32个字", Toast.LENGTH_SHORT);
                 }
 
-//                onKeyboardChangeListener.setExecuteHideCallback(false);
-//                smoothScalable.getContainer().getLayoutParams().height = ViewUtil.getScreenSizeWithoutNotification().y;
-//                smoothScalable.getContainer().setLayoutParams(smoothScalable.getContainer().getLayoutParams());
+                onKeyboardChangeListener.setExecuteHideCallback(false);
+                smoothScalable.getContainer().getLayoutParams().height = ViewUtil.getScreenSizeWithoutNotification().y;
+                smoothScalable.getContainer().setLayoutParams(smoothScalable.getContainer().getLayoutParams());
             }
         });
 
         saveButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
+                HideTodoEditEvent hideTodoEditEvent = new HideTodoEditEvent(index);
+                EventBus.getDefault().post(hideTodoEditEvent);
                 InputMethodUtil.hideKeyboard(contentEditText, onKeyboardChangeListener, false);
 
                 String content = contentEditText.getText().toString();

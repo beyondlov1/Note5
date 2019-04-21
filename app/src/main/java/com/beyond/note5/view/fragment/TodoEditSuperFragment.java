@@ -21,7 +21,6 @@ import com.beyond.note5.event.HideKeyBoardEvent2;
 import com.beyond.note5.event.HideTodoEditEvent;
 import com.beyond.note5.event.ShowKeyBoardEvent;
 import com.beyond.note5.utils.InputMethodUtil;
-import com.beyond.note5.utils.ViewUtil;
 import com.beyond.note5.view.animator.DefaultSmoothScalable;
 import com.beyond.note5.view.animator.SmoothScalable;
 import com.beyond.note5.view.listener.OnBackPressListener;
@@ -107,8 +106,8 @@ public class TodoEditSuperFragment extends DialogFragment implements OnBackPress
         super.onStop();
     }
 
-    @Subscribe(threadMode = ThreadMode.MAIN,sticky = true)
-    public void initOnKeyboardChangeListener(OnKeyboardChangeListener onKeyboardChangeListener){
+    @Subscribe(threadMode = ThreadMode.MAIN, sticky = true)
+    public void initOnKeyboardChangeListener(OnKeyboardChangeListener onKeyboardChangeListener) {
         this.onKeyboardChangeListener = onKeyboardChangeListener;
     }
 
@@ -124,34 +123,23 @@ public class TodoEditSuperFragment extends DialogFragment implements OnBackPress
     @Subscribe(threadMode = ThreadMode.MAIN)
     public void onEventMainThread(final HideKeyBoardEvent2 event) {
         final String type = event.getType();
+        if (event.get().getHideCallback()!=null){
+            return;
+        }
         event.get().setHideCallback(new Runnable() {
             @Override
             public void run() {
-                if (isClosing) { // 后退触发的inputMethod隐藏时, 即要退出
-                    if (StringUtils.equals(Document.TODO, type)) {
-                        EventBus.getDefault().post(new HideTodoEditEvent(index));
-                    }
-                } else { // 不是后退触发的inputMethod隐藏时
-                    if (StringUtils.equals(Document.TODO, type)) {
-                        smoothScalable.getContainer().getLayoutParams().height = ViewUtil.getScreenSizeWithoutNotification().y;
-                        smoothScalable.getContainer().setLayoutParams(smoothScalable.getContainer().getLayoutParams());
-                    }
+                if (StringUtils.equals(Document.TODO, type)) {
+                    EventBus.getDefault().post(new HideTodoEditEvent(index));
                 }
-                isClosing = true;
             }
         });
 
     }
 
-    protected boolean isClosing = true;
-
-    /**
-     * TYPE3: 可控edit页面隐藏
-     */
-
     @Override
     public boolean onBackPressed() {
-        InputMethodUtil.hideKeyboard(contentEditText);
+        InputMethodUtil.hideKeyboard(contentEditText,onKeyboardChangeListener,true);
         EventBus.getDefault().post(new HideTodoEditEvent(index));
         return true;
     }

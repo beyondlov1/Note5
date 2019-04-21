@@ -302,6 +302,10 @@ public class MainActivity extends FragmentActivity {
 
     @Subscribe(threadMode = ThreadMode.MAIN)
     public void onReceived(HideNoteDetailEvent event) {
+        if (!Document.NOTE.equals(currentType)){
+            return;
+        }
+
         EventBus.getDefault().post(new ShowFABEvent(null));
 
         //获取viewSwitcher划到的位置，获取动画要返回的view
@@ -335,6 +339,10 @@ public class MainActivity extends FragmentActivity {
 
     @Subscribe(threadMode = ThreadMode.MAIN)
     public void onReceived(HideTodoEditEvent event) {
+        if (!Document.TODO.equals(currentType)){
+            return;
+        }
+
         EventBus.getDefault().post(new ShowFABEvent(null));
 
         SmoothScalable smoothScalable = (SmoothScalable) todoModifyFragment;
