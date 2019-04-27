@@ -4,6 +4,7 @@ import android.animation.Animator;
 import android.animation.AnimatorInflater;
 import android.animation.AnimatorListenerAdapter;
 import android.animation.AnimatorSet;
+import android.annotation.SuppressLint;
 import android.annotation.TargetApi;
 import android.app.Activity;
 import android.content.Intent;
@@ -12,7 +13,6 @@ import android.os.Build;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
-import android.support.annotation.RequiresApi;
 import android.support.design.widget.FloatingActionButton;
 import android.support.v4.app.DialogFragment;
 import android.support.v4.app.Fragment;
@@ -23,6 +23,7 @@ import android.support.v4.app.FragmentTransaction;
 import android.support.v4.view.PagerTabStrip;
 import android.support.v4.view.ViewPager;
 import android.util.Log;
+import android.view.MotionEvent;
 import android.view.View;
 import android.widget.FrameLayout;
 import android.widget.Toast;
@@ -74,7 +75,8 @@ import java.util.concurrent.atomic.AtomicBoolean;
  * @date: 2019/1/30
  */
 @TargetApi(Build.VERSION_CODES.M)
-public class MainActivity extends FragmentActivity implements View.OnClickListener, View.OnLongClickListener, View.OnScrollChangeListener {
+public class MainActivity extends FragmentActivity implements View.OnClickListener,
+        View.OnLongClickListener, View.OnScrollChangeListener, View.OnTouchListener {
 
     private static final int TAKE_PHOTO_REQUEST_CODE = 1;
 
@@ -174,11 +176,13 @@ public class MainActivity extends FragmentActivity implements View.OnClickListen
         currentType = documentTypes[mainViewPager.getCurrentItem()];
     }
 
+    @SuppressLint("ClickableViewAccessibility")
     private void initEvent() {
         //监控输入法
         this.getWindow().getDecorView().getViewTreeObserver()
                 .addOnGlobalLayoutListener(new MyOnKeyboardChangeListener(this));
         mainViewPager.setOnScrollChangeListener(this);
+        addDocumentButton.setOnTouchListener(this);
         addDocumentButton.setOnClickListener(this);
         addDocumentButton.setOnLongClickListener(this);
     }
@@ -378,6 +382,9 @@ public class MainActivity extends FragmentActivity implements View.OnClickListen
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         if (resultCode == RESULT_OK && requestCode == TAKE_PHOTO_REQUEST_CODE) {
             addPhotoNote();
+        }else if (resultCode == RESULT_CANCELED &&requestCode == TAKE_PHOTO_REQUEST_CODE){
+            boolean delete = new File(currPhotoPath).delete();
+            Log.d(this.getClass().getSimpleName(),""+delete);
         }
 
         IntentResult result = IntentIntegrator.parseActivityResult(requestCode, resultCode, data);
@@ -494,6 +501,42 @@ public class MainActivity extends FragmentActivity implements View.OnClickListen
         EventBus.getDefault().post(new ShowFABEvent(R.id.note_recycler_view));
     }
 
+    @Override
+    public boolean onTouch(View v, MotionEvent event) {
+        if (v == addDocumentButton) {
+            int action = event.getAction();
+            switch (action) {
+                case MotionEvent.ACTION_MOVE:
+                    v.setX(v.getX() - v.getWidth() / 2 + event.getX());
+                    if (v.getX() < 200) {
+                        v.setX(200);
+                    }
+
+                    if (v.getX() > ViewUtil.getScreenSize().x - v.getWidth() - 200) {
+                        v.setX(ViewUtil.getScreenSize().x - v.getWidth() - 200);
+                    }
+
+                    break;
+                case MotionEvent.ACTION_UP:
+                    if (v.getX() == 200) {
+                        v.setX(ViewUtil.getScreenSize().x / 2 - v.getWidth() / 2);
+                        takePhoto();
+                    } else if (v.getX() == ViewUtil.getScreenSize().x - v.getWidth() - 200) {
+                        v.setX(ViewUtil.getScreenSize().x / 2 - v.getWidth() / 2);
+                        launchQRScanner();
+                    } else {
+                        v.setX(ViewUtil.getScreenSize().x / 2 - v.getWidth() / 2);
+                        v.performClick();
+                    }
+
+                    break;
+            }
+            return true;
+
+        }
+        return false;
+    }
+
     private class StaticViewHolder {
 
         private View rightBottomView;
@@ -530,9 +573,9 @@ public class MainActivity extends FragmentActivity implements View.OnClickListen
         }
     }
 
-    private class MyOnKeyboardChangeListener extends OnKeyboardChangeListener{
+    private class MyOnKeyboardChangeListener extends OnKeyboardChangeListener {
 
-        public MyOnKeyboardChangeListener(Activity context) {
+        MyOnKeyboardChangeListener(Activity context) {
             super(context);
         }
 
