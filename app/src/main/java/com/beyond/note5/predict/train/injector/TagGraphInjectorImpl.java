@@ -78,6 +78,8 @@ public class TagGraphInjectorImpl implements TagGraphInjector {
 
             if (i != 0&&currTag.isFirst()){
                 currTag.setFirst(false);
+            }else if (i==0&&!currTag.isFirst()&&currTag.getScore()>2){
+                currTag.setFirst(true);
             }
 
             i++;
