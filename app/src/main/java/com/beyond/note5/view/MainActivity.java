@@ -4,12 +4,15 @@ import android.animation.Animator;
 import android.animation.AnimatorInflater;
 import android.animation.AnimatorListenerAdapter;
 import android.animation.AnimatorSet;
+import android.annotation.TargetApi;
+import android.app.Activity;
 import android.content.Intent;
 import android.graphics.Point;
 import android.os.Build;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
+import android.support.annotation.RequiresApi;
 import android.support.design.widget.FloatingActionButton;
 import android.support.v4.app.DialogFragment;
 import android.support.v4.app.Fragment;
@@ -70,7 +73,8 @@ import java.util.concurrent.atomic.AtomicBoolean;
  * @author: beyond
  * @date: 2019/1/30
  */
-public class MainActivity extends FragmentActivity {
+@TargetApi(Build.VERSION_CODES.M)
+public class MainActivity extends FragmentActivity implements View.OnClickListener, View.OnLongClickListener, View.OnScrollChangeListener {
 
     private static final int TAKE_PHOTO_REQUEST_CODE = 1;
 
@@ -172,68 +176,11 @@ public class MainActivity extends FragmentActivity {
 
     private void initEvent() {
         //监控输入法
-        OnKeyboardChangeListener onKeyboardChangeListener = new OnKeyboardChangeListener(this) {
-
-            @Override
-            protected void onKeyBoardShow(int x, int y) {
-                ShowKeyBoardEvent showKeyBoardEvent = new ShowKeyBoardEvent(y);
-                showKeyBoardEvent.setType(currentType);
-                EventBus.getDefault().post(showKeyBoardEvent);
-            }
-
-            @Override
-            protected void onKeyBoardHide() {
-                //Event 为消耗品， 每次都要新建
-                HideKeyBoardEvent2 hideKeyBoardEvent = new HideKeyBoardEvent2(this);
-                hideKeyBoardEvent.setType(currentType);
-                EventBus.getDefault().post(hideKeyBoardEvent);
-                if (isExecuteHideCallback()&&getHideCallback()!=null){
-                    getHideCallback().run();
-                }
-                setExecuteHideCallback(true);
-            }
-        };
         this.getWindow().getDecorView().getViewTreeObserver()
-                .addOnGlobalLayoutListener(onKeyboardChangeListener);
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-            mainViewPager.setOnScrollChangeListener(new View.OnScrollChangeListener() {
-                @Override
-                public void onScrollChange(View v, int scrollX, int scrollY, int oldScrollX, int oldScrollY) {
-                    int currentItemPosition = mainViewPager.getCurrentItem();
-                    Fragment fragment = fragments.get(currentItemPosition);
-                    if (fragment instanceof NoteListFragment) {
-                        currentType = Document.NOTE;
-                    } else if (fragment instanceof TodoListFragment) {
-                        currentType = Document.TODO;
-                    }
-                    EventBus.getDefault().post(new ShowFABEvent(R.id.note_recycler_view));
-                }
-            });
-        }
-        addDocumentButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                int currentItemPosition = mainViewPager.getCurrentItem();
-                Fragment fragment = fragments.get(currentItemPosition);
-                DialogFragment dialog;
-                if (fragment instanceof NoteListFragment) {
-                    dialog = new NoteEditFragment();
-                } else if (fragment instanceof TodoListFragment) {
-                    dialog = new TodoEditFragment();
-                } else {
-                    return;
-                }
-                dialog.show(getSupportFragmentManager(), "editDialog");
-            }
-        });
-        addDocumentButton.setOnLongClickListener(new View.OnLongClickListener() {
-            @Override
-            public boolean onLongClick(View v) {
-//                    takePhoto();
-                new IntentIntegrator(MainActivity.this).initiateScan();
-                return true;
-            }
-        });
+                .addOnGlobalLayoutListener(new MyOnKeyboardChangeListener(this));
+        mainViewPager.setOnScrollChangeListener(this);
+        addDocumentButton.setOnClickListener(this);
+        addDocumentButton.setOnLongClickListener(this);
     }
 
     private AtomicBoolean isFabShown = new AtomicBoolean(true);
@@ -302,7 +249,7 @@ public class MainActivity extends FragmentActivity {
 
     @Subscribe(threadMode = ThreadMode.MAIN)
     public void onReceived(HideNoteDetailEvent event) {
-        if (!Document.NOTE.equals(currentType)){
+        if (!Document.NOTE.equals(currentType)) {
             return;
         }
 
@@ -339,7 +286,7 @@ public class MainActivity extends FragmentActivity {
 
     @Subscribe(threadMode = ThreadMode.MAIN)
     public void onReceived(HideTodoEditEvent event) {
-        if (!Document.TODO.equals(currentType)){
+        if (!Document.TODO.equals(currentType)) {
             return;
         }
 
@@ -495,6 +442,58 @@ public class MainActivity extends FragmentActivity {
         EventBus.getDefault().post(new AddNoteEvent(note));
     }
 
+    @Override
+    public void onClick(View v) {
+        if (v == addDocumentButton) {
+            addDocument();
+        }
+    }
+
+    private void addDocument() {
+        int currentItemPosition = mainViewPager.getCurrentItem();
+        Fragment fragment = fragments.get(currentItemPosition);
+        DialogFragment dialog;
+        if (fragment instanceof NoteListFragment) {
+            dialog = new NoteEditFragment();
+        } else if (fragment instanceof TodoListFragment) {
+            dialog = new TodoEditFragment();
+        } else {
+            return;
+        }
+        dialog.show(getSupportFragmentManager(), "editDialog");
+    }
+
+    @Override
+    public boolean onLongClick(View v) {
+        if (v == addDocumentButton) {
+            launchQRScanner();
+            return true;
+        }
+        return false;
+    }
+
+    private void launchQRScanner() {
+        new IntentIntegrator(MainActivity.this).initiateScan();
+    }
+
+    @Override
+    public void onScrollChange(View v, int scrollX, int scrollY, int oldScrollX, int oldScrollY) {
+        if (v == mainViewPager) {
+            switchViewPager();
+        }
+    }
+
+    private void switchViewPager() {
+        int currentItemPosition = mainViewPager.getCurrentItem();
+        Fragment fragment = fragments.get(currentItemPosition);
+        if (fragment instanceof NoteListFragment) {
+            currentType = Document.NOTE;
+        } else if (fragment instanceof TodoListFragment) {
+            currentType = Document.TODO;
+        }
+        EventBus.getDefault().post(new ShowFABEvent(R.id.note_recycler_view));
+    }
+
     private class StaticViewHolder {
 
         private View rightBottomView;
@@ -528,6 +527,32 @@ public class MainActivity extends FragmentActivity {
             leftTopView.setX(0);
             leftTopView.setY(0);
             return leftTopView;
+        }
+    }
+
+    private class MyOnKeyboardChangeListener extends OnKeyboardChangeListener{
+
+        public MyOnKeyboardChangeListener(Activity context) {
+            super(context);
+        }
+
+        @Override
+        protected void onKeyBoardShow(int x, int y) {
+            ShowKeyBoardEvent showKeyBoardEvent = new ShowKeyBoardEvent(y);
+            showKeyBoardEvent.setType(currentType);
+            EventBus.getDefault().post(showKeyBoardEvent);
+        }
+
+        @Override
+        protected void onKeyBoardHide() {
+            //Event 为消耗品， 每次都要新建
+            HideKeyBoardEvent2 hideKeyBoardEvent = new HideKeyBoardEvent2(this);
+            hideKeyBoardEvent.setType(currentType);
+            EventBus.getDefault().post(hideKeyBoardEvent);
+            if (isExecuteHideCallback() && getHideCallback() != null) {
+                getHideCallback().run();
+            }
+            setExecuteHideCallback(true);
         }
     }
 }
