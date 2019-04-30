@@ -142,7 +142,7 @@ public class MainActivity extends FragmentActivity implements View.OnClickListen
         addDocumentButton = findViewById(R.id.add_document);
 
         pagerTabStrip.setTabIndicatorColor(getResources().getColor(R.color.google_yellow));
-        pagerTabStrip.setTextColor(getResources().getColor(R.color.white));
+        pagerTabStrip.setTextColor(getResources().getColor(R.color.black));
     }
 
     private void initViewPagerData() {

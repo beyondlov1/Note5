@@ -206,7 +206,7 @@ public class TodoEditSuperFragment extends DialogFragment implements OnBackPress
 
     @Override
     public void hide() {
-        context.getWindow().setStatusBarColor(getResources().getColor(R.color.google_blue));
+        context.getWindow().setStatusBarColor(getResources().getColor(R.color.white));
         this.smoothScalable.hide();
     }
 
