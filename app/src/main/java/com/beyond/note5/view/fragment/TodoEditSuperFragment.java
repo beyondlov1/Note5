@@ -124,9 +124,6 @@ public class TodoEditSuperFragment extends DialogFragment implements OnBackPress
     @Subscribe(threadMode = ThreadMode.MAIN)
     public void onEventMainThread(final HideKeyBoardEvent2 event) {
         final String type = event.getType();
-        if (event.get().getHideCallback()!=null){
-            return;
-        }
         event.get().setHideCallback(new Runnable() {
             @Override
             public void run() {

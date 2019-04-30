@@ -46,7 +46,7 @@ public class HtmlUtil {
             //网址正则式
             Pattern pattern = Pattern.compile("^(http|https|ftp)\\://([a-zA-Z0-9\\.\\-]+(\\:[a-zA-Z0-9\\.&%\\$\\-]+)*@)?((25[0-5]|2[0-4][0-9]|[0-1]{1}[0-9]{2}|[1-9]{1}[0-9]{1}|[1-9])\\.(25[0-5]|2[0-4][0-9]|[0-1]{1}[0-9]{2}|[1-9]{1}[0-9]{1}|[1-9]|0)\\.(25[0-5]|2[0-4][0-9]|[0-1]{1}[0-9]{2}|[1-9]{1}[0-9]{1}|[1-9]|0)\\.(25[0-5]|2[0-4][0-9]|[0-1]{1}[0-9]{2}|[1-9]{1}[0-9]{1}|[0-9])|([a-zA-Z0-9\\-]+\\.)*[a-zA-Z0-9\\-]+\\.[a-zA-Z]{2,4})(\\:[0-9]+)?(/[^/][a-zA-Z0-9\\.\\,\\?\\'\\\\/\\+&%\\$#\\=~_\\-@]*)*$");
 
-            if (content.length() < 200) {
+            if (content.length() < 300) {
                 //小于200有网址的获取网址
                 String httpContent = content.substring(content.indexOf("http"), content.length());
                 if (pattern.matcher(httpContent).matches()) {
@@ -66,7 +66,7 @@ public class HtmlUtil {
                 }
             } else {
                 //大于200的有网址的获取网址
-                String shortThings = content.substring(0, 200);
+                String shortThings = content.substring(0, 300);
                 for (int i = shortThings.length(); !pattern.matcher(content.substring(shortThings.indexOf("http"), i)).matches(); i--) {
                     urlWeGet = shortThings.substring(shortThings.indexOf("http"), i);
                 }

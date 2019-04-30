@@ -179,8 +179,8 @@ public class MainActivity extends FragmentActivity implements View.OnClickListen
     @SuppressLint("ClickableViewAccessibility")
     private void initEvent() {
         //监控输入法
-        this.getWindow().getDecorView().getViewTreeObserver()
-                .addOnGlobalLayoutListener(new MyOnKeyboardChangeListener(this));
+        OnKeyboardChangeListener onKeyboardChangeListener = new MyOnKeyboardChangeListener(this);
+        this.getWindow().getDecorView().getViewTreeObserver().addOnGlobalLayoutListener(onKeyboardChangeListener);
         mainViewPager.setOnScrollChangeListener(this);
         addDocumentButton.setOnTouchListener(this);
         addDocumentButton.setOnClickListener(this);
