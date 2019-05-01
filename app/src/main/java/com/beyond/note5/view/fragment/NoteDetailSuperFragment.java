@@ -527,7 +527,7 @@ public class NoteDetailSuperFragment extends DialogFragment implements OnBackPre
      */
     @Override
     public void hide() {
-        getActivity().getWindow().setStatusBarColor(getResources().getColor(R.color.white));
+//        getActivity().getWindow().setStatusBarColor(getResources().getColor(R.color.white));
         this.smoothScalable.hide();
     }
 
