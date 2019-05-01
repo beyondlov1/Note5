@@ -144,13 +144,15 @@ public class MainActivity extends FragmentActivity implements View.OnClickListen
         pagerTabStrip.setTabIndicatorColor(getResources().getColor(R.color.google_yellow));
         pagerTabStrip.setTextColor(getResources().getColor(R.color.black));
 
+//        View decorView = getWindow().getDecorView();
+//        decorView.setSystemUiVisibility(View.SYSTEM_UI_FLAG_FULLSCREEN
+//                |View.SYSTEM_UI_FLAG_LAYOUT_STABLE
+//                |View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN
+//                |View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY
+//        );
         View decorView = getWindow().getDecorView();
-        decorView.setSystemUiVisibility(View.SYSTEM_UI_FLAG_FULLSCREEN
-                |View.SYSTEM_UI_FLAG_LAYOUT_STABLE
-                |View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN
-                |View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY
-        );
-        getWindow().setStatusBarColor(getResources().getColor(R.color.light_gray));
+        decorView.setSystemUiVisibility(View.SYSTEM_UI_FLAG_LIGHT_STATUS_BAR);
+        getWindow().setStatusBarColor(getResources().getColor(R.color.white));
     }
 
     private void initViewPagerData() {

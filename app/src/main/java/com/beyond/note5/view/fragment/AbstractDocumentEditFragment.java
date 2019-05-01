@@ -1,10 +1,12 @@
 package com.beyond.note5.view.fragment;
 
 import android.annotation.SuppressLint;
+import android.annotation.TargetApi;
 import android.app.Dialog;
 import android.content.DialogInterface;
 import android.graphics.Color;
 import android.graphics.drawable.ColorDrawable;
+import android.os.Build;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
@@ -95,6 +97,7 @@ public abstract class AbstractDocumentEditFragment<T extends Document> extends D
     }
 
 
+    @TargetApi(Build.VERSION_CODES.M)
     private void processStatusBarColor(AlertDialog dialog){
         Objects.requireNonNull(dialog.getWindow()).clearFlags(WindowManager.LayoutParams.FLAG_TRANSLUCENT_STATUS);
         dialog.getWindow().addFlags(WindowManager.LayoutParams.FLAG_DRAWS_SYSTEM_BAR_BACKGROUNDS);

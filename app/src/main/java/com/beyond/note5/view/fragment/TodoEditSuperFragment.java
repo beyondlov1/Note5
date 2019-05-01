@@ -1,7 +1,9 @@
 package com.beyond.note5.view.fragment;
 
 import android.annotation.SuppressLint;
+import android.annotation.TargetApi;
 import android.app.Activity;
+import android.os.Build;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.support.v4.app.DialogFragment;
@@ -192,6 +194,7 @@ public class TodoEditSuperFragment extends DialogFragment implements OnBackPress
         this.smoothScalable.setOnShownListener(new Runnable() {
             @Override
             public void run() {
+                getActivity().getWindow().getDecorView().setSystemUiVisibility(View.SYSTEM_UI_FLAG_VISIBLE);
                 context.getWindow().setStatusBarColor(ContextCompat.getColor(context, R.color.white));
             }
         });
@@ -204,9 +207,11 @@ public class TodoEditSuperFragment extends DialogFragment implements OnBackPress
         this.smoothScalable.show();
     }
 
+    @TargetApi(Build.VERSION_CODES.M)
     @Override
     public void hide() {
-//        context.getWindow().setStatusBarColor(getResources().getColor(R.color.white));
+        getActivity().getWindow().getDecorView().setSystemUiVisibility(View.SYSTEM_UI_FLAG_LIGHT_STATUS_BAR);
+        context.getWindow().setStatusBarColor(getResources().getColor(R.color.white));
         this.smoothScalable.hide();
     }
 

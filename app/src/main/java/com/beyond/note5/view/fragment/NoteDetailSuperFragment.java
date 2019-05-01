@@ -1,9 +1,11 @@
 package com.beyond.note5.view.fragment;
 
 import android.annotation.SuppressLint;
+import android.annotation.TargetApi;
 import android.app.Activity;
 import android.content.Intent;
 import android.net.Uri;
+import android.os.Build;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.support.v4.app.DialogFragment;
@@ -510,6 +512,7 @@ public class NoteDetailSuperFragment extends DialogFragment implements OnBackPre
         this.smoothScalable.setOnShownListener(new Runnable() {
             @Override
             public void run() {
+                getActivity().getWindow().getDecorView().setSystemUiVisibility(View.SYSTEM_UI_FLAG_VISIBLE);
                 context.getWindow().setStatusBarColor(getResources().getColor(R.color.white));
             }
         });
@@ -525,9 +528,11 @@ public class NoteDetailSuperFragment extends DialogFragment implements OnBackPre
     /**
      * 不要在本类调用
      */
+    @TargetApi(Build.VERSION_CODES.M)
     @Override
     public void hide() {
-//        getActivity().getWindow().setStatusBarColor(getResources().getColor(R.color.white));
+        getActivity().getWindow().getDecorView().setSystemUiVisibility(View.SYSTEM_UI_FLAG_LIGHT_STATUS_BAR);
+        getActivity().getWindow().setStatusBarColor(getResources().getColor(R.color.white));
         this.smoothScalable.hide();
     }
 
