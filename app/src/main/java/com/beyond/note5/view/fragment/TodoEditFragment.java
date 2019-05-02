@@ -1,14 +1,12 @@
 package com.beyond.note5.view.fragment;
 
 import android.annotation.SuppressLint;
-import android.annotation.TargetApi;
 import android.app.Dialog;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.SharedPreferences;
 import android.graphics.Color;
 import android.graphics.drawable.ColorDrawable;
-import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
 import android.support.annotation.NonNull;
@@ -141,7 +139,6 @@ public class TodoEditFragment extends DialogFragment implements PredictView {
         return null;
     }
 
-    @TargetApi(Build.VERSION_CODES.M)
     private void processStatusBarColor(AlertDialog dialog) {
         Objects.requireNonNull(dialog.getWindow()).clearFlags(WindowManager.LayoutParams.FLAG_TRANSLUCENT_STATUS);
         dialog.getWindow().addFlags(WindowManager.LayoutParams.FLAG_DRAWS_SYSTEM_BAR_BACKGROUNDS);
@@ -290,7 +287,7 @@ public class TodoEditFragment extends DialogFragment implements PredictView {
             editor.putInt(DIALOG_HEIGHT_WITH_SOFT_INPUT_METHOD, dm.heightPixels - y - 50);
             editor.apply();
         }
-        params.height = dialogHeightWithSoftInputMethod + 75;//因为改写了edit的通知栏，所以要加上通知栏的高度
+        params.height = dialogHeightWithSoftInputMethod ;//因为改写了edit的通知栏，所以要加上通知栏的高度 //FIXME: Pixel模拟会不包括这个75,不知道为什么
         win.setAttributes(params);
 
         contentEditText.setMinimumHeight(dm.heightPixels);
