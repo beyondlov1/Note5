@@ -287,7 +287,7 @@ public class TodoEditFragment extends DialogFragment implements PredictView {
             editor.putInt(DIALOG_HEIGHT_WITH_SOFT_INPUT_METHOD, dm.heightPixels - y - 50);
             editor.apply();
         }
-        params.height = dialogHeightWithSoftInputMethod ;//因为改写了edit的通知栏，所以要加上通知栏的高度 //FIXME: Pixel模拟会不包括这个75,不知道为什么
+        params.height = dialogHeightWithSoftInputMethod +75;//因为改写了edit的通知栏，所以要加上通知栏的高度 //FIXME: Pixel模拟会不包括这个75,不知道为什么
         win.setAttributes(params);
 
         contentEditText.setMinimumHeight(dm.heightPixels);
