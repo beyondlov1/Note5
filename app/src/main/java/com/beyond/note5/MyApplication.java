@@ -57,7 +57,7 @@ public class MyApplication extends Application {
         DaoMaster daoMaster = new DaoMaster(writableDatabase);
         daoSession = daoMaster.newSession();
 
-        addColumnDev("note","PRIORITY","int");
+        //addColumnDev("note","PRIORITY","int");
     }
 
     //FIXME
