@@ -1,6 +1,7 @@
 apply plugin: 'com.android.application'
 apply plugin: 'org.greenrobot.greendao' // apply plugin
 
+
 android {
     compileSdkVersion 26
     defaultConfig {
@@ -18,7 +19,6 @@ android {
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
         }
     }
-
 }
 
 buildscript{
@@ -33,7 +33,6 @@ buildscript{
         //noinspection GradleDependency
         classpath 'com.android.tools.build:gradle:3.2.1'
         classpath 'org.greenrobot:greendao-gradle-plugin:3.2.2' // add plugin
-
     }
 }
 
@@ -103,5 +102,6 @@ dependencies {
 
     //svg
     implementation 'com.caverock:androidsvg-aar:1.3'
+
 }
 
