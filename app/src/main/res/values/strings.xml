@@ -20,5 +20,6 @@
     <string name="markdown_order_list">1.</string>
     <string name="markdown_head3">###</string>
     <string name="markdown_head1">#</string>
+    <string name="splash_icon_description">icon</string>
     <integer name="config_shortAnimTime">100</integer>
 </resources>
