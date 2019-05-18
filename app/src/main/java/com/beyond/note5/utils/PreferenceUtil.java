@@ -28,6 +28,10 @@ public class PreferenceUtil {
        return MyApplication.getInstance().getSharedPreferences(MyApplication.SHARED_PREFERENCES_NAME,Context.MODE_PRIVATE)
                 .getBoolean(key,false);
     }
+    public static boolean getBoolean(String key,boolean defaultValue){
+       return MyApplication.getInstance().getSharedPreferences(MyApplication.SHARED_PREFERENCES_NAME,Context.MODE_PRIVATE)
+                .getBoolean(key,defaultValue);
+    }
 
     public static String getString(String key){
        return MyApplication.getInstance().getSharedPreferences(MyApplication.SHARED_PREFERENCES_NAME,Context.MODE_PRIVATE)

@@ -13,6 +13,7 @@ import android.view.animation.LinearInterpolator;
 import android.view.animation.RotateAnimation;
 import android.widget.ImageView;
 
+import com.beyond.note5.MyApplication;
 import com.beyond.note5.R;
 
 public class SplashActivity extends Activity {
@@ -24,6 +25,11 @@ public class SplashActivity extends Activity {
         super.onCreate(savedInstanceState);
         getWindow().requestFeature(Window.FEATURE_CONTENT_TRANSITIONS);
 
+        if(!showSplash()){
+            startMainActivity();
+            return;
+        }
+        resetShowSplash();
 //        Transition transition = TransitionInflater.from(this).inflateTransition(android.R.transition.fade);
 //        getWindow().setExitTransition(transition);
 
@@ -36,6 +42,16 @@ public class SplashActivity extends Activity {
 
 
     }
+
+    private void resetShowSplash() {
+        MyApplication.getInstance().resetApplicationState();
+    }
+
+    private boolean showSplash() {
+        return MyApplication.getInstance().isApplicationToBeBorn();
+//        return PreferenceUtil.getBoolean("SHOW_SPLASH",true);
+    }
+
 
     private void initView() {
         ImageView icon = findViewById(R.id.app_icon);

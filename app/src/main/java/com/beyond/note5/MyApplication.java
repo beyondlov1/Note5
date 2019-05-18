@@ -32,6 +32,7 @@ public class MyApplication extends Application {
     public static final String DEFAULT_PAGE = "default_page";
     public static final String IS_ALTER_SQL_EXECUTED = "IS_ALTER_SQL_EXECUTED";
 
+    private boolean isApplicationToBeBorn = false;
 
     private static MyApplication instance;
 
@@ -42,6 +43,7 @@ public class MyApplication extends Application {
     @Override
     public void onCreate() {
         super.onCreate();
+        isApplicationToBeBorn = true;
         instance = this;
         initDaoSession();
     }
@@ -81,6 +83,7 @@ public class MyApplication extends Application {
         PreferenceUtil.put(IS_ALTER_SQL_EXECUTED,true);
     }
 
+
     private ExecutorService executorService;
     public ExecutorService getExecutorService() {
         if (executorService == null){
@@ -109,5 +112,13 @@ public class MyApplication extends Application {
             predictModel = new PredictModelImpl(tagPredictor);
         }
         return predictModel;
+    }
+
+    public boolean isApplicationToBeBorn() {
+        return isApplicationToBeBorn;
+    }
+
+    public void resetApplicationState(){
+        isApplicationToBeBorn = false;
     }
 }
