@@ -20,7 +20,7 @@
             android:layout_gravity="center"
             android:gravity="center"
             android:layout_weight="1"
-            android:text="#"
+            android:text="@string/markdown_head1"
             android:textColor="#ff000000"/>
 
         <TextView
@@ -30,7 +30,7 @@
             android:layout_gravity="center"
             android:gravity="center"
             android:layout_weight="1"
-            android:text="### "
+            android:text="@string/markdown_head3"
             android:textColor="#ff000000"/>
 
         <TextView
@@ -40,7 +40,7 @@
             android:layout_gravity="center"
             android:gravity="center"
             android:layout_weight="1"
-            android:text="- "
+            android:text="@string/markdown_list"
             android:textColor="#ff000000"/>
 
         <TextView
@@ -51,6 +51,17 @@
             android:gravity="center"
             android:layout_weight="1"
             android:text="@string/markdown_enter_list"
+            android:textColor="#ff000000"
+            android:visibility="gone"/>
+
+        <TextView
+            android:id="@+id/keyboard_top_tool_order_list"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            android:gravity="center"
+            android:layout_weight="1"
+            android:text="@string/markdown_order_list"
             android:textColor="#ff000000"/>
 
         <TextView

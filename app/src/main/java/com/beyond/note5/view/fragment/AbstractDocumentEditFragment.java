@@ -129,6 +129,7 @@ public abstract class AbstractDocumentEditFragment<T extends Document> extends D
         TextView markdownToolHead3 = view.findViewById(R.id.keyboard_top_tool_head_3);
         TextView markdownToolList = view.findViewById(R.id.keyboard_top_tool_list);
         TextView markdownToolEnterList = view.findViewById(R.id.keyboard_top_tool_enter_list);
+        TextView markdownToolOrderList = view.findViewById(R.id.keyboard_top_tool_order_list);
         TextView markdownToolLine = view.findViewById(R.id.keyboard_top_tool_line);
         TextView markdownToolBracketsLeft = view.findViewById(R.id.keyboard_top_tool_brackets_left);
         TextView markdownToolBracketsRight = view.findViewById(R.id.keyboard_top_tool_brackets_right);
@@ -141,6 +142,7 @@ public abstract class AbstractDocumentEditFragment<T extends Document> extends D
         markdownToolHead.setOnClickListener(onClickToInsertBeforeLineListener);
         markdownToolHead3.setOnClickListener(onClickToInsertBeforeLineListener);
         markdownToolList.setOnClickListener(onClickToInsertBeforeLineListener);
+        markdownToolOrderList.setOnClickListener(onClickToInsertBeforeLineListener);
 
         markdownToolEnterList.setOnClickListener(onMarkdownToolItemClickListener);
         markdownToolLine.setOnClickListener(onMarkdownToolItemClickListener);

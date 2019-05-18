@@ -16,5 +16,9 @@
     <string name="page_count">page/count</string>
     <string name="todo_edit_content_hint">input your plan…</string>
     <string name="linkDescription">link</string>
+    <string name="markdown_list">-</string>
+    <string name="markdown_order_list">1.</string>
+    <string name="markdown_head3">###</string>
+    <string name="markdown_head1">#</string>
     <integer name="config_shortAnimTime">100</integer>
 </resources>
