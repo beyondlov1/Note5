@@ -352,6 +352,11 @@ public class MainActivity extends FragmentActivity implements View.OnClickListen
     protected void onStart() {
         super.onStart();
         EventBus.getDefault().register(this);
+//        showFloatEditor();
+    }
+
+    private void showFloatEditor(){
+        startService(new Intent(this,FloatEditorService.class));
     }
 
     @Override

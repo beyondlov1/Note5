@@ -3,9 +3,10 @@
     <!-- Base application theme. -->
     <style name="AppTheme" parent="Theme.AppCompat.Light">
         <!-- Customize your theme here. -->
-        <item name="colorPrimary">@color/light_gray</item>
-        <item name="colorPrimaryDark">@color/light_gray</item>
+        <item name="colorPrimary">@color/white</item>
+        <item name="colorPrimaryDark">@color/white</item>
         <item name="colorAccent">@color/google_red</item>
+
     </style>
 
     <style name="FullscreenTheme" parent="AppTheme">
@@ -24,11 +25,26 @@
     <style name="StartLoadBackgroundFullScreenTheme" parent="FullscreenTheme">
         <item name="windowNoTitle">true</item>
         <item name="android:windowBackground">@android:color/white</item>
+        <item name="android:windowAnimationStyle">@style/main_activity_animation</item>
+    </style>
+
+    <style name="activityTransactionAnimation">
+        <item name="android:activityOpenEnterAnimation">@anim/slide_in_left</item>
+        <item name="android:activityCloseEnterAnimation">@anim/slide_in_right</item>
+        <item name="android:activityOpenExitAnimation">@anim/slide_out_left</item>
+        <item name="android:activityCloseExitAnimation">@anim/slide_out_right</item>
+    </style>
+
+    <style name="TranslucentTheme" parent="FullscreenTheme">
+        <item name="windowNoTitle">true</item>
+        <item name="android:windowBackground">@android:color/transparent</item>
+        <item name="android:windowIsTranslucent">true</item>
+        <item name="android:windowAnimationStyle">@android:style/Animation.Translucent</item>
     </style>
 
     <style name="main_activity_animation">
-        <item name="android:windowEnterAnimation">@anim/scale_y_in</item>
-        <item name="android:windowExitAnimation">@anim/slide_out_down</item>
+        <item name="android:windowEnterAnimation">@android:anim/fade_in</item>
+        <item name="android:windowExitAnimation">@android:anim/fade_out</item>
     </style>
 
     <style name="FullscreenActionBarStyle" parent="Widget.AppCompat.ActionBar">
