@@ -15,6 +15,8 @@ import com.beyond.note5.R;
 
 public class SplashActivity extends Activity {
 
+    private boolean splash;
+
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -25,9 +27,13 @@ public class SplashActivity extends Activity {
 //        getWindow().setExitTransition(transition);
 
         if (!shouldSplash()) {
+            splash = false;
             startMainActivity();
             return;
         }
+
+        splash = true;
+
         resetSplashState();
 
         showSplashView();
@@ -106,7 +112,9 @@ public class SplashActivity extends Activity {
         Intent intent = new Intent(SplashActivity.this, MainActivity.class);
 //        startActivity(intent,ActivityOptions.makeSceneTransitionAnimation(SplashActivity.this).toBundle());
         startActivity(intent);
+        if(splash){
+            overridePendingTransition(android.R.anim.fade_in,android.R.anim.fade_out);
+        }
         finish();
-
     }
 }

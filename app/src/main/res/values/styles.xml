@@ -25,7 +25,7 @@
     <style name="StartLoadBackgroundFullScreenTheme" parent="FullscreenTheme">
         <item name="windowNoTitle">true</item>
         <item name="android:windowBackground">@android:color/white</item>
-        <item name="android:windowAnimationStyle">@style/main_activity_animation</item>
+        <!--<item name="android:windowAnimationStyle">@style/main_activity_animation</item>-->
     </style>
 
     <style name="activityTransactionAnimation">

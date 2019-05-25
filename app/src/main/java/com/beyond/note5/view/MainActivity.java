@@ -11,6 +11,7 @@ import android.content.Intent;
 import android.graphics.Point;
 import android.os.Build;
 import android.os.Bundle;
+import android.provider.Settings;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.design.widget.FloatingActionButton;
@@ -40,6 +41,7 @@ import com.beyond.note5.event.HideKeyBoardEvent2;
 import com.beyond.note5.event.HideNoteDetailEvent;
 import com.beyond.note5.event.HideTodoEditEvent;
 import com.beyond.note5.event.ShowFABEvent;
+import com.beyond.note5.event.ShowFloatButtonEvent;
 import com.beyond.note5.event.ShowKeyBoardEvent;
 import com.beyond.note5.event.ShowNoteDetailEvent;
 import com.beyond.note5.event.ShowTodoEditEvent;
@@ -80,6 +82,8 @@ public class MainActivity extends FragmentActivity implements View.OnClickListen
 
     private static final int TAKE_PHOTO_REQUEST_CODE = 1;
 
+    private static final int OVERLAY_REQUEST_CODE = 2;
+
     public View mainContainer;
     private ViewPager mainViewPager;
     private View noteDetailFragmentContainer;
@@ -95,6 +99,7 @@ public class MainActivity extends FragmentActivity implements View.OnClickListen
     private String currentType;
 
     private StaticViewHolder staticViewHolder = new StaticViewHolder();
+
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
@@ -352,16 +357,29 @@ public class MainActivity extends FragmentActivity implements View.OnClickListen
     protected void onStart() {
         super.onStart();
         EventBus.getDefault().register(this);
-//        showFloatEditor();
+        showFloatEditor();
     }
 
     private void showFloatEditor(){
-        startService(new Intent(this,FloatEditorService.class));
+
+//        // 悬浮窗授权
+//        if (!Settings.canDrawOverlays(this)){
+//            ToastUtil.toast(this,"请允许在其他应用之上");
+//            startActivityForResult(new Intent(Settings.ACTION_MANAGE_OVERLAY_PERMISSION,
+//                    Uri.parse("package:"+getPackageName())),OVERLAY_REQUEST_CODE);
+//        }
+
+        if (Settings.canDrawOverlays(this)){
+            Intent intent = new Intent(this, FloatEditorService.class);
+            intent.putExtra("showFloatButton",false);
+            startService(intent);
+        }
     }
 
     @Override
     protected void onStop() {
         EventBus.getDefault().unregister(this);
+        EventBus.getDefault().post(new ShowFloatButtonEvent(null));
         super.onStop();
     }
 

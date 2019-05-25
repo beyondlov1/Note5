@@ -1,6 +1,6 @@
 package com.beyond.note5.view.adapter;
 
-import android.app.Activity;
+import android.support.v4.app.FragmentActivity;
 import android.widget.Toast;
 
 import com.beyond.note5.utils.ToastUtil;
@@ -13,7 +13,7 @@ import java.util.List;
  * @date: 2019/2/6
  */
 
-public abstract class AbstractActivityDocumentView<T> extends Activity implements DocumentView<T> {
+public abstract class AbstractActivityDocumentView<T> extends FragmentActivity implements DocumentView<T> {
     @Override
     public void onAddSuccess(T note) {
         msg("添加成功");

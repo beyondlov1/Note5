@@ -3,8 +3,11 @@ package com.beyond.note5.view.adapter;
 import android.support.v4.app.Fragment;
 import android.widget.Toast;
 
+import com.beyond.note5.event.Event;
 import com.beyond.note5.utils.ToastUtil;
 import com.beyond.note5.view.DocumentView;
+
+import org.greenrobot.eventbus.EventBus;
 
 /**
  * @author: beyond
@@ -42,4 +45,9 @@ public abstract class AbstractDocumentViewFragment<T> extends Fragment implement
     protected void msg(String msg) {
         ToastUtil.toast(this.getActivity(), msg, Toast.LENGTH_SHORT);
     }
+
+    public void post(Event event) {
+        EventBus.getDefault().post(event);
+    }
+
 }
