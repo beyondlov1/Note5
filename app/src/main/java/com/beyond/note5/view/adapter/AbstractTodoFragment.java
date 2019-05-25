@@ -25,6 +25,7 @@ import java.util.List;
 
 import javax.inject.Inject;
 
+
 public abstract class AbstractTodoFragment extends AbstractDocumentFragment<Todo> implements TodoView, CalendarView, PredictView {
 
     protected ViewGroup viewGroup;

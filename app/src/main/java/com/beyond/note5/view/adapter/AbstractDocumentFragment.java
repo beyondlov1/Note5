@@ -74,7 +74,9 @@ public abstract class AbstractDocumentFragment<T extends Document> extends Abstr
                 int insertIndex = recyclerViewAdapter.getItemDataGenerator().getInsertIndex(t);
                 data.add(insertIndex, t);
                 recyclerViewAdapter.notifyInserted(t);
-                recyclerView.scrollToPosition(insertIndex);
+                if (recyclerView != null) {
+                    recyclerView.scrollToPosition(insertIndex);
+                }
                 msg("更新成功");
                 break;
             }

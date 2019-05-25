@@ -69,6 +69,12 @@ public class FloatEditorActivity extends FragmentActivity implements View.OnClic
     }
 
     @Override
+    public void onBackPressed() {
+        EventBus.getDefault().post(new AfterFloatEditorSavedEvent(null));
+//        super.onBackPressed();
+    }
+
+    @Override
     public void onDetachedFromWindow() {
         super.onDetachedFromWindow();
         EventBus.getDefault().post(new AfterFloatEditorSavedEvent(null));

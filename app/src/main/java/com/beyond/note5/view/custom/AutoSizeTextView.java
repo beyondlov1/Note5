@@ -34,6 +34,9 @@ public class AutoSizeTextView extends android.support.v7.widget.AppCompatTextVie
 
     @Override
     public void setText(CharSequence text, BufferType type) {
+        if (text == null){
+            return;
+        }
         setTextSize(TypedValue.COMPLEX_UNIT_PX, (float) (getTextSize()*(1+ mScaleFactor *Math.pow(1.618, - text.length() / 10))));
         super.setText(text, type);
     }
