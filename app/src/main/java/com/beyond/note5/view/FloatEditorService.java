@@ -23,8 +23,6 @@ import org.greenrobot.eventbus.EventBus;
 import org.greenrobot.eventbus.Subscribe;
 import org.greenrobot.eventbus.ThreadMode;
 
-import java.util.Objects;
-
 import static android.view.WindowManager.LayoutParams.FLAG_ALT_FOCUSABLE_IM;
 import static android.view.WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE;
 import static android.view.WindowManager.LayoutParams.FLAG_WATCH_OUTSIDE_TOUCH;
@@ -90,8 +88,10 @@ public class FloatEditorService extends Service {
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
-        visibilityFlag = Objects.requireNonNull(intent.getExtras()).getBoolean("showFloatButton");
-        startFloat();
+        if(intent!=null && intent.getExtras()!=null){
+            visibilityFlag = intent.getExtras().getBoolean("showFloatButton");
+            startFloat();
+        }
         return super.onStartCommand(intent, flags, startId);
     }
 

@@ -107,6 +107,7 @@ public class DocumentCompositePresenterImpl implements DocumentCompositePresente
     }
 
     private String getDocumentType() {
+        //Todo
         return Document.TODO;
     }
 

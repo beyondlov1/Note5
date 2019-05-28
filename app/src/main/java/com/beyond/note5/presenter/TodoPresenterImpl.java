@@ -1,5 +1,7 @@
 package com.beyond.note5.presenter;
 
+import android.support.annotation.Nullable;
+
 import com.beyond.note5.bean.Todo;
 import com.beyond.note5.model.TodoModel;
 import com.beyond.note5.model.TodoModelImpl;
@@ -11,7 +13,7 @@ public class TodoPresenterImpl implements TodoPresenter {
     private TodoView todoView;
     private TodoModel todoModel;
 
-    public TodoPresenterImpl(TodoView todoView) {
+    public TodoPresenterImpl(@Nullable TodoView todoView) {
         this.todoView = todoView;
         this.todoModel = new TodoModelImpl();
     }
@@ -29,11 +31,17 @@ public class TodoPresenterImpl implements TodoPresenter {
 
     @Override
     public void addSuccess(Todo note) {
+        if (todoView == null) {
+            return;
+        }
         todoView.onAddSuccess(note);
     }
 
     @Override
     public void addFail(Todo note) {
+        if (todoView == null) {
+            return;
+        }
         todoView.onAddFail(note);
     }
 
@@ -50,11 +58,17 @@ public class TodoPresenterImpl implements TodoPresenter {
 
     @Override
     public void updateSuccess(Todo note) {
+        if (todoView == null) {
+            return;
+        }
         todoView.onUpdateSuccess(note);
     }
 
     @Override
     public void updateFail(Todo note) {
+        if (todoView == null) {
+            return;
+        }
         todoView.onUpdateFail(note);
     }
 
@@ -71,11 +85,17 @@ public class TodoPresenterImpl implements TodoPresenter {
 
     @Override
     public void updatePrioritySuccess(Todo document) {
+        if (todoView == null) {
+            return;
+        }
         todoView.onUpdatePrioritySuccess(document);
     }
 
     @Override
     public void updatePriorityFail(Todo document) {
+        if (todoView == null) {
+            return;
+        }
         todoView.onUpdatePriorityFail(document);
     }
 
@@ -92,11 +112,17 @@ public class TodoPresenterImpl implements TodoPresenter {
 
     @Override
     public void deleteSuccess(Todo note) {
+        if (todoView == null) {
+            return;
+        }
         todoView.onDeleteSuccess(note);
     }
 
     @Override
     public void deleteFail(Todo note) {
+        if (todoView == null) {
+            return;
+        }
         todoView.onDeleteFail(note);
     }
 
@@ -113,11 +139,17 @@ public class TodoPresenterImpl implements TodoPresenter {
 
     @Override
     public void findAllSuccess(List<Todo> allTodo) {
+        if (todoView == null) {
+            return;
+        }
         todoView.onFindAllSuccess(allTodo);
     }
 
     @Override
     public void findAllFail() {
+        if (todoView == null) {
+            return;
+        }
         todoView.onFindAllFail();
     }
 
@@ -134,11 +166,17 @@ public class TodoPresenterImpl implements TodoPresenter {
 
     @Override
     public void onDeleteReminderSuccess(Todo todo) {
+        if (todoView == null) {
+            return;
+        }
         todoView.onDeleteReminderSuccess(todo);
     }
 
     @Override
     public void onDeleteReminderFail(Todo todo) {
+        if (todoView == null) {
+            return;
+        }
         todoView.onDeleteReminderFail(todo);
     }
 }

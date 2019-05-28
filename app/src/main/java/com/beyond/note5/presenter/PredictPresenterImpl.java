@@ -1,5 +1,6 @@
 package com.beyond.note5.presenter;
 
+import android.support.annotation.Nullable;
 import android.util.Log;
 
 import com.beyond.note5.MyApplication;
@@ -21,7 +22,7 @@ public class PredictPresenterImpl implements PredictPresenter {
 
     private ExecutorService executorService;
 
-    public PredictPresenterImpl(PredictView predictView) {
+    public PredictPresenterImpl(@Nullable PredictView predictView) {
         this.predictView = predictView;
         this.predictModel = MyApplication.getInstance().getPredictModel();
         this.executorService = MyApplication.getInstance().getExecutorService();
@@ -43,12 +44,16 @@ public class PredictPresenterImpl implements PredictPresenter {
     }
 
     @Override
-    public void onPredictSuccess(List<Tag> data,String source) {
+    public void onPredictSuccess(List<Tag> data,String source) {if (predictView == null){
+        return;
+    }
         predictView.onPredictSuccess(data,source);
     }
 
     @Override
-    public void onPredictFail() {
+    public void onPredictFail() {if (predictView == null){
+        return;
+    }
         predictView.onPredictFail();
     }
 
@@ -69,12 +74,16 @@ public class PredictPresenterImpl implements PredictPresenter {
     }
 
     @Override
-    public void onTrainSuccess() {
+    public void onTrainSuccess() {if (predictView == null){
+        return;
+    }
         predictView.onTrainSuccess();
     }
 
     @Override
-    public void onTrainFail() {
+    public void onTrainFail() {if (predictView == null){
+        return;
+    }
         predictView.onTrainFail();
     }
 }

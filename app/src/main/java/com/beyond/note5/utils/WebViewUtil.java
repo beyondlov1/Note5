@@ -141,7 +141,7 @@ public class WebViewUtil {
 
     public static String getUrlOrSearchUrl(String content) {
 
-        String url = HtmlUtil.getUrl(content);
+        String url = HtmlUtil.getUrl2(content);
         if (StringUtils.isNotBlank(url)) {
             return url;
         }

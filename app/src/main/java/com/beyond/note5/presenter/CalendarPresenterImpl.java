@@ -1,6 +1,7 @@
 package com.beyond.note5.presenter;
 
 import android.app.Activity;
+import android.support.annotation.Nullable;
 
 import com.beyond.note5.bean.Todo;
 import com.beyond.note5.model.CalendarModel;
@@ -14,7 +15,7 @@ public class CalendarPresenterImpl implements CalendarPresenter {
     private CalendarView calendarView;
     private CalendarModel calendarModel;
 
-    public CalendarPresenterImpl(Activity activity, CalendarView calendarView) {
+    public CalendarPresenterImpl(Activity activity, @Nullable CalendarView calendarView) {
         this.calendarView = calendarView;
         this.calendarModel = new CalendarModelImpl(activity);
     }
@@ -32,11 +33,17 @@ public class CalendarPresenterImpl implements CalendarPresenter {
 
     @Override
     public void addSuccess(Todo todo) {
+        if (calendarView == null) {
+            return;
+        }
         calendarView.onEventAddSuccess(todo);
     }
 
     @Override
     public void addFail(Todo todo) {
+        if (calendarView == null) {
+            return;
+        }
         calendarView.onEventAddFail(todo);
     }
 
@@ -53,11 +60,17 @@ public class CalendarPresenterImpl implements CalendarPresenter {
 
     @Override
     public void updateSuccess(Todo todo) {
+        if (calendarView == null) {
+            return;
+        }
         calendarView.onEventUpdateSuccess(todo);
     }
 
     @Override
     public void updateFail(Todo todo) {
+        if (calendarView == null) {
+            return;
+        }
         calendarView.onEventUpdateFail(todo);
     }
 
@@ -74,11 +87,17 @@ public class CalendarPresenterImpl implements CalendarPresenter {
 
     @Override
     public void deleteSuccess(Todo todo) {
+        if (calendarView == null) {
+            return;
+        }
         calendarView.onEventDeleteSuccess(todo);
     }
 
     @Override
     public void deleteFail(Todo todo) {
+        if (calendarView == null) {
+            return;
+        }
         calendarView.onEventDeleteFail(todo);
     }
 
@@ -95,17 +114,23 @@ public class CalendarPresenterImpl implements CalendarPresenter {
 
     @Override
     public void findAllSuccess(List<Todo> allDocument) {
+        if (calendarView == null) {
+            return;
+        }
         calendarView.onEventFindAllSuccess(allDocument);
     }
 
     @Override
     public void findAllFail() {
+        if (calendarView == null) {
+            return;
+        }
         calendarView.onEventFindAllFail();
     }
 
     @Override
     public void deleteReminder(Todo todo) {
-        if (todo.getReminder()==null){
+        if (todo.getReminder() == null) {
             return;
         }
         try {
@@ -119,17 +144,23 @@ public class CalendarPresenterImpl implements CalendarPresenter {
 
     @Override
     public void deleteCalendarReminderSuccess(Todo todo) {
+        if (calendarView == null) {
+            return;
+        }
         calendarView.onCalendarReminderDeleteSuccess(todo);
     }
 
     @Override
     public void deleteCalendarReminderFail(Todo todo) {
+        if (calendarView == null) {
+            return;
+        }
         calendarView.onCalendarReminderDeleteFail(todo);
     }
 
     @Override
     public void restoreReminder(Todo todo) {
-        if (todo.getReminder()==null){
+        if (todo.getReminder() == null) {
             return;
         }
         try {
@@ -143,11 +174,17 @@ public class CalendarPresenterImpl implements CalendarPresenter {
 
     @Override
     public void restoreReminderSuccess(Todo todo) {
+        if (calendarView == null) {
+            return;
+        }
         calendarView.onCalendarReminderRestoreSuccess(todo);
     }
 
     @Override
     public void restoreReminderFail(Todo todo) {
+        if (calendarView == null) {
+            return;
+        }
         calendarView.onCalendarReminderRestoreFail(todo);
 
     }

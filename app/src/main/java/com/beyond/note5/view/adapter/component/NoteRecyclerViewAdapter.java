@@ -17,6 +17,7 @@ import com.beyond.note5.bean.Note;
 import com.beyond.note5.constant.DocumentConst;
 import com.beyond.note5.event.ShowNoteDetailEvent;
 import com.beyond.note5.event.UpdateNotePriorityEvent;
+import com.beyond.note5.utils.HtmlUtil;
 import com.beyond.note5.utils.PreferenceUtil;
 import com.beyond.note5.utils.WebViewUtil;
 import com.beyond.note5.view.adapter.component.header.Header;
@@ -107,7 +108,18 @@ public class NoteRecyclerViewAdapter extends DocumentRecyclerViewAdapter<Note, N
         if (StringUtils.isNotBlank(note.getTitle())) {
             viewHolder.content.setText(StringUtils.trim(note.getTitle()));
         } else {
-            viewHolder.content.setText(StringUtils.trim(note.getContent()));
+            String content = StringUtils.trim(note.getContent());
+            String url = HtmlUtil.getUrl2(content);
+            if (url !=null){
+                String contentWithoutUrl = content.replace(url, "");
+                if (StringUtils.isBlank(contentWithoutUrl)){
+                    viewHolder.content.setText(content);
+                }else {
+                    viewHolder.content.setText(contentWithoutUrl);
+                }
+            }else {
+                viewHolder.content.setText(content);
+            }
         }
 
         if (shouldLinkShow && WebViewUtil.getUrlOrSearchUrl(note) != null) {

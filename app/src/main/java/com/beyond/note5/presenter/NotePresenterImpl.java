@@ -1,7 +1,7 @@
 package com.beyond.note5.presenter;
 
 import android.os.Handler;
-import android.util.Log;
+import android.support.annotation.Nullable;
 
 import com.beyond.note5.MyApplication;
 import com.beyond.note5.bean.Note;
@@ -12,6 +12,7 @@ import com.beyond.note5.view.NoteView;
 
 import org.apache.commons.lang3.StringUtils;
 
+import java.io.IOException;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.TimeUnit;
@@ -34,7 +35,7 @@ public class NotePresenterImpl implements NotePresenter {
     private final OkHttpClient okHttpClient;
     private final Handler handler;
 
-    public NotePresenterImpl(NoteView noteView) {
+    public NotePresenterImpl(@Nullable NoteView noteView) {
         this.noteView = noteView;
         this.noteModel = new NoteModelImpl();
         this.executorService = MyApplication.getInstance().getExecutorService();
@@ -59,11 +60,17 @@ public class NotePresenterImpl implements NotePresenter {
 
     @Override
     public void addSuccess(Note note) {
+        if (noteView == null) {
+            return;
+        }
         noteView.onAddSuccess(note);
     }
 
     @Override
     public void addFail(Note note) {
+        if (noteView == null) {
+            return;
+        }
         noteView.onAddFail(note);
     }
 
@@ -82,11 +89,17 @@ public class NotePresenterImpl implements NotePresenter {
 
     @Override
     public void updateSuccess(Note note) {
+        if (noteView == null) {
+            return;
+        }
         noteView.onUpdateSuccess(note);
     }
 
     @Override
     public void updateFail(Note note) {
+        if (noteView == null) {
+            return;
+        }
         noteView.onUpdateFail(note);
     }
 
@@ -125,21 +138,33 @@ public class NotePresenterImpl implements NotePresenter {
 
     @Override
     public void updatePrioritySuccess(Note note) {
+        if (noteView == null) {
+            return;
+        }
         noteView.onUpdatePrioritySuccess(note);
     }
 
     @Override
     public void updatePriorityFail(Note note) {
+        if (noteView == null) {
+            return;
+        }
         noteView.onUpdatePriorityFail(note);
     }
 
     @Override
     public void deleteSuccess(Note note) {
+        if (noteView == null) {
+            return;
+        }
         noteView.onDeleteSuccess(note);
     }
 
     @Override
     public void deleteFail(Note note) {
+        if (noteView == null) {
+            return;
+        }
         noteView.onDeleteFail(note);
     }
 
@@ -156,11 +181,17 @@ public class NotePresenterImpl implements NotePresenter {
 
     @Override
     public void findAllSuccess(List<Note> allNote) {
+        if (noteView == null) {
+            return;
+        }
         noteView.onFindAllSuccess(allNote);
     }
 
     @Override
     public void findAllFail() {
+        if (noteView == null) {
+            return;
+        }
         noteView.onFindAllFail();
     }
 
@@ -196,9 +227,25 @@ public class NotePresenterImpl implements NotePresenter {
      */
     private boolean processTitle(Note note) throws Exception {
 
-        String url = HtmlUtil.getUrl(note.getContent());
+        String url = HtmlUtil.getUrl2(note.getContent());
         if (StringUtils.isBlank(url)) {
             return false;
+        }
+
+        String titleFromUrl = this.getTitleFromUrl(url);
+        if (StringUtils.isNotBlank(titleFromUrl)) {
+            if (StringUtils.equals(titleFromUrl, note.getTitle())) {
+                return false;
+            }
+            note.setTitle(titleFromUrl);
+            return true;
+        }
+        return false;
+    }
+
+    private String getTitleFromUrl(String url) throws IOException {
+        if (StringUtils.isBlank(url)) {
+            return null;
         }
 
         final Request request = new Request.Builder()
@@ -208,20 +255,15 @@ public class NotePresenterImpl implements NotePresenter {
         Call call = okHttpClient.newCall(request);
         Response response = call.execute();
         if (!response.isSuccessful()) {
-            return false;
+            return null;
         }
         if (response.body() == null) {
-            return false;
+            return null;
         }
         String titleFromHtml = HtmlUtil.getTitleFromHtml(response.body().string());
-        Log.d("NotePresenterImpl", titleFromHtml + "");
         if (StringUtils.isNotBlank(titleFromHtml)) {
-            if (StringUtils.equals(titleFromHtml, note.getTitle())) {
-                return false;
-            }
-            note.setTitle(titleFromHtml);
-            return true;
+           return titleFromHtml;
         }
-        return false;
+        return null;
     }
 }
