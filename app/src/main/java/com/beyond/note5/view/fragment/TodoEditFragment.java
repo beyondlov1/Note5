@@ -28,9 +28,7 @@ import android.widget.TextView;
 import com.beyond.note5.MyApplication;
 import com.beyond.note5.R;
 import com.beyond.note5.bean.Document;
-import com.beyond.note5.bean.Reminder;
 import com.beyond.note5.bean.Todo;
-import com.beyond.note5.constant.DocumentConst;
 import com.beyond.note5.event.AddTodoEvent;
 import com.beyond.note5.event.HideKeyBoardEvent2;
 import com.beyond.note5.event.ShowKeyBoardEvent;
@@ -39,9 +37,7 @@ import com.beyond.note5.module.PredictComponent;
 import com.beyond.note5.module.PredictModule;
 import com.beyond.note5.predict.bean.Tag;
 import com.beyond.note5.presenter.PredictPresenter;
-import com.beyond.note5.utils.IDUtil;
 import com.beyond.note5.utils.InputMethodUtil;
-import com.beyond.note5.utils.TimeNLPUtil;
 import com.beyond.note5.utils.ToastUtil;
 import com.beyond.note5.view.PredictView;
 import com.beyond.note5.view.custom.DialogButton;
@@ -60,7 +56,6 @@ import org.greenrobot.eventbus.ThreadMode;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
-import java.util.Date;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Objects;
@@ -150,24 +145,7 @@ public class TodoEditFragment extends DialogFragment implements PredictView {
         if (StringUtils.isBlank(content)){
             return;
         }
-        Todo todo = new Todo();
-        todo.setId(IDUtil.uuid());
-        todo.setTitle(content.length() > 10 ? content.substring(0, 10) : content);
-        todo.setContent(content);
-        todo.setCreateTime(new Date());
-        todo.setVersion(0);
-        todo.setLastModifyTime(new Date());
-        todo.setReadFlag(DocumentConst.READ_FLAG_NORMAL);
-
-        Date reminderStart = TimeNLPUtil.parse(todo.getContent());
-        if (reminderStart!=null){
-            Reminder reminder = new Reminder();
-            reminder.setId(IDUtil.uuid());
-            reminder.setStart(reminderStart);
-            todo.setReminder(reminder);
-            todo.setReminderId(reminder.getId());
-        }
-
+        Todo todo = Todo.newTodo(content);
         EventBus.getDefault().post(new AddTodoEvent(todo));
     }
 

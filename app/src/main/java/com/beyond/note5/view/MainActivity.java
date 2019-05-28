@@ -68,7 +68,6 @@ import org.greenrobot.eventbus.ThreadMode;
 
 import java.io.File;
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
 
@@ -437,13 +436,8 @@ public class MainActivity extends FragmentActivity implements View.OnClickListen
     }
 
     private void addQRCodeNote(String content) {
-        Date currDate = new Date();
-        Note note = new Note();
-        note.setId(IDUtil.uuid());
+        Note note = Note.newInstance();
         note.setContent(content);
-        note.setCreateTime(currDate);
-        note.setLastModifyTime(currDate);
-
         EventBus.getDefault().post(new AddNoteEvent(note));
     }
 
@@ -462,7 +456,6 @@ public class MainActivity extends FragmentActivity implements View.OnClickListen
         String noteId = IDUtil.uuid();
         File file = new File(currPhotoPath);
         String name = file.getName();
-        Date currDate = new Date();
 
         List<Attachment> attachments = new ArrayList<>();
         Attachment attachment = new Attachment();
@@ -472,12 +465,10 @@ public class MainActivity extends FragmentActivity implements View.OnClickListen
         attachment.setPath(currPhotoPath);
         attachments.add(attachment);
 
-        Note note = new Note();
+        Note note = Note.newInstance();
         note.setId(noteId);
         note.setContent(content);
         note.setAttachments(attachments);
-        note.setCreateTime(currDate);
-        note.setLastModifyTime(currDate);
 
         EventBus.getDefault().post(new AddNoteEvent(note));
     }

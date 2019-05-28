@@ -4,6 +4,7 @@ import com.beyond.note5.constant.DocumentConst;
 import com.beyond.note5.model.dao.AttachmentDao;
 import com.beyond.note5.model.dao.DaoSession;
 import com.beyond.note5.model.dao.NoteDao;
+import com.beyond.note5.utils.IDUtil;
 
 import org.greenrobot.greendao.DaoException;
 import org.greenrobot.greendao.annotation.Entity;
@@ -16,6 +17,16 @@ import java.util.List;
 
 @Entity
 public class Note extends Document {
+
+    public static Note newInstance(){
+        Note note = new Note();
+        note.setId(IDUtil.uuid());
+        note.setCreateTime(new Date());
+        note.setVersion(0);
+        note.setLastModifyTime(new Date());
+        note.setReadFlag(DocumentConst.READ_FLAG_NORMAL);
+        return note;
+    }
 
     @Id
     private String id;

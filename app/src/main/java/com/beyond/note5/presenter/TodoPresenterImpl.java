@@ -5,7 +5,10 @@ import android.support.annotation.Nullable;
 import com.beyond.note5.bean.Todo;
 import com.beyond.note5.model.TodoModel;
 import com.beyond.note5.model.TodoModelImpl;
+import com.beyond.note5.utils.TimeNLPUtil;
 import com.beyond.note5.view.TodoView;
+
+import org.apache.commons.lang3.StringUtils;
 
 import java.util.List;
 
@@ -19,57 +22,59 @@ public class TodoPresenterImpl implements TodoPresenter {
     }
 
     @Override
-    public void add(Todo note) {
+    public void add(Todo todo) {
         try {
-            todoModel.add(note);
-            this.addSuccess(note);
+            fillContentWithoutTime(todo);
+            todoModel.add(todo);
+            this.addSuccess(todo);
         } catch (Exception e) {
             e.printStackTrace();
-            this.addFail(note);
+            this.addFail(todo);
         }
     }
 
     @Override
-    public void addSuccess(Todo note) {
+    public void addSuccess(Todo todo) {
         if (todoView == null) {
             return;
         }
-        todoView.onAddSuccess(note);
+        todoView.onAddSuccess(todo);
     }
 
     @Override
-    public void addFail(Todo note) {
+    public void addFail(Todo todo) {
         if (todoView == null) {
             return;
         }
-        todoView.onAddFail(note);
+        todoView.onAddFail(todo);
     }
 
     @Override
-    public void update(Todo note) {
+    public void update(Todo todo) {
         try {
-            todoModel.update(note);
-            this.updateSuccess(note);
+            fillContentWithoutTime(todo);
+            todoModel.update(todo);
+            this.updateSuccess(todo);
         } catch (Exception e) {
             e.printStackTrace();
-            this.updateFail(note);
+            this.updateFail(todo);
         }
     }
 
     @Override
-    public void updateSuccess(Todo note) {
+    public void updateSuccess(Todo todo) {
         if (todoView == null) {
             return;
         }
-        todoView.onUpdateSuccess(note);
+        todoView.onUpdateSuccess(todo);
     }
 
     @Override
-    public void updateFail(Todo note) {
+    public void updateFail(Todo todo) {
         if (todoView == null) {
             return;
         }
-        todoView.onUpdateFail(note);
+        todoView.onUpdateFail(todo);
     }
 
     @Override
@@ -100,30 +105,30 @@ public class TodoPresenterImpl implements TodoPresenter {
     }
 
     @Override
-    public void delete(Todo note) {
+    public void delete(Todo todo) {
         try {
-            todoModel.delete(note);
-            this.deleteSuccess(note);
+            todoModel.delete(todo);
+            this.deleteSuccess(todo);
         } catch (Exception e) {
             e.printStackTrace();
-            this.deleteFail(note);
+            this.deleteFail(todo);
         }
     }
 
     @Override
-    public void deleteSuccess(Todo note) {
+    public void deleteSuccess(Todo todo) {
         if (todoView == null) {
             return;
         }
-        todoView.onDeleteSuccess(note);
+        todoView.onDeleteSuccess(todo);
     }
 
     @Override
-    public void deleteFail(Todo note) {
+    public void deleteFail(Todo todo) {
         if (todoView == null) {
             return;
         }
-        todoView.onDeleteFail(note);
+        todoView.onDeleteFail(todo);
     }
 
     @Override
@@ -178,5 +183,18 @@ public class TodoPresenterImpl implements TodoPresenter {
             return;
         }
         todoView.onDeleteReminderFail(todo);
+    }
+
+    /**
+     * 计算无时间内容
+     * 要不要改成异步， 看情况吧
+     * @param todo 待办
+     */
+    private void fillContentWithoutTime(Todo todo) {
+        String contentWithoutTime = StringUtils.trim(TimeNLPUtil.getOriginExpressionWithoutTime(StringUtils.trim(todo.getContent())));
+        if (StringUtils.isBlank(contentWithoutTime)) {
+            contentWithoutTime = StringUtils.trim(todo.getContent());
+        }
+        todo.setContentWithoutTime(contentWithoutTime);
     }
 }

@@ -24,7 +24,13 @@ import com.beyond.note5.presenter.DocumentCompositePresenter;
 import com.beyond.note5.utils.IDUtil;
 import com.beyond.note5.utils.InputMethodUtil;
 import com.beyond.note5.utils.ToastUtil;
+import com.beyond.note5.view.CalendarView;
 import com.beyond.note5.view.DocumentCompositeView;
+import com.beyond.note5.view.NoteView;
+import com.beyond.note5.view.PredictView;
+import com.beyond.note5.view.TodoView;
+import com.beyond.note5.view.adapter.view.NoteViewAdapter;
+import com.beyond.note5.view.adapter.view.TodoViewAdapter;
 
 import org.greenrobot.eventbus.EventBus;
 
@@ -100,24 +106,47 @@ public class FloatEditorFragment extends Fragment implements View.OnClickListene
     }
 
     @Override
-    public void onNoteAddSuccess(Note document) {
+    public NoteView getNoteView() {
+        return new NoteViewAdapter(){
+            @Override
+            public void onAddSuccess(Note document) {
+                ToastUtil.toast(getActivity(), "添加记录成功");
+                EventBus.getDefault().post(new RefreshNoteListEvent(null));
+                EventBus.getDefault().post(new AfterFloatEditorSavedEvent(document));
+            }
 
-        EventBus.getDefault().post(new RefreshNoteListEvent(null));
-        EventBus.getDefault().post(new AfterFloatEditorSavedEvent(document));
+            @Override
+            public void onAddFail(Note document) {
+                ToastUtil.toast(getContext(), "添加失败");
+            }
+        };
     }
 
     @Override
-    public void onTodoAddSuccess(Todo todo) {
-//        if (todo.getReminder()!=null) {
-//            calendarPresenter.add(todo);
-//        }
-//        predictPresenter.train(todo.getContent());
-        EventBus.getDefault().post(new RefreshTodoListEvent(null));
-        EventBus.getDefault().post(new AfterFloatEditorSavedEvent(todo));
+    public TodoView getTodoView() {
+        return new TodoViewAdapter(){
+            @Override
+            public void onAddSuccess(Todo document) {
+                ToastUtil.toast(getActivity(), "添加待办事项成功");
+                EventBus.getDefault().post(new RefreshTodoListEvent(null));
+                EventBus.getDefault().post(new AfterFloatEditorSavedEvent(document));
+            }
+
+            @Override
+            public void onAddFail(Todo document) {
+                ToastUtil.toast(getContext(), "添加失败");
+            }
+        };
     }
 
     @Override
-    public void onAddFail() {
-        ToastUtil.toast(getContext(), "添加失败");
+    public CalendarView getCalendarView() {
+        return null;
     }
+
+    @Override
+    public PredictView getPredictView() {
+        return null;
+    }
+
 }

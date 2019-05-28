@@ -1,5 +1,6 @@
 package com.beyond.note5.view;
 
+import android.app.Activity;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
@@ -12,6 +13,7 @@ import android.view.View;
 import com.beyond.note5.R;
 import com.beyond.note5.event.AfterFloatEditorSavedEvent;
 import com.beyond.note5.view.fragment.FloatEditorFragment;
+import com.beyond.note5.view.listener.OnKeyboardChangeListener;
 
 import org.greenrobot.eventbus.EventBus;
 import org.greenrobot.eventbus.Subscribe;
@@ -43,6 +45,9 @@ public class FloatEditorActivity extends FragmentActivity implements View.OnClic
 
     private void initEvent() {
         activityContainer.setOnClickListener(this);
+        //监控输入法
+        OnKeyboardChangeListener onKeyboardChangeListener = new MyOnKeyboardChangeListener(this);
+        this.getWindow().getDecorView().getViewTreeObserver().addOnGlobalLayoutListener(onKeyboardChangeListener);
     }
 
     private void initFragment() {
@@ -90,6 +95,22 @@ public class FloatEditorActivity extends FragmentActivity implements View.OnClic
     protected void onStop() {
         EventBus.getDefault().unregister(this);
         super.onStop();
+    }
+
+    private class MyOnKeyboardChangeListener extends OnKeyboardChangeListener {
+
+        MyOnKeyboardChangeListener(Activity context) {
+            super(context);
+        }
+
+        @Override
+        protected void onKeyBoardShow(int x, int y) {
+        }
+
+        @Override
+        protected void onKeyBoardHide() {
+            finish();
+        }
     }
 
 }

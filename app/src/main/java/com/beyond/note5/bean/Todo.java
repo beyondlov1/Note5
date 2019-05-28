@@ -4,6 +4,9 @@ import com.beyond.note5.constant.DocumentConst;
 import com.beyond.note5.model.dao.DaoSession;
 import com.beyond.note5.model.dao.ReminderDao;
 import com.beyond.note5.model.dao.TodoDao;
+import com.beyond.note5.utils.IDUtil;
+import com.beyond.note5.utils.TimeNLPUtil;
+
 import org.greenrobot.greendao.DaoException;
 import org.greenrobot.greendao.annotation.Entity;
 import org.greenrobot.greendao.annotation.Generated;
@@ -15,6 +18,27 @@ import java.util.Date;
 @SuppressWarnings("StringEquality")
 @Entity
 public class Todo extends Document {
+
+    public static Todo newTodo(String content){
+        Todo todo = new Todo();
+        todo.setId(IDUtil.uuid());
+        todo.setTitle(content.length() > 10 ? content.substring(0, 10) : content);
+        todo.setContent(content);
+        todo.setCreateTime(new Date());
+        todo.setVersion(0);
+        todo.setLastModifyTime(new Date());
+        todo.setReadFlag(DocumentConst.READ_FLAG_NORMAL);
+
+        Date reminderStart = TimeNLPUtil.parse(todo.getContent());
+        if (reminderStart!=null){
+            Reminder reminder = new Reminder();
+            reminder.setId(IDUtil.uuid());
+            reminder.setStart(reminderStart);
+            todo.setReminder(reminder);
+            todo.setReminderId(reminder.getId());
+        }
+        return todo;
+    }
 
     @Id
     private String id;

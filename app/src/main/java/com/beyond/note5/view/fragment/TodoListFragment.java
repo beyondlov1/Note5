@@ -28,7 +28,6 @@ import com.beyond.note5.event.ScrollToTodoEvent;
 import com.beyond.note5.event.ShowFABEvent;
 import com.beyond.note5.event.UpdateTodoEvent;
 import com.beyond.note5.event.UpdateTodoPriorityEvent;
-import com.beyond.note5.utils.TimeNLPUtil;
 import com.beyond.note5.view.adapter.AbstractTodoFragment;
 import com.beyond.note5.view.adapter.component.header.Header;
 
@@ -154,7 +153,6 @@ public class TodoListFragment extends AbstractTodoFragment {
     @Subscribe(threadMode = ThreadMode.MAIN)
     public void onReceived(AddTodoEvent event) {
         Todo todo = event.get();
-        this.fillContentWithoutTime(todo);
         todoPresenter.add(todo);
         if (todo.getReminder()!=null) {
             calendarPresenter.add(todo);
@@ -165,7 +163,6 @@ public class TodoListFragment extends AbstractTodoFragment {
     @Subscribe(threadMode = ThreadMode.MAIN)
     public void onReceived(UpdateTodoEvent event) {
         Todo todo = event.get();
-        this.fillContentWithoutTime(todo);
         todoPresenter.update(todo);
         if (todo.getReminder()!=null) {
             if (todo.getReminder().getCalendarEventId() == null){
@@ -272,18 +269,6 @@ public class TodoListFragment extends AbstractTodoFragment {
         }
     }
 
-    /**
-     * 计算无时间内容
-     * 要不要改成异步， 看情况吧
-     * @param todo 待办
-     */
-    private void fillContentWithoutTime(Todo todo) {
-        String contentWithoutTime = StringUtils.trim(TimeNLPUtil.getOriginExpressionWithoutTime(StringUtils.trim(todo.getContent())));
-        if (StringUtils.isBlank(contentWithoutTime)) {
-            contentWithoutTime = StringUtils.trim(todo.getContent());
-        }
-        todo.setContentWithoutTime(contentWithoutTime);
-    }
 
     private boolean isNeedTrain(Todo oldTodo, Todo newTodo){
         return !StringUtils.equals(StringUtils.trim(oldTodo.getContent()), StringUtils.trim(newTodo.getContent()));

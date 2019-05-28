@@ -31,7 +31,6 @@ import java.io.FileOutputStream;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.List;
 
 import javax.inject.Inject;
@@ -89,28 +88,20 @@ public class ShareActivity extends AbstractActivityNoteView {
     private Note generateNoteFromSend(Intent intent) {
         String title = intent.getStringExtra(Intent.EXTRA_SUBJECT);
         String content = intent.getStringExtra(Intent.EXTRA_TEXT);
-        Date currDate = new Date();
-        Note note = new Note();
-        note.setId(IDUtil.uuid());
+        Note note = Note.newInstance();
         note.setTitle(title);
         if (content.startsWith("null ")){
             content = content.substring(5);
         }
         note.setContent(content);
-        note.setCreateTime(currDate);
-        note.setLastModifyTime(currDate);
         return note;
     }
 
     @RequiresApi(api = Build.VERSION_CODES.M)
     private Note generateNoteFromProcessText(Intent intent) {
         String content = intent.getStringExtra(Intent.EXTRA_PROCESS_TEXT);
-        Date currDate = new Date();
-        Note note = new Note();
-        note.setId(IDUtil.uuid());
+        Note note = Note.newInstance();
         note.setContent(content);
-        note.setCreateTime(currDate);
-        note.setLastModifyTime(currDate);
         return note;
     }
 
@@ -139,13 +130,10 @@ public class ShareActivity extends AbstractActivityNoteView {
                 return null;
             }
 
-            Date currDate = new Date();
-            Note note = new Note();
+            Note note = Note.newInstance();
             note.setId(noteId);
             note.setContent(content.toString());
             note.setAttachments(attachments);
-            note.setCreateTime(currDate);
-            note.setLastModifyTime(currDate);
             return note;
         } else {
             return null;
