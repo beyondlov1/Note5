@@ -18,17 +18,17 @@ import com.beyond.note5.bean.Note;
 import com.beyond.note5.bean.Reminder;
 import com.beyond.note5.bean.Todo;
 import com.beyond.note5.event.AddNoteEvent;
-import com.beyond.note5.event.DeleteReminderEvent;
-import com.beyond.note5.event.DeleteTodoEvent;
+import com.beyond.note5.event.DeleteTodoSuccessEvent;
 import com.beyond.note5.event.FillTodoModifyEvent;
 import com.beyond.note5.event.HideTodoEditEvent;
 import com.beyond.note5.event.ScrollToTodoByDateEvent;
-import com.beyond.note5.event.UpdateTodoEvent;
-import com.beyond.note5.module.DaggerPredictComponent;
-import com.beyond.note5.module.PredictComponent;
-import com.beyond.note5.module.PredictModule;
+import com.beyond.note5.event.UpdateTodoSuccessEvent;
 import com.beyond.note5.predict.bean.Tag;
-import com.beyond.note5.presenter.PredictPresenter;
+import com.beyond.note5.presenter.CalendarPresenterImpl;
+import com.beyond.note5.presenter.PredictPresenterImpl;
+import com.beyond.note5.presenter.TodoCompositePresenter;
+import com.beyond.note5.presenter.TodoCompositePresenterImpl;
+import com.beyond.note5.presenter.TodoPresenterImpl;
 import com.beyond.note5.utils.HighlightUtil;
 import com.beyond.note5.utils.HtmlUtil;
 import com.beyond.note5.utils.IDUtil;
@@ -37,7 +37,9 @@ import com.beyond.note5.utils.TimeNLPUtil;
 import com.beyond.note5.utils.ToastUtil;
 import com.beyond.note5.utils.ViewUtil;
 import com.beyond.note5.utils.WebViewUtil;
-import com.beyond.note5.view.PredictView;
+import com.beyond.note5.view.adapter.view.CalendarViewAdapter;
+import com.beyond.note5.view.adapter.view.PredictViewAdapter;
+import com.beyond.note5.view.adapter.view.TodoViewAdapter;
 import com.beyond.note5.view.custom.SelectionListenableEditText;
 import com.beyond.note5.view.listener.OnTagClickToAppendListener;
 import com.beyond.note5.view.listener.TimeExpressionDetectiveTextWatcher;
@@ -60,9 +62,7 @@ import java.util.Date;
 import java.util.Iterator;
 import java.util.List;
 
-import javax.inject.Inject;
-
-public class TodoModifySuperFragment extends TodoEditSuperFragment implements PredictView {
+public class TodoModifySuperFragment extends TodoEditSuperFragment {
 
     private ImageButton clearButton;
     private ImageButton convertButton;
@@ -75,8 +75,7 @@ public class TodoModifySuperFragment extends TodoEditSuperFragment implements Pr
 
     private Handler handler = new Handler();
 
-    @Inject
-    PredictPresenter predictPresenter;
+    TodoCompositePresenter todoCompositePresenter;
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -85,8 +84,11 @@ public class TodoModifySuperFragment extends TodoEditSuperFragment implements Pr
     }
 
     private void initInjection() {
-        PredictComponent predictComponent = DaggerPredictComponent.builder().predictModule(new PredictModule(this)).build();
-        predictComponent.inject(this);
+
+        todoCompositePresenter = new TodoCompositePresenterImpl.Builder(new TodoPresenterImpl(new MyTodoView()))
+                .calendarPresenter(new CalendarPresenterImpl(getActivity(), new MyCalendarView()))
+                .predictPresenter(new PredictPresenterImpl(new MyPredictView()))
+                .build();
     }
 
     //回显
@@ -171,7 +173,7 @@ public class TodoModifySuperFragment extends TodoEditSuperFragment implements Pr
                 note.setLastModifyTime(new Date());
                 note.setVersion(createdDocument.getVersion());
                 EventBus.getDefault().post(new AddNoteEvent(note));
-                EventBus.getDefault().post(new DeleteTodoEvent(createdDocument));
+                todoCompositePresenter.delete(createdDocument);
                 EventBus.getDefault().post(new HideTodoEditEvent(index));
                 InputMethodUtil.hideKeyboard(contentEditText);
                 ToastUtil.toast(getContext(), "已转化为NOTE", Toast.LENGTH_SHORT);
@@ -205,7 +207,7 @@ public class TodoModifySuperFragment extends TodoEditSuperFragment implements Pr
 
                 String content = contentEditText.getText().toString();
                 if (StringUtils.isBlank(content)) {
-                    EventBus.getDefault().post(new DeleteTodoEvent(createdDocument));
+                    todoCompositePresenter.delete(createdDocument);
                 } else {
                     createdDocument.setTitle(content.length() > 10 ? content.substring(0, 10) : content);
                     createdDocument.setContent(content);
@@ -230,9 +232,9 @@ public class TodoModifySuperFragment extends TodoEditSuperFragment implements Pr
                     }
                     createdDocument.setReminder(reminder);
                 } else {
-                    EventBus.getDefault().post(new DeleteReminderEvent(createdDocument));
+                    todoCompositePresenter.deleteReminder(createdDocument);
                 }
-                EventBus.getDefault().post(new UpdateTodoEvent(createdDocument));
+                todoCompositePresenter.update(createdDocument);
             }
         });
 
@@ -242,8 +244,8 @@ public class TodoModifySuperFragment extends TodoEditSuperFragment implements Pr
                 @Override
                 public void onChanged(String content, int selStart, int selEnd) {
                     if (content.length() >= selStart) {
-                        predictPresenter.predict(content.substring(0, selStart));
-                        Log.d("todoModifySuperFragment", "predictPresenter" + predictPresenter);
+                        todoCompositePresenter.predict(content.substring(0, selStart));
+                        Log.d("todoModifySuperFragment", "todoCompositePresenter" + todoCompositePresenter);
                     }
                 }
             });
@@ -276,56 +278,89 @@ public class TodoModifySuperFragment extends TodoEditSuperFragment implements Pr
         flowLayout.setOnTagClickListener(new OnTagClickToAppendListener(contentEditText));
     }
 
-    @Override
-    public void onPredictSuccess(final List<Tag> data, final String source) {
-        handler.post(new Runnable() {
-            @SuppressWarnings("Duplicates")
-            @Override
-            public void run() {
-                if (data == null || data.isEmpty()) {
-                    predictPresenter.predict(null);
-                    return;
-                }
-                List<Tag> finalTags = data;
-                tagData.clear();
-                if (StringUtils.isBlank(source)) {
-                    Iterator<Tag> iterator = finalTags.iterator();
-                    while (iterator.hasNext()) {
-                        Tag tag = iterator.next();
-                        if (!tag.isFirst()) {
-                            iterator.remove();
+
+    private class MyTodoView extends TodoViewAdapter {
+
+        @Override
+        public void onUpdateSuccess(Todo document) {
+            EventBus.getDefault().post(new UpdateTodoSuccessEvent(document));
+        }
+
+        @Override
+        public void onUpdateFail(Todo document) {
+            ToastUtil.toast(getContext(),"更新失敗");
+        }
+
+        @Override
+        public void onDeleteSuccess(Todo document) {
+            EventBus.getDefault().post(new DeleteTodoSuccessEvent(document));
+        }
+
+        @Override
+        public void onDeleteFail(Todo document) {
+            ToastUtil.toast(getContext(),"刪除失敗");
+        }
+    }
+
+    private class MyPredictView extends PredictViewAdapter {
+        @Override
+        public void onPredictSuccess(final List<Tag> data, final String source) {
+            handler.post(new Runnable() {
+                @SuppressWarnings("Duplicates")
+                @Override
+                public void run() {
+                    if (data == null || data.isEmpty()) {
+                        todoCompositePresenter.predict(null);
+                        return;
+                    }
+                    List<Tag> finalTags = data;
+                    tagData.clear();
+                    if (StringUtils.isBlank(source)) {
+                        Iterator<Tag> iterator = finalTags.iterator();
+                        while (iterator.hasNext()) {
+                            Tag tag = iterator.next();
+                            if (!tag.isFirst()) {
+                                iterator.remove();
+                            }
                         }
                     }
-                }
-                Collections.sort(finalTags, new Comparator<Tag>() {
-                    @Override
-                    public int compare(Tag o1, Tag o2) {
-                        return -o1.getScore() + o2.getScore();
+                    Collections.sort(finalTags, new Comparator<Tag>() {
+                        @Override
+                        public int compare(Tag o1, Tag o2) {
+                            return -o1.getScore() + o2.getScore();
+                        }
+                    });
+                    if (finalTags.size() >= 5) {
+                        finalTags = finalTags.subList(0, 5);
                     }
-                });
-                if (finalTags.size() >= 5) {
-                    finalTags = finalTags.subList(0, 5);
+                    for (Tag tag : finalTags) {
+                        tagData.add(tag.getContent());
+                    }
+                    tagAdapter.notifyDataChanged();
                 }
-                for (Tag tag : finalTags) {
-                    tagData.add(tag.getContent());
-                }
-                tagAdapter.notifyDataChanged();
-            }
-        });
+            });
+        }
+
+        @Override
+        public void onPredictFail() {
+            ToastUtil.toast(getContext(), "预测失败");
+        }
+
+        @Override
+        public void onTrainFail() {
+            ToastUtil.toast(getContext(), "网络状况不佳");
+        }
     }
 
-    @Override
-    public void onPredictFail() {
-        ToastUtil.toast(this.getContext(), "预测失败");
-    }
+    private class MyCalendarView extends CalendarViewAdapter {
+        @Override
+        public void onEventAddFail(Todo todo) {
+            ToastUtil.toast(getContext(),"添加到日历事件失败");
+        }
 
-    @Override
-    public void onTrainSuccess() {
-        //do nothing
-    }
-
-    @Override
-    public void onTrainFail() {
-        ToastUtil.toast(this.getContext(), "网络状况不佳");
+        @Override
+        public void onEventFindAllSuccess(List<Todo> allTodo) {
+            ToastUtil.toast(getContext(),"成功查询日历事件");
+        }
     }
 }

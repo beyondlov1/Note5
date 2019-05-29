@@ -7,8 +7,8 @@ import com.beyond.note5.bean.Todo;
  * @date: 2019/2/2
  */
 
-public class AddTodoEvent extends AbstractEvent<Todo>{
-    public AddTodoEvent(Todo todo) {
+public class AddTodoSuccessEvent extends AbstractEvent<Todo>{
+    public AddTodoSuccessEvent(Todo todo) {
         super(todo);
     }
 }

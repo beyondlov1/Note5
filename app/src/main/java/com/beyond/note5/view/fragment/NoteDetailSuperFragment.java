@@ -22,7 +22,7 @@ import com.beyond.note5.R;
 import com.beyond.note5.bean.Note;
 import com.beyond.note5.bean.Todo;
 import com.beyond.note5.constant.DocumentConst;
-import com.beyond.note5.event.AddTodoEvent;
+import com.beyond.note5.event.AddTodoSuccessEvent;
 import com.beyond.note5.event.DeleteDeepNoteEvent;
 import com.beyond.note5.event.DeleteNoteEvent;
 import com.beyond.note5.event.DetailNoteEvent;
@@ -32,9 +32,19 @@ import com.beyond.note5.event.ModifyNoteDoneEvent;
 import com.beyond.note5.event.ScrollToNoteEvent;
 import com.beyond.note5.event.ShowNoteDetailEvent;
 import com.beyond.note5.event.UpdateNoteEvent;
+import com.beyond.note5.module.DaggerTodoComponent;
+import com.beyond.note5.module.PredictModule;
+import com.beyond.note5.module.TodoComponent;
+import com.beyond.note5.module.TodoModule;
+import com.beyond.note5.presenter.CalendarPresenter;
+import com.beyond.note5.presenter.PredictPresenter;
+import com.beyond.note5.presenter.TodoPresenter;
 import com.beyond.note5.utils.ToastUtil;
 import com.beyond.note5.utils.ViewUtil;
 import com.beyond.note5.utils.WebViewUtil;
+import com.beyond.note5.view.adapter.view.CalendarViewAdapter;
+import com.beyond.note5.view.adapter.view.PredictViewAdapter;
+import com.beyond.note5.view.adapter.view.TodoViewAdapter;
 import com.beyond.note5.view.animator.DefaultSmoothScalable;
 import com.beyond.note5.view.animator.SmoothScalable;
 import com.beyond.note5.view.custom.ViewSwitcher;
@@ -49,6 +59,8 @@ import org.greenrobot.eventbus.ThreadMode;
 import java.util.Date;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
+
+import javax.inject.Inject;
 
 public class NoteDetailSuperFragment extends DialogFragment implements OnBackPressListener, SmoothScalable {
     private static final String TAG = NoteDetailSuperFragment.class.getSimpleName();
@@ -79,12 +91,32 @@ public class NoteDetailSuperFragment extends DialogFragment implements OnBackPre
 
     public static AtomicBoolean isShowing = new AtomicBoolean(false);
 
+    @Inject
+    TodoPresenter todoPresenter;
+
+    @Inject
+    CalendarPresenter calendarPresenter;
+
+    @Inject
+    PredictPresenter predictPresenter;
+
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         this.context = getActivity();
+
+        initInjection();
     }
+
+    private void initInjection() {
+        TodoComponent todoComponent = DaggerTodoComponent.builder()
+                .todoModule(new TodoModule(getActivity(),new MyTodoView(),new MyCalendarView()))
+                .predictModule(new PredictModule(new MyPredictView()))
+                .build();
+        todoComponent.inject(this);
+    }
+
 
     @SuppressLint("InflateParams")
     @Nullable
@@ -173,10 +205,18 @@ public class NoteDetailSuperFragment extends DialogFragment implements OnBackPre
                 todo.setCreateTime(note.getCreateTime());
                 todo.setLastModifyTime(new Date());
                 todo.setVersion(note.getVersion());
-                EventBus.getDefault().post(new AddTodoEvent(todo));
+                saveTodo(todo);
                 EventBus.getDefault().post(new DeleteNoteEvent(note));
                 sendHideMessage();
                 ToastUtil.toast(getContext(), "已转化为TODO", Toast.LENGTH_SHORT);
+            }
+
+            private void saveTodo(Todo todo) {
+                todoPresenter.add(todo);
+                if (todo.getReminder()!=null) {
+                    calendarPresenter.add(todo);
+                }
+                predictPresenter.train(todo.getContent());
             }
         });
         modifyButton.setOnClickListener(new View.OnClickListener() {
@@ -557,6 +597,35 @@ public class NoteDetailSuperFragment extends DialogFragment implements OnBackPre
         DetailViewHolder(View view) {
             displayContainer = view.findViewById(R.id.fragment_document_display_container);
             displayWebView = view.findViewById(R.id.fragment_document_display_web);
+        }
+    }
+
+
+    private class MyTodoView extends TodoViewAdapter {
+        @Override
+        public void onAddSuccess(Todo document) {
+            EventBus.getDefault().post(new AddTodoSuccessEvent(document));
+        }
+
+        @Override
+        public void onAddFail(Todo document) {
+            ToastUtil.toast(getContext(), "添加失败");
+        }
+    }
+
+    private class MyPredictView extends PredictViewAdapter {
+
+    }
+
+    private class MyCalendarView extends CalendarViewAdapter {
+        @Override
+        public void onEventAddFail(Todo todo) {
+            ToastUtil.toast(getContext(),"添加到日历事件失败");
+        }
+
+        @Override
+        public void onEventFindAllSuccess(List<Todo> allTodo) {
+            ToastUtil.toast(getContext(),"成功查询日历事件");
         }
     }
 

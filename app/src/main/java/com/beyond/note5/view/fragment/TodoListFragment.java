@@ -4,9 +4,9 @@ import android.annotation.SuppressLint;
 import android.content.Context;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
+import android.support.v4.app.Fragment;
 import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.StaggeredGridLayoutManager;
-import android.util.Log;
 import android.view.GestureDetector;
 import android.view.LayoutInflater;
 import android.view.MotionEvent;
@@ -16,20 +16,31 @@ import android.view.ViewGroup;
 import com.beyond.note5.MyApplication;
 import com.beyond.note5.R;
 import com.beyond.note5.bean.Todo;
-import com.beyond.note5.event.AddTodoEvent;
+import com.beyond.note5.event.AddTodoSuccessEvent;
 import com.beyond.note5.event.CompleteTodoEvent;
-import com.beyond.note5.event.DeleteReminderEvent;
-import com.beyond.note5.event.DeleteTodoEvent;
+import com.beyond.note5.event.DeleteTodoSuccessEvent;
 import com.beyond.note5.event.HideFABEvent;
 import com.beyond.note5.event.InCompleteTodoEvent;
 import com.beyond.note5.event.RefreshTodoListEvent;
 import com.beyond.note5.event.ScrollToTodoByDateEvent;
 import com.beyond.note5.event.ScrollToTodoEvent;
 import com.beyond.note5.event.ShowFABEvent;
-import com.beyond.note5.event.UpdateTodoEvent;
 import com.beyond.note5.event.UpdateTodoPriorityEvent;
-import com.beyond.note5.view.adapter.AbstractTodoFragment;
+import com.beyond.note5.event.UpdateTodoSuccessEvent;
+import com.beyond.note5.presenter.CalendarPresenterImpl;
+import com.beyond.note5.presenter.PredictPresenterImpl;
+import com.beyond.note5.presenter.TodoCompositePresenter;
+import com.beyond.note5.presenter.TodoCompositePresenterImpl;
+import com.beyond.note5.presenter.TodoPresenterImpl;
+import com.beyond.note5.view.TodoView;
+import com.beyond.note5.view.adapter.component.DocumentRecyclerViewAdapter;
+import com.beyond.note5.view.adapter.component.TodoRecyclerViewAdapter;
 import com.beyond.note5.view.adapter.component.header.Header;
+import com.beyond.note5.view.adapter.component.header.ItemDataGenerator;
+import com.beyond.note5.view.adapter.component.header.ReminderTimeItemDataGenerator;
+import com.beyond.note5.view.adapter.view.CalendarViewAdapter;
+import com.beyond.note5.view.adapter.view.DocumentViewBase;
+import com.beyond.note5.view.adapter.view.PredictViewAdapter;
 
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.time.DateFormatUtils;
@@ -37,6 +48,7 @@ import org.greenrobot.eventbus.EventBus;
 import org.greenrobot.eventbus.Subscribe;
 import org.greenrobot.eventbus.ThreadMode;
 
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.Iterator;
 import java.util.List;
@@ -48,15 +60,45 @@ import static com.beyond.note5.model.TodoModelImpl.IS_SHOW_READ_FLAG_DONE;
  * @date: 2019/1/30
  */
 @SuppressWarnings("unchecked")
-public class TodoListFragment extends AbstractTodoFragment {
+public class TodoListFragment extends Fragment {
+
+    protected RecyclerView recyclerView;
+    protected DocumentRecyclerViewAdapter recyclerViewAdapter;
+    protected List<Todo> data = new ArrayList<>();
+
+    MyCalendarView calendarView = new MyCalendarView();
+    MyPredictView predictView = new MyPredictView();
+    MyTodoView todoView = new MyTodoView();
+
+    TodoCompositePresenter todoCompositePresenter;
 
     @Override
-    protected ViewGroup initViewGroup(LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
-        return (ViewGroup) inflater.inflate(R.layout.fragment_todo_list, container, false);
+    public void onCreate(@Nullable Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        EventBus.getDefault().register(this);
+        recyclerViewAdapter = new TodoRecyclerViewAdapter(this.getActivity(), new ReminderTimeItemDataGenerator(data));
+        initInjection();
     }
 
+    private void initInjection() {
+
+        todoCompositePresenter = new TodoCompositePresenterImpl.Builder(new TodoPresenterImpl(todoView))
+                .calendarPresenter(new CalendarPresenterImpl(getActivity(), calendarView))
+                .predictPresenter(new PredictPresenterImpl(predictView))
+                .build();
+    }
+
+    @Nullable
     @Override
-    protected void initView() {
+    public View onCreateView(LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
+        ViewGroup viewGroup = (ViewGroup) inflater.inflate(R.layout.fragment_todo_list, container, false);
+        initView(viewGroup);
+        initEvent();
+        todoCompositePresenter.findAll();
+        return viewGroup;
+    }
+
+    private void initView(ViewGroup viewGroup) {
         recyclerView = viewGroup.findViewById(R.id.todo_recycler_view);
         recyclerView.setAdapter(recyclerViewAdapter);
         //设置显示格式
@@ -65,7 +107,7 @@ public class TodoListFragment extends AbstractTodoFragment {
     }
 
     @SuppressLint("ClickableViewAccessibility")
-    protected void initEvent(){
+    protected void initEvent() {
 
         // 点击切换显示模式（是否显示已读）
         recyclerView.setOnTouchListener(new View.OnTouchListener() {
@@ -150,63 +192,50 @@ public class TodoListFragment extends AbstractTodoFragment {
         });
     }
 
-    @Subscribe(threadMode = ThreadMode.MAIN)
-    public void onReceived(AddTodoEvent event) {
-        Todo todo = event.get();
-        todoPresenter.add(todo);
-        if (todo.getReminder()!=null) {
-            calendarPresenter.add(todo);
-        }
-        predictPresenter.train(todo.getContent());
+    @Override
+    public void onDestroy() {
+        super.onDestroy();
+        EventBus.getDefault().unregister(this);
     }
 
     @Subscribe(threadMode = ThreadMode.MAIN)
-    public void onReceived(UpdateTodoEvent event) {
+    public void onReceived(AddTodoSuccessEvent event) {
         Todo todo = event.get();
-        todoPresenter.update(todo);
-        if (todo.getReminder()!=null) {
-            if (todo.getReminder().getCalendarEventId() == null){
-                calendarPresenter.add(todo);
-            }else {
-                calendarPresenter.update(todo);
-            }
-        }
+        todoView.onAddSuccess(todo);
     }
+
+    @Subscribe(threadMode = ThreadMode.MAIN)
+    public void onReceived(UpdateTodoSuccessEvent event) {
+        Todo todo = event.get();
+        todoView.onUpdateSuccess(todo);
+    }
+
+
+    @Subscribe(threadMode = ThreadMode.MAIN)
+    public void onReceived(DeleteTodoSuccessEvent event) {
+        Todo todo = event.get();
+        todoView.onDeleteSuccess(todo);
+    }
+
 
     @Subscribe(threadMode = ThreadMode.MAIN)
     public void onReceived(UpdateTodoPriorityEvent event) {
         Todo todo = event.get();
-        todoPresenter.updatePriority(todo);
-    }
-
-    @Subscribe(threadMode = ThreadMode.MAIN)
-    public void onReceived(DeleteReminderEvent event) {
-        Todo todo = event.get();
-        calendarPresenter.delete(todo);
-        todoPresenter.deleteReminder(todo);
-        todo.setReminder(null);
-    }
-
-    @Subscribe(threadMode = ThreadMode.MAIN)
-    public void onReceived(DeleteTodoEvent event) {
-        todoPresenter.delete(event.get());
-        if (event.get().getReminder()!=null) {
-            calendarPresenter.delete(event.get());
-        }
+        todoCompositePresenter.updatePriority(todo);
     }
 
     @Subscribe(threadMode = ThreadMode.MAIN)
     public void onReceived(RefreshTodoListEvent event) {
-        todoPresenter.findAll();
+        todoCompositePresenter.findAll();
         //滚动到当前时间的header， recyclerView 的scrollTo 滚动只会在item 不在显示范围的时候才会触发（Strange）
         //所以要用 staggered.. linear..LayoutManager 的scrollToPositionWithOffset 方法 0 代表top
         String clickContent = event.getClickContent();
         List<Header> headerData = recyclerViewAdapter.getItemDataGenerator().getHeaderData();
         for (final Header headerDatum : headerData) {
             if (StringUtils.equalsIgnoreCase(headerDatum.getContent(),
-                    clickContent!=null?clickContent:DateFormatUtils.format(System.currentTimeMillis(),"yyyy-MM-dd"))){
-                StaggeredGridLayoutManager layoutManager = (StaggeredGridLayoutManager)recyclerView.getLayoutManager();
-                layoutManager.scrollToPositionWithOffset(headerDatum.getPosition(),0);
+                    clickContent != null ? clickContent : DateFormatUtils.format(System.currentTimeMillis(), "yyyy-MM-dd"))) {
+                StaggeredGridLayoutManager layoutManager = (StaggeredGridLayoutManager) recyclerView.getLayoutManager();
+                layoutManager.scrollToPositionWithOffset(headerDatum.getPosition(), 0);
                 break;
             }
         }
@@ -214,63 +243,119 @@ public class TodoListFragment extends AbstractTodoFragment {
 
     @Subscribe(threadMode = ThreadMode.MAIN)
     public void onReceived(CompleteTodoEvent event) {
-        todoPresenter.update(event.get());
-        calendarPresenter.deleteReminder(event.get());
+        todoCompositePresenter.completeTodo(event.get());
+
     }
 
     @Subscribe(threadMode = ThreadMode.MAIN)
     public void onReceived(InCompleteTodoEvent event) {
-        todoPresenter.update(event.get());
-        calendarPresenter.restoreReminder(event.get());
+        todoCompositePresenter.inCompleteTodo(event.get());
     }
 
     @Subscribe(threadMode = ThreadMode.MAIN)
-    public void onReceived(ScrollToTodoEvent event){
+    public void onReceived(ScrollToTodoEvent event) {
         Todo todo = event.get();
         int position = recyclerViewAdapter.getItemDataGenerator().getPosition(todo);
         recyclerView.scrollToPosition(position);
     }
 
     @Subscribe(threadMode = ThreadMode.MAIN)
-    public void onReceived(ScrollToTodoByDateEvent event){
+    public void onReceived(ScrollToTodoByDateEvent event) {
         Date changedRemindStart = event.get();
         List headerData = recyclerViewAdapter.getItemDataGenerator().getHeaderData();
         for (Object headerDatum : headerData) {
-            if (headerDatum instanceof Header){
+            if (headerDatum instanceof Header) {
                 String content = ((Header) headerDatum).getContent();
-                if (StringUtils.equals(DateFormatUtils.format(changedRemindStart,"yyyy-MM-dd"),content)){
-                    StaggeredGridLayoutManager layoutManager = (StaggeredGridLayoutManager)recyclerView.getLayoutManager();
-                    layoutManager.scrollToPositionWithOffset(((Header) headerDatum).getPosition(),0);
+                if (StringUtils.equals(DateFormatUtils.format(changedRemindStart, "yyyy-MM-dd"), content)) {
+                    StaggeredGridLayoutManager layoutManager = (StaggeredGridLayoutManager) recyclerView.getLayoutManager();
+                    layoutManager.scrollToPositionWithOffset(((Header) headerDatum).getPosition(), 0);
                     break;
                 }
             }
         }
     }
 
-    @Override
-    public void onUpdateSuccess(Todo todo) {
-        Iterator<Todo> iterator = data.iterator();
-        while (iterator.hasNext()) {
-            Todo oldT = iterator.next();
-            if (StringUtils.equals(oldT.getId(), todo.getId())) {
-                iterator.remove();
-                recyclerViewAdapter.notifyRemoved(oldT);
-                int insertIndex = recyclerViewAdapter.getItemDataGenerator().getInsertIndex(todo);
-                data.add(insertIndex, todo);
-                recyclerViewAdapter.notifyInserted(todo);
-                msg("更新成功");
-                //训练
-                if (isNeedTrain(oldT,todo)){
-                    predictPresenter.train(todo.getContent());
-                    Log.d("todoListFragment","predictPresenter"+predictPresenter);
-                }
-                break;
-            }
-        }
+    private boolean isNeedTrain(Todo oldTodo, Todo newTodo) {
+        return !StringUtils.equals(StringUtils.trim(oldTodo.getContent()), StringUtils.trim(newTodo.getContent()));
     }
 
+    public void scrollTo(Integer index) {
+        ItemDataGenerator itemDataGenerator = this.getRecyclerViewAdapter().getItemDataGenerator();
+        Object note = itemDataGenerator.getContentData().get(index);
+        int position = itemDataGenerator.getPosition(note);
+        this.getRecyclerView().scrollToPosition(position);
+    }
 
-    private boolean isNeedTrain(Todo oldTodo, Todo newTodo){
-        return !StringUtils.equals(StringUtils.trim(oldTodo.getContent()), StringUtils.trim(newTodo.getContent()));
+    public View findViewBy(Integer index) {
+        ItemDataGenerator itemDataGenerator = this.getRecyclerViewAdapter().getItemDataGenerator();
+        Object note = itemDataGenerator.getContentData().get(index);
+        int position = itemDataGenerator.getPosition(note);
+        return this.getRecyclerView().getLayoutManager().findViewByPosition(position);
+    }
+
+    public DocumentRecyclerViewAdapter getRecyclerViewAdapter() {
+        return recyclerViewAdapter;
+    }
+
+    public RecyclerView getRecyclerView() {
+        return recyclerView;
+    }
+
+    private class MyTodoView extends DocumentViewBase<Todo> implements TodoView {
+
+        @Override
+        public DocumentRecyclerViewAdapter getRecyclerViewAdapter() {
+            return recyclerViewAdapter;
+        }
+
+        @Override
+        public RecyclerView getRecyclerView() {
+            return recyclerView;
+        }
+
+        @Override
+        public List<Todo> getData() {
+            return data;
+        }
+
+        @Override
+        public void onUpdateSuccess(Todo todo) {
+            Iterator<Todo> iterator = data.iterator();
+            while (iterator.hasNext()) {
+                Todo oldT = iterator.next();
+                if (StringUtils.equals(oldT.getId(), todo.getId())) {
+                    iterator.remove();
+                    recyclerViewAdapter.notifyRemoved(oldT);
+                    int insertIndex = recyclerViewAdapter.getItemDataGenerator().getInsertIndex(todo);
+                    data.add(insertIndex, todo);
+                    recyclerViewAdapter.notifyInserted(todo);
+                    //训练
+                    if (isNeedTrain(oldT, todo)) {
+                        todoCompositePresenter.train(todo.getContent());
+                    }
+                    break;
+                }
+            }
+        }
+
+
+        @Override
+        public void onDeleteReminderSuccess(Todo todo) {
+
+        }
+
+        @Override
+        public void onDeleteReminderFail(Todo todo) {
+
+        }
+
+
+    }
+
+    private class MyPredictView extends PredictViewAdapter {
+
+    }
+
+    private class MyCalendarView extends CalendarViewAdapter {
     }
 }
