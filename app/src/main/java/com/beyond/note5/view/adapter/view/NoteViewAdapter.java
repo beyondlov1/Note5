@@ -55,4 +55,5 @@ public class NoteViewAdapter implements NoteView {
     public void onUpdatePriorityFail(Note document) {
 
     }
+
 }

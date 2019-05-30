@@ -1,10 +1,8 @@
 package com.beyond.note5.view.fragment;
 
 import android.annotation.SuppressLint;
-import android.annotation.TargetApi;
-import android.app.Activity;
-import android.os.Build;
 import android.os.Bundle;
+import android.os.Handler;
 import android.support.annotation.Nullable;
 import android.support.v4.app.DialogFragment;
 import android.support.v4.content.ContextCompat;
@@ -23,8 +21,8 @@ import com.beyond.note5.event.HideKeyBoardEvent2;
 import com.beyond.note5.event.HideTodoEditEvent;
 import com.beyond.note5.event.ShowKeyBoardEvent;
 import com.beyond.note5.utils.InputMethodUtil;
-import com.beyond.note5.view.animator.DefaultSmoothScalable;
 import com.beyond.note5.view.animator.SmoothScalable;
+import com.beyond.note5.view.animator.SmoothScaleAnimation;
 import com.beyond.note5.view.listener.OnBackPressListener;
 import com.beyond.note5.view.listener.OnKeyboardChangeListener;
 
@@ -33,40 +31,37 @@ import org.greenrobot.eventbus.EventBus;
 import org.greenrobot.eventbus.Subscribe;
 import org.greenrobot.eventbus.ThreadMode;
 
-public class TodoEditSuperFragment extends DialogFragment implements OnBackPressListener, SmoothScalable {
+public class TodoEditSuperFragment extends DialogFragment implements OnBackPressListener, SmoothScalable,FragmentContainerAware {
 
-    private Activity context;
 
-    protected View root;
+    protected Handler handler;
+    protected Todo createdDocument;
+    protected int currentIndex;
+
+    protected View fragmentContainer;
     protected EditText contentEditText;
-
-    protected SmoothScalable smoothScalable = new DefaultSmoothScalable();
-
-    protected Todo createdDocument = new Todo();
-    protected int index;
 
     protected OnKeyboardChangeListener onKeyboardChangeListener;
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        this.context = getActivity();
+        handler = new Handler();
+        createdDocument = new Todo();
     }
 
     @SuppressLint("InflateParams")
     @Nullable
     @Override
     public View onCreateView(LayoutInflater inflater, @Nullable ViewGroup container, Bundle savedInstanceState) {
-        if (root == null) {
-            root = LayoutInflater.from(context).inflate(R.layout.fragment_todo_edit, null);
-        }
+        View root = LayoutInflater.from(getActivity()).inflate(R.layout.fragment_todo_edit, null);
         initView(root);
         initEvent(root);
         return root;
     }
 
     protected void initView(View view) {
-        view.setBackgroundColor(context.getResources().getColor(R.color.white));
+        view.setBackgroundColor(ContextCompat.getColor(getActivity(),R.color.white));
         contentEditText = view.findViewById(R.id.fragment_edit_todo_content);
     }
 
@@ -117,9 +112,9 @@ public class TodoEditSuperFragment extends DialogFragment implements OnBackPress
     @Subscribe(threadMode = ThreadMode.MAIN)
     public void onEventMainThread(ShowKeyBoardEvent event) {
         String type = event.getType();
-        if (StringUtils.equals(Document.TODO, type) && smoothScalable.getContainer() != null) {
-            smoothScalable.getContainer().getLayoutParams().height = InputMethodUtil.getDialogHeightWithSoftInputMethod();
-            smoothScalable.getContainer().setLayoutParams(smoothScalable.getContainer().getLayoutParams());
+        if (StringUtils.equals(Document.TODO, type) && fragmentContainer != null) {
+            fragmentContainer.getLayoutParams().height = InputMethodUtil.getDialogHeightWithSoftInputMethod();
+            fragmentContainer.setLayoutParams(fragmentContainer.getLayoutParams());
         }
     }
 
@@ -130,7 +125,7 @@ public class TodoEditSuperFragment extends DialogFragment implements OnBackPress
             @Override
             public void run() {
                 if (StringUtils.equals(Document.TODO, type)) {
-                    EventBus.getDefault().post(new HideTodoEditEvent(index));
+                    EventBus.getDefault().post(new HideTodoEditEvent(currentIndex));
                 }
             }
         });
@@ -139,92 +134,43 @@ public class TodoEditSuperFragment extends DialogFragment implements OnBackPress
 
     @Override
     public boolean onBackPressed() {
-        InputMethodUtil.hideKeyboard(contentEditText,onKeyboardChangeListener,true);
-        EventBus.getDefault().post(new HideTodoEditEvent(index));
+        InputMethodUtil.hideKeyboard(contentEditText, onKeyboardChangeListener, true);
+        EventBus.getDefault().post(new HideTodoEditEvent(currentIndex));
         return true;
     }
 
-    public void setSmoothScalable(SmoothScalable smoothScalable) {
-        this.smoothScalable = smoothScalable;
-    }
-
-    @Override
-    public void setContainer(View view) {
-        this.smoothScalable.setContainer(view);
-    }
-
-    @Override
-    public View getContainer() {
-        return smoothScalable.getContainer();
-    }
-
-    @Override
-    public void setStartView(View view) {
-        this.smoothScalable.setStartView(view);
-    }
-
-    @Override
-    public View getStartView() {
-        return this.smoothScalable.getStartView();
-    }
-
-    @Override
-    public void setEndView(View view) {
-        this.smoothScalable.setEndView(view);
-    }
-
-    @Override
-    public View getEndView() {
-        return this.smoothScalable.getEndView();
-    }
-
-    @Override
-    public void setShowingView(View view) {
-        this.smoothScalable.setShowingView(view);
-    }
-
-    @Override
-    public View getShowingView() {
-        return this.smoothScalable.getShowingView();
-    }
-
-    @Override
-    public void show() {
-        InputMethodUtil.showKeyboard(contentEditText);
-        this.smoothScalable.setOnShownListener(new Runnable() {
+    public void registerHooks(SmoothScaleAnimation smoothScaleAnimation) {
+        smoothScaleAnimation.setAfterShowHook(new Runnable() {
             @Override
             public void run() {
                 getActivity().getWindow().getDecorView().setSystemUiVisibility(View.SYSTEM_UI_FLAG_VISIBLE);
-                context.getWindow().setStatusBarColor(ContextCompat.getColor(context, R.color.white));
+                getActivity().getWindow().setStatusBarColor(ContextCompat.getColor(getActivity(), R.color.white));
             }
         });
-        this.smoothScalable.setOnHiddenListener(new Runnable() {
+        smoothScaleAnimation.setAfterHideHook(new Runnable() {
             @Override
             public void run() {
-                smoothScalable.getContainer().setVisibility(View.GONE);
+                fragmentContainer.setVisibility(View.GONE);
             }
         });
-        this.smoothScalable.show();
+        smoothScaleAnimation.setBeforeShowHook(new Runnable() {
+            @Override
+            public void run() {
+                InputMethodUtil.showKeyboard(contentEditText);
+            }
+        });
+        smoothScaleAnimation.setBeforeHideHook(new Runnable() {
+            @Override
+            public void run() {
+                getActivity().getWindow().getDecorView().setSystemUiVisibility(View.SYSTEM_UI_FLAG_LIGHT_STATUS_BAR);
+                getActivity().getWindow().setStatusBarColor(ContextCompat.getColor(getActivity(),R.color.white));
+            }
+        });
     }
 
-    @TargetApi(Build.VERSION_CODES.M)
     @Override
-    public void hide() {
-        getActivity().getWindow().getDecorView().setSystemUiVisibility(View.SYSTEM_UI_FLAG_LIGHT_STATUS_BAR);
-        context.getWindow().setStatusBarColor(getResources().getColor(R.color.white));
-        this.smoothScalable.hide();
+    public void setFragmentContainer(View fragmentContainer) {
+        this.fragmentContainer = fragmentContainer;
     }
-
-    @Override
-    public void setOnShownListener(Runnable onShownListener) {
-        //do nothing
-    }
-
-    @Override
-    public void setOnHiddenListener(Runnable onHiddenListener) {
-        //do nothing
-    }
-
-
 
 }

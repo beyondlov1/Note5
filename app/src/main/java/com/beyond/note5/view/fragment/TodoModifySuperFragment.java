@@ -3,7 +3,6 @@ package com.beyond.note5.view.fragment;
 import android.content.Intent;
 import android.net.Uri;
 import android.os.Bundle;
-import android.os.Handler;
 import android.support.v4.content.ContextCompat;
 import android.util.Log;
 import android.view.View;
@@ -17,7 +16,7 @@ import com.beyond.note5.R;
 import com.beyond.note5.bean.Note;
 import com.beyond.note5.bean.Reminder;
 import com.beyond.note5.bean.Todo;
-import com.beyond.note5.event.AddNoteEvent;
+import com.beyond.note5.event.AddNoteSuccessEvent;
 import com.beyond.note5.event.DeleteTodoSuccessEvent;
 import com.beyond.note5.event.FillTodoModifyEvent;
 import com.beyond.note5.event.HideTodoEditEvent;
@@ -25,6 +24,7 @@ import com.beyond.note5.event.ScrollToTodoByDateEvent;
 import com.beyond.note5.event.UpdateTodoSuccessEvent;
 import com.beyond.note5.predict.bean.Tag;
 import com.beyond.note5.presenter.CalendarPresenterImpl;
+import com.beyond.note5.presenter.NotePresenterImpl;
 import com.beyond.note5.presenter.PredictPresenterImpl;
 import com.beyond.note5.presenter.TodoCompositePresenter;
 import com.beyond.note5.presenter.TodoCompositePresenterImpl;
@@ -38,6 +38,7 @@ import com.beyond.note5.utils.ToastUtil;
 import com.beyond.note5.utils.ViewUtil;
 import com.beyond.note5.utils.WebViewUtil;
 import com.beyond.note5.view.adapter.view.CalendarViewAdapter;
+import com.beyond.note5.view.adapter.view.NoteViewAdapter;
 import com.beyond.note5.view.adapter.view.PredictViewAdapter;
 import com.beyond.note5.view.adapter.view.TodoViewAdapter;
 import com.beyond.note5.view.custom.SelectionListenableEditText;
@@ -73,9 +74,9 @@ public class TodoModifySuperFragment extends TodoEditSuperFragment {
 
     private List<String> tagData = new ArrayList<>();
 
-    private Handler handler = new Handler();
+    private TodoCompositePresenter todoCompositePresenter;
+    private NotePresenterImpl notePresenter;
 
-    TodoCompositePresenter todoCompositePresenter;
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -89,13 +90,14 @@ public class TodoModifySuperFragment extends TodoEditSuperFragment {
                 .calendarPresenter(new CalendarPresenterImpl(getActivity(), new MyCalendarView()))
                 .predictPresenter(new PredictPresenterImpl(new MyPredictView()))
                 .build();
+        notePresenter = new NotePresenterImpl( new MyNoteView());
     }
 
     //回显
     @Subscribe(threadMode = ThreadMode.MAIN, sticky = true)
     public void onEventMainThread(FillTodoModifyEvent fillTodoModifyEvent) {
         final Todo todo = fillTodoModifyEvent.get();
-        index = fillTodoModifyEvent.getIndex();
+        currentIndex = fillTodoModifyEvent.getIndex();
         createdDocument = ObjectUtils.clone(todo);
         contentEditText.setText(createdDocument.getContent());
         contentEditText.setSelection(createdDocument.getContent().length());
@@ -172,9 +174,9 @@ public class TodoModifySuperFragment extends TodoEditSuperFragment {
                 note.setCreateTime(createdDocument.getCreateTime());
                 note.setLastModifyTime(new Date());
                 note.setVersion(createdDocument.getVersion());
-                EventBus.getDefault().post(new AddNoteEvent(note));
+                notePresenter.add(note);
                 todoCompositePresenter.delete(createdDocument);
-                EventBus.getDefault().post(new HideTodoEditEvent(index));
+                EventBus.getDefault().post(new HideTodoEditEvent(currentIndex));
                 InputMethodUtil.hideKeyboard(contentEditText);
                 ToastUtil.toast(getContext(), "已转化为NOTE", Toast.LENGTH_SHORT);
             }
@@ -193,15 +195,15 @@ public class TodoModifySuperFragment extends TodoEditSuperFragment {
                 }
 
                 onKeyboardChangeListener.setExecuteHideCallback(false);
-                smoothScalable.getContainer().getLayoutParams().height = ViewUtil.getScreenSizeWithoutNotification().y;
-                smoothScalable.getContainer().setLayoutParams(smoothScalable.getContainer().getLayoutParams());
+                fragmentContainer.getLayoutParams().height = ViewUtil.getScreenSizeWithoutNotification().y;
+                fragmentContainer.setLayoutParams(fragmentContainer.getLayoutParams());
             }
         });
 
         saveButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                HideTodoEditEvent hideTodoEditEvent = new HideTodoEditEvent(index);
+                HideTodoEditEvent hideTodoEditEvent = new HideTodoEditEvent(currentIndex);
                 EventBus.getDefault().post(hideTodoEditEvent);
                 InputMethodUtil.hideKeyboard(contentEditText, onKeyboardChangeListener, false);
 
@@ -288,7 +290,7 @@ public class TodoModifySuperFragment extends TodoEditSuperFragment {
 
         @Override
         public void onUpdateFail(Todo document) {
-            ToastUtil.toast(getContext(),"更新失敗");
+            ToastUtil.toast(getContext(), "更新失敗");
         }
 
         @Override
@@ -298,47 +300,41 @@ public class TodoModifySuperFragment extends TodoEditSuperFragment {
 
         @Override
         public void onDeleteFail(Todo document) {
-            ToastUtil.toast(getContext(),"刪除失敗");
+            ToastUtil.toast(getContext(), "刪除失敗");
         }
     }
 
     private class MyPredictView extends PredictViewAdapter {
         @Override
         public void onPredictSuccess(final List<Tag> data, final String source) {
-            handler.post(new Runnable() {
-                @SuppressWarnings("Duplicates")
+            if (data == null || data.isEmpty()) {
+                todoCompositePresenter.predict(null);
+                return;
+            }
+            List<Tag> finalTags = data;
+            tagData.clear();
+            if (StringUtils.isBlank(source)) {
+                Iterator<Tag> iterator = finalTags.iterator();
+                while (iterator.hasNext()) {
+                    Tag tag = iterator.next();
+                    if (!tag.isFirst()) {
+                        iterator.remove();
+                    }
+                }
+            }
+            Collections.sort(finalTags, new Comparator<Tag>() {
                 @Override
-                public void run() {
-                    if (data == null || data.isEmpty()) {
-                        todoCompositePresenter.predict(null);
-                        return;
-                    }
-                    List<Tag> finalTags = data;
-                    tagData.clear();
-                    if (StringUtils.isBlank(source)) {
-                        Iterator<Tag> iterator = finalTags.iterator();
-                        while (iterator.hasNext()) {
-                            Tag tag = iterator.next();
-                            if (!tag.isFirst()) {
-                                iterator.remove();
-                            }
-                        }
-                    }
-                    Collections.sort(finalTags, new Comparator<Tag>() {
-                        @Override
-                        public int compare(Tag o1, Tag o2) {
-                            return -o1.getScore() + o2.getScore();
-                        }
-                    });
-                    if (finalTags.size() >= 5) {
-                        finalTags = finalTags.subList(0, 5);
-                    }
-                    for (Tag tag : finalTags) {
-                        tagData.add(tag.getContent());
-                    }
-                    tagAdapter.notifyDataChanged();
+                public int compare(Tag o1, Tag o2) {
+                    return -o1.getScore() + o2.getScore();
                 }
             });
+            if (finalTags.size() >= 5) {
+                finalTags = finalTags.subList(0, 5);
+            }
+            for (Tag tag : finalTags) {
+                tagData.add(tag.getContent());
+            }
+            tagAdapter.notifyDataChanged();
         }
 
         @Override
@@ -355,12 +351,24 @@ public class TodoModifySuperFragment extends TodoEditSuperFragment {
     private class MyCalendarView extends CalendarViewAdapter {
         @Override
         public void onEventAddFail(Todo todo) {
-            ToastUtil.toast(getContext(),"添加到日历事件失败");
+            ToastUtil.toast(getContext(), "添加到日历事件失败");
         }
 
         @Override
         public void onEventFindAllSuccess(List<Todo> allTodo) {
-            ToastUtil.toast(getContext(),"成功查询日历事件");
+            ToastUtil.toast(getContext(), "成功查询日历事件");
+        }
+    }
+
+    private class MyNoteView extends NoteViewAdapter{
+        @Override
+        public void onAddSuccess(Note document) {
+            EventBus.getDefault().post(new AddNoteSuccessEvent(document));
+        }
+
+        @Override
+        public void onAddFail(Note document) {
+            ToastUtil.toast(getActivity(),"添加失敗");
         }
     }
 }

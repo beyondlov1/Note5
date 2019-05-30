@@ -6,24 +6,13 @@ import com.beyond.note5.view.TodoView;
 import java.util.List;
 
 public class TodoViewAdapter implements TodoView {
-    @Override
-    public void onDeleteReminderSuccess(Todo todo) {
-
-    }
-
-    @Override
-    public void onDeleteReminderFail(Todo todo) {
-
-    }
 
     @Override
     public void onAddSuccess(Todo document) {
-
     }
 
     @Override
     public void onAddFail(Todo document) {
-
     }
 
     @Override
@@ -33,16 +22,6 @@ public class TodoViewAdapter implements TodoView {
 
     @Override
     public void onFindAllFail() {
-
-    }
-
-    @Override
-    public void onDeleteFail(Todo document) {
-
-    }
-
-    @Override
-    public void onDeleteSuccess(Todo document) {
 
     }
 
@@ -57,6 +36,14 @@ public class TodoViewAdapter implements TodoView {
     }
 
     @Override
+    public void onDeleteSuccess(Todo document) {
+    }
+
+    @Override
+    public void onDeleteFail(Todo document) {
+    }
+
+    @Override
     public void onUpdatePrioritySuccess(Todo document) {
 
     }
@@ -65,4 +52,16 @@ public class TodoViewAdapter implements TodoView {
     public void onUpdatePriorityFail(Todo document) {
 
     }
+
+
+    @Override
+    public void onDeleteReminderSuccess(Todo todo) {
+
+    }
+
+    @Override
+    public void onDeleteReminderFail(Todo todo) {
+
+    }
+
 }

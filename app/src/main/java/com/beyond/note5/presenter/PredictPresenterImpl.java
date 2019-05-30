@@ -1,5 +1,6 @@
 package com.beyond.note5.presenter;
 
+import android.os.Handler;
 import android.support.annotation.Nullable;
 import android.util.Log;
 
@@ -22,6 +23,8 @@ public class PredictPresenterImpl implements PredictPresenter {
 
     private ExecutorService executorService;
 
+    private Handler handler = new Handler();
+
     public PredictPresenterImpl(@Nullable PredictView predictView) {
         this.predictView = predictView;
         this.predictModel = MyApplication.getInstance().getPredictModel();
@@ -34,26 +37,34 @@ public class PredictPresenterImpl implements PredictPresenter {
             @Override
             public void run() {
                 List<Tag> data = predictModel.predict(source);
-                if (data == null){
-                    onPredictFail();
-                }else {
-                    onPredictSuccess(data,source);
-                }
+                handler.post(new Runnable() {
+                    @Override
+                    public void run() {
+                        if (data == null) {
+                            onPredictFail();
+                        } else {
+                            onPredictSuccess(data, source);
+                        }
+                    }
+                });
+
             }
         });
     }
 
     @Override
-    public void onPredictSuccess(List<Tag> data,String source) {if (predictView == null){
-        return;
-    }
-        predictView.onPredictSuccess(data,source);
+    public void onPredictSuccess(List<Tag> data, String source) {
+        if (predictView == null) {
+            return;
+        }
+        predictView.onPredictSuccess(data, source);
     }
 
     @Override
-    public void onPredictFail() {if (predictView == null){
-        return;
-    }
+    public void onPredictFail() {
+        if (predictView == null) {
+            return;
+        }
         predictView.onPredictFail();
     }
 
@@ -64,26 +75,38 @@ public class PredictPresenterImpl implements PredictPresenter {
             public void run() {
                 try {
                     predictModel.train(source);
-                    onTrainSuccess();
-                }catch (Exception e){
-                    Log.e("predictPresenterImpl","训练失败");
-                    onTrainFail();
+                    handler.post(new Runnable() {
+                        @Override
+                        public void run() {
+                            onTrainSuccess();
+                        }
+                    });
+                } catch (Exception e) {
+                    Log.e("predictPresenterImpl", "训练失败");
+                    handler.post(new Runnable() {
+                        @Override
+                        public void run() {
+                            onTrainFail();
+                        }
+                    });
                 }
             }
         });
     }
 
     @Override
-    public void onTrainSuccess() {if (predictView == null){
-        return;
-    }
+    public void onTrainSuccess() {
+        if (predictView == null) {
+            return;
+        }
         predictView.onTrainSuccess();
     }
 
     @Override
-    public void onTrainFail() {if (predictView == null){
-        return;
-    }
+    public void onTrainFail() {
+        if (predictView == null) {
+            return;
+        }
         predictView.onTrainFail();
     }
 }

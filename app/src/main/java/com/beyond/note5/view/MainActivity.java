@@ -21,6 +21,7 @@ import android.support.v4.app.FragmentActivity;
 import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentPagerAdapter;
 import android.support.v4.app.FragmentTransaction;
+import android.support.v4.content.ContextCompat;
 import android.support.v4.view.PagerTabStrip;
 import android.support.v4.view.ViewPager;
 import android.util.Log;
@@ -34,7 +35,7 @@ import com.beyond.note5.R;
 import com.beyond.note5.bean.Attachment;
 import com.beyond.note5.bean.Document;
 import com.beyond.note5.bean.Note;
-import com.beyond.note5.event.AddNoteEvent;
+import com.beyond.note5.event.AddNoteSuccessEvent;
 import com.beyond.note5.event.DetailNoteEvent;
 import com.beyond.note5.event.HideFABEvent;
 import com.beyond.note5.event.HideKeyBoardEvent2;
@@ -45,12 +46,18 @@ import com.beyond.note5.event.ShowFloatButtonEvent;
 import com.beyond.note5.event.ShowKeyBoardEvent;
 import com.beyond.note5.event.ShowNoteDetailEvent;
 import com.beyond.note5.event.ShowTodoEditEvent;
+import com.beyond.note5.presenter.NotePresenter;
+import com.beyond.note5.presenter.NotePresenterImpl;
 import com.beyond.note5.utils.IDUtil;
 import com.beyond.note5.utils.PhotoUtil;
 import com.beyond.note5.utils.PreferenceUtil;
 import com.beyond.note5.utils.ToastUtil;
 import com.beyond.note5.utils.ViewUtil;
+import com.beyond.note5.view.adapter.view.NoteViewAdapter;
+import com.beyond.note5.view.animator.DefaultSmoothScaleAnimation;
 import com.beyond.note5.view.animator.SmoothScalable;
+import com.beyond.note5.view.animator.SmoothScaleAnimation;
+import com.beyond.note5.view.fragment.FragmentContainerAware;
 import com.beyond.note5.view.fragment.NoteDetailSuperFragment;
 import com.beyond.note5.view.fragment.NoteEditFragment;
 import com.beyond.note5.view.fragment.NoteListFragment;
@@ -81,8 +88,6 @@ public class MainActivity extends FragmentActivity implements View.OnClickListen
 
     private static final int TAKE_PHOTO_REQUEST_CODE = 1;
 
-    private static final int OVERLAY_REQUEST_CODE = 2;
-
     public View mainContainer;
     private ViewPager mainViewPager;
     private View noteDetailFragmentContainer;
@@ -93,17 +98,23 @@ public class MainActivity extends FragmentActivity implements View.OnClickListen
     private Fragment noteDetailFragment;
     private Fragment todoModifyFragment;
 
+    private SmoothScaleAnimation noteDetailSmoothScaleAnimation = new DefaultSmoothScaleAnimation();
+    private SmoothScaleAnimation todoEditSmoothScaleAnimation = new DefaultSmoothScaleAnimation();
+
     private String[] documentTypes = new String[3];
 
     private String currentType;
 
     private StaticViewHolder staticViewHolder = new StaticViewHolder();
 
+    protected NotePresenter notePresenter;
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+
+        initInjection();
 
         initView();
         initViewPagerData();
@@ -111,7 +122,11 @@ public class MainActivity extends FragmentActivity implements View.OnClickListen
 
         initNoteDetailFragmentContainer();
         initTodoEditFragmentContainer();
+        
+    }
 
+    private void initInjection() {
+        notePresenter = new NotePresenterImpl(new MyNoteView());
     }
 
     private void initNoteDetailFragmentContainer() {
@@ -126,6 +141,15 @@ public class MainActivity extends FragmentActivity implements View.OnClickListen
 
         noteDetailFragmentContainer = findViewById(R.id.container_fragment_note_detail);
         noteDetailFragmentContainer.setVisibility(View.GONE);
+        
+        if (noteDetailFragment instanceof FragmentContainerAware){
+            ((FragmentContainerAware) noteDetailFragment).setFragmentContainer(noteDetailFragmentContainer);
+        }
+        
+        if (noteDetailFragment instanceof SmoothScalable){
+            ((SmoothScalable) noteDetailFragment).registerHooks(noteDetailSmoothScaleAnimation);
+        }
+        
     }
 
     private void initTodoEditFragmentContainer() {
@@ -137,6 +161,14 @@ public class MainActivity extends FragmentActivity implements View.OnClickListen
 
         todoEditFragmentContainer = findViewById(R.id.container_fragment_todo_edit);
         todoEditFragmentContainer.setVisibility(View.GONE);
+
+        if (todoModifyFragment instanceof FragmentContainerAware){
+            ((FragmentContainerAware) todoModifyFragment).setFragmentContainer(todoEditFragmentContainer);
+        }
+
+        if (todoModifyFragment instanceof SmoothScalable){
+            ((SmoothScalable) todoModifyFragment).registerHooks(todoEditSmoothScaleAnimation);
+        }
     }
 
     private void initView() {
@@ -145,8 +177,8 @@ public class MainActivity extends FragmentActivity implements View.OnClickListen
         PagerTabStrip pagerTabStrip = findViewById(R.id.pager_tab_strip);
         addDocumentButton = findViewById(R.id.add_document);
 
-        pagerTabStrip.setTabIndicatorColor(getResources().getColor(R.color.google_yellow));
-        pagerTabStrip.setTextColor(getResources().getColor(R.color.black));
+        pagerTabStrip.setTabIndicatorColor(ContextCompat.getColor(this,R.color.google_yellow));
+        pagerTabStrip.setTextColor(ContextCompat.getColor(this,R.color.black));
 
 //        View decorView = getWindow().getDecorView();
 //        decorView.setSystemUiVisibility(View.SYSTEM_UI_FLAG_FULLSCREEN
@@ -156,7 +188,7 @@ public class MainActivity extends FragmentActivity implements View.OnClickListen
 //        );
         View decorView = getWindow().getDecorView();
         decorView.setSystemUiVisibility(View.SYSTEM_UI_FLAG_LIGHT_STATUS_BAR);
-        getWindow().setStatusBarColor(getResources().getColor(R.color.white));
+        getWindow().setStatusBarColor(ContextCompat.getColor(this,R.color.white));
     }
 
     private void initViewPagerData() {
@@ -213,7 +245,7 @@ public class MainActivity extends FragmentActivity implements View.OnClickListen
     }
 
     @Subscribe(threadMode = ThreadMode.MAIN)
-    public void onReceivedHideFABCommand(HideFABEvent hideFABEvent) {
+    public void onReceived(HideFABEvent hideFABEvent) {
         if (isFabShown.get()) {
             hideAnimatorSet.setTarget(addDocumentButton);
             hideAnimatorSet.start();
@@ -230,7 +262,7 @@ public class MainActivity extends FragmentActivity implements View.OnClickListen
 
 
     @Subscribe(threadMode = ThreadMode.MAIN)
-    public void onReceivedShowFABCommand(ShowFABEvent showFABEvent) {
+    public void onReceived(ShowFABEvent showFABEvent) {
         if (!isFabShown.get()) {
             showAnimatorSet.setTarget(addDocumentButton);
             showAnimatorSet.start();
@@ -253,12 +285,11 @@ public class MainActivity extends FragmentActivity implements View.OnClickListen
 
         View view = event.get();
 
-        SmoothScalable smoothScalable = (SmoothScalable) noteDetailFragment;
-        smoothScalable.setContainer(noteDetailFragmentContainer);
-        smoothScalable.setStartView(view);
-        smoothScalable.setShowingView(mainContainer);
+        noteDetailSmoothScaleAnimation.setContainer(noteDetailFragmentContainer);
+        noteDetailSmoothScaleAnimation.setStartView(view);
+        noteDetailSmoothScaleAnimation.setShowingView(mainContainer);
 
-        smoothScalable.show();
+        noteDetailSmoothScaleAnimation.show();
         DetailNoteEvent detailNoteEvent = new DetailNoteEvent(event.getData(), event.getIndex());
         detailNoteEvent.setShowType(event.getShowType());
         EventBus.getDefault().postSticky(detailNoteEvent);
@@ -278,9 +309,8 @@ public class MainActivity extends FragmentActivity implements View.OnClickListen
         int firstIndex = event.getFirstIndex();
         View view = getNoteViewToReturn(currIndex, firstIndex);
 
-        SmoothScalable smoothScalable = (SmoothScalable) noteDetailFragment;
-        smoothScalable.setEndView(view);
-        smoothScalable.hide();
+        noteDetailSmoothScaleAnimation.setEndView(view);
+        noteDetailSmoothScaleAnimation.hide();
         isDetailShow = false;
     }
 
@@ -293,12 +323,11 @@ public class MainActivity extends FragmentActivity implements View.OnClickListen
 
         View view = event.get();
 
-        SmoothScalable smoothScalable = (SmoothScalable) this.todoModifyFragment;
-        smoothScalable.setContainer(todoEditFragmentContainer);
-        smoothScalable.setStartView(view);
-        smoothScalable.setShowingView(mainContainer);
+        todoEditSmoothScaleAnimation.setContainer(todoEditFragmentContainer);
+        todoEditSmoothScaleAnimation.setStartView(view);
+        todoEditSmoothScaleAnimation.setShowingView(mainContainer);
 
-        smoothScalable.show();
+        todoEditSmoothScaleAnimation.show();
         isTodoEditShow = true;
     }
 
@@ -310,9 +339,8 @@ public class MainActivity extends FragmentActivity implements View.OnClickListen
 
         EventBus.getDefault().post(new ShowFABEvent(null));
 
-        SmoothScalable smoothScalable = (SmoothScalable) todoModifyFragment;
-        smoothScalable.setEndView(getTodoViewToReturn(event.get()));
-        smoothScalable.hide();
+        todoEditSmoothScaleAnimation.setEndView(getTodoViewToReturn(event.get()));
+        todoEditSmoothScaleAnimation.hide();
         isTodoEditShow = false;
     }
 
@@ -438,17 +466,7 @@ public class MainActivity extends FragmentActivity implements View.OnClickListen
     private void addQRCodeNote(String content) {
         Note note = Note.newInstance();
         note.setContent(content);
-        EventBus.getDefault().post(new AddNoteEvent(note));
-    }
-
-    private String currPhotoPath;
-
-    private void takePhoto() {
-        File file = PhotoUtil.takePhoto(this, TAKE_PHOTO_REQUEST_CODE);
-        if (file != null) {
-            currPhotoPath = file.getAbsolutePath();
-        }
-//        testFilePath();
+        notePresenter.add(note);
     }
 
     private void addPhotoNote() {
@@ -470,7 +488,7 @@ public class MainActivity extends FragmentActivity implements View.OnClickListen
         note.setContent(content);
         note.setAttachments(attachments);
 
-        EventBus.getDefault().post(new AddNoteEvent(note));
+        notePresenter.add(note);
     }
 
     @Override
@@ -561,6 +579,15 @@ public class MainActivity extends FragmentActivity implements View.OnClickListen
         return false;
     }
 
+    private String currPhotoPath;
+
+    private void takePhoto() {
+        File file = PhotoUtil.takePhoto(this, TAKE_PHOTO_REQUEST_CODE);
+        if (file != null) {
+            currPhotoPath = file.getAbsolutePath();
+        }
+    }
+
     private class StaticViewHolder {
 
         private View rightBottomView;
@@ -620,6 +647,19 @@ public class MainActivity extends FragmentActivity implements View.OnClickListen
                 getHideCallback().run();
             }
             setExecuteHideCallback(true);
+        }
+    }
+
+    private class MyNoteView extends NoteViewAdapter {
+
+        @Override
+        public void onAddSuccess(Note document) {
+            EventBus.getDefault().post(new AddNoteSuccessEvent(document));
+        }
+
+        @Override
+        public void onAddFail(Note document) {
+            ToastUtil.toast(MainActivity.this,"添加失敗");
         }
     }
 }

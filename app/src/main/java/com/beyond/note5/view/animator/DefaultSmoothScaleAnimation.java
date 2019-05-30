@@ -9,15 +9,17 @@ import android.view.animation.DecelerateInterpolator;
 
 import com.beyond.note5.utils.ViewUtil;
 
-public class DefaultSmoothScalable implements SmoothScalable {
+public class DefaultSmoothScaleAnimation implements SmoothScaleAnimation {
 
     protected View container;
     protected View startView;
     protected View endView;
     protected View showingView;
 
-    protected Runnable onShownListener;
-    protected Runnable onHiddenListener;
+    protected Runnable afterShowHook;
+    protected Runnable afterHideHook;
+    protected Runnable beforeShowHook;
+    protected Runnable beforeHideHook;
 
     private AnimatorSet showAnimatorSet = new AnimatorSet();
     private AnimatorSet hideAnimatorSet = new AnimatorSet();
@@ -65,7 +67,11 @@ public class DefaultSmoothScalable implements SmoothScalable {
 
     @Override
     public void show() {
-//获取view 位置、大小信息
+        if (beforeShowHook!=null){
+            beforeShowHook.run();
+        }
+
+        //获取view 位置、大小信息
         final int clickItemWidth = ViewUtil.getWidth(startView);
         final int clickItemHeight = ViewUtil.getHeight(startView);
         final float clickItemX = ViewUtil.getXInScreenWithoutNotification(startView);
@@ -99,8 +105,8 @@ public class DefaultSmoothScalable implements SmoothScalable {
             @Override
             public void onAnimationEnd(Animator animation) {
                 super.onAnimationEnd(animation);
-                if (onShownListener!=null){
-                    onShownListener.run();
+                if (afterShowHook != null) {
+                    afterShowHook.run();
                 }
             }
         });
@@ -108,7 +114,11 @@ public class DefaultSmoothScalable implements SmoothScalable {
 
     @Override
     public void hide() {
-//获取view 位置、大小信息
+        if (beforeHideHook!=null){
+            beforeHideHook.run();
+        }
+
+        //获取view 位置、大小信息
         final int clickItemWidth = ViewUtil.getWidth(endView);
         final int clickItemHeight = ViewUtil.getHeight(endView);
         final float clickItemX = ViewUtil.getXInScreenWithoutNotification(endView);
@@ -124,7 +134,7 @@ public class DefaultSmoothScalable implements SmoothScalable {
             @Override
             public void onAnimationUpdate(ValueAnimator animation) {
                 float animatedValue = (float) animation.getAnimatedValue();
-                if (container == null){
+                if (container == null) {
                     return;
                 }
                 container.setX(clickItemX - animatedValue * clickItemX);
@@ -139,22 +149,32 @@ public class DefaultSmoothScalable implements SmoothScalable {
             @Override
             public void onAnimationEnd(Animator animation) {
                 super.onAnimationEnd(animation);
-                if (onHiddenListener !=null){
-                    onHiddenListener.run();
+                if (afterHideHook != null) {
+                    afterHideHook.run();
                 }
             }
         });
     }
 
-
     @Override
-    public void setOnShownListener(Runnable onShownListener) {
-        this.onShownListener = onShownListener;
+    public void setBeforeShowHook(Runnable runnable) {
+        this.beforeShowHook = runnable;
     }
 
     @Override
-    public void setOnHiddenListener(Runnable onHiddenListener) {
-        this.onHiddenListener = onHiddenListener;
+    public void setBeforeHideHook(Runnable runnable) {
+        this.beforeHideHook = runnable;
+    }
+
+
+    @Override
+    public void setAfterShowHook(Runnable onShownListener) {
+        this.afterShowHook = onShownListener;
+    }
+
+    @Override
+    public void setAfterHideHook(Runnable onHiddenListener) {
+        this.afterHideHook = onHiddenListener;
 
     }
 

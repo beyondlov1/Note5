@@ -2,29 +2,37 @@ package com.beyond.note5.view.fragment;
 
 import android.os.Bundle;
 import android.support.annotation.Nullable;
+import android.support.v4.app.Fragment;
 import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.StaggeredGridLayoutManager;
 import android.util.Base64;
 import android.util.Log;
 import android.view.LayoutInflater;
+import android.view.View;
 import android.view.ViewGroup;
 
 import com.beyond.note5.R;
 import com.beyond.note5.bean.Note;
-import com.beyond.note5.event.AddNoteEvent;
-import com.beyond.note5.event.DeleteDeepNoteEvent;
-import com.beyond.note5.event.DeleteNoteEvent;
+import com.beyond.note5.event.AddNoteSuccessEvent;
+import com.beyond.note5.event.DeleteNoteSuccessEvent;
 import com.beyond.note5.event.HideFABEvent;
 import com.beyond.note5.event.ModifyNoteDoneEvent;
 import com.beyond.note5.event.RefreshNoteListEvent;
 import com.beyond.note5.event.ScrollToNoteEvent;
 import com.beyond.note5.event.ShowFABEvent;
-import com.beyond.note5.event.UpdateNoteEvent;
 import com.beyond.note5.event.UpdateNotePriorityEvent;
+import com.beyond.note5.event.UpdateNoteSuccessEvent;
 import com.beyond.note5.ocr.OCRCallBack;
 import com.beyond.note5.ocr.OCRTask;
+import com.beyond.note5.presenter.NotePresenter;
+import com.beyond.note5.presenter.NotePresenterImpl;
 import com.beyond.note5.view.MainActivity;
-import com.beyond.note5.view.adapter.AbstractNoteFragment;
+import com.beyond.note5.view.NoteView;
+import com.beyond.note5.view.adapter.component.DocumentRecyclerViewAdapter;
+import com.beyond.note5.view.adapter.component.NoteRecyclerViewAdapter;
+import com.beyond.note5.view.adapter.component.header.ItemDataGenerator;
+import com.beyond.note5.view.adapter.component.header.ReadFlagItemDataGenerator;
+import com.beyond.note5.view.adapter.view.DocumentViewBase;
 
 import org.greenrobot.eventbus.EventBus;
 import org.greenrobot.eventbus.Subscribe;
@@ -32,21 +40,51 @@ import org.greenrobot.eventbus.ThreadMode;
 
 import java.io.FileInputStream;
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * @author: beyond
  * @date: 2019/1/30
  */
 @SuppressWarnings("unchecked")
-public class NoteListFragment extends AbstractNoteFragment {
+public class NoteListFragment extends Fragment {
+
+    protected RecyclerView recyclerView;
+
+    protected DocumentRecyclerViewAdapter recyclerViewAdapter;
+
+    protected List<Note> data = new ArrayList<>();
+
+    protected NotePresenter notePresenter;
+
+    protected NoteView noteView;
 
     @Override
-    protected ViewGroup initViewGroup(LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
-        return (ViewGroup) inflater.inflate(R.layout.fragment_note_list, container, false);
+    public void onCreate(@Nullable Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        EventBus.getDefault().register(this);
+        recyclerViewAdapter = new NoteRecyclerViewAdapter(this.getContext(), new ReadFlagItemDataGenerator<>(data));
+        initInjection();
     }
 
+    private void initInjection() {
+        noteView = new MyNoteView();
+        notePresenter = new NotePresenterImpl(noteView);
+    }
+
+    @Nullable
     @Override
-    protected void initView() {
+    public View onCreateView(LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
+        ViewGroup viewGroup = (ViewGroup) inflater.inflate(R.layout.fragment_note_list, container, false);
+        initView(viewGroup);
+        initEvent(viewGroup);
+        //显示所有Note
+        notePresenter.findAll();
+        return viewGroup;
+    }
+
+    protected void initView(ViewGroup viewGroup) {
         recyclerView = viewGroup.findViewById(R.id.note_recycler_view);
         recyclerView.setAdapter(recyclerViewAdapter);
         //设置显示格式
@@ -54,8 +92,7 @@ public class NoteListFragment extends AbstractNoteFragment {
         recyclerView.setLayoutManager(staggeredGridLayoutManager);
     }
 
-    @Override
-    protected void initEvent() {
+    protected void initEvent(ViewGroup viewGroup) {
         recyclerView.setOnFlingListener(new RecyclerView.OnFlingListener() {
             @Override
             public boolean onFling(int velocityX, int velocityY) {
@@ -88,7 +125,7 @@ public class NoteListFragment extends AbstractNoteFragment {
 
         });
     }
-
+    
     @SuppressWarnings("ResultOfMethodCallIgnored")
     @Deprecated
     private void testOcr(Note note) {
@@ -115,20 +152,15 @@ public class NoteListFragment extends AbstractNoteFragment {
 
     }
 
-    @Override
-    public void onUpdateSuccess(Note note) {
-        super.onUpdateSuccess(note);
-        EventBus.getDefault().post(new ModifyNoteDoneEvent(note));
+
+    @Subscribe(threadMode = ThreadMode.MAIN)
+    public void onReceived(AddNoteSuccessEvent event) {
+        noteView.onAddSuccess(event.get());
     }
 
     @Subscribe(threadMode = ThreadMode.MAIN)
-    public void onReceived(AddNoteEvent event) {
-        notePresenter.add(event.get());
-    }
-
-    @Subscribe(threadMode = ThreadMode.MAIN)
-    public void onReceived(UpdateNoteEvent event) {
-        notePresenter.update(event.get());
+    public void onReceived(UpdateNoteSuccessEvent event) {
+        noteView.onUpdateSuccess(event.get());
     }
 
     @Subscribe(threadMode = ThreadMode.MAIN)
@@ -137,13 +169,8 @@ public class NoteListFragment extends AbstractNoteFragment {
     }
 
     @Subscribe(threadMode = ThreadMode.MAIN)
-    public void onReceived(DeleteNoteEvent event) {
-        notePresenter.delete(event.get());
-    }
-
-    @Subscribe(threadMode = ThreadMode.MAIN)
-    public void onReceived(DeleteDeepNoteEvent event) {
-        notePresenter.deleteDeep(event.get());
+    public void onReceived(DeleteNoteSuccessEvent event) {
+        noteView.onDeleteSuccess(event.get());
     }
 
     @Subscribe(threadMode = ThreadMode.MAIN)
@@ -158,4 +185,45 @@ public class NoteListFragment extends AbstractNoteFragment {
         recyclerView.scrollToPosition(position);
     }
 
+    public void scrollTo(Integer index) {
+        ItemDataGenerator itemDataGenerator = recyclerViewAdapter.getItemDataGenerator();
+        Object note = itemDataGenerator.getContentData().get(index);
+        int position = itemDataGenerator.getPosition(note);
+        recyclerView.scrollToPosition(position);
+    }
+
+    public View findViewBy(Integer index) {
+        ItemDataGenerator itemDataGenerator = recyclerViewAdapter.getItemDataGenerator();
+        Object note = itemDataGenerator.getContentData().get(index);
+        int position = itemDataGenerator.getPosition(note);
+        return recyclerView.getLayoutManager().findViewByPosition(position);
+    }
+
+    @Override
+    public void onDestroy() {
+        super.onDestroy();
+        EventBus.getDefault().unregister(this);
+    }
+
+    
+    private class MyNoteView extends DocumentViewBase<Note> implements NoteView {
+
+        @Override
+        public void onUpdateSuccess(Note note) {
+            super.onUpdateSuccess(note);
+            EventBus.getDefault().post(new ModifyNoteDoneEvent(note));
+        }
+
+        public DocumentRecyclerViewAdapter getRecyclerViewAdapter() {
+            return recyclerViewAdapter;
+        }
+
+        public RecyclerView getRecyclerView() {
+            return recyclerView;
+        }
+
+        public List<Note> getData() {
+            return data;
+        }
+    }
 }

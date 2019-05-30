@@ -84,8 +84,6 @@ public class TodoEditFragment extends DialogFragment {
     private List<String> tagData = new ArrayList<>();
     private Handler handler = new Handler();
 
-    protected Todo createdDocument = new Todo();
-
     TodoCompositePresenter todoCompositePresenter;
 
     @Override

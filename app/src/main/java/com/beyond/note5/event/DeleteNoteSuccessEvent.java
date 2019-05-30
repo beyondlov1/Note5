@@ -7,8 +7,8 @@ import com.beyond.note5.bean.Note;
  * @date: 2019/2/2
  */
 
-public class DeleteNoteEvent extends AbstractEvent<Note> {
-    public DeleteNoteEvent(Note note) {
+public class DeleteNoteSuccessEvent extends AbstractEvent<Note> {
+    public DeleteNoteSuccessEvent(Note note) {
         super(note);
     }
 }

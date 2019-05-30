@@ -280,26 +280,19 @@ public class TodoListFragment extends Fragment {
     }
 
     public void scrollTo(Integer index) {
-        ItemDataGenerator itemDataGenerator = this.getRecyclerViewAdapter().getItemDataGenerator();
+        ItemDataGenerator itemDataGenerator = recyclerViewAdapter.getItemDataGenerator();
         Object note = itemDataGenerator.getContentData().get(index);
         int position = itemDataGenerator.getPosition(note);
-        this.getRecyclerView().scrollToPosition(position);
+        recyclerView.scrollToPosition(position);
     }
 
     public View findViewBy(Integer index) {
-        ItemDataGenerator itemDataGenerator = this.getRecyclerViewAdapter().getItemDataGenerator();
+        ItemDataGenerator itemDataGenerator = recyclerViewAdapter.getItemDataGenerator();
         Object note = itemDataGenerator.getContentData().get(index);
         int position = itemDataGenerator.getPosition(note);
-        return this.getRecyclerView().getLayoutManager().findViewByPosition(position);
+        return recyclerView.getLayoutManager().findViewByPosition(position);
     }
 
-    public DocumentRecyclerViewAdapter getRecyclerViewAdapter() {
-        return recyclerViewAdapter;
-    }
-
-    public RecyclerView getRecyclerView() {
-        return recyclerView;
-    }
 
     private class MyTodoView extends DocumentViewBase<Todo> implements TodoView {
 

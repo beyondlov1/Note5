@@ -9,7 +9,7 @@ import android.view.animation.LinearInterpolator;
 import com.beyond.note5.utils.ViewUtil;
 
 @Deprecated
-public class ABASmoothScalable extends DefaultSmoothScalable {
+public class ABASmoothScaleAnimation extends DefaultSmoothScaleAnimation {
     @Override
     public void show() {
 
@@ -58,8 +58,8 @@ public class ABASmoothScalable extends DefaultSmoothScalable {
             @Override
             public void onAnimationEnd(Animator animation) {
                 super.onAnimationEnd(animation);
-                if (onShownListener!=null){
-                    onShownListener.run();
+                if (afterShowHook !=null){
+                    afterShowHook.run();
                 }
             }
         });

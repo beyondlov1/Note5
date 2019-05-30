@@ -1,11 +1,19 @@
 package com.beyond.note5.view.fragment;
 
+import android.os.Bundle;
+import android.support.annotation.Nullable;
+
 import com.beyond.note5.bean.Note;
 import com.beyond.note5.event.FillNoteModifyEvent;
-import com.beyond.note5.event.UpdateNoteEvent;
+import com.beyond.note5.event.UpdateNoteSuccessEvent;
+import com.beyond.note5.presenter.NotePresenter;
+import com.beyond.note5.presenter.NotePresenterImpl;
+import com.beyond.note5.utils.ToastUtil;
 import com.beyond.note5.utils.WebViewUtil;
+import com.beyond.note5.view.adapter.view.NoteViewAdapter;
 
 import org.apache.commons.lang3.ObjectUtils;
+import org.greenrobot.eventbus.EventBus;
 import org.greenrobot.eventbus.Subscribe;
 import org.greenrobot.eventbus.ThreadMode;
 
@@ -17,6 +25,18 @@ import java.util.Date;
  */
 
 public class NoteModifyFragment extends AbstractDocumentEditFragment<Note> {
+
+    protected NotePresenter notePresenter;
+
+    @Override
+    public void onCreate(@Nullable Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        initInjection();
+    }
+
+    private void initInjection() {
+        notePresenter = new NotePresenterImpl(new MyNoteView());
+    }
 
     //回显
     @Subscribe(threadMode = ThreadMode.MAIN,sticky = true)
@@ -39,7 +59,19 @@ public class NoteModifyFragment extends AbstractDocumentEditFragment<Note> {
         createdDocument.setContent(content);
         createdDocument.setLastModifyTime(new Date());
         createdDocument.setVersion(createdDocument.getVersion() == null?0:createdDocument.getVersion()+1);
-        post(new UpdateNoteEvent(createdDocument));
+        notePresenter.update(createdDocument);
 //        post(new ModifyNoteDoneEvent(createdDocument)); //把新增和修改改成异步就不能这么用了， see： NoteListFragment:onUpdateSuccess
+    }
+
+    private class MyNoteView extends NoteViewAdapter {
+        @Override
+        public void onUpdateSuccess(Note document) {
+            EventBus.getDefault().post(new UpdateNoteSuccessEvent(document));
+        }
+
+        @Override
+        public void onUpdateFail(Note document) {
+            ToastUtil.toast(getActivity(),"更新失敗");
+        }
     }
 }

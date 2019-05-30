@@ -7,9 +7,10 @@ import com.beyond.note5.bean.Note;
  * @date: 2019/2/2
  */
 
-public class UpdateNoteEvent extends AbstractEvent<Note> {
+public class AddNoteSuccessEvent extends AbstractEvent<Note> {
 
-    public UpdateNoteEvent(Note note) {
+    public AddNoteSuccessEvent(Note note) {
         super(note);
     }
+
 }

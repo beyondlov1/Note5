@@ -1,14 +1,13 @@
 package com.beyond.note5.view.fragment;
 
 import android.annotation.SuppressLint;
-import android.annotation.TargetApi;
 import android.app.Activity;
 import android.content.Intent;
 import android.net.Uri;
-import android.os.Build;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.support.v4.app.DialogFragment;
+import android.support.v4.content.ContextCompat;
 import android.view.LayoutInflater;
 import android.view.MotionEvent;
 import android.view.View;
@@ -23,30 +22,30 @@ import com.beyond.note5.bean.Note;
 import com.beyond.note5.bean.Todo;
 import com.beyond.note5.constant.DocumentConst;
 import com.beyond.note5.event.AddTodoSuccessEvent;
-import com.beyond.note5.event.DeleteDeepNoteEvent;
-import com.beyond.note5.event.DeleteNoteEvent;
+import com.beyond.note5.event.DeleteNoteSuccessEvent;
 import com.beyond.note5.event.DetailNoteEvent;
 import com.beyond.note5.event.FillNoteModifyEvent;
 import com.beyond.note5.event.HideNoteDetailEvent;
 import com.beyond.note5.event.ModifyNoteDoneEvent;
 import com.beyond.note5.event.ScrollToNoteEvent;
 import com.beyond.note5.event.ShowNoteDetailEvent;
-import com.beyond.note5.event.UpdateNoteEvent;
-import com.beyond.note5.module.DaggerTodoComponent;
-import com.beyond.note5.module.PredictModule;
-import com.beyond.note5.module.TodoComponent;
-import com.beyond.note5.module.TodoModule;
-import com.beyond.note5.presenter.CalendarPresenter;
-import com.beyond.note5.presenter.PredictPresenter;
-import com.beyond.note5.presenter.TodoPresenter;
+import com.beyond.note5.event.UpdateNoteSuccessEvent;
+import com.beyond.note5.presenter.CalendarPresenterImpl;
+import com.beyond.note5.presenter.NotePresenter;
+import com.beyond.note5.presenter.NotePresenterImpl;
+import com.beyond.note5.presenter.PredictPresenterImpl;
+import com.beyond.note5.presenter.TodoCompositePresenter;
+import com.beyond.note5.presenter.TodoCompositePresenterImpl;
+import com.beyond.note5.presenter.TodoPresenterImpl;
 import com.beyond.note5.utils.ToastUtil;
 import com.beyond.note5.utils.ViewUtil;
 import com.beyond.note5.utils.WebViewUtil;
 import com.beyond.note5.view.adapter.view.CalendarViewAdapter;
+import com.beyond.note5.view.adapter.view.NoteViewAdapter;
 import com.beyond.note5.view.adapter.view.PredictViewAdapter;
 import com.beyond.note5.view.adapter.view.TodoViewAdapter;
-import com.beyond.note5.view.animator.DefaultSmoothScalable;
 import com.beyond.note5.view.animator.SmoothScalable;
+import com.beyond.note5.view.animator.SmoothScaleAnimation;
 import com.beyond.note5.view.custom.ViewSwitcher;
 import com.beyond.note5.view.listener.OnBackPressListener;
 import com.beyond.note5.view.listener.OnSlideListener;
@@ -60,9 +59,7 @@ import java.util.Date;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
 
-import javax.inject.Inject;
-
-public class NoteDetailSuperFragment extends DialogFragment implements OnBackPressListener, SmoothScalable {
+public class NoteDetailSuperFragment extends DialogFragment implements OnBackPressListener, SmoothScalable,FragmentContainerAware {
     private static final String TAG = NoteDetailSuperFragment.class.getSimpleName();
     protected Activity context;
     protected View root;
@@ -87,19 +84,16 @@ public class NoteDetailSuperFragment extends DialogFragment implements OnBackPre
     private View modifyButton;
     private View hideButton;
 
-    private SmoothScalable smoothScalable = new DefaultSmoothScalable();
+    private View fragmentContainer;
 
     public static AtomicBoolean isShowing = new AtomicBoolean(false);
 
-    @Inject
-    TodoPresenter todoPresenter;
+    private MyCalendarView calendarView = new MyCalendarView();
+    private MyPredictView predictView = new MyPredictView();
+    private MyTodoView todoView = new MyTodoView();
 
-    @Inject
-    CalendarPresenter calendarPresenter;
-
-    @Inject
-    PredictPresenter predictPresenter;
-
+    private TodoCompositePresenter todoCompositePresenter;
+    private NotePresenter notePresenter;
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -110,11 +104,12 @@ public class NoteDetailSuperFragment extends DialogFragment implements OnBackPre
     }
 
     private void initInjection() {
-        TodoComponent todoComponent = DaggerTodoComponent.builder()
-                .todoModule(new TodoModule(getActivity(),new MyTodoView(),new MyCalendarView()))
-                .predictModule(new PredictModule(new MyPredictView()))
+        todoCompositePresenter = new TodoCompositePresenterImpl.Builder(new TodoPresenterImpl(todoView))
+                .calendarPresenter(new CalendarPresenterImpl(getActivity(), calendarView))
+                .predictPresenter(new PredictPresenterImpl(predictView))
                 .build();
-        todoComponent.inject(this);
+        notePresenter = new NotePresenterImpl(new MyNoteView());
+
     }
 
 
@@ -164,7 +159,7 @@ public class NoteDetailSuperFragment extends DialogFragment implements OnBackPre
             @Override
             public void onClick(View v) {
                 Note currentNote = data.get(currIndex);
-                EventBus.getDefault().post(new DeleteDeepNoteEvent(currentNote));
+                notePresenter.deleteDeep(currentNote);
                 if (data.isEmpty()) {
                     sendHideMessage();
                     return;
@@ -205,19 +200,12 @@ public class NoteDetailSuperFragment extends DialogFragment implements OnBackPre
                 todo.setCreateTime(note.getCreateTime());
                 todo.setLastModifyTime(new Date());
                 todo.setVersion(note.getVersion());
-                saveTodo(todo);
-                EventBus.getDefault().post(new DeleteNoteEvent(note));
+                todoCompositePresenter.add(todo);
+                notePresenter.delete(note);
                 sendHideMessage();
                 ToastUtil.toast(getContext(), "已转化为TODO", Toast.LENGTH_SHORT);
             }
 
-            private void saveTodo(Todo todo) {
-                todoPresenter.add(todo);
-                if (todo.getReminder()!=null) {
-                    calendarPresenter.add(todo);
-                }
-                predictPresenter.train(todo.getContent());
-            }
         });
         modifyButton.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -297,13 +285,13 @@ public class NoteDetailSuperFragment extends DialogFragment implements OnBackPre
                 note.setLastModifyTime(new Date());
                 if (data.get(currIndex).getReadFlag() < 0) { // 置顶
                     note.setReadFlag(DocumentConst.READ_FLAG_NORMAL);
-                    EventBus.getDefault().post(new UpdateNoteEvent(note));
+                    EventBus.getDefault().post(new UpdateNoteSuccessEvent(note));
                     ToastUtil.toast(context, "取消置顶", Toast.LENGTH_SHORT);
                     EventBus.getDefault().post(new ModifyNoteDoneEvent(note));
                     ((ImageButton) stickButton).setImageDrawable(getResources().getDrawable(R.drawable.ic_thumb_up_grey_600_24dp, null));
                 } else { //其他
                     note.setReadFlag(DocumentConst.READ_FLAG_STICK);
-                    EventBus.getDefault().post(new UpdateNoteEvent(note));
+                    EventBus.getDefault().post(new UpdateNoteSuccessEvent(note));
                     ToastUtil.toast(context, "置顶成功", Toast.LENGTH_SHORT);
                     EventBus.getDefault().post(new ModifyNoteDoneEvent(note));
                     ((ImageButton) stickButton).setImageDrawable(getResources().getDrawable(R.drawable.ic_thumb_up_blue_400_24dp, null));
@@ -328,7 +316,7 @@ public class NoteDetailSuperFragment extends DialogFragment implements OnBackPre
 
                     Note currentNote = data.get(currIndex);
                     currentNote.setReadFlag(DocumentConst.READ_FLAG_NORMAL);
-                    EventBus.getDefault().post(new UpdateNoteEvent(currentNote));
+                    EventBus.getDefault().post(new UpdateNoteSuccessEvent(currentNote));
                     ToastUtil.toast(context, "取消已读", Toast.LENGTH_SHORT);
                     reloadView();
                     ((ImageButton) doneButton).setImageDrawable(getResources().getDrawable(R.drawable.ic_done_grey_600_24dp, null));
@@ -336,7 +324,7 @@ public class NoteDetailSuperFragment extends DialogFragment implements OnBackPre
                     Note currentNote = data.get(currIndex);
                     currentNote.setReadFlag(DocumentConst.READ_FLAG_DONE);
                     int oldIndex = currIndex;
-                    EventBus.getDefault().post(new UpdateNoteEvent(currentNote));
+                    EventBus.getDefault().post(new UpdateNoteSuccessEvent(currentNote));
                     currIndex = oldIndex;
                     ToastUtil.toast(context, "已读", Toast.LENGTH_SHORT);
                     reloadView();
@@ -503,91 +491,41 @@ public class NoteDetailSuperFragment extends DialogFragment implements OnBackPre
         EventBus.getDefault().post(event);
     }
 
-    public void setSmoothScalable(SmoothScalable smoothScalable) {
-        this.smoothScalable = smoothScalable;
-    }
-
-    @Override
-    public void setContainer(View view) {
-        this.smoothScalable.setContainer(view);
-    }
-
-    @Override
-    public View getContainer() {
-        return smoothScalable.getContainer();
-    }
-
-    @Override
-    public void setStartView(View view) {
-        this.smoothScalable.setStartView(view);
-    }
-
-    @Override
-    public View getStartView() {
-        return this.smoothScalable.getStartView();
-    }
-
-    @Override
-    public void setEndView(View view) {
-        this.smoothScalable.setEndView(view);
-    }
-
-    @Override
-    public View getEndView() {
-        return this.smoothScalable.getEndView();
-    }
-
-    @Override
-    public void setShowingView(View view) {
-        this.smoothScalable.setShowingView(view);
-    }
-
-    @Override
-    public View getShowingView() {
-        return this.smoothScalable.getShowingView();
-    }
-
-    @Override
-    public void show() {
-        this.smoothScalable.setOnShownListener(new Runnable() {
+    public void registerHooks(SmoothScaleAnimation smoothScaleAnimation) {
+        smoothScaleAnimation.setAfterShowHook(new Runnable() {
             @Override
             public void run() {
                 getActivity().getWindow().getDecorView().setSystemUiVisibility(View.SYSTEM_UI_FLAG_VISIBLE);
-                context.getWindow().setStatusBarColor(getResources().getColor(R.color.white));
+                getActivity().getWindow().setStatusBarColor(ContextCompat.getColor(getActivity(), R.color.white));
             }
         });
-        this.smoothScalable.setOnHiddenListener(new Runnable() {
+        smoothScaleAnimation.setAfterHideHook(new Runnable() {
             @Override
             public void run() {
-                smoothScalable.getContainer().setVisibility(View.GONE);
+                fragmentContainer.setVisibility(View.GONE);
             }
         });
-        this.smoothScalable.show();
-    }
-
-    /**
-     * 不要在本类调用
-     */
-    @TargetApi(Build.VERSION_CODES.M)
-    @Override
-    public void hide() {
-        getActivity().getWindow().getDecorView().setSystemUiVisibility(View.SYSTEM_UI_FLAG_LIGHT_STATUS_BAR);
-        getActivity().getWindow().setStatusBarColor(getResources().getColor(R.color.white));
-        this.smoothScalable.hide();
-    }
-
-    @Override
-    public void setOnShownListener(Runnable onShownListener) {
-        //do nothing
-    }
-
-    @Override
-    public void setOnHiddenListener(Runnable onHiddenListener) {
-        //do nothing
+        smoothScaleAnimation.setBeforeShowHook(new Runnable() {
+            @Override
+            public void run() {
+            }
+        });
+        smoothScaleAnimation.setBeforeHideHook(new Runnable() {
+            @Override
+            public void run() {
+                getActivity().getWindow().getDecorView().setSystemUiVisibility(View.SYSTEM_UI_FLAG_LIGHT_STATUS_BAR);
+                getActivity().getWindow().setStatusBarColor(ContextCompat.getColor(getActivity(),R.color.white));
+            }
+        });
     }
 
     private void msg(String msg) {
         ToastUtil.toast(context, msg, Toast.LENGTH_SHORT);
+    }
+
+    @Override
+    public void setFragmentContainer(View fragmentContainer) {
+        this.fragmentContainer = fragmentContainer;
     }
 
     class DetailViewHolder {
@@ -629,4 +567,10 @@ public class NoteDetailSuperFragment extends DialogFragment implements OnBackPre
         }
     }
 
+    private class MyNoteView extends NoteViewAdapter {
+        @Override
+        public void onDeleteSuccess(Note document) {
+            EventBus.getDefault().post(new DeleteNoteSuccessEvent(document));
+        }
+    }
 }
