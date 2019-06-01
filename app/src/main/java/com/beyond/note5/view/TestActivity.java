@@ -12,8 +12,6 @@ import android.view.View;
 import com.beyond.note5.R;
 import com.beyond.note5.utils.PhotoUtil;
 
-import java.io.File;
-
 public class TestActivity extends Activity {
 
     @Override
@@ -27,13 +25,8 @@ public class TestActivity extends Activity {
         }
         takePhoto();
     }
-    private String currPhotoPath;
     private void takePhoto() {
-        File file = PhotoUtil.takePhoto(this, TAKE_PHOTO_REQUEST_CODE);
-        if (file != null) {
-            currPhotoPath = file.getAbsolutePath();
-        }
-//        testFilePath();
+       PhotoUtil.takePhoto(this, TAKE_PHOTO_REQUEST_CODE);
     }
 
     private static final int TAKE_PHOTO_REQUEST_CODE = 1;
@@ -42,7 +35,7 @@ public class TestActivity extends Activity {
         if (resultCode == RESULT_OK && requestCode == TAKE_PHOTO_REQUEST_CODE) {
             Log.d("test","hahah");
         }else if (resultCode == RESULT_CANCELED &&requestCode == TAKE_PHOTO_REQUEST_CODE){
-            boolean delete = new File(currPhotoPath).delete();
+            boolean delete = PhotoUtil.getLastPhotoFile().delete();
             Log.d(this.getClass().getSimpleName(),""+delete);
         }
 

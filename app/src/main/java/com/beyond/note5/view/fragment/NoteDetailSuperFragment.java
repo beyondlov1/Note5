@@ -21,7 +21,7 @@ import com.beyond.note5.R;
 import com.beyond.note5.bean.Note;
 import com.beyond.note5.bean.Todo;
 import com.beyond.note5.constant.DocumentConst;
-import com.beyond.note5.event.DetailNoteEvent;
+import com.beyond.note5.event.FillNoteDetailEvent;
 import com.beyond.note5.event.FillNoteModifyEvent;
 import com.beyond.note5.event.HideNoteDetailEvent;
 import com.beyond.note5.event.ScrollToNoteEvent;
@@ -249,16 +249,16 @@ public class NoteDetailSuperFragment extends DialogFragment implements OnBackPre
     }
 
     @Subscribe(threadMode = ThreadMode.MAIN, sticky = true)
-    public void onEventMainThread(DetailNoteEvent detailNoteEvent) {
-        if (detailNoteEvent.isConsumed()) {
+    public void onEventMainThread(FillNoteDetailEvent fillNoteDetailEvent) {
+        if (fillNoteDetailEvent.isConsumed()) {
             return;
         }
-        data = detailNoteEvent.get();
-        currIndex = detailNoteEvent.getIndex();
+        data = fillNoteDetailEvent.get();
+        currIndex = fillNoteDetailEvent.getIndex();
         firstInIndex = currIndex;
-        showType = detailNoteEvent.getShowType();
+        showType = fillNoteDetailEvent.getShowType();
         reloadView();
-        detailNoteEvent.setConsumed(true);
+        fillNoteDetailEvent.setConsumed(true);
     }
 
     /**

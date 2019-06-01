@@ -4,7 +4,6 @@ import android.animation.Animator;
 import android.animation.AnimatorInflater;
 import android.animation.AnimatorListenerAdapter;
 import android.animation.AnimatorSet;
-import android.annotation.SuppressLint;
 import android.annotation.TargetApi;
 import android.app.Activity;
 import android.content.Intent;
@@ -12,8 +11,8 @@ import android.graphics.Point;
 import android.os.Build;
 import android.os.Bundle;
 import android.provider.Settings;
-import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
+import android.support.design.widget.CoordinatorLayout;
 import android.support.design.widget.FloatingActionButton;
 import android.support.v4.app.DialogFragment;
 import android.support.v4.app.Fragment;
@@ -35,16 +34,16 @@ import com.beyond.note5.R;
 import com.beyond.note5.bean.Attachment;
 import com.beyond.note5.bean.Document;
 import com.beyond.note5.bean.Note;
-import com.beyond.note5.event.DetailNoteEvent;
+import com.beyond.note5.event.FillNoteDetailEvent;
 import com.beyond.note5.event.HideFABEvent;
 import com.beyond.note5.event.HideKeyBoardEvent2;
 import com.beyond.note5.event.HideNoteDetailEvent;
-import com.beyond.note5.event.HideTodoEditEvent;
+import com.beyond.note5.event.HideTodoEditorEvent;
 import com.beyond.note5.event.ShowFABEvent;
 import com.beyond.note5.event.ShowFloatButtonEvent;
 import com.beyond.note5.event.ShowKeyBoardEvent;
 import com.beyond.note5.event.ShowNoteDetailEvent;
-import com.beyond.note5.event.ShowTodoEditEvent;
+import com.beyond.note5.event.ShowTodoEditorEvent;
 import com.beyond.note5.presenter.NotePresenter;
 import com.beyond.note5.presenter.NotePresenterImpl;
 import com.beyond.note5.utils.IDUtil;
@@ -77,21 +76,34 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
 
+import butterknife.BindView;
+import butterknife.ButterKnife;
+import butterknife.OnClick;
+import butterknife.OnTouch;
+
 /**
  * @author: beyond
  * @date: 2019/1/30
  */
 @TargetApi(Build.VERSION_CODES.M)
-public class MainActivity extends FragmentActivity implements View.OnClickListener,
-        View.OnLongClickListener, View.OnScrollChangeListener, View.OnTouchListener {
+public class MainActivity extends FragmentActivity implements
+        View.OnScrollChangeListener {
 
     private static final int TAKE_PHOTO_REQUEST_CODE = 1;
 
-    public View mainContainer;
-    private ViewPager mainViewPager;
-    private View noteDetailFragmentContainer;
-    private View todoEditFragmentContainer;
-    private FloatingActionButton addDocumentButton;
+    @BindView(R.id.pager_tab_strip)
+    PagerTabStrip pagerTabStrip;
+    @BindView(R.id.main_view_pager)
+    ViewPager mainViewPager;
+    @BindView(R.id.note_detail_fragment_container)
+    FrameLayout noteDetailFragmentContainer;
+    @BindView(R.id.todo_edit_fragment_container)
+    FrameLayout todoEditFragmentContainer;
+    @BindView(R.id.add_document_button)
+    FloatingActionButton addDocumentButton;
+    @BindView(R.id.main_container)
+    CoordinatorLayout mainContainer;
+
     private List<Fragment> fragments = new ArrayList<>();
 
     private Fragment noteDetailFragment;
@@ -101,10 +113,11 @@ public class MainActivity extends FragmentActivity implements View.OnClickListen
     private SmoothScaleAnimation todoEditSmoothScaleAnimation = new DefaultSmoothScaleAnimation();
 
     private String[] documentTypes = new String[3];
-
     private String currentType;
 
-    private StaticViewHolder staticViewHolder = new StaticViewHolder();
+    private AtomicBoolean isFabShown = new AtomicBoolean(true);
+    private AnimatorSet showAnimatorSet;
+    private AnimatorSet hideAnimatorSet;
 
     protected NotePresenter notePresenter;
 
@@ -112,16 +125,17 @@ public class MainActivity extends FragmentActivity implements View.OnClickListen
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+        ButterKnife.bind(this);
 
         initInjection();
 
         initView();
-        initViewPagerData();
+        initViewPager();
         initEvent();
 
         initNoteDetailFragmentContainer();
         initTodoEditFragmentContainer();
-        
+
     }
 
     private void initInjection() {
@@ -135,62 +149,51 @@ public class MainActivity extends FragmentActivity implements View.OnClickListen
 
         FragmentManager fragmentManager = getSupportFragmentManager();
         FragmentTransaction fragmentTransaction = fragmentManager.beginTransaction();
-        fragmentTransaction.replace(R.id.container_fragment_note_detail, noteDetailFragment);
+        fragmentTransaction.replace(R.id.note_detail_fragment_container, noteDetailFragment);
         fragmentTransaction.commit();
 
-        noteDetailFragmentContainer = findViewById(R.id.container_fragment_note_detail);
+        noteDetailFragmentContainer = findViewById(R.id.note_detail_fragment_container);
         noteDetailFragmentContainer.setVisibility(View.GONE);
-        
-        if (noteDetailFragment instanceof FragmentContainerAware){
+
+        if (noteDetailFragment instanceof FragmentContainerAware) {
             ((FragmentContainerAware) noteDetailFragment).setFragmentContainer(noteDetailFragmentContainer);
         }
-        
-        if (noteDetailFragment instanceof SmoothScalable){
+
+        if (noteDetailFragment instanceof SmoothScalable) {
             ((SmoothScalable) noteDetailFragment).registerHooks(noteDetailSmoothScaleAnimation);
         }
-        
+
     }
 
     private void initTodoEditFragmentContainer() {
         todoModifyFragment = new TodoModifySuperFragment();
         FragmentManager fragmentManager = getSupportFragmentManager();
         FragmentTransaction fragmentTransaction = fragmentManager.beginTransaction();
-        fragmentTransaction.replace(R.id.container_fragment_todo_edit, todoModifyFragment);
+        fragmentTransaction.replace(R.id.todo_edit_fragment_container, todoModifyFragment);
         fragmentTransaction.commit();
 
-        todoEditFragmentContainer = findViewById(R.id.container_fragment_todo_edit);
+        todoEditFragmentContainer = findViewById(R.id.todo_edit_fragment_container);
         todoEditFragmentContainer.setVisibility(View.GONE);
 
-        if (todoModifyFragment instanceof FragmentContainerAware){
+        if (todoModifyFragment instanceof FragmentContainerAware) {
             ((FragmentContainerAware) todoModifyFragment).setFragmentContainer(todoEditFragmentContainer);
         }
 
-        if (todoModifyFragment instanceof SmoothScalable){
+        if (todoModifyFragment instanceof SmoothScalable) {
             ((SmoothScalable) todoModifyFragment).registerHooks(todoEditSmoothScaleAnimation);
         }
     }
 
     private void initView() {
-        mainContainer = findViewById(R.id.main_container);
-        mainViewPager = findViewById(R.id.main_view_pager);
-        PagerTabStrip pagerTabStrip = findViewById(R.id.pager_tab_strip);
-        addDocumentButton = findViewById(R.id.add_document);
+        pagerTabStrip.setTabIndicatorColor(ContextCompat.getColor(this, R.color.google_yellow));
+        pagerTabStrip.setTextColor(ContextCompat.getColor(this, R.color.black));
 
-        pagerTabStrip.setTabIndicatorColor(ContextCompat.getColor(this,R.color.google_yellow));
-        pagerTabStrip.setTextColor(ContextCompat.getColor(this,R.color.black));
-
-//        View decorView = getWindow().getDecorView();
-//        decorView.setSystemUiVisibility(View.SYSTEM_UI_FLAG_FULLSCREEN
-//                |View.SYSTEM_UI_FLAG_LAYOUT_STABLE
-//                |View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN
-//                |View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY
-//        );
         View decorView = getWindow().getDecorView();
         decorView.setSystemUiVisibility(View.SYSTEM_UI_FLAG_LIGHT_STATUS_BAR);
-        getWindow().setStatusBarColor(ContextCompat.getColor(this,R.color.white));
+        getWindow().setStatusBarColor(ContextCompat.getColor(this, R.color.white));
     }
 
-    private void initViewPagerData() {
+    private void initViewPager() {
         Fragment noteFragment = new NoteListFragment();
         Fragment todoFragment = new TodoListFragment();
         fragments.add(noteFragment);
@@ -221,20 +224,14 @@ public class MainActivity extends FragmentActivity implements View.OnClickListen
         currentType = documentTypes[mainViewPager.getCurrentItem()];
     }
 
-    @SuppressLint("ClickableViewAccessibility")
     private void initEvent() {
         //监控输入法
         OnKeyboardChangeListener onKeyboardChangeListener = new MyOnKeyboardChangeListener(this);
         this.getWindow().getDecorView().getViewTreeObserver().addOnGlobalLayoutListener(onKeyboardChangeListener);
         mainViewPager.setOnScrollChangeListener(this);
-        addDocumentButton.setOnTouchListener(this);
-        addDocumentButton.setOnClickListener(this);
-        addDocumentButton.setOnLongClickListener(this);
     }
 
-    private AtomicBoolean isFabShown = new AtomicBoolean(true);
-    private AnimatorSet showAnimatorSet;
-    private AnimatorSet hideAnimatorSet;
+
 
     @Override
     public void onWindowFocusChanged(boolean hasFocus) {
@@ -244,7 +241,30 @@ public class MainActivity extends FragmentActivity implements View.OnClickListen
     }
 
     @Subscribe(threadMode = ThreadMode.MAIN)
+    public void onReceived(ShowFABEvent showFABEvent) {
+        showFAB();
+    }
+
+    private void showFAB(){
+        if (!isFabShown.get()) {
+            showAnimatorSet.setTarget(addDocumentButton);
+            showAnimatorSet.start();
+            showAnimatorSet.addListener(new AnimatorListenerAdapter() {
+                @Override
+                public void onAnimationEnd(Animator animation) {
+                    super.onAnimationEnd(animation);
+                    isFabShown.set(true);
+                }
+            });
+        }
+    }
+
+    @Subscribe(threadMode = ThreadMode.MAIN)
     public void onReceived(HideFABEvent hideFABEvent) {
+        hideFAB();
+    }
+
+    private void hideFAB(){
         if (isFabShown.get()) {
             hideAnimatorSet.setTarget(addDocumentButton);
             hideAnimatorSet.start();
@@ -259,105 +279,89 @@ public class MainActivity extends FragmentActivity implements View.OnClickListen
         }
     }
 
-
-    @Subscribe(threadMode = ThreadMode.MAIN)
-    public void onReceived(ShowFABEvent showFABEvent) {
-        if (!isFabShown.get()) {
-            showAnimatorSet.setTarget(addDocumentButton);
-            showAnimatorSet.start();
-            showAnimatorSet.addListener(new AnimatorListenerAdapter() {
-                @Override
-                public void onAnimationEnd(Animator animation) {
-                    super.onAnimationEnd(animation);
-                    isFabShown.set(true);
-                }
-            });
-        }
-    }
-
-    private boolean isDetailShow = false;
-
     @Subscribe(threadMode = ThreadMode.MAIN)
     public void onReceived(final ShowNoteDetailEvent event) {
+        showNoteDetail(event.get(),event.getData(),event.getIndex(),event.getShowType());
+    }
+
+    private void showNoteDetail(View startView, List<Note> data, int index, ShowNoteDetailEvent.ShowType showType){
         noteDetailFragmentContainer.setVisibility(View.VISIBLE);
         EventBus.getDefault().post(new HideFABEvent(null));
 
-        View view = event.get();
-
         noteDetailSmoothScaleAnimation.setContainer(noteDetailFragmentContainer);
-        noteDetailSmoothScaleAnimation.setStartView(view);
+        noteDetailSmoothScaleAnimation.setStartView(startView);
         noteDetailSmoothScaleAnimation.setShowingView(mainContainer);
-
         noteDetailSmoothScaleAnimation.show();
-        DetailNoteEvent detailNoteEvent = new DetailNoteEvent(event.getData(), event.getIndex());
-        detailNoteEvent.setShowType(event.getShowType());
-        EventBus.getDefault().postSticky(detailNoteEvent);
-        isDetailShow = true;
+
+        FillNoteDetailEvent fillNoteDetailEvent = new FillNoteDetailEvent(data, index);
+        fillNoteDetailEvent.setShowType(showType);
+        EventBus.getDefault().postSticky(fillNoteDetailEvent);
     }
 
     @Subscribe(threadMode = ThreadMode.MAIN)
     public void onReceived(HideNoteDetailEvent event) {
+        Integer currIndex = event.get();
+        int firstIndex = event.getFirstIndex();
+        hideNoteDetail(currIndex,firstIndex);
+    }
+
+    private void hideNoteDetail(int currIndex, int firstIndex){
         if (!Document.NOTE.equals(currentType)) {
             return;
         }
-
         EventBus.getDefault().post(new ShowFABEvent(null));
 
         //获取viewSwitcher划到的位置，获取动画要返回的view
-        Integer currIndex = event.get();
-        int firstIndex = event.getFirstIndex();
         View view = getNoteViewToReturn(currIndex, firstIndex);
-
         noteDetailSmoothScaleAnimation.setEndView(view);
         noteDetailSmoothScaleAnimation.hide();
-        isDetailShow = false;
     }
 
-    private boolean isTodoEditShow = false;
-
     @Subscribe(threadMode = ThreadMode.MAIN)
-    public void onReceived(final ShowTodoEditEvent event) {
+    public void onReceived(final ShowTodoEditorEvent event) {
+        showTodoEdit(event.get());
+    }
+
+    private void showTodoEdit(View startView){
         todoEditFragmentContainer.setVisibility(View.VISIBLE);
         EventBus.getDefault().post(new HideFABEvent(null));
 
-        View view = event.get();
-
         todoEditSmoothScaleAnimation.setContainer(todoEditFragmentContainer);
-        todoEditSmoothScaleAnimation.setStartView(view);
+        todoEditSmoothScaleAnimation.setStartView(startView);
         todoEditSmoothScaleAnimation.setShowingView(mainContainer);
-
         todoEditSmoothScaleAnimation.show();
-        isTodoEditShow = true;
     }
 
     @Subscribe(threadMode = ThreadMode.MAIN)
-    public void onReceived(HideTodoEditEvent event) {
-        if (!Document.TODO.equals(currentType)) {
-            return;
-        }
-
-        EventBus.getDefault().post(new ShowFABEvent(null));
-
-        todoEditSmoothScaleAnimation.setEndView(getTodoViewToReturn(event.get()));
-        todoEditSmoothScaleAnimation.hide();
-        isTodoEditShow = false;
+    public void onReceived(HideTodoEditorEvent event) {
+        hideTodoEditor(event.get());
     }
+
+   private void hideTodoEditor(int returnIndex){
+       if (!Document.TODO.equals(currentType)) {
+           return;
+       }
+       EventBus.getDefault().post(new ShowFABEvent(null));
+
+       todoEditSmoothScaleAnimation.setEndView(getTodoViewToReturn(returnIndex));
+       todoEditSmoothScaleAnimation.hide();
+   }
 
     @SuppressWarnings("unchecked")
     private View getNoteViewToReturn(Integer currIndex, Integer firstIndex) {
         View view;
         if (currIndex == -1) {
-            view = staticViewHolder.getLeftTopView();
+            view = ViewUtil.getLeftTopView(this,mainContainer);
         } else {
             NoteListFragment fragment = (NoteListFragment) fragments.get(0);
             fragment.scrollTo(currIndex);
             view = fragment.findViewBy(currIndex);
             if (view == null && firstIndex < currIndex) {
-                view = staticViewHolder.getRightBottomView();
+                view = ViewUtil.getRightBottomView(this,mainContainer);
             } else if (view == null && firstIndex > currIndex) {
-                view = staticViewHolder.getLeftTopView();
+                view = ViewUtil.getLeftTopView(this,mainContainer);
             } else if (view == null) {
-                view = staticViewHolder.getRightBottomView(); // 正常情况下不会执行
+                view = ViewUtil.getRightBottomView(this,mainContainer); // 正常情况下不会执行
             }
         }
         return view;
@@ -367,17 +371,19 @@ public class MainActivity extends FragmentActivity implements View.OnClickListen
     private View getTodoViewToReturn(Integer currIndex) {
         View view;
         if (currIndex == -1) {
-            view = staticViewHolder.getLeftTopView();
+            view = ViewUtil.getLeftTopView(this,mainContainer);
         } else {
             TodoListFragment fragment = (TodoListFragment) fragments.get(1);
 //            fragment.scrollTo(currIndex);
             view = fragment.findViewBy(currIndex);
             if (view == null) {
-                view = staticViewHolder.getRightBottomView();
+                view = ViewUtil.getRightBottomView(this,mainContainer);
             }
         }
         return view;
     }
+
+
 
     @Override
     protected void onStart() {
@@ -386,7 +392,7 @@ public class MainActivity extends FragmentActivity implements View.OnClickListen
         showFloatEditor();
     }
 
-    private void showFloatEditor(){
+    private void showFloatEditor() {
 
 //        // 悬浮窗授权
 //        if (!Settings.canDrawOverlays(this)){
@@ -395,9 +401,9 @@ public class MainActivity extends FragmentActivity implements View.OnClickListen
 //                    Uri.parse("package:"+getPackageName())),OVERLAY_REQUEST_CODE);
 //        }
 
-        if (Settings.canDrawOverlays(this)){
+        if (Settings.canDrawOverlays(this)) {
             Intent intent = new Intent(this, FloatEditorService.class);
-            intent.putExtra("showFloatButton",false);
+            intent.putExtra("showFloatButton", false);
             startService(intent);
         }
     }
@@ -419,13 +425,13 @@ public class MainActivity extends FragmentActivity implements View.OnClickListen
 
     @Override
     public void onBackPressed() {
-        if (isDetailShow) {
+        if (noteDetailFragmentContainer.getVisibility() == View.VISIBLE) {
             OnBackPressListener noteDetailOnBackPressListener = (OnBackPressListener) noteDetailFragment;
             boolean consumed = noteDetailOnBackPressListener.onBackPressed();
             if (!consumed) {
                 super.onBackPressed();
             }
-        } else if (isTodoEditShow) {
+        } else if (todoEditFragmentContainer.getVisibility() == View.VISIBLE) {
             OnBackPressListener todoEditOnBackPressListener = (OnBackPressListener) todoModifyFragment;
             boolean consumed = todoEditOnBackPressListener.onBackPressed();
             if (!consumed) {
@@ -437,13 +443,80 @@ public class MainActivity extends FragmentActivity implements View.OnClickListen
         ToastUtil.cancel();
     }
 
+
+
+    @OnClick(R.id.add_document_button)
+    public void onViewClicked() {
+        addDocument();
+    }
+
+    private void addDocument() {
+        int currentItemPosition = mainViewPager.getCurrentItem();
+        Fragment fragment = fragments.get(currentItemPosition);
+        DialogFragment dialog;
+        if (fragment instanceof NoteListFragment) {
+            dialog = new NoteEditFragment();
+        } else if (fragment instanceof TodoListFragment) {
+            dialog = new TodoEditFragment();
+        } else {
+            return;
+        }
+        dialog.show(getSupportFragmentManager(), "editDialog");
+    }
+
+
+
+    /** Media Note START **/
+
+    @OnTouch(R.id.add_document_button)
+    public boolean onAddDocumentButtonTouch(View v, MotionEvent event) {
+        int action = event.getAction();
+        switch (action) {
+            case MotionEvent.ACTION_MOVE:
+                v.setX(v.getX() - v.getWidth() / 2 + event.getX());
+                if (v.getX() < 200) {
+                    v.setX(200);
+                }
+
+                if (v.getX() > ViewUtil.getScreenSize().x - v.getWidth() - 200) {
+                    v.setX(ViewUtil.getScreenSize().x - v.getWidth() - 200);
+                }
+
+                break;
+            case MotionEvent.ACTION_UP:
+                if (v.getX() == 200) {
+                    v.setX(ViewUtil.getScreenSize().x / 2 - v.getWidth() / 2);
+                    launchCamera();
+                } else if (v.getX() == ViewUtil.getScreenSize().x - v.getWidth() - 200) {
+                    v.setX(ViewUtil.getScreenSize().x / 2 - v.getWidth() / 2);
+                    launchQRScanner();
+                } else {
+                    v.setX(ViewUtil.getScreenSize().x / 2 - v.getWidth() / 2);
+                    v.performClick();
+                }
+
+                break;
+        }
+        return true;
+    }
+
+    private void launchQRScanner() {
+        new IntentIntegrator(MainActivity.this).initiateScan();
+    }
+
+    private void launchCamera() {
+        PhotoUtil.takePhoto(this, TAKE_PHOTO_REQUEST_CODE);
+    }
+
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         if (resultCode == RESULT_OK && requestCode == TAKE_PHOTO_REQUEST_CODE) {
             addPhotoNote();
-        }else if (resultCode == RESULT_CANCELED &&requestCode == TAKE_PHOTO_REQUEST_CODE){
-            boolean delete = new File(currPhotoPath).delete();
-            Log.d(this.getClass().getSimpleName(),""+delete);
+        } else if (resultCode == RESULT_CANCELED && requestCode == TAKE_PHOTO_REQUEST_CODE) {
+            if (PhotoUtil.getLastPhotoFile()!=null){
+                boolean delete = PhotoUtil.getLastPhotoFile().delete();
+                Log.d(this.getClass().getSimpleName(), "" + delete);
+            }
         }
 
         IntentResult result = IntentIntegrator.parseActivityResult(requestCode, resultCode, data);
@@ -469,9 +542,10 @@ public class MainActivity extends FragmentActivity implements View.OnClickListen
     }
 
     private void addPhotoNote() {
+        File file = PhotoUtil.getLastPhotoFile();
+        String currPhotoPath = file.getAbsolutePath();
         String content = "!file://" + currPhotoPath;
         String noteId = IDUtil.uuid();
-        File file = new File(currPhotoPath);
         String name = file.getName();
 
         List<Attachment> attachments = new ArrayList<>();
@@ -490,48 +564,18 @@ public class MainActivity extends FragmentActivity implements View.OnClickListen
         notePresenter.add(note);
     }
 
-    @Override
-    public void onClick(View v) {
-        if (v == addDocumentButton) {
-            addDocument();
-        }
-    }
+    /** Media Note END **/
 
-    private void addDocument() {
-        int currentItemPosition = mainViewPager.getCurrentItem();
-        Fragment fragment = fragments.get(currentItemPosition);
-        DialogFragment dialog;
-        if (fragment instanceof NoteListFragment) {
-            dialog = new NoteEditFragment();
-        } else if (fragment instanceof TodoListFragment) {
-            dialog = new TodoEditFragment();
-        } else {
-            return;
-        }
-        dialog.show(getSupportFragmentManager(), "editDialog");
-    }
 
-    @Override
-    public boolean onLongClick(View v) {
-        if (v == addDocumentButton) {
-            launchQRScanner();
-            return true;
-        }
-        return false;
-    }
-
-    private void launchQRScanner() {
-        new IntentIntegrator(MainActivity.this).initiateScan();
-    }
 
     @Override
     public void onScrollChange(View v, int scrollX, int scrollY, int oldScrollX, int oldScrollY) {
         if (v == mainViewPager) {
-            switchViewPager();
+            changeViewPager();
         }
     }
 
-    private void switchViewPager() {
+    private void changeViewPager() {
         int currentItemPosition = mainViewPager.getCurrentItem();
         Fragment fragment = fragments.get(currentItemPosition);
         if (fragment instanceof NoteListFragment) {
@@ -540,87 +584,6 @@ public class MainActivity extends FragmentActivity implements View.OnClickListen
             currentType = Document.TODO;
         }
         EventBus.getDefault().post(new ShowFABEvent(R.id.note_recycler_view));
-    }
-
-    @Override
-    public boolean onTouch(View v, MotionEvent event) {
-        if (v == addDocumentButton) {
-            int action = event.getAction();
-            switch (action) {
-                case MotionEvent.ACTION_MOVE:
-                    v.setX(v.getX() - v.getWidth() / 2 + event.getX());
-                    if (v.getX() < 200) {
-                        v.setX(200);
-                    }
-
-                    if (v.getX() > ViewUtil.getScreenSize().x - v.getWidth() - 200) {
-                        v.setX(ViewUtil.getScreenSize().x - v.getWidth() - 200);
-                    }
-
-                    break;
-                case MotionEvent.ACTION_UP:
-                    if (v.getX() == 200) {
-                        v.setX(ViewUtil.getScreenSize().x / 2 - v.getWidth() / 2);
-                        takePhoto();
-                    } else if (v.getX() == ViewUtil.getScreenSize().x - v.getWidth() - 200) {
-                        v.setX(ViewUtil.getScreenSize().x / 2 - v.getWidth() / 2);
-                        launchQRScanner();
-                    } else {
-                        v.setX(ViewUtil.getScreenSize().x / 2 - v.getWidth() / 2);
-                        v.performClick();
-                    }
-
-                    break;
-            }
-            return true;
-
-        }
-        return false;
-    }
-
-    private String currPhotoPath;
-
-    private void takePhoto() {
-        File file = PhotoUtil.takePhoto(this, TAKE_PHOTO_REQUEST_CODE);
-        if (file != null) {
-            currPhotoPath = file.getAbsolutePath();
-        }
-    }
-
-    private class StaticViewHolder {
-
-        private View rightBottomView;
-        private View leftTopView;
-
-        @NonNull
-        private View getRightBottomView() {
-            if (rightBottomView != null) {
-                return rightBottomView;
-            }
-            rightBottomView = new View(MainActivity.this);
-            FrameLayout.LayoutParams layoutParams = new FrameLayout.LayoutParams(mainContainer.getLayoutParams());
-            layoutParams.width = 0;
-            layoutParams.height = 0;
-            rightBottomView.setLayoutParams(layoutParams);
-            rightBottomView.setX(ViewUtil.getScreenSizeWithoutNotification().x);
-            rightBottomView.setY(ViewUtil.getScreenSizeWithoutNotification().y);
-            return rightBottomView;
-        }
-
-        @NonNull
-        private View getLeftTopView() {
-            if (leftTopView != null) {
-                return leftTopView;
-            }
-            leftTopView = new View(MainActivity.this);
-            FrameLayout.LayoutParams layoutParams = new FrameLayout.LayoutParams(mainContainer.getLayoutParams());
-            layoutParams.width = 0;
-            layoutParams.height = 0;
-            leftTopView.setLayoutParams(layoutParams);
-            leftTopView.setX(0);
-            leftTopView.setY(0);
-            return leftTopView;
-        }
     }
 
     private class MyOnKeyboardChangeListener extends OnKeyboardChangeListener {
@@ -653,7 +616,7 @@ public class MainActivity extends FragmentActivity implements View.OnClickListen
 
         @Override
         public void onAddFail(Note document) {
-            ToastUtil.toast(MainActivity.this,"添加失敗");
+            ToastUtil.toast(MainActivity.this, "添加失敗");
         }
     }
 }

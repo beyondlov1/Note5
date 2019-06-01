@@ -17,7 +17,7 @@ import com.beyond.note5.bean.Note;
 import com.beyond.note5.bean.Reminder;
 import com.beyond.note5.bean.Todo;
 import com.beyond.note5.event.FillTodoModifyEvent;
-import com.beyond.note5.event.HideTodoEditEvent;
+import com.beyond.note5.event.HideTodoEditorEvent;
 import com.beyond.note5.event.ScrollToTodoByDateEvent;
 import com.beyond.note5.predict.bean.Tag;
 import com.beyond.note5.presenter.CalendarPresenterImpl;
@@ -173,7 +173,7 @@ public class TodoModifySuperFragment extends TodoEditSuperFragment {
                 note.setVersion(createdDocument.getVersion());
                 notePresenter.add(note);
                 todoCompositePresenter.delete(createdDocument);
-                EventBus.getDefault().post(new HideTodoEditEvent(currentIndex));
+                EventBus.getDefault().post(new HideTodoEditorEvent(currentIndex));
                 InputMethodUtil.hideKeyboard(contentEditText);
                 ToastUtil.toast(getContext(), "已转化为NOTE", Toast.LENGTH_SHORT);
             }
@@ -200,8 +200,8 @@ public class TodoModifySuperFragment extends TodoEditSuperFragment {
         saveButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                HideTodoEditEvent hideTodoEditEvent = new HideTodoEditEvent(currentIndex);
-                EventBus.getDefault().post(hideTodoEditEvent);
+                HideTodoEditorEvent hideTodoEditorEvent = new HideTodoEditorEvent(currentIndex);
+                EventBus.getDefault().post(hideTodoEditorEvent);
                 InputMethodUtil.hideKeyboard(contentEditText, onKeyboardChangeListener, false);
 
                 String content = contentEditText.getText().toString();

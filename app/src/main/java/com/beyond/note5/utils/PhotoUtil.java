@@ -20,7 +20,9 @@ import java.util.Date;
 
 public class PhotoUtil {
 
-    public static File takePhoto(Activity context, int requestCode) {
+    private static File photoFile;
+
+    public static void takePhoto(Activity context, int requestCode) {
 
         //获取缩略图
 //        Intent takePhotoIntent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);//用来打开相机的Intent
@@ -45,9 +47,14 @@ public class PhotoUtil {
                 takePhotoIntent.putExtra(MediaStore.EXTRA_OUTPUT, mImageUri);//将用于输出的文件Uri传递给相机
                 context.startActivityForResult(takePhotoIntent, requestCode);//打开相机
             }
-            return imageFile;
+            photoFile = imageFile;
+            return;
         }
-        return null;
+        photoFile = null;
+    }
+
+    public static File getLastPhotoFile(){
+        return photoFile;
     }
 
     public static File createImageFile(Context context) {

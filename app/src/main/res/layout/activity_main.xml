@@ -32,13 +32,13 @@
 
 
         <FrameLayout
-            android:id="@+id/container_fragment_note_detail"
+            android:id="@+id/note_detail_fragment_container"
             android:layout_width="match_parent"
             android:layout_height="match_parent">
         </FrameLayout>
 
         <FrameLayout
-            android:id="@+id/container_fragment_todo_edit"
+            android:id="@+id/todo_edit_fragment_container"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
             >
@@ -47,7 +47,7 @@
     </FrameLayout>
 
     <android.support.design.widget.FloatingActionButton
-        android:id="@+id/add_document"
+        android:id="@+id/add_document_button"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_gravity="bottom|center_horizontal"

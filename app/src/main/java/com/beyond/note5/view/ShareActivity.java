@@ -1,5 +1,6 @@
 package com.beyond.note5.view;
 
+import android.app.Activity;
 import android.content.ClipData;
 import android.content.Intent;
 import android.net.Uri;
@@ -12,19 +13,15 @@ import android.util.Log;
 
 import com.beyond.note5.bean.Attachment;
 import com.beyond.note5.bean.Note;
-import com.beyond.note5.event.RefreshNoteListEvent;
-import com.beyond.note5.module.DaggerNoteComponent;
-import com.beyond.note5.module.NoteComponent;
-import com.beyond.note5.module.NoteModule;
 import com.beyond.note5.presenter.NotePresenter;
+import com.beyond.note5.presenter.NotePresenterImpl;
 import com.beyond.note5.utils.IDUtil;
 import com.beyond.note5.utils.PhotoUtil;
-import com.beyond.note5.view.adapter.AbstractActivityNoteView;
+import com.beyond.note5.view.adapter.view.NoteViewAdapter;
 
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.lang3.StringUtils;
-import org.greenrobot.eventbus.EventBus;
 
 import java.io.File;
 import java.io.FileOutputStream;
@@ -40,7 +37,7 @@ import javax.inject.Inject;
  * @date: 17-12-15
  */
 
-public class ShareActivity extends AbstractActivityNoteView {
+public class ShareActivity extends Activity {
     public final static String SEND = "android.intent.action.SEND";
     public final static String PROCESS_TEXT = "android.intent.action.PROCESS_TEXT";
 
@@ -76,13 +73,11 @@ public class ShareActivity extends AbstractActivityNoteView {
             }
         }
 
-        EventBus.getDefault().post(new RefreshNoteListEvent(TAG));
         finish();
     }
 
     private void initInjection() {
-        NoteComponent noteComponent = DaggerNoteComponent.builder().noteModule(new NoteModule(this)).build();
-        noteComponent.inject(this);
+        notePresenter = new NotePresenterImpl(new MyNoteView());
     }
 
     private Note generateNoteFromSend(Intent intent) {
@@ -184,9 +179,10 @@ public class ShareActivity extends AbstractActivityNoteView {
                     notePresenter.add(note);
                 }
             }
-            EventBus.getDefault().post(new RefreshNoteListEvent(TAG));
             finish();
         }
     }
 
+    private class MyNoteView extends NoteViewAdapter {
+    }
 }

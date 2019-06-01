@@ -1,11 +1,16 @@
 package com.beyond.note5.utils;
 
+import android.app.Activity;
 import android.content.Context;
 import android.graphics.Point;
 import android.view.View;
 import android.view.WindowManager;
+import android.widget.FrameLayout;
 
 import com.beyond.note5.MyApplication;
+
+import java.util.HashMap;
+import java.util.Map;
 
 public class ViewUtil {
 
@@ -69,4 +74,47 @@ public class ViewUtil {
         return screenSizeWithoutNotification;
     }
 
+
+    private static Map<Object,Map<Object,View>> rightBottomViews = new HashMap<>(1);
+    private static Map<Object,Map<Object,View>> leftTopViews = new HashMap<>(1);
+
+    public static View getRightBottomView(Activity activity, View tpl) {
+        if (rightBottomViews.containsKey(activity)) {
+            if (rightBottomViews.get(activity).containsKey(tpl)){
+                return rightBottomViews.get(activity).get(tpl);
+            }
+        }
+        View rightBottomView = new View(activity);
+        FrameLayout.LayoutParams layoutParams = new FrameLayout.LayoutParams(tpl.getLayoutParams());
+        layoutParams.width = 0;
+        layoutParams.height = 0;
+        rightBottomView.setLayoutParams(layoutParams);
+        rightBottomView.setX(ViewUtil.getScreenSizeWithoutNotification().x);
+        rightBottomView.setY(ViewUtil.getScreenSizeWithoutNotification().y);
+        HashMap<Object, View> hashMap = new HashMap<>(1);
+        hashMap.put(tpl,rightBottomView);
+        rightBottomViews.put(activity,hashMap);
+        return rightBottomView;
+    }
+
+    public static View getLeftTopView(Activity activity, View tpl) {
+
+        if (leftTopViews.containsKey(activity)) {
+            if (leftTopViews.get(activity).containsKey(tpl)){
+                return leftTopViews.get(activity).get(tpl);
+            }
+        }
+        View leftTopView = new View(activity);
+        FrameLayout.LayoutParams layoutParams = new FrameLayout.LayoutParams(tpl.getLayoutParams());
+        layoutParams.width = 0;
+        layoutParams.height = 0;
+        leftTopView.setLayoutParams(layoutParams);
+        leftTopView.setX(ViewUtil.getScreenSizeWithoutNotification().x);
+        leftTopView.setY(ViewUtil.getScreenSizeWithoutNotification().y);
+        HashMap<Object, View> hashMap = new HashMap<>(1);
+        hashMap.put(tpl,leftTopView);
+        leftTopViews.put(activity,hashMap);
+        return leftTopView;
+
+    }
 }

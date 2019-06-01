@@ -5,7 +5,9 @@ import com.beyond.note5.predict.bean.Tag;
 import com.beyond.note5.predict.bean.TagGraph;
 import com.beyond.note5.predict.train.target.TrainTagTarget;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 /**
  * @author beyondlov1
@@ -15,24 +17,19 @@ public class PredictModelImpl implements PredictModel{
 
     private TagPredictor<String, TagGraph> tagPredictor;
 
-    private static PredictModel predictModel;
+    private static Map<TagPredictor<String, TagGraph> , PredictModel> instanceContainer = new HashMap<>(2);
 
     public static PredictModel getRelativeSingletonInstance(TagPredictor<String, TagGraph> tagPredictor){
-        if (predictModel == null){
-            synchronized (PredictModel.class){
-                if (predictModel == null){
-                    predictModel = new PredictModelImpl(tagPredictor);
-                }else {
-                    if (predictModel instanceof PredictModelImpl){
-                        if (((PredictModelImpl)predictModel).getTagPredictor() != tagPredictor){
-                            predictModel = new PredictModelImpl(tagPredictor);
-                        }
-                    }
-                }
+        if (instanceContainer.get(tagPredictor) == null) {
+            synchronized (PredictModel.class) {
+                PredictModel predictModel = new PredictModelImpl(tagPredictor);
+                instanceContainer.put(tagPredictor, predictModel);
+                return predictModel;
             }
         }
-        return predictModel;
+        return instanceContainer.get(tagPredictor);
     }
+
 
     public PredictModelImpl(TagPredictor<String, TagGraph> tagPredictor) {
         this.tagPredictor = tagPredictor;
@@ -48,7 +45,4 @@ public class PredictModelImpl implements PredictModel{
         tagPredictor.trainSync(new TrainTagTarget(source));
     }
 
-    private TagPredictor<String, TagGraph> getTagPredictor() {
-        return tagPredictor;
-    }
 }

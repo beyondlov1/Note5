@@ -9,13 +9,13 @@ import java.util.List;
  * @date: 2019/2/2
  */
 
-public class DetailNoteEvent extends AbstractEvent<List<Note>> {
+public class FillNoteDetailEvent extends AbstractEvent<List<Note>> {
 
     private int index;
     private ShowNoteDetailEvent.ShowType showType;
     private boolean consumed;
 
-    public DetailNoteEvent(List<Note> notes, int index) {
+    public FillNoteDetailEvent(List<Note> notes, int index) {
         super(notes);
         this.index = index;
     }

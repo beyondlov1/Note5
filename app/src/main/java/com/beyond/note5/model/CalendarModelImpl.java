@@ -23,7 +23,9 @@ import com.github.dfqin.grantor.PermissionsUtil;
 
 import org.apache.commons.lang3.time.DateUtils;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.TimeZone;
 
 public class CalendarModelImpl implements CalendarModel {
@@ -34,27 +36,17 @@ public class CalendarModelImpl implements CalendarModel {
 
     private ReminderDao reminderDao;
 
-    private static CalendarModel calendarModel;
+    private static Map<Activity, CalendarModel> instanceContainer = new HashMap<>(2);
 
-    public static CalendarModel getRelativeSingletonInstance(Activity activity){
-        if (calendarModel == null){
-            synchronized (CalendarModel.class){
-                if (calendarModel == null){
-                    calendarModel = new CalendarModelImpl(activity);
-                }else {
-                    if (calendarModel instanceof CalendarModelImpl){
-                        if (((CalendarModelImpl)calendarModel).getActivity() != activity){
-                            calendarModel = new CalendarModelImpl(activity);
-                        }
-                    }
-                }
+    public static CalendarModel getRelativeSingletonInstance(Activity activity) {
+        if (instanceContainer.get(activity) == null) {
+            synchronized (CalendarModel.class) {
+                CalendarModel calendarModel = new CalendarModelImpl(activity);
+                instanceContainer.put(activity, calendarModel);
+                return calendarModel;
             }
         }
-        return calendarModel;
-    }
-
-    private Activity getActivity() {
-        return activity;
+        return instanceContainer.get(activity);
     }
 
     public CalendarModelImpl(Activity activity) {
@@ -79,13 +71,13 @@ public class CalendarModelImpl implements CalendarModel {
                     public void permissionDenied(@NonNull String[] permission) {
 
                     }
-                },new String[]{Manifest.permission.WRITE_CALENDAR}, false, null);
+                }, new String[]{Manifest.permission.WRITE_CALENDAR}, false, null);
             }
             return;
         }
 
         ContentValues values = getContentValues(todo);
-        if (values == null){
+        if (values == null) {
             return;
         }
 
@@ -96,21 +88,21 @@ public class CalendarModelImpl implements CalendarModel {
             long eventID = Long.parseLong(uri.getLastPathSegment());
 
             //add Reminder
-            ContentValues reminderValues= new ContentValues();
-            reminderValues.put(CalendarContract.Reminders.EVENT_ID,eventID);
-            reminderValues.put(CalendarContract.Reminders.MINUTES,0);
-            reminderValues.put(CalendarContract.Reminders.METHOD,CalendarContract.Reminders.METHOD_ALERT);
+            ContentValues reminderValues = new ContentValues();
+            reminderValues.put(CalendarContract.Reminders.EVENT_ID, eventID);
+            reminderValues.put(CalendarContract.Reminders.MINUTES, 0);
+            reminderValues.put(CalendarContract.Reminders.METHOD, CalendarContract.Reminders.METHOD_ALERT);
             Uri reminderUri = cr.insert(CalendarContract.Reminders.CONTENT_URI, reminderValues);
-            if (reminderUri == null){
-                Log.e(TAG,"添加提醒失败");
+            if (reminderUri == null) {
+                Log.e(TAG, "添加提醒失败");
                 throw new RuntimeException("添加提醒失败");
             }
 
             todo.getReminder().setCalendarEventId(eventID);
             todo.getReminder().setCalendarReminderId(Long.parseLong(reminderUri.getLastPathSegment()));
             reminderDao.update(todo.getReminder());
-        }else {
-            Log.e(TAG,"事件添加失败");
+        } else {
+            Log.e(TAG, "事件添加失败");
             throw new RuntimeException("添加提醒失败");
         }
     }
@@ -134,11 +126,11 @@ public class CalendarModelImpl implements CalendarModel {
             return;
         }
         ContentValues values = getContentValues(todo);
-        if (values == null){
+        if (values == null) {
             return;
         }
         Long eventId = todo.getReminder().getCalendarEventId();
-        if (eventId == null){
+        if (eventId == null) {
             return;
         }
         ContentResolver cr = MyApplication.getInstance().getContentResolver();
@@ -166,8 +158,11 @@ public class CalendarModelImpl implements CalendarModel {
             return;
         }
 
+        if (todo.getReminder() == null){
+            return;
+        }
         Long eventId = todo.getReminder().getCalendarEventId();
-        if (eventId == null){
+        if (eventId == null) {
             return;
         }
         ContentResolver cr = MyApplication.getInstance().getContentResolver();
@@ -201,7 +196,7 @@ public class CalendarModelImpl implements CalendarModel {
         }
 
         Long reminderId = todo.getReminder().getCalendarReminderId();
-        if (reminderId == null){
+        if (reminderId == null) {
             return;
         }
         ContentResolver cr = MyApplication.getInstance().getContentResolver();
@@ -214,7 +209,7 @@ public class CalendarModelImpl implements CalendarModel {
 
     @Override
     public void restoreCalendarReminder(final Todo todo) {
-        if (todo.getReminder()==null||todo.getReminder().getCalendarEventId()==null){
+        if (todo.getReminder() == null || todo.getReminder().getCalendarEventId() == null) {
             return;
         }
 
@@ -230,7 +225,7 @@ public class CalendarModelImpl implements CalendarModel {
                     public void permissionDenied(@NonNull String[] permission) {
 
                     }
-                },new String[]{Manifest.permission.WRITE_CALENDAR}, false, null);
+                }, new String[]{Manifest.permission.WRITE_CALENDAR}, false, null);
             }
             return;
         }
@@ -238,13 +233,13 @@ public class CalendarModelImpl implements CalendarModel {
         ContentResolver cr = MyApplication.getInstance().getContentResolver();
         long eventID = todo.getReminder().getCalendarEventId();
         //add Reminder
-        ContentValues reminderValues= new ContentValues();
-        reminderValues.put(CalendarContract.Reminders.EVENT_ID,eventID);
-        reminderValues.put(CalendarContract.Reminders.MINUTES,0);
-        reminderValues.put(CalendarContract.Reminders.METHOD,CalendarContract.Reminders.METHOD_ALERT);
+        ContentValues reminderValues = new ContentValues();
+        reminderValues.put(CalendarContract.Reminders.EVENT_ID, eventID);
+        reminderValues.put(CalendarContract.Reminders.MINUTES, 0);
+        reminderValues.put(CalendarContract.Reminders.METHOD, CalendarContract.Reminders.METHOD_ALERT);
         Uri reminderUri = cr.insert(CalendarContract.Reminders.CONTENT_URI, reminderValues);
-        if (reminderUri == null){
-            Log.e(TAG,"恢复提醒失败");
+        if (reminderUri == null) {
+            Log.e(TAG, "恢复提醒失败");
             throw new RuntimeException("恢复提醒失败");
         }
 
@@ -252,7 +247,7 @@ public class CalendarModelImpl implements CalendarModel {
         reminderDao.update(todo.getReminder());
     }
 
-    private ContentValues getContentValues(Todo todo){
+    private ContentValues getContentValues(Todo todo) {
         Long startMillis;
         long endMillis;
         String title;
@@ -260,17 +255,17 @@ public class CalendarModelImpl implements CalendarModel {
         String contentWithoutTime;
         Long calendarId = CalendarUtil.getCalendarId(activity);
 
-        if (todo.getReminder()==null){
+        if (todo.getReminder() == null) {
             return null;
         }
-        if (todo.getReminder().getStart() == null){
+        if (todo.getReminder().getStart() == null) {
             return null;
         }
-        startMillis= todo.getReminder().getStart().getTime();
+        startMillis = todo.getReminder().getStart().getTime();
 
-        if (todo.getReminder().getEnd() == null){
+        if (todo.getReminder().getEnd() == null) {
             endMillis = startMillis + DateUtils.MILLIS_PER_MINUTE * 15;
-        }else {
+        } else {
             endMillis = todo.getReminder().getEnd().getTime();
         }
         title = todo.getTitle();

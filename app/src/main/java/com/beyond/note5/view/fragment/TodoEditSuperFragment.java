@@ -18,7 +18,7 @@ import com.beyond.note5.R;
 import com.beyond.note5.bean.Document;
 import com.beyond.note5.bean.Todo;
 import com.beyond.note5.event.HideKeyBoardEvent2;
-import com.beyond.note5.event.HideTodoEditEvent;
+import com.beyond.note5.event.HideTodoEditorEvent;
 import com.beyond.note5.event.ShowKeyBoardEvent;
 import com.beyond.note5.utils.InputMethodUtil;
 import com.beyond.note5.view.animator.SmoothScalable;
@@ -125,7 +125,7 @@ public class TodoEditSuperFragment extends DialogFragment implements OnBackPress
             @Override
             public void run() {
                 if (StringUtils.equals(Document.TODO, type)) {
-                    EventBus.getDefault().post(new HideTodoEditEvent(currentIndex));
+                    EventBus.getDefault().post(new HideTodoEditorEvent(currentIndex));
                 }
             }
         });
@@ -135,7 +135,7 @@ public class TodoEditSuperFragment extends DialogFragment implements OnBackPress
     @Override
     public boolean onBackPressed() {
         InputMethodUtil.hideKeyboard(contentEditText, onKeyboardChangeListener, true);
-        EventBus.getDefault().post(new HideTodoEditEvent(currentIndex));
+        EventBus.getDefault().post(new HideTodoEditorEvent(currentIndex));
         return true;
     }
 
