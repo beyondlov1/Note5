@@ -35,7 +35,6 @@ import com.beyond.note5.R;
 import com.beyond.note5.bean.Attachment;
 import com.beyond.note5.bean.Document;
 import com.beyond.note5.bean.Note;
-import com.beyond.note5.event.AddNoteSuccessEvent;
 import com.beyond.note5.event.DetailNoteEvent;
 import com.beyond.note5.event.HideFABEvent;
 import com.beyond.note5.event.HideKeyBoardEvent2;
@@ -651,11 +650,6 @@ public class MainActivity extends FragmentActivity implements View.OnClickListen
     }
 
     private class MyNoteView extends NoteViewAdapter {
-
-        @Override
-        public void onAddSuccess(Note document) {
-            EventBus.getDefault().post(new AddNoteSuccessEvent(document));
-        }
 
         @Override
         public void onAddFail(Note document) {

@@ -17,7 +17,7 @@ public class CalendarPresenterImpl implements CalendarPresenter {
 
     public CalendarPresenterImpl(Activity activity, @Nullable CalendarView calendarView) {
         this.calendarView = calendarView;
-        this.calendarModel = new CalendarModelImpl(activity);
+        this.calendarModel = CalendarModelImpl.getRelativeSingletonInstance(activity);
     }
 
     @Override

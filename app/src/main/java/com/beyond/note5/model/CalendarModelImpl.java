@@ -34,6 +34,29 @@ public class CalendarModelImpl implements CalendarModel {
 
     private ReminderDao reminderDao;
 
+    private static CalendarModel calendarModel;
+
+    public static CalendarModel getRelativeSingletonInstance(Activity activity){
+        if (calendarModel == null){
+            synchronized (CalendarModel.class){
+                if (calendarModel == null){
+                    calendarModel = new CalendarModelImpl(activity);
+                }else {
+                    if (calendarModel instanceof CalendarModelImpl){
+                        if (((CalendarModelImpl)calendarModel).getActivity() != activity){
+                            calendarModel = new CalendarModelImpl(activity);
+                        }
+                    }
+                }
+            }
+        }
+        return calendarModel;
+    }
+
+    private Activity getActivity() {
+        return activity;
+    }
+
     public CalendarModelImpl(Activity activity) {
         this.activity = activity;
 

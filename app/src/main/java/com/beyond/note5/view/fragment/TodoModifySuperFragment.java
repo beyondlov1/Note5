@@ -16,12 +16,9 @@ import com.beyond.note5.R;
 import com.beyond.note5.bean.Note;
 import com.beyond.note5.bean.Reminder;
 import com.beyond.note5.bean.Todo;
-import com.beyond.note5.event.AddNoteSuccessEvent;
-import com.beyond.note5.event.DeleteTodoSuccessEvent;
 import com.beyond.note5.event.FillTodoModifyEvent;
 import com.beyond.note5.event.HideTodoEditEvent;
 import com.beyond.note5.event.ScrollToTodoByDateEvent;
-import com.beyond.note5.event.UpdateTodoSuccessEvent;
 import com.beyond.note5.predict.bean.Tag;
 import com.beyond.note5.presenter.CalendarPresenterImpl;
 import com.beyond.note5.presenter.NotePresenterImpl;
@@ -284,18 +281,8 @@ public class TodoModifySuperFragment extends TodoEditSuperFragment {
     private class MyTodoView extends TodoViewAdapter {
 
         @Override
-        public void onUpdateSuccess(Todo document) {
-            EventBus.getDefault().post(new UpdateTodoSuccessEvent(document));
-        }
-
-        @Override
         public void onUpdateFail(Todo document) {
             ToastUtil.toast(getContext(), "更新失敗");
-        }
-
-        @Override
-        public void onDeleteSuccess(Todo document) {
-            EventBus.getDefault().post(new DeleteTodoSuccessEvent(document));
         }
 
         @Override
@@ -361,11 +348,6 @@ public class TodoModifySuperFragment extends TodoEditSuperFragment {
     }
 
     private class MyNoteView extends NoteViewAdapter{
-        @Override
-        public void onAddSuccess(Note document) {
-            EventBus.getDefault().post(new AddNoteSuccessEvent(document));
-        }
-
         @Override
         public void onAddFail(Note document) {
             ToastUtil.toast(getActivity(),"添加失敗");

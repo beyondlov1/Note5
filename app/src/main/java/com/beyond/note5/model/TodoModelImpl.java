@@ -18,6 +18,14 @@ public class TodoModelImpl implements TodoModel {
     private TodoDao todoDao;
     private ReminderDao reminderDao;
 
+    public static TodoModel getSingletonInstance(){
+        return TodoModelHolder.TODO_MODEL;
+    }
+
+    private static class TodoModelHolder {
+        private static final TodoModel TODO_MODEL = new TodoModelImpl();
+    }
+
     public TodoModelImpl() {
         DaoSession daoSession = MyApplication.getInstance().getDaoSession();
         todoDao = daoSession.getTodoDao();

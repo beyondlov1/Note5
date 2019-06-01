@@ -21,15 +21,12 @@ import com.beyond.note5.R;
 import com.beyond.note5.bean.Note;
 import com.beyond.note5.bean.Todo;
 import com.beyond.note5.constant.DocumentConst;
-import com.beyond.note5.event.AddTodoSuccessEvent;
-import com.beyond.note5.event.DeleteNoteSuccessEvent;
 import com.beyond.note5.event.DetailNoteEvent;
 import com.beyond.note5.event.FillNoteModifyEvent;
 import com.beyond.note5.event.HideNoteDetailEvent;
-import com.beyond.note5.event.ModifyNoteDoneEvent;
 import com.beyond.note5.event.ScrollToNoteEvent;
 import com.beyond.note5.event.ShowNoteDetailEvent;
-import com.beyond.note5.event.UpdateNoteSuccessEvent;
+import com.beyond.note5.event.note.UpdateNoteSuccessEvent;
 import com.beyond.note5.presenter.CalendarPresenterImpl;
 import com.beyond.note5.presenter.NotePresenter;
 import com.beyond.note5.presenter.NotePresenterImpl;
@@ -285,15 +282,13 @@ public class NoteDetailSuperFragment extends DialogFragment implements OnBackPre
                 note.setLastModifyTime(new Date());
                 if (data.get(currIndex).getReadFlag() < 0) { // 置顶
                     note.setReadFlag(DocumentConst.READ_FLAG_NORMAL);
-                    EventBus.getDefault().post(new UpdateNoteSuccessEvent(note));
+                    notePresenter.update(note);
                     ToastUtil.toast(context, "取消置顶", Toast.LENGTH_SHORT);
-                    EventBus.getDefault().post(new ModifyNoteDoneEvent(note));
                     ((ImageButton) stickButton).setImageDrawable(getResources().getDrawable(R.drawable.ic_thumb_up_grey_600_24dp, null));
                 } else { //其他
                     note.setReadFlag(DocumentConst.READ_FLAG_STICK);
-                    EventBus.getDefault().post(new UpdateNoteSuccessEvent(note));
+                    notePresenter.update(note);
                     ToastUtil.toast(context, "置顶成功", Toast.LENGTH_SHORT);
-                    EventBus.getDefault().post(new ModifyNoteDoneEvent(note));
                     ((ImageButton) stickButton).setImageDrawable(getResources().getDrawable(R.drawable.ic_thumb_up_blue_400_24dp, null));
                 }
             }
@@ -316,26 +311,24 @@ public class NoteDetailSuperFragment extends DialogFragment implements OnBackPre
 
                     Note currentNote = data.get(currIndex);
                     currentNote.setReadFlag(DocumentConst.READ_FLAG_NORMAL);
-                    EventBus.getDefault().post(new UpdateNoteSuccessEvent(currentNote));
+                    notePresenter.update(note);
                     ToastUtil.toast(context, "取消已读", Toast.LENGTH_SHORT);
-                    reloadView();
                     ((ImageButton) doneButton).setImageDrawable(getResources().getDrawable(R.drawable.ic_done_grey_600_24dp, null));
                 } else { //其他
                     Note currentNote = data.get(currIndex);
                     currentNote.setReadFlag(DocumentConst.READ_FLAG_DONE);
                     int oldIndex = currIndex;
-                    EventBus.getDefault().post(new UpdateNoteSuccessEvent(currentNote));
+                    notePresenter.update(note);
                     currIndex = oldIndex;
                     ToastUtil.toast(context, "已读", Toast.LENGTH_SHORT);
-                    reloadView();
                 }
             }
         });
     }
 
     @Subscribe(threadMode = ThreadMode.MAIN)
-    public void onEventMainThread(ModifyNoteDoneEvent modifyNoteDoneEvent) {
-        Note note = modifyNoteDoneEvent.get();
+    public void onEventMainThread(UpdateNoteSuccessEvent updateNoteSuccessEvent) {
+        Note note = updateNoteSuccessEvent.get();
         int index = data.indexOf(note);
         currIndex = index == -1 ? 0 : index;
         reloadView();
@@ -538,13 +531,7 @@ public class NoteDetailSuperFragment extends DialogFragment implements OnBackPre
         }
     }
 
-
     private class MyTodoView extends TodoViewAdapter {
-        @Override
-        public void onAddSuccess(Todo document) {
-            EventBus.getDefault().post(new AddTodoSuccessEvent(document));
-        }
-
         @Override
         public void onAddFail(Todo document) {
             ToastUtil.toast(getContext(), "添加失败");
@@ -568,9 +555,6 @@ public class NoteDetailSuperFragment extends DialogFragment implements OnBackPre
     }
 
     private class MyNoteView extends NoteViewAdapter {
-        @Override
-        public void onDeleteSuccess(Note document) {
-            EventBus.getDefault().post(new DeleteNoteSuccessEvent(document));
-        }
+
     }
 }

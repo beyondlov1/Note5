@@ -109,7 +109,7 @@ public class MyApplication extends Application {
             tagPredictor.addTrainFilter(new UrlTrainTagFilter());
             tagPredictor.addTrainFilter(new TimeExpressionTrainTagFilter());
             tagPredictor.setExecutorService(executorService);
-            predictModel = new PredictModelImpl(tagPredictor);
+            predictModel = PredictModelImpl.getRelativeSingletonInstance(tagPredictor);
         }
         return predictModel;
     }

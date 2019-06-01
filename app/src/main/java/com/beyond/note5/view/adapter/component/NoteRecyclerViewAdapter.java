@@ -16,7 +16,7 @@ import com.beyond.note5.R;
 import com.beyond.note5.bean.Note;
 import com.beyond.note5.constant.DocumentConst;
 import com.beyond.note5.event.ShowNoteDetailEvent;
-import com.beyond.note5.event.UpdateNotePriorityEvent;
+import com.beyond.note5.event.note.UpdateNotePriorityEvent;
 import com.beyond.note5.utils.HtmlUtil;
 import com.beyond.note5.utils.PreferenceUtil;
 import com.beyond.note5.utils.WebViewUtil;

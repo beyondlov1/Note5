@@ -3,12 +3,16 @@ package com.beyond.note5.presenter;
 import android.support.annotation.Nullable;
 
 import com.beyond.note5.bean.Todo;
+import com.beyond.note5.event.todo.AddTodoSuccessEvent;
+import com.beyond.note5.event.todo.DeleteTodoSuccessEvent;
+import com.beyond.note5.event.todo.UpdateTodoSuccessEvent;
 import com.beyond.note5.model.TodoModel;
 import com.beyond.note5.model.TodoModelImpl;
 import com.beyond.note5.utils.TimeNLPUtil;
 import com.beyond.note5.view.TodoView;
 
 import org.apache.commons.lang3.StringUtils;
+import org.greenrobot.eventbus.EventBus;
 
 import java.util.List;
 
@@ -18,7 +22,7 @@ public class TodoPresenterImpl implements TodoPresenter {
 
     public TodoPresenterImpl(@Nullable TodoView todoView) {
         this.todoView = todoView;
-        this.todoModel = new TodoModelImpl();
+        this.todoModel = TodoModelImpl.getSingletonInstance();
     }
 
     @Override
@@ -38,6 +42,7 @@ public class TodoPresenterImpl implements TodoPresenter {
         if (todoView == null) {
             return;
         }
+        EventBus.getDefault().post(new AddTodoSuccessEvent(todo));
         todoView.onAddSuccess(todo);
     }
 
@@ -66,6 +71,7 @@ public class TodoPresenterImpl implements TodoPresenter {
         if (todoView == null) {
             return;
         }
+        EventBus.getDefault().post(new UpdateTodoSuccessEvent(todo));
         todoView.onUpdateSuccess(todo);
     }
 
@@ -120,6 +126,7 @@ public class TodoPresenterImpl implements TodoPresenter {
         if (todoView == null) {
             return;
         }
+        EventBus.getDefault().post(new DeleteTodoSuccessEvent(todo));
         todoView.onDeleteSuccess(todo);
     }
 

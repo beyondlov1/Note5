@@ -29,6 +29,14 @@ public class NoteModelImpl implements NoteModel {
 
     private AttachmentDao attachmentDao;
 
+    public static NoteModel getSingletonInstance(){
+        return NoteModelHolder.noteModel;
+    }
+
+    private static class NoteModelHolder {
+        private static final NoteModel noteModel = new NoteModelImpl();
+    }
+
     public NoteModelImpl() {
         DaoSession daoSession = MyApplication.getInstance().getDaoSession();
         noteDao = daoSession.getNoteDao();

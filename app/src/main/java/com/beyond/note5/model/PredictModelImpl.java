@@ -15,6 +15,25 @@ public class PredictModelImpl implements PredictModel{
 
     private TagPredictor<String, TagGraph> tagPredictor;
 
+    private static PredictModel predictModel;
+
+    public static PredictModel getRelativeSingletonInstance(TagPredictor<String, TagGraph> tagPredictor){
+        if (predictModel == null){
+            synchronized (PredictModel.class){
+                if (predictModel == null){
+                    predictModel = new PredictModelImpl(tagPredictor);
+                }else {
+                    if (predictModel instanceof PredictModelImpl){
+                        if (((PredictModelImpl)predictModel).getTagPredictor() != tagPredictor){
+                            predictModel = new PredictModelImpl(tagPredictor);
+                        }
+                    }
+                }
+            }
+        }
+        return predictModel;
+    }
+
     public PredictModelImpl(TagPredictor<String, TagGraph> tagPredictor) {
         this.tagPredictor = tagPredictor;
     }
@@ -27,5 +46,9 @@ public class PredictModelImpl implements PredictModel{
     @Override
     public void train(String source) throws Exception {
         tagPredictor.trainSync(new TrainTagTarget(source));
+    }
+
+    private TagPredictor<String, TagGraph> getTagPredictor() {
+        return tagPredictor;
     }
 }

@@ -29,8 +29,6 @@ import com.beyond.note5.MyApplication;
 import com.beyond.note5.R;
 import com.beyond.note5.bean.Document;
 import com.beyond.note5.bean.Todo;
-import com.beyond.note5.event.AddTodoSuccessEvent;
-import com.beyond.note5.event.DeleteTodoSuccessEvent;
 import com.beyond.note5.event.HideKeyBoardEvent2;
 import com.beyond.note5.event.ShowKeyBoardEvent;
 import com.beyond.note5.predict.bean.Tag;
@@ -282,19 +280,10 @@ public class TodoEditFragment extends DialogFragment {
     }
 
     private class MyTodoView extends TodoViewAdapter {
-        @Override
-        public void onAddSuccess(Todo document) {
-            EventBus.getDefault().post(new AddTodoSuccessEvent(document));
-        }
 
         @Override
         public void onAddFail(Todo document) {
             ToastUtil.toast(getContext(), "添加失败");
-        }
-
-        @Override
-        public void onDeleteSuccess(Todo document) {
-            EventBus.getDefault().post(new DeleteTodoSuccessEvent(document));
         }
 
         @Override
@@ -307,40 +296,34 @@ public class TodoEditFragment extends DialogFragment {
     private class MyPredictView extends PredictViewAdapter {
         @Override
         public void onPredictSuccess(final List<Tag> data, final String source) {
-            handler.post(new Runnable() {
-                @SuppressWarnings("Duplicates")
+            if (data == null || data.isEmpty()) {
+                todoCompositePresenter.predict(null);
+                return;
+            }
+            List<Tag> finalTags = data;
+            tagData.clear();
+            if (StringUtils.isBlank(source)) {
+                Iterator<Tag> iterator = finalTags.iterator();
+                while (iterator.hasNext()) {
+                    Tag tag = iterator.next();
+                    if (!tag.isFirst()) {
+                        iterator.remove();
+                    }
+                }
+            }
+            Collections.sort(finalTags, new Comparator<Tag>() {
                 @Override
-                public void run() {
-                    if (data == null || data.isEmpty()) {
-                        todoCompositePresenter.predict(null);
-                        return;
-                    }
-                    List<Tag> finalTags = data;
-                    tagData.clear();
-                    if (StringUtils.isBlank(source)) {
-                        Iterator<Tag> iterator = finalTags.iterator();
-                        while (iterator.hasNext()) {
-                            Tag tag = iterator.next();
-                            if (!tag.isFirst()) {
-                                iterator.remove();
-                            }
-                        }
-                    }
-                    Collections.sort(finalTags, new Comparator<Tag>() {
-                        @Override
-                        public int compare(Tag o1, Tag o2) {
-                            return -o1.getScore() + o2.getScore();
-                        }
-                    });
-                    if (finalTags.size() >= 5) {
-                        finalTags = finalTags.subList(0, 5);
-                    }
-                    for (Tag tag : finalTags) {
-                        tagData.add(tag.getContent());
-                    }
-                    tagAdapter.notifyDataChanged();
+                public int compare(Tag o1, Tag o2) {
+                    return -o1.getScore() + o2.getScore();
                 }
             });
+            if (finalTags.size() >= 5) {
+                finalTags = finalTags.subList(0, 5);
+            }
+            for (Tag tag : finalTags) {
+                tagData.add(tag.getContent());
+            }
+            tagAdapter.notifyDataChanged();
         }
 
         @Override

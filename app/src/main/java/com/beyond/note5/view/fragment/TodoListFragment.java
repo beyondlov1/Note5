@@ -16,17 +16,17 @@ import android.view.ViewGroup;
 import com.beyond.note5.MyApplication;
 import com.beyond.note5.R;
 import com.beyond.note5.bean.Todo;
-import com.beyond.note5.event.AddTodoSuccessEvent;
-import com.beyond.note5.event.CompleteTodoEvent;
-import com.beyond.note5.event.DeleteTodoSuccessEvent;
+import com.beyond.note5.event.todo.AddTodoSuccessEvent;
+import com.beyond.note5.event.todo.CompleteTodoEvent;
+import com.beyond.note5.event.todo.DeleteTodoSuccessEvent;
 import com.beyond.note5.event.HideFABEvent;
 import com.beyond.note5.event.InCompleteTodoEvent;
 import com.beyond.note5.event.RefreshTodoListEvent;
 import com.beyond.note5.event.ScrollToTodoByDateEvent;
 import com.beyond.note5.event.ScrollToTodoEvent;
 import com.beyond.note5.event.ShowFABEvent;
-import com.beyond.note5.event.UpdateTodoPriorityEvent;
-import com.beyond.note5.event.UpdateTodoSuccessEvent;
+import com.beyond.note5.event.todo.UpdateTodoPriorityEvent;
+import com.beyond.note5.event.todo.UpdateTodoSuccessEvent;
 import com.beyond.note5.presenter.CalendarPresenterImpl;
 import com.beyond.note5.presenter.PredictPresenterImpl;
 import com.beyond.note5.presenter.TodoCompositePresenter;
@@ -292,7 +292,6 @@ public class TodoListFragment extends Fragment {
         int position = itemDataGenerator.getPosition(note);
         return recyclerView.getLayoutManager().findViewByPosition(position);
     }
-
 
     private class MyTodoView extends DocumentViewBase<Todo> implements TodoView {
 

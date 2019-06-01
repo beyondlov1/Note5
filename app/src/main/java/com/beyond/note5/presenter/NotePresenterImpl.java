@@ -5,12 +5,16 @@ import android.support.annotation.Nullable;
 
 import com.beyond.note5.MyApplication;
 import com.beyond.note5.bean.Note;
+import com.beyond.note5.event.note.AddNoteSuccessEvent;
+import com.beyond.note5.event.note.DeleteNoteSuccessEvent;
+import com.beyond.note5.event.note.UpdateNoteSuccessEvent;
 import com.beyond.note5.model.NoteModel;
 import com.beyond.note5.model.NoteModelImpl;
 import com.beyond.note5.utils.HtmlUtil;
 import com.beyond.note5.view.NoteView;
 
 import org.apache.commons.lang3.StringUtils;
+import org.greenrobot.eventbus.EventBus;
 
 import java.io.IOException;
 import java.util.List;
@@ -37,7 +41,7 @@ public class NotePresenterImpl implements NotePresenter {
 
     public NotePresenterImpl(@Nullable NoteView noteView) {
         this.noteView = noteView;
-        this.noteModel = new NoteModelImpl();
+        this.noteModel = NoteModelImpl.getSingletonInstance();
         this.executorService = MyApplication.getInstance().getExecutorService();
         OkHttpClient.Builder httpBuilder = new OkHttpClient.Builder();
         httpBuilder.connectTimeout(10000, TimeUnit.MILLISECONDS);
@@ -63,6 +67,7 @@ public class NotePresenterImpl implements NotePresenter {
         if (noteView == null) {
             return;
         }
+        EventBus.getDefault().post(new AddNoteSuccessEvent(note));
         noteView.onAddSuccess(note);
     }
 
@@ -92,6 +97,7 @@ public class NotePresenterImpl implements NotePresenter {
         if (noteView == null) {
             return;
         }
+        EventBus.getDefault().post(new UpdateNoteSuccessEvent(note));
         noteView.onUpdateSuccess(note);
     }
 
@@ -157,6 +163,7 @@ public class NotePresenterImpl implements NotePresenter {
         if (noteView == null) {
             return;
         }
+        EventBus.getDefault().post(new DeleteNoteSuccessEvent(note));
         noteView.onDeleteSuccess(note);
     }
 

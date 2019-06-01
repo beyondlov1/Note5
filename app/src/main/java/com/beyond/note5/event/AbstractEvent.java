@@ -9,7 +9,7 @@ public abstract class AbstractEvent<T> implements Event{
 
     private T t;
 
-    AbstractEvent(T t){
+    public AbstractEvent(T t){
         this.t = t;
     }
 

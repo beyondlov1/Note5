@@ -1,6 +1,7 @@
-package com.beyond.note5.event;
+package com.beyond.note5.event.note;
 
 import com.beyond.note5.bean.Note;
+import com.beyond.note5.event.AbstractEvent;
 
 /**
  * @author: beyond

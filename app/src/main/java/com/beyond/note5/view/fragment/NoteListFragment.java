@@ -13,15 +13,14 @@ import android.view.ViewGroup;
 
 import com.beyond.note5.R;
 import com.beyond.note5.bean.Note;
-import com.beyond.note5.event.AddNoteSuccessEvent;
-import com.beyond.note5.event.DeleteNoteSuccessEvent;
 import com.beyond.note5.event.HideFABEvent;
-import com.beyond.note5.event.ModifyNoteDoneEvent;
 import com.beyond.note5.event.RefreshNoteListEvent;
 import com.beyond.note5.event.ScrollToNoteEvent;
 import com.beyond.note5.event.ShowFABEvent;
-import com.beyond.note5.event.UpdateNotePriorityEvent;
-import com.beyond.note5.event.UpdateNoteSuccessEvent;
+import com.beyond.note5.event.note.UpdateNotePriorityEvent;
+import com.beyond.note5.event.note.AddNoteSuccessEvent;
+import com.beyond.note5.event.note.DeleteNoteSuccessEvent;
+import com.beyond.note5.event.note.UpdateNoteSuccessEvent;
 import com.beyond.note5.ocr.OCRCallBack;
 import com.beyond.note5.ocr.OCRTask;
 import com.beyond.note5.presenter.NotePresenter;
@@ -207,12 +206,6 @@ public class NoteListFragment extends Fragment {
 
     
     private class MyNoteView extends DocumentViewBase<Note> implements NoteView {
-
-        @Override
-        public void onUpdateSuccess(Note note) {
-            super.onUpdateSuccess(note);
-            EventBus.getDefault().post(new ModifyNoteDoneEvent(note));
-        }
 
         public DocumentRecyclerViewAdapter getRecyclerViewAdapter() {
             return recyclerViewAdapter;
