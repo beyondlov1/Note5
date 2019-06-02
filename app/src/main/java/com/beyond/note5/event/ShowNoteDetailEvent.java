@@ -3,6 +3,7 @@ package com.beyond.note5.event;
 import android.view.View;
 
 import com.beyond.note5.bean.Note;
+import com.beyond.note5.constant.LoadType;
 
 import java.util.List;
 
@@ -10,7 +11,7 @@ public class ShowNoteDetailEvent extends AbstractEvent<View> {
 
     private List<Note> data;
     private int Index;
-    private ShowType showType;
+    private LoadType loadType;
 
     public ShowNoteDetailEvent(View view) {
         super(view);
@@ -32,15 +33,12 @@ public class ShowNoteDetailEvent extends AbstractEvent<View> {
         Index = index;
     }
 
-    public ShowType getShowType() {
-        return showType;
+    public LoadType getLoadType() {
+        return loadType;
     }
 
-    public void setShowType(ShowType showType) {
-        this.showType = showType;
+    public void setLoadType(LoadType loadType) {
+        this.loadType = loadType;
     }
 
-    public enum ShowType{
-        CONTENT,WEB
-    }
 }

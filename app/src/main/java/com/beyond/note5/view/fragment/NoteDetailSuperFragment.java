@@ -1,7 +1,6 @@
 package com.beyond.note5.view.fragment;
 
 import android.annotation.SuppressLint;
-import android.app.Activity;
 import android.content.Intent;
 import android.net.Uri;
 import android.os.Bundle;
@@ -21,11 +20,11 @@ import com.beyond.note5.R;
 import com.beyond.note5.bean.Note;
 import com.beyond.note5.bean.Todo;
 import com.beyond.note5.constant.DocumentConst;
+import com.beyond.note5.constant.LoadType;
 import com.beyond.note5.event.FillNoteDetailEvent;
 import com.beyond.note5.event.FillNoteModifyEvent;
 import com.beyond.note5.event.HideNoteDetailEvent;
 import com.beyond.note5.event.ScrollToNoteEvent;
-import com.beyond.note5.event.ShowNoteDetailEvent;
 import com.beyond.note5.event.note.UpdateNoteSuccessEvent;
 import com.beyond.note5.presenter.CalendarPresenterImpl;
 import com.beyond.note5.presenter.NotePresenter;
@@ -43,7 +42,6 @@ import com.beyond.note5.view.adapter.view.PredictViewAdapter;
 import com.beyond.note5.view.adapter.view.TodoViewAdapter;
 import com.beyond.note5.view.animator.SmoothScalable;
 import com.beyond.note5.view.animator.SmoothScaleAnimation;
-import com.beyond.note5.view.custom.ViewSwitcher;
 import com.beyond.note5.view.listener.OnBackPressListener;
 import com.beyond.note5.view.listener.OnSlideListener;
 
@@ -54,21 +52,18 @@ import org.greenrobot.eventbus.ThreadMode;
 
 import java.util.Date;
 import java.util.List;
-import java.util.concurrent.atomic.AtomicBoolean;
 
 public class NoteDetailSuperFragment extends DialogFragment implements OnBackPressListener, SmoothScalable,FragmentContainerAware {
     private static final String TAG = NoteDetailSuperFragment.class.getSimpleName();
-    protected Activity context;
     protected View root;
-    protected ViewSwitcher viewSwitcher;
+    protected NoteDetailStage noteDetailStage;
     protected TextView pageCountTextView;
-    protected DetailViewHolder detailViewHolder;
 
     protected List<Note> data;
     protected int currIndex;
     private int firstInIndex;
 
-    private ShowNoteDetailEvent.ShowType showType;
+    private LoadType loadType;
 
     protected View operationContainer;
     protected View operationItemsContainer;
@@ -78,12 +73,8 @@ public class NoteDetailSuperFragment extends DialogFragment implements OnBackPre
     protected View stickButton;
     protected View convertButton;
     protected View doneButton;
-    private View modifyButton;
-    private View hideButton;
 
     private View fragmentContainer;
-
-    public static AtomicBoolean isShowing = new AtomicBoolean(false);
 
     private MyCalendarView calendarView = new MyCalendarView();
     private MyPredictView predictView = new MyPredictView();
@@ -95,7 +86,6 @@ public class NoteDetailSuperFragment extends DialogFragment implements OnBackPre
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        this.context = getActivity();
 
         initInjection();
     }
@@ -117,7 +107,7 @@ public class NoteDetailSuperFragment extends DialogFragment implements OnBackPre
         System.out.println("onCreateView");
 
         if (root == null) {
-            root = LayoutInflater.from(context).inflate(R.layout.fragment_note_detail, null);
+            root = LayoutInflater.from(getActivity()).inflate(R.layout.fragment_note_detail, null);
         }
         initView(root);
         initEvent(root);
@@ -125,7 +115,7 @@ public class NoteDetailSuperFragment extends DialogFragment implements OnBackPre
     }
 
     protected void initView(View view) {
-        viewSwitcher = view.findViewById(R.id.fragment_note_detail_view_switcher);
+        noteDetailStage = view.findViewById(R.id.fragment_note_detail_view_switcher);
         pageCountTextView = view.findViewById(R.id.fragment_note_detail_page_count);
         operationContainer = view.findViewById(R.id.fragment_note_detail_operation_container);
         operationItemsContainer = view.findViewById(R.id.fragment_note_detail_operation_items);
@@ -135,10 +125,6 @@ public class NoteDetailSuperFragment extends DialogFragment implements OnBackPre
         stickButton = view.findViewById(R.id.fragment_note_detail_operation_stick);
         convertButton = view.findViewById(R.id.fragment_note_detail_to_todo);
         doneButton = view.findViewById(R.id.fragment_note_detail_operation_done);
-        modifyButton = view.findViewById(R.id.fragment_note_detail_modify);
-        modifyButton.setVisibility(View.GONE);
-        hideButton = view.findViewById(R.id.fragment_note_detail_hide);
-        hideButton.setVisibility(View.GONE);
         pageCountTextView.getLayoutParams().height = 100;
         pageCountTextView.setLayoutParams(pageCountTextView.getLayoutParams());
     }
@@ -182,7 +168,7 @@ public class NoteDetailSuperFragment extends DialogFragment implements OnBackPre
                     Intent intent = new Intent(Intent.ACTION_VIEW, uri);
                     startActivity(intent);
                 } else {
-                    ToastUtil.toast(context, "搜索文字不能超过32个字", Toast.LENGTH_SHORT);
+                    ToastUtil.toast(getActivity(), "搜索文字不能超过32个字", Toast.LENGTH_SHORT);
                 }
             }
         });
@@ -204,47 +190,22 @@ public class NoteDetailSuperFragment extends DialogFragment implements OnBackPre
             }
 
         });
-        modifyButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                showModifyView();
-            }
-        });
-        hideButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                sendHideMessage();
-            }
-        });
     }
 
     private void loadWebPage() {
-        Note currNote = data.get(currIndex);
-        String url = WebViewUtil.getUrlOrSearchUrl(currNote);
-        if (url != null) {
-            WebView currentWebView = new DetailViewHolder(viewSwitcher.getCurrentView()).displayWebView;
-            WebViewUtil.addWebViewProgressBar(currentWebView);
-            currentWebView.loadUrl(url);
-        } else {
-            ToastUtil.toast(context, "搜索文字不能超过32个字", Toast.LENGTH_SHORT);
-        }
+       noteDetailStage.setLoadType(LoadType.WEB);
+       noteDetailStage.loadMore();
     }
 
     @Override
     public void onStart() {
         super.onStart();
-        System.out.println("onStart");
-
         EventBus.getDefault().register(this);
-        isShowing.set(true);
     }
 
     @Override
     public void onStop() {
-        System.out.println("onStop");
-
         EventBus.getDefault().unregister(this);
-        isShowing.set(false);
         super.onStop();
     }
 
@@ -256,7 +217,7 @@ public class NoteDetailSuperFragment extends DialogFragment implements OnBackPre
         data = fillNoteDetailEvent.get();
         currIndex = fillNoteDetailEvent.getIndex();
         firstInIndex = currIndex;
-        showType = fillNoteDetailEvent.getShowType();
+        loadType = fillNoteDetailEvent.getLoadType();
         reloadView();
         fillNoteDetailEvent.setConsumed(true);
     }
@@ -283,12 +244,12 @@ public class NoteDetailSuperFragment extends DialogFragment implements OnBackPre
                 if (data.get(currIndex).getReadFlag() < 0) { // 置顶
                     note.setReadFlag(DocumentConst.READ_FLAG_NORMAL);
                     notePresenter.update(note);
-                    ToastUtil.toast(context, "取消置顶", Toast.LENGTH_SHORT);
+                    ToastUtil.toast(getActivity(), "取消置顶", Toast.LENGTH_SHORT);
                     ((ImageButton) stickButton).setImageDrawable(getResources().getDrawable(R.drawable.ic_thumb_up_grey_600_24dp, null));
                 } else { //其他
                     note.setReadFlag(DocumentConst.READ_FLAG_STICK);
                     notePresenter.update(note);
-                    ToastUtil.toast(context, "置顶成功", Toast.LENGTH_SHORT);
+                    ToastUtil.toast(getActivity(), "置顶成功", Toast.LENGTH_SHORT);
                     ((ImageButton) stickButton).setImageDrawable(getResources().getDrawable(R.drawable.ic_thumb_up_blue_400_24dp, null));
                 }
             }
@@ -312,7 +273,7 @@ public class NoteDetailSuperFragment extends DialogFragment implements OnBackPre
                     Note currentNote = data.get(currIndex);
                     currentNote.setReadFlag(DocumentConst.READ_FLAG_NORMAL);
                     notePresenter.update(note);
-                    ToastUtil.toast(context, "取消已读", Toast.LENGTH_SHORT);
+                    ToastUtil.toast(getActivity(), "取消已读", Toast.LENGTH_SHORT);
                     ((ImageButton) doneButton).setImageDrawable(getResources().getDrawable(R.drawable.ic_done_grey_600_24dp, null));
                 } else { //其他
                     Note currentNote = data.get(currIndex);
@@ -320,7 +281,7 @@ public class NoteDetailSuperFragment extends DialogFragment implements OnBackPre
                     int oldIndex = currIndex;
                     notePresenter.update(note);
                     currIndex = oldIndex;
-                    ToastUtil.toast(context, "已读", Toast.LENGTH_SHORT);
+                    ToastUtil.toast(getActivity(), "已读", Toast.LENGTH_SHORT);
                 }
             }
         });
@@ -337,73 +298,61 @@ public class NoteDetailSuperFragment extends DialogFragment implements OnBackPre
     @SuppressWarnings("ConstantConditions")
     private void reloadView() {
         processVariableTools();
-        viewSwitcher.removeAllViews();
-        viewSwitcher.setFactory(new ViewSwitcher.ViewFactory() {
-            @Override
-            public View makeView() {
-                @SuppressLint("InflateParams") View view = LayoutInflater.from(context).inflate(R.layout.fragment_note_detail_content, null);
-                view.setMinimumHeight(2000);
-
-                detailViewHolder = new NoteDetailSuperFragment.DetailViewHolder(view);
-
-                initContentConfig(detailViewHolder);
-                initContentData(detailViewHolder);
-                initContentEvent(detailViewHolder);
-
-                return view;
-            }
-        });
+        initContentEvent();  // FIXME
+        noteDetailStage.setData(data);
+        noteDetailStage.setCurrentIndex(currIndex);
+        noteDetailStage.setEnterIndex(firstInIndex);
+        noteDetailStage.refresh();
+        processPageCount();
         openWebPage();
-        resetShowType();
+        resetLoadType();
         scrollRecyclerViewTo(data.get(currIndex));
     }
 
-    private void initContentConfig(NoteDetailSuperFragment.DetailViewHolder detailViewHolder) {
-        WebViewUtil.configWebView(detailViewHolder.displayWebView);
-    }
-
-    private void initContentData(NoteDetailSuperFragment.DetailViewHolder detailViewHolder) {
-        this.detailViewHolder = detailViewHolder;
-        WebViewUtil.clearHistory();
-        WebViewUtil.loadWebContent(detailViewHolder.displayWebView, data.get(currIndex));
-        String pageCount = String.format("%s/%s", currIndex + 1, data.size());
+    private void processPageCount() {
+        String pageCount = String.format("%s/%s", noteDetailStage.getCurrentIndex() + 1, noteDetailStage.getData().size());
         pageCountTextView.setText(pageCount);
     }
 
     @SuppressLint("ClickableViewAccessibility")
-    private void initContentEvent(final NoteDetailSuperFragment.DetailViewHolder detailViewHolder) {
-        detailViewHolder.displayWebView.setOnTouchListener(new OnSlideListener(context) {
+    private void initContentEvent() {
+        noteDetailStage.setOnViewMadeListener(new DetailStage.OnViewMadeListener() {
             @Override
-            protected void onSlideLeft() {
-                next();
-            }
+            public void onViewMade(View view) {
+                view.findViewById(R.id.fragment_document_display_web).setOnTouchListener(new OnSlideListener(getActivity()) {
+                    @Override
+                    protected void onSlideLeft() {
+                        next();
+                    }
 
-            @Override
-            protected void onSlideRight() {
-                prev();
-            }
+                    @Override
+                    protected void onSlideRight() {
+                        prev();
+                    }
 
-            @Override
-            protected void onSlideUp() {
-            }
+                    @Override
+                    protected void onSlideUp() {
+                    }
 
-            @Override
-            protected void onSlideDown() {
-            }
+                    @Override
+                    protected void onSlideDown() {
+                    }
 
-            @Override
-            protected void onDoubleClick(MotionEvent e) {
-                showModifyView();
-            }
+                    @Override
+                    protected void onDoubleClick(MotionEvent e) {
+                        showModifyView();
+                    }
 
-            @Override
-            protected int getSlideXSensitivity() {
-                return 250;
-            }
+                    @Override
+                    protected int getSlideXSensitivity() {
+                        return 250;
+                    }
 
-            @Override
-            protected int getSlideYSensitivity() {
-                return (int) (ViewUtil.getScreenSize().y * 0.33);
+                    @Override
+                    protected int getSlideYSensitivity() {
+                        return (int) (ViewUtil.getScreenSize().y * 0.33);
+                    }
+                });
             }
         });
         pageCountTextView.setOnClickListener(new View.OnClickListener() {
@@ -415,7 +364,7 @@ public class NoteDetailSuperFragment extends DialogFragment implements OnBackPre
     }
 
     private void openWebPage() {
-        if (showType == ShowNoteDetailEvent.ShowType.WEB) {
+        if (loadType == LoadType.WEB) {
             loadWebPage();
         }
     }
@@ -424,36 +373,20 @@ public class NoteDetailSuperFragment extends DialogFragment implements OnBackPre
         EventBus.getDefault().post(new ScrollToNoteEvent(note));
     }
 
-    private void resetShowType() {
-        this.showType = ShowNoteDetailEvent.ShowType.CONTENT;
+    private void resetLoadType() {
+        this.loadType = LoadType.CONTENT;
     }
 
     private void next() {
-        if (currIndex == data.size() - 1) {
-            msg("已到达最后一页");
-        }
-        if (currIndex < data.size() - 1) {
-            currIndex++;
-            viewSwitcher.setInAnimation(context, R.anim.slide_in_right);
-            viewSwitcher.setOutAnimation(context, R.anim.slide_out_left);
-            initContentData(new NoteDetailSuperFragment.DetailViewHolder(viewSwitcher.getNextView()));
-            viewSwitcher.showNext();
-            processVariableTools();
-        }
+        noteDetailStage.next();
+        processVariableTools();
+        processPageCount();
     }
 
     private void prev() {
-        if (currIndex == 0) {
-            msg("已到达第一页");
-        }
-        if (currIndex > 0) {
-            currIndex--;
-            viewSwitcher.setInAnimation(context, R.anim.slide_in_left);
-            viewSwitcher.setOutAnimation(context, R.anim.slide_out_right);
-            initContentData(new NoteDetailSuperFragment.DetailViewHolder(viewSwitcher.getNextView()));
-            viewSwitcher.showPrevious();
-            processVariableTools();
-        }
+        noteDetailStage.prev();
+        processVariableTools();
+        processPageCount();
     }
 
     protected void showModifyView() {
@@ -464,10 +397,10 @@ public class NoteDetailSuperFragment extends DialogFragment implements OnBackPre
 
     @Override
     public boolean onBackPressed() {
-        if (viewSwitcher.getCurrentView() == null){
+        if (noteDetailStage.getCurrentView() == null){
             return true;
         }
-        WebView displayWebView = new DetailViewHolder(viewSwitcher.getCurrentView()).displayWebView;
+        WebView displayWebView = noteDetailStage.getCurrentWebView();
         if (WebViewUtil.canGoBack(displayWebView)) {
             WebViewUtil.goBack(displayWebView);
         } else {
@@ -478,15 +411,16 @@ public class NoteDetailSuperFragment extends DialogFragment implements OnBackPre
     }
 
     private void sendHideMessage() {
-        viewSwitcher.removeAllViews();
+        noteDetailStage.removeAllViews();
         if (data.isEmpty()) {
-            currIndex = -1;
+            noteDetailStage.setCurrentIndex(-1);
         }
-        HideNoteDetailEvent event = new HideNoteDetailEvent(currIndex);
-        event.setFirstIndex(firstInIndex);
+        HideNoteDetailEvent event = new HideNoteDetailEvent(noteDetailStage.getCurrentIndex());
+        event.setFirstIndex( noteDetailStage.getEnterIndex());
         EventBus.getDefault().post(event);
     }
 
+    @Override
     public void registerHooks(SmoothScaleAnimation smoothScaleAnimation) {
         smoothScaleAnimation.setAfterShowHook(new Runnable() {
             @Override
@@ -515,23 +449,9 @@ public class NoteDetailSuperFragment extends DialogFragment implements OnBackPre
         });
     }
 
-    private void msg(String msg) {
-        ToastUtil.toast(context, msg, Toast.LENGTH_SHORT);
-    }
-
     @Override
     public void setFragmentContainer(View fragmentContainer) {
         this.fragmentContainer = fragmentContainer;
-    }
-
-    class DetailViewHolder {
-        ViewGroup displayContainer;
-        WebView displayWebView;
-
-        DetailViewHolder(View view) {
-            displayContainer = view.findViewById(R.id.fragment_document_display_container);
-            displayWebView = view.findViewById(R.id.fragment_document_display_web);
-        }
     }
 
     private class MyTodoView extends TodoViewAdapter {
@@ -560,4 +480,5 @@ public class NoteDetailSuperFragment extends DialogFragment implements OnBackPre
     private class MyNoteView extends NoteViewAdapter {
 
     }
+
 }

@@ -17,13 +17,13 @@
         android:layout_marginTop="30dp"
         >
 
-        <com.beyond.note5.view.custom.ViewSwitcher
+        <com.beyond.note5.view.fragment.NoteDetailStage
             android:id="@+id/fragment_note_detail_view_switcher"
             android:layout_width="match_parent"
             android:layout_height="0dp"
             android:layout_weight="1">
 
-        </com.beyond.note5.view.custom.ViewSwitcher>
+        </com.beyond.note5.view.fragment.NoteDetailStage>
 
         <TextView
             android:id="@+id/fragment_note_detail_page_count"
@@ -32,23 +32,6 @@
             android:gravity="center"
             android:text="@string/page_count"
             android:textAlignment="gravity" />
-
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:orientation="horizontal">
-            <Button
-                android:id="@+id/fragment_note_detail_modify"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="modify"/>
-            <Button
-                android:id="@+id/fragment_note_detail_hide"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:text="hide" />
-
-        </LinearLayout>
 
     </LinearLayout>
 

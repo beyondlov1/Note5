@@ -1,6 +1,7 @@
 package com.beyond.note5.event;
 
 import com.beyond.note5.bean.Note;
+import com.beyond.note5.constant.LoadType;
 
 import java.util.List;
 
@@ -12,7 +13,7 @@ import java.util.List;
 public class FillNoteDetailEvent extends AbstractEvent<List<Note>> {
 
     private int index;
-    private ShowNoteDetailEvent.ShowType showType;
+    private LoadType loadType;
     private boolean consumed;
 
     public FillNoteDetailEvent(List<Note> notes, int index) {
@@ -24,12 +25,12 @@ public class FillNoteDetailEvent extends AbstractEvent<List<Note>> {
         return index;
     }
 
-    public void setShowType(ShowNoteDetailEvent.ShowType showType) {
-        this.showType = showType;
+    public void setLoadType(LoadType loadType) {
+        this.loadType = loadType;
     }
 
-    public ShowNoteDetailEvent.ShowType getShowType() {
-        return showType;
+    public LoadType getLoadType() {
+        return loadType;
     }
 
     public boolean isConsumed() {

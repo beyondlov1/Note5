@@ -104,8 +104,8 @@ public class TodoModifySuperFragment extends AbstractTodoEditorFragment implemen
     protected int getFragmentLayoutResId() {
         return R.layout.fragment_todo_edit;
     }
-    //回显
 
+    //回显
     @Subscribe(threadMode = ThreadMode.MAIN, sticky = true)
     public void onEventMainThread(FillTodoModifyEvent fillTodoModifyEvent) {
         final Todo todo = fillTodoModifyEvent.get();

@@ -34,6 +34,7 @@ import com.beyond.note5.R;
 import com.beyond.note5.bean.Attachment;
 import com.beyond.note5.bean.Document;
 import com.beyond.note5.bean.Note;
+import com.beyond.note5.constant.LoadType;
 import com.beyond.note5.event.FillNoteDetailEvent;
 import com.beyond.note5.event.HideFABEvent;
 import com.beyond.note5.event.HideKeyBoardEvent2;
@@ -282,10 +283,10 @@ public class MainActivity extends FragmentActivity implements
 
     @Subscribe(threadMode = ThreadMode.MAIN)
     public void onReceived(final ShowNoteDetailEvent event) {
-        showNoteDetail(event.get(),event.getData(),event.getIndex(),event.getShowType());
+        showNoteDetail(event.get(),event.getData(),event.getIndex(),event.getLoadType());
     }
 
-    private void showNoteDetail(View startView, List<Note> data, int index, ShowNoteDetailEvent.ShowType showType){
+    private void showNoteDetail(View startView, List<Note> data, int index, LoadType loadType){
         noteDetailFragmentContainer.setVisibility(View.VISIBLE);
         EventBus.getDefault().post(new HideFABEvent(null));
 
@@ -295,7 +296,7 @@ public class MainActivity extends FragmentActivity implements
         noteDetailSmoothScaleAnimation.show();
 
         FillNoteDetailEvent fillNoteDetailEvent = new FillNoteDetailEvent(data, index);
-        fillNoteDetailEvent.setShowType(showType);
+        fillNoteDetailEvent.setLoadType(loadType);
         EventBus.getDefault().postSticky(fillNoteDetailEvent);
     }
 

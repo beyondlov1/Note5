@@ -15,6 +15,7 @@ import android.view.ViewGroup;
 import com.beyond.note5.R;
 import com.beyond.note5.bean.Note;
 import com.beyond.note5.constant.DocumentConst;
+import com.beyond.note5.constant.LoadType;
 import com.beyond.note5.event.ShowNoteDetailEvent;
 import com.beyond.note5.event.note.UpdateNotePriorityEvent;
 import com.beyond.note5.utils.HtmlUtil;
@@ -195,7 +196,7 @@ public class NoteRecyclerViewAdapter extends DocumentRecyclerViewAdapter<Note, N
         ShowNoteDetailEvent showNoteDetailEvent = new ShowNoteDetailEvent(v);
         showNoteDetailEvent.setData(data);
         showNoteDetailEvent.setIndex(index);
-        showNoteDetailEvent.setShowType(ShowNoteDetailEvent.ShowType.CONTENT);
+        showNoteDetailEvent.setLoadType(LoadType.CONTENT);
         EventBus.getDefault().post(showNoteDetailEvent);
     }
 
@@ -203,7 +204,7 @@ public class NoteRecyclerViewAdapter extends DocumentRecyclerViewAdapter<Note, N
         ShowNoteDetailEvent showNoteDetailEvent = new ShowNoteDetailEvent(v);
         showNoteDetailEvent.setData(itemDataGenerator.getContentData());
         showNoteDetailEvent.setIndex(index);
-        showNoteDetailEvent.setShowType(ShowNoteDetailEvent.ShowType.WEB);
+        showNoteDetailEvent.setLoadType(LoadType.WEB);
         EventBus.getDefault().post(showNoteDetailEvent);
     }
 }

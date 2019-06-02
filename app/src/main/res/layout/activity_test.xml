@@ -23,8 +23,17 @@
         <!--android:src="@drawable/svg_test_convert_animated_drawable"-->
         <!--android:contentDescription="TODO" />-->
 
+    <com.beyond.note5.view.fragment.NoteDetailStage
+        android:id="@+id/test_detail_stage"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent">
+
+    </com.beyond.note5.view.fragment.NoteDetailStage>
+
     <com.beyond.note5.view.markdown.HighlightingEditor
         android:id="@+id/test_highlight"
         android:layout_width="match_parent"
         android:layout_height="wrap_content" />
+
+
 </LinearLayout>
