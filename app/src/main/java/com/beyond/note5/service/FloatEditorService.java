@@ -1,4 +1,4 @@
-package com.beyond.note5.view;
+package com.beyond.note5.service;
 
 import android.annotation.SuppressLint;
 import android.app.Service;
@@ -18,6 +18,7 @@ import com.beyond.note5.event.AfterFloatEditorSavedEvent;
 import com.beyond.note5.event.HideFloatButtonEvent;
 import com.beyond.note5.event.ShowFloatButtonEvent;
 import com.beyond.note5.utils.ViewUtil;
+import com.beyond.note5.view.FloatEditorActivity;
 
 import org.greenrobot.eventbus.EventBus;
 import org.greenrobot.eventbus.Subscribe;

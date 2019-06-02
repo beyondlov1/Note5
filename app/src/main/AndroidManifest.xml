@@ -87,7 +87,7 @@
                 android:resource="@xml/file_paths" />
         </provider>
         <service
-            android:name=".view.FloatEditorService"
+            android:name=".service.FloatEditorService"
             android:launchMode="singleInstance"
             />
     </application>

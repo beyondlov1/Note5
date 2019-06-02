@@ -12,7 +12,7 @@ import android.view.View;
 
 import com.beyond.note5.R;
 import com.beyond.note5.event.AfterFloatEditorSavedEvent;
-import com.beyond.note5.view.fragment.FloatEditorFragment;
+import com.beyond.note5.view.fragment.NoteEditFragment;
 import com.beyond.note5.view.listener.OnKeyboardChangeListener;
 
 import org.greenrobot.eventbus.EventBus;
@@ -52,12 +52,17 @@ public class FloatEditorActivity extends FragmentActivity implements View.OnClic
 
     private void initFragment() {
 
-        Fragment fragment = new FloatEditorFragment();
+//        Fragment fragment = new FloatEditorFragment();
+//        FragmentManager fragmentManager = getSupportFragmentManager();
+//        FragmentTransaction fragmentTransaction = fragmentManager.beginTransaction();
+//        fragmentTransaction.replace(R.id.float_editor_fragment_container, fragment);
+//        fragmentTransaction.commit();
+
+        Fragment fragment = new NoteEditFragment();
         FragmentManager fragmentManager = getSupportFragmentManager();
         FragmentTransaction fragmentTransaction = fragmentManager.beginTransaction();
         fragmentTransaction.replace(R.id.float_editor_fragment_container, fragment);
         fragmentTransaction.commit();
-
     }
 
     @Override

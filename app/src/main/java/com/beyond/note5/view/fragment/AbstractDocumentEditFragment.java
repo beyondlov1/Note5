@@ -17,6 +17,7 @@ import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.ViewStub;
 import android.view.Window;
 import android.view.WindowManager;
 import android.webkit.ValueCallback;
@@ -24,6 +25,7 @@ import android.webkit.WebResourceRequest;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
 import android.widget.EditText;
+import android.widget.LinearLayout;
 import android.widget.TextView;
 
 import com.beyond.note5.R;
@@ -35,12 +37,18 @@ import com.beyond.note5.utils.InputMethodUtil;
 import com.beyond.note5.utils.WebViewUtil;
 import com.beyond.note5.view.custom.DialogButton;
 import com.beyond.note5.view.listener.OnClickToInsertBeforeLineListener;
+import com.beyond.note5.view.markdown.HighlightingEditor;
 
+import org.apache.commons.lang3.StringUtils;
 import org.greenrobot.eventbus.EventBus;
 import org.greenrobot.eventbus.Subscribe;
 import org.greenrobot.eventbus.ThreadMode;
 
 import java.util.Objects;
+
+import butterknife.BindView;
+import butterknife.ButterKnife;
+import butterknife.Unbinder;
 
 
 /**
@@ -51,10 +59,26 @@ import java.util.Objects;
 public abstract class AbstractDocumentEditFragment<T extends Document> extends DialogFragment {
 
     protected View root;
-    protected EditText contentEditText;
-    protected WebView displayWebView;
+
+    protected boolean dialog = false;
 
     protected T createdDocument;
+
+    @BindView(R.id.fragment_edit_note_view_stub)
+    ViewStub editorToolViewStub;
+    @BindView(R.id.fragment_edit_note_web)
+    WebView displayWebView;
+    @BindView(R.id.fragment_edit_note_content)
+    HighlightingEditor editorContent;
+    @BindView(R.id.fragment_edit_note_container)
+    LinearLayout editorContainer;
+
+    private View clearButton;
+    private View convertButton;
+    private View browserSearchButton;
+    private View saveButton;
+
+    Unbinder unbinder;
 
     public AbstractDocumentEditFragment() {
         createdDocument = initCreatedDocument();
@@ -71,6 +95,7 @@ public abstract class AbstractDocumentEditFragment<T extends Document> extends D
     @NonNull
     @Override
     public Dialog onCreateDialog(Bundle savedInstanceState) {
+        dialog = true;
         AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());
         root = LayoutInflater.from(getActivity()).inflate(R.layout.fragment_note_edit, null);
         builder.setView(root)
@@ -78,7 +103,7 @@ public abstract class AbstractDocumentEditFragment<T extends Document> extends D
                         new DialogInterface.OnClickListener() {
                             @Override
                             public void onClick(DialogInterface dialog, int id) {
-                                String content = contentEditText.getText().toString();
+                                String content = editorContent.getText().toString();
                                 if (content.length() > 0) {
                                     sendEventsOnOKClick(content);
                                 }
@@ -94,7 +119,7 @@ public abstract class AbstractDocumentEditFragment<T extends Document> extends D
         return alertDialog;
     }
 
-    private void processStatusBarColor(AlertDialog dialog){
+    private void processStatusBarColor(AlertDialog dialog) {
         Objects.requireNonNull(dialog.getWindow()).clearFlags(WindowManager.LayoutParams.FLAG_TRANSLUCENT_STATUS);
         dialog.getWindow().addFlags(WindowManager.LayoutParams.FLAG_DRAWS_SYSTEM_BAR_BACKGROUNDS);
         dialog.getWindow().setStatusBarColor(getResources().getColor(R.color.white));
@@ -114,16 +139,21 @@ public abstract class AbstractDocumentEditFragment<T extends Document> extends D
     @Nullable
     @Override
     public View onCreateView(LayoutInflater inflater, @Nullable ViewGroup container, Bundle savedInstanceState) {
-//        root =  inflater.inflate(R.layout.fragment_note_edit, container, false);
+        if (!dialog) {
+            root = inflater.inflate(R.layout.fragment_note_edit, container, false);
+        }
+        unbinder = ButterKnife.bind(this, root);
         initView(root);
-        initDialogAnimation();
+        if (dialog) {
+            initDialogAnimation();
+        }
         initEvent();
         return root;
     }
 
     private void initView(View view) {
-        contentEditText = view.findViewById(R.id.fragment_edit_document_content);
-        displayWebView = view.findViewById(R.id.fragment_edit_document_web);
+        editorContent = view.findViewById(R.id.fragment_edit_note_content);
+        displayWebView = view.findViewById(R.id.fragment_edit_note_web);
 
         TextView markdownToolHead = view.findViewById(R.id.keyboard_top_tool_head);
         TextView markdownToolHead3 = view.findViewById(R.id.keyboard_top_tool_head_3);
@@ -136,8 +166,8 @@ public abstract class AbstractDocumentEditFragment<T extends Document> extends D
         TextView markdownToolStrike = view.findViewById(R.id.keyboard_top_tool_strike);
         View markdownToolContainer = view.findViewById(R.id.keyboard_top_tool_tip_container);
 
-        OnMarkdownToolItemClickListener onMarkdownToolItemClickListener = new OnMarkdownToolItemClickListener(contentEditText);
-        OnClickToInsertBeforeLineListener onClickToInsertBeforeLineListener = new OnClickToInsertBeforeLineListener(contentEditText);
+        OnMarkdownToolItemClickListener onMarkdownToolItemClickListener = new OnMarkdownToolItemClickListener(editorContent);
+        OnClickToInsertBeforeLineListener onClickToInsertBeforeLineListener = new OnClickToInsertBeforeLineListener(editorContent);
 
         markdownToolHead.setOnClickListener(onClickToInsertBeforeLineListener);
         markdownToolHead3.setOnClickListener(onClickToInsertBeforeLineListener);
@@ -148,7 +178,21 @@ public abstract class AbstractDocumentEditFragment<T extends Document> extends D
         markdownToolLine.setOnClickListener(onMarkdownToolItemClickListener);
         markdownToolBracketsLeft.setOnClickListener(onMarkdownToolItemClickListener);
         markdownToolBracketsRight.setOnClickListener(onMarkdownToolItemClickListener);
-        markdownToolStrike.setOnClickListener(new OnMarkdownToolStrikeClickListener(contentEditText));
+        markdownToolStrike.setOnClickListener(new OnMarkdownToolStrikeClickListener(editorContent));
+
+        if (!dialog) {
+            editorContainer.setBackgroundColor(Color.WHITE);
+            editorContainer.setBackgroundResource(R.drawable.corners_5dp);
+            editorContainer.setPadding(5, 5, 5, 5);
+            editorToolViewStub.inflate();
+            clearButton = view.findViewById(R.id.fragment_edit_note_clear);
+            convertButton = view.findViewById(R.id.fragment_edit_note_to_note);
+            convertButton.setVisibility(View.GONE);
+            browserSearchButton = view.findViewById(R.id.fragment_edit_note_browser_search);
+            browserSearchButton.setVisibility(View.GONE);
+            saveButton = view.findViewById(R.id.fragment_edit_note_save);
+            InputMethodUtil.showKeyboard(editorContent);
+        }
     }
 
     @SuppressWarnings("ConstantConditions")
@@ -162,7 +206,7 @@ public abstract class AbstractDocumentEditFragment<T extends Document> extends D
         displayWebView.getSettings().setJavaScriptEnabled(true);
         displayWebView.getSettings().setJavaScriptCanOpenWindowsAutomatically(true);
         displayWebView.scrollTo(0, 100000);
-        contentEditText.addTextChangedListener(new TextWatcher() {
+        editorContent.addTextChangedListener(new TextWatcher() {
             @Override
             public void beforeTextChanged(CharSequence s, int start, int count, int after) {
 
@@ -186,14 +230,33 @@ public abstract class AbstractDocumentEditFragment<T extends Document> extends D
 
             }
         });
-
+        if (!dialog){
+            clearButton.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    editorContent.setText(null);
+                }
+            });
+            saveButton.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    String content = editorContent.getText().toString();
+                    if (StringUtils.isNotBlank(content)) {
+                        sendEventsOnOKClick(content);
+                    }
+                    InputMethodUtil.hideKeyboard(editorContent);
+                }
+            });
+        }
     }
 
     @Override
     public void onStart() {
         super.onStart();
         EventBus.getDefault().register(this);
-        initDialogSize();
+        if (dialog) {
+            initDialogSize();
+        }
     }
 
     private void initDialogSize() {
@@ -211,8 +274,8 @@ public abstract class AbstractDocumentEditFragment<T extends Document> extends D
         params.height = InputMethodUtil.getDialogHeightWithSoftInputMethod();
         win.setAttributes(params);
         displayWebView.setMinimumHeight(dm.heightPixels);
-        contentEditText.setMinimumHeight(dm.heightPixels);
-        InputMethodUtil.showKeyboard(contentEditText);
+        editorContent.setMinimumHeight(dm.heightPixels);
+        InputMethodUtil.showKeyboard(editorContent);
     }
 
     @Override
@@ -224,7 +287,9 @@ public abstract class AbstractDocumentEditFragment<T extends Document> extends D
     @Subscribe(threadMode = ThreadMode.MAIN)
     public void onEventMainThread(ShowKeyBoardEvent event) {
         Integer y = event.get();
-        adjustDialogSize(y);
+        if (dialog) {
+            adjustDialogSize(y);
+        }
     }
 
     private void adjustDialogSize(Integer y) {
@@ -240,20 +305,28 @@ public abstract class AbstractDocumentEditFragment<T extends Document> extends D
         params.width = dm.widthPixels;
         //设置初始的dialogHeightWithSoftInputMethod, 为了不让开始的时候动画跳一下
         int dialogHeightWithSoftInputMethod = InputMethodUtil.getDialogHeightWithSoftInputMethod();
-        if ( dialogHeightWithSoftInputMethod== 0) {
-            dialogHeightWithSoftInputMethod = dm.heightPixels - y -50;
-            InputMethodUtil.rememberDialogHeightWithSoftInputMethod(dm.heightPixels - y -50);
+        if (dialogHeightWithSoftInputMethod == 0) {
+            dialogHeightWithSoftInputMethod = dm.heightPixels - y - 50;
+            InputMethodUtil.rememberDialogHeightWithSoftInputMethod(dm.heightPixels - y - 50);
         }
-        params.height = dialogHeightWithSoftInputMethod+75;//因为改写了edit的通知栏，所以要加上通知栏的高度
+        params.height = dialogHeightWithSoftInputMethod + 75;//因为改写了edit的通知栏，所以要加上通知栏的高度
         win.setAttributes(params);
 
         displayWebView.setMinimumHeight(dm.heightPixels);
-        contentEditText.setMinimumHeight(dm.heightPixels);
+        editorContent.setMinimumHeight(dm.heightPixels);
     }
 
     @Subscribe(threadMode = ThreadMode.MAIN)
     public void onEventMainThread(HideKeyBoardEvent2 event) {
-        dismiss();
+        if (dialog) {
+            dismiss();
+        }
+    }
+
+    @Override
+    public void onDestroyView() {
+        super.onDestroyView();
+        unbinder.unbind();
     }
 
     class OnMarkdownToolItemClickListener implements View.OnClickListener {

@@ -22,7 +22,7 @@ import android.view.ViewGroup;
 import android.view.ViewStub;
 import android.view.Window;
 import android.view.WindowManager;
-import android.widget.EditText;
+import android.widget.LinearLayout;
 import android.widget.TextView;
 
 import com.beyond.note5.MyApplication;
@@ -62,6 +62,10 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Objects;
 
+import butterknife.BindView;
+import butterknife.ButterKnife;
+import butterknife.Unbinder;
+
 /**
  * @author: beyond
  * @date: 2019/1/31
@@ -74,7 +78,22 @@ public class TodoEditFragment extends DialogFragment {
     private static final String DIALOG_HEIGHT_WITH_SOFT_INPUT_METHOD = "dialogHeightWithSoftInputMethod";
 
     protected View root;
-    protected EditText contentEditText;
+
+    @BindView(R.id.fragment_edit_todo_content)
+    SelectionListenableEditText editorContent;
+    @BindView(R.id.fragment_edit_todo_tag_view_stub)
+    ViewStub editorTagViewStub;
+    @BindView(R.id.fragment_edit_todo_view_stub)
+    ViewStub editorToolViewStub;
+    @BindView(R.id.fragment_todo_edit_container)
+    LinearLayout editorContainer;
+
+    private View clearButton;
+    private View convertButton;
+    private View browserSearchButton;
+    private View saveButton;
+    Unbinder unbinder;
+
     private DialogButton neutralButton;
     private TagFlowLayout flowLayout;
     private TagAdapter<String> tagAdapter;
@@ -82,7 +101,10 @@ public class TodoEditFragment extends DialogFragment {
     private List<String> tagData = new ArrayList<>();
     private Handler handler = new Handler();
 
+    private boolean dialog = false;
+
     TodoCompositePresenter todoCompositePresenter;
+
 
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
@@ -109,6 +131,8 @@ public class TodoEditFragment extends DialogFragment {
     @NonNull
     @Override
     public Dialog onCreateDialog(Bundle savedInstanceState) {
+        dialog = true;
+
         AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());
         root = LayoutInflater.from(getActivity()).inflate(R.layout.fragment_todo_edit, null);
         builder.setView(root)
@@ -116,10 +140,10 @@ public class TodoEditFragment extends DialogFragment {
                         new DialogInterface.OnClickListener() {
                             @Override
                             public void onClick(DialogInterface dialog, int id) {
-                                String content = contentEditText.getText().toString();
+                                String content = editorContent.getText().toString();
                                 saveTodo(content);
                                 dialog.dismiss();
-                                InputMethodUtil.hideKeyboard(contentEditText);
+                                InputMethodUtil.hideKeyboard(editorContent);
                             }
                         }).setNegativeButton("Cancel", null);
         neutralButton = initNeutralButton();
@@ -153,16 +177,20 @@ public class TodoEditFragment extends DialogFragment {
     @Nullable
     @Override
     public View onCreateView(LayoutInflater inflater, @Nullable ViewGroup container, Bundle savedInstanceState) {
+        if (root == null) {
+            root = inflater.inflate(R.layout.fragment_todo_edit, null);
+        }
+        unbinder = ButterKnife.bind(this, root);
         initView(root);
-        initDialogAnimation();
+        if (dialog) {
+            initDialogAnimation();
+        }
         initEvent();
         return root;
     }
 
     private void initView(View view) {
-        contentEditText = view.findViewById(R.id.fragment_edit_todo_content);
-        ViewStub tagsContainer = view.findViewById(R.id.fragment_edit_todo_tag_view_stub);
-        tagsContainer.inflate();
+        editorTagViewStub.inflate();
         flowLayout = view.findViewById(R.id.fragment_edit_todo_tags);
         tagAdapter = new TagAdapter<String>(tagData) {
             @Override
@@ -175,6 +203,20 @@ public class TodoEditFragment extends DialogFragment {
             }
         };
         flowLayout.setAdapter(tagAdapter);
+
+        if (!dialog) {
+            editorContainer.setBackgroundColor(Color.WHITE);
+            editorContainer.setBackgroundResource(R.drawable.corners_5dp);
+            editorContainer.setPadding(5,5,5,0);
+            editorToolViewStub.inflate();
+            clearButton = view.findViewById(R.id.fragment_edit_todo_clear);
+            convertButton = view.findViewById(R.id.fragment_edit_todo_to_note);
+            convertButton.setVisibility(View.GONE);
+            browserSearchButton = view.findViewById(R.id.fragment_edit_todo_browser_search);
+            browserSearchButton.setVisibility(View.GONE);
+            saveButton = view.findViewById(R.id.fragment_edit_todo_save);
+            InputMethodUtil.showKeyboard(editorContent);
+        }
     }
 
     @SuppressWarnings("ConstantConditions")
@@ -184,37 +226,56 @@ public class TodoEditFragment extends DialogFragment {
     }
 
     private void initEvent() {
-        TimeExpressionDetectiveTextWatcher.Builder builder = new TimeExpressionDetectiveTextWatcher.Builder(contentEditText);
-        contentEditText.addTextChangedListener(builder.handler(handler).build());
-        if (contentEditText instanceof SelectionListenableEditText) {
-            ((SelectionListenableEditText) contentEditText).setOnSelectionChanged(new SelectionListenableEditText.OnSelectionChangeListener() {
+        TimeExpressionDetectiveTextWatcher.Builder builder = new TimeExpressionDetectiveTextWatcher.Builder(editorContent);
+        editorContent.addTextChangedListener(builder.handler(handler).build());
+        editorContent.setOnSelectionChanged(new SelectionListenableEditText.OnSelectionChangeListener() {
 
+            @Override
+            public void onChanged(String content, int selStart, int selEnd) {
+                if (content.length() >= selStart) {
+                    todoCompositePresenter.predict(content.substring(0, selStart));
+                }
+            }
+        });
+        // 刚打开时预测
+        editorContent.setOnFocusChangeListener(new View.OnFocusChangeListener() {
+            @Override
+            public void onFocusChange(View v, boolean hasFocus) {
+                if (editorContent== null ||editorContent.getText() == null){
+                    todoCompositePresenter.predict(null);
+                    return;
+                }
+                todoCompositePresenter.predict(editorContent.getText().toString());
+            }
+        });
+        flowLayout.setOnTagClickListener(new OnTagClickToAppendListener(editorContent));
+
+        if (!dialog){
+            clearButton.setOnClickListener(new View.OnClickListener() {
                 @Override
-                public void onChanged(String content, int selStart, int selEnd) {
-                    if (content.length() >= selStart) {
-                        todoCompositePresenter.predict(content.substring(0, selStart));
-                    }
+                public void onClick(View v) {
+                    editorContent.setText(null);
+                }
+            });
+            saveButton.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    saveTodo(editorContent.getText().toString());
+                    InputMethodUtil.hideKeyboard(editorContent);
                 }
             });
         }
-        // 刚打开时预测
-        contentEditText.setOnFocusChangeListener(new View.OnFocusChangeListener() {
-            @Override
-            public void onFocusChange(View v, boolean hasFocus) {
-                todoCompositePresenter.predict(contentEditText.getText().toString());
-            }
-        });
-        flowLayout.setOnTagClickListener(new OnTagClickToAppendListener(contentEditText));
-
     }
 
     @Override
     public void onStart() {
         super.onStart();
         EventBus.getDefault().register(this);
-        initDialogSize();
-        if (neutralButton != null) {
-            ((AlertDialog) getDialog()).getButton(-3).setOnClickListener(neutralButton.getOnClickListener());
+        if (dialog) {
+            initDialogSize();
+            if (neutralButton != null) {
+                ((AlertDialog) getDialog()).getButton(-3).setOnClickListener(neutralButton.getOnClickListener());
+            }
         }
     }
 
@@ -232,8 +293,8 @@ public class TodoEditFragment extends DialogFragment {
         params.width = ViewGroup.LayoutParams.MATCH_PARENT;
         params.height = dialogHeightWithSoftInputMethod;
         win.setAttributes(params);
-        contentEditText.setMinimumHeight(dm.heightPixels);
-        InputMethodUtil.showKeyboard(contentEditText);
+        editorContent.setMinimumHeight(dm.heightPixels);
+        InputMethodUtil.showKeyboard(editorContent);
     }
 
     @Override
@@ -269,7 +330,7 @@ public class TodoEditFragment extends DialogFragment {
         params.height = dialogHeightWithSoftInputMethod + 75;//因为改写了edit的通知栏，所以要加上通知栏的高度 //FIXME: Pixel模拟会不包括这个75,不知道为什么
         win.setAttributes(params);
 
-        contentEditText.setMinimumHeight(dm.heightPixels);
+        editorContent.setMinimumHeight(dm.heightPixels);
     }
 
     @Subscribe(threadMode = ThreadMode.MAIN)
@@ -277,6 +338,12 @@ public class TodoEditFragment extends DialogFragment {
         if (Document.TODO.equals(event.getType())) {
             dismiss();
         }
+    }
+
+    @Override
+    public void onDestroyView() {
+        super.onDestroyView();
+        unbinder.unbind();
     }
 
     private class MyTodoView extends TodoViewAdapter {

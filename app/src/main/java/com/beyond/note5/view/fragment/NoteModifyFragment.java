@@ -41,8 +41,8 @@ public class NoteModifyFragment extends AbstractDocumentEditFragment<Note> {
     public void onEventMainThread(FillNoteModifyEvent fillNoteModifyEvent){
         Note note = fillNoteModifyEvent.get();
         createdDocument = ObjectUtils.clone(note);
-        contentEditText.setText(note.getContent());
-        contentEditText.setSelection(note.getContent().length());
+        editorContent.setText(note.getContent());
+        editorContent.setSelection(note.getContent().length());
         WebViewUtil.loadWebContent(displayWebView,note);
     }
 
