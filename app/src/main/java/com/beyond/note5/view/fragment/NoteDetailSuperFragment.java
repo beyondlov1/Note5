@@ -464,6 +464,9 @@ public class NoteDetailSuperFragment extends DialogFragment implements OnBackPre
 
     @Override
     public boolean onBackPressed() {
+        if (viewSwitcher.getCurrentView() == null){
+            return true;
+        }
         WebView displayWebView = new DetailViewHolder(viewSwitcher.getCurrentView()).displayWebView;
         if (WebViewUtil.canGoBack(displayWebView)) {
             WebViewUtil.goBack(displayWebView);

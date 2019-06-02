@@ -1,7 +1,6 @@
 package com.beyond.note5.view.fragment;
 
 import android.os.Bundle;
-import android.support.annotation.Nullable;
 
 import com.beyond.note5.bean.Note;
 import com.beyond.note5.constant.DocumentConst;
@@ -18,34 +17,28 @@ import java.util.Date;
  * @date: 2019/1/31
  */
 
-public class NoteEditFragment extends AbstractDocumentEditFragment<Note> {
+public class NoteEditFragment extends AbstractNoteEditorFragment {
 
     protected NotePresenter notePresenter;
 
     @Override
-    public void onCreate(@Nullable Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-        initInjection();
-    }
-
-    private void initInjection() {
+    protected void init(Bundle savedInstanceState) {
         notePresenter = new NotePresenterImpl(new MyNoteView());
     }
 
     @Override
-    protected Note initCreatedDocument() {
+    protected Note creatingDocument() {
         return new Note();
     }
 
     @Override
-    protected void sendEventsOnOKClick(String content) {
-        createdDocument.setId(IDUtil.uuid());
-        createdDocument.setContent(content);
-        createdDocument.setCreateTime(new Date());
-        createdDocument.setLastModifyTime(new Date());
-        createdDocument.setVersion(1);
-        createdDocument.setReadFlag(DocumentConst.READ_FLAG_NORMAL);
-        notePresenter.add(createdDocument);
+    protected void onOKClick() {
+        creatingDocument.setId(IDUtil.uuid());
+        creatingDocument.setCreateTime(new Date());
+        creatingDocument.setLastModifyTime(new Date());
+        creatingDocument.setVersion(1);
+        creatingDocument.setReadFlag(DocumentConst.READ_FLAG_NORMAL);
+        notePresenter.add(creatingDocument);
     }
 
     private class MyNoteView extends NoteViewAdapter {

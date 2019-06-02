@@ -6,15 +6,11 @@ import android.content.DialogInterface;
 import android.graphics.Color;
 import android.graphics.drawable.ColorDrawable;
 import android.os.Bundle;
-import android.support.annotation.NonNull;
-import android.support.annotation.Nullable;
-import android.support.v4.app.DialogFragment;
 import android.support.v7.app.AlertDialog;
 import android.text.Editable;
 import android.text.TextWatcher;
 import android.util.DisplayMetrics;
 import android.view.Gravity;
-import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.ViewStub;
@@ -25,30 +21,24 @@ import android.webkit.WebResourceRequest;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
 import android.widget.EditText;
+import android.widget.ImageButton;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 
 import com.beyond.note5.R;
-import com.beyond.note5.bean.Document;
-import com.beyond.note5.event.Event;
+import com.beyond.note5.bean.Note;
 import com.beyond.note5.event.HideKeyBoardEvent2;
 import com.beyond.note5.event.ShowKeyBoardEvent;
 import com.beyond.note5.utils.InputMethodUtil;
 import com.beyond.note5.utils.WebViewUtil;
-import com.beyond.note5.view.custom.DialogButton;
 import com.beyond.note5.view.listener.OnClickToInsertBeforeLineListener;
 import com.beyond.note5.view.markdown.HighlightingEditor;
 
 import org.apache.commons.lang3.StringUtils;
-import org.greenrobot.eventbus.EventBus;
-import org.greenrobot.eventbus.Subscribe;
-import org.greenrobot.eventbus.ThreadMode;
 
 import java.util.Objects;
 
 import butterknife.BindView;
-import butterknife.ButterKnife;
-import butterknife.Unbinder;
 
 
 /**
@@ -56,48 +46,23 @@ import butterknife.Unbinder;
  * @date: 2019/1/30
  */
 
-public abstract class AbstractDocumentEditFragment<T extends Document> extends DialogFragment {
-
-    protected View root;
-
-    protected boolean dialog = false;
-
-    protected T createdDocument;
+public abstract class AbstractNoteEditorFragment extends AbstractDocumentEditorFragment<Note> {
 
     @BindView(R.id.fragment_edit_note_view_stub)
-    ViewStub editorToolViewStub;
+    protected ViewStub editorToolViewStub;
     @BindView(R.id.fragment_edit_note_web)
-    WebView displayWebView;
+    protected WebView displayWebView;
     @BindView(R.id.fragment_edit_note_content)
-    HighlightingEditor editorContent;
+    protected HighlightingEditor editorContent;
     @BindView(R.id.fragment_edit_note_container)
-    LinearLayout editorContainer;
+    protected LinearLayout editorContainer;
 
-    private View clearButton;
-    private View convertButton;
-    private View browserSearchButton;
-    private View saveButton;
-
-    Unbinder unbinder;
-
-    public AbstractDocumentEditFragment() {
-        createdDocument = initCreatedDocument();
-    }
-
-    protected abstract T initCreatedDocument();
+    protected ImageButton clearButton;
+    protected ImageButton saveButton;
 
     @Override
-    public void onCreate(@Nullable Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-    }
-
-    @SuppressLint("InflateParams")
-    @NonNull
-    @Override
-    public Dialog onCreateDialog(Bundle savedInstanceState) {
-        dialog = true;
+    public Dialog createDialogInternal(Bundle savedInstanceState) {
         AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());
-        root = LayoutInflater.from(getActivity()).inflate(R.layout.fragment_note_edit, null);
         builder.setView(root)
                 .setPositiveButton("OK",
                         new DialogInterface.OnClickListener() {
@@ -105,15 +70,12 @@ public abstract class AbstractDocumentEditFragment<T extends Document> extends D
                             public void onClick(DialogInterface dialog, int id) {
                                 String content = editorContent.getText().toString();
                                 if (content.length() > 0) {
-                                    sendEventsOnOKClick(content);
+                                    creatingDocument.setContent(content);
+                                    onOKClick();
                                 }
                                 dialog.dismiss();
                             }
                         }).setNegativeButton("Cancel", null);
-        DialogButton neutralButton = getNeutralButton();
-        if (neutralButton != null) {
-            builder.setNeutralButton(neutralButton.getName(), null);
-        }
         AlertDialog alertDialog = builder.create();
         processStatusBarColor(alertDialog);
         return alertDialog;
@@ -126,45 +88,24 @@ public abstract class AbstractDocumentEditFragment<T extends Document> extends D
         dialog.getWindow().getDecorView().setSystemUiVisibility(View.VISIBLE);
     }
 
-    protected abstract void sendEventsOnOKClick(String content);
+    protected abstract void onOKClick();
 
-    public void post(Event event) {
-        EventBus.getDefault().post(event);
-    }
-
-    protected DialogButton getNeutralButton() {
-        return null;
-    }
-
-    @Nullable
     @Override
-    public View onCreateView(LayoutInflater inflater, @Nullable ViewGroup container, Bundle savedInstanceState) {
-        if (!dialog) {
-            root = inflater.inflate(R.layout.fragment_note_edit, container, false);
-        }
-        unbinder = ButterKnife.bind(this, root);
-        initView(root);
-        if (dialog) {
-            initDialogAnimation();
-        }
-        initEvent();
-        return root;
-    }
+    protected void initCommonView() {
 
-    private void initView(View view) {
-        editorContent = view.findViewById(R.id.fragment_edit_note_content);
-        displayWebView = view.findViewById(R.id.fragment_edit_note_web);
+        editorContent = root.findViewById(R.id.fragment_edit_note_content);
+        displayWebView = root.findViewById(R.id.fragment_edit_note_web);
 
-        TextView markdownToolHead = view.findViewById(R.id.keyboard_top_tool_head);
-        TextView markdownToolHead3 = view.findViewById(R.id.keyboard_top_tool_head_3);
-        TextView markdownToolList = view.findViewById(R.id.keyboard_top_tool_list);
-        TextView markdownToolEnterList = view.findViewById(R.id.keyboard_top_tool_enter_list);
-        TextView markdownToolOrderList = view.findViewById(R.id.keyboard_top_tool_order_list);
-        TextView markdownToolLine = view.findViewById(R.id.keyboard_top_tool_line);
-        TextView markdownToolBracketsLeft = view.findViewById(R.id.keyboard_top_tool_brackets_left);
-        TextView markdownToolBracketsRight = view.findViewById(R.id.keyboard_top_tool_brackets_right);
-        TextView markdownToolStrike = view.findViewById(R.id.keyboard_top_tool_strike);
-        View markdownToolContainer = view.findViewById(R.id.keyboard_top_tool_tip_container);
+        TextView markdownToolHead = root.findViewById(R.id.keyboard_top_tool_head);
+        TextView markdownToolHead3 = root.findViewById(R.id.keyboard_top_tool_head_3);
+        TextView markdownToolList = root.findViewById(R.id.keyboard_top_tool_list);
+        TextView markdownToolEnterList = root.findViewById(R.id.keyboard_top_tool_enter_list);
+        TextView markdownToolOrderList = root.findViewById(R.id.keyboard_top_tool_order_list);
+        TextView markdownToolLine = root.findViewById(R.id.keyboard_top_tool_line);
+        TextView markdownToolBracketsLeft = root.findViewById(R.id.keyboard_top_tool_brackets_left);
+        TextView markdownToolBracketsRight = root.findViewById(R.id.keyboard_top_tool_brackets_right);
+        TextView markdownToolStrike = root.findViewById(R.id.keyboard_top_tool_strike);
+        View markdownToolContainer = root.findViewById(R.id.keyboard_top_tool_tip_container);
 
         OnMarkdownToolItemClickListener onMarkdownToolItemClickListener = new OnMarkdownToolItemClickListener(editorContent);
         OnClickToInsertBeforeLineListener onClickToInsertBeforeLineListener = new OnClickToInsertBeforeLineListener(editorContent);
@@ -180,29 +121,11 @@ public abstract class AbstractDocumentEditFragment<T extends Document> extends D
         markdownToolBracketsRight.setOnClickListener(onMarkdownToolItemClickListener);
         markdownToolStrike.setOnClickListener(new OnMarkdownToolStrikeClickListener(editorContent));
 
-        if (!dialog) {
-            editorContainer.setBackgroundColor(Color.WHITE);
-            editorContainer.setBackgroundResource(R.drawable.corners_5dp);
-            editorContainer.setPadding(5, 5, 5, 5);
-            editorToolViewStub.inflate();
-            clearButton = view.findViewById(R.id.fragment_edit_note_clear);
-            convertButton = view.findViewById(R.id.fragment_edit_note_to_note);
-            convertButton.setVisibility(View.GONE);
-            browserSearchButton = view.findViewById(R.id.fragment_edit_note_browser_search);
-            browserSearchButton.setVisibility(View.GONE);
-            saveButton = view.findViewById(R.id.fragment_edit_note_save);
-            InputMethodUtil.showKeyboard(editorContent);
-        }
-    }
-
-    @SuppressWarnings("ConstantConditions")
-    private void initDialogAnimation() {
-        getDialog().requestWindowFeature(Window.FEATURE_NO_TITLE);
-        getDialog().getWindow().setWindowAnimations(R.style.edit_dialog_animation);
     }
 
     @SuppressLint("SetJavaScriptEnabled")
-    private void initEvent() {
+    @Override
+    protected void initCommonEvent() {
         displayWebView.getSettings().setJavaScriptEnabled(true);
         displayWebView.getSettings().setJavaScriptCanOpenWindowsAutomatically(true);
         displayWebView.scrollTo(0, 100000);
@@ -214,8 +137,8 @@ public abstract class AbstractDocumentEditFragment<T extends Document> extends D
 
             @Override
             public void onTextChanged(final CharSequence s, int start, int before, int count) {
-                createdDocument.setContent(s.toString());
-                WebViewUtil.loadWebContent(displayWebView, createdDocument);
+                creatingDocument.setContent(s.toString());
+                WebViewUtil.loadWebContent(displayWebView, creatingDocument);
                 final CharSequence target = s.subSequence(start + count, s.length()).toString()
                         .replaceAll("\\p{Punct}*", "")
                         .replaceAll("\\s*|\n|\t|\r", "");
@@ -230,33 +153,71 @@ public abstract class AbstractDocumentEditFragment<T extends Document> extends D
 
             }
         });
-        if (!dialog){
-            clearButton.setOnClickListener(new View.OnClickListener() {
-                @Override
-                public void onClick(View v) {
-                    editorContent.setText(null);
-                }
-            });
-            saveButton.setOnClickListener(new View.OnClickListener() {
-                @Override
-                public void onClick(View v) {
-                    String content = editorContent.getText().toString();
-                    if (StringUtils.isNotBlank(content)) {
-                        sendEventsOnOKClick(content);
-                    }
-                    InputMethodUtil.hideKeyboard(editorContent);
-                }
-            });
-        }
     }
 
     @Override
-    public void onStart() {
-        super.onStart();
-        EventBus.getDefault().register(this);
-        if (dialog) {
-            initDialogSize();
-        }
+    protected void initDialogView() {
+        super.initDialogView();
+        initDialogAnimation();
+    }
+
+    @SuppressWarnings("ConstantConditions")
+    private void initDialogAnimation() {
+        getDialog().requestWindowFeature(Window.FEATURE_NO_TITLE);
+        getDialog().getWindow().setWindowAnimations(R.style.edit_dialog_animation);
+    }
+
+    @Override
+    protected void initFragmentView() {
+        super.initFragmentView();
+        editorContainer.setBackgroundColor(Color.WHITE);
+        editorContainer.setBackgroundResource(R.drawable.corners_5dp);
+        editorContainer.setPadding(5, 5, 5, 5);
+        editorToolViewStub.inflate();
+        clearButton = root.findViewById(R.id.fragment_edit_note_clear);
+        View convertButton = root.findViewById(R.id.fragment_edit_note_to_note);
+        convertButton.setVisibility(View.GONE);
+        View browserSearchButton = root.findViewById(R.id.fragment_edit_note_browser_search);
+        browserSearchButton.setVisibility(View.GONE);
+        saveButton = root.findViewById(R.id.fragment_edit_note_save);
+        InputMethodUtil.showKeyboard(editorContent);
+    }
+
+    @Override
+    protected void initFragmentEvent() {
+        super.initFragmentEvent();
+        clearButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                editorContent.setText(null);
+            }
+        });
+        saveButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                String content = editorContent.getText().toString();
+                if (StringUtils.isNotBlank(content)) {
+                    creatingDocument.setContent(content);
+                    onOKClick();
+                }
+                InputMethodUtil.hideKeyboard(editorContent);
+            }
+        });
+    }
+
+    @Override
+    protected int getDialogLayoutResId() {
+        return R.layout.fragment_note_edit;
+    }
+
+    @Override
+    protected int getFragmentLayoutResId() {
+        return R.layout.fragment_note_edit;
+    }
+
+    @Override
+    protected void onDialogStartInternal() {
+        initDialogSize();
     }
 
     private void initDialogSize() {
@@ -279,17 +240,9 @@ public abstract class AbstractDocumentEditFragment<T extends Document> extends D
     }
 
     @Override
-    public void onStop() {
-        EventBus.getDefault().unregister(this);
-        super.onStop();
-    }
-
-    @Subscribe(threadMode = ThreadMode.MAIN)
-    public void onEventMainThread(ShowKeyBoardEvent event) {
+    protected void onDialogShowKeyboard(ShowKeyBoardEvent event) {
         Integer y = event.get();
-        if (dialog) {
-            adjustDialogSize(y);
-        }
+        adjustDialogSize(y);
     }
 
     private void adjustDialogSize(Integer y) {
@@ -316,24 +269,16 @@ public abstract class AbstractDocumentEditFragment<T extends Document> extends D
         editorContent.setMinimumHeight(dm.heightPixels);
     }
 
-    @Subscribe(threadMode = ThreadMode.MAIN)
-    public void onEventMainThread(HideKeyBoardEvent2 event) {
-        if (dialog) {
-            dismiss();
-        }
-    }
-
     @Override
-    public void onDestroyView() {
-        super.onDestroyView();
-        unbinder.unbind();
+    protected void onDialogHideKeyboard(HideKeyBoardEvent2 event) {
+        dismiss();
     }
 
     class OnMarkdownToolItemClickListener implements View.OnClickListener {
 
         private EditText editText;
 
-        public OnMarkdownToolItemClickListener(EditText editText) {
+        OnMarkdownToolItemClickListener(EditText editText) {
             this.editText = editText;
         }
 
@@ -450,7 +395,7 @@ public abstract class AbstractDocumentEditFragment<T extends Document> extends D
 
         private EditText editText;
 
-        public OnMarkdownToolStrikeClickListener(EditText editText) {
+        OnMarkdownToolStrikeClickListener(EditText editText) {
             this.editText = editText;
         }
 

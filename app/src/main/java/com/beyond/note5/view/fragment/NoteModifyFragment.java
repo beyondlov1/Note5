@@ -1,7 +1,6 @@
 package com.beyond.note5.view.fragment;
 
 import android.os.Bundle;
-import android.support.annotation.Nullable;
 
 import com.beyond.note5.bean.Note;
 import com.beyond.note5.event.FillNoteModifyEvent;
@@ -22,17 +21,12 @@ import java.util.Date;
  * @date: 2019/2/5
  */
 
-public class NoteModifyFragment extends AbstractDocumentEditFragment<Note> {
+public class NoteModifyFragment extends AbstractNoteEditorFragment {
 
     protected NotePresenter notePresenter;
 
     @Override
-    public void onCreate(@Nullable Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-        initInjection();
-    }
-
-    private void initInjection() {
+    protected void init(Bundle savedInstanceState) {
         notePresenter = new NotePresenterImpl(new MyNoteView());
     }
 
@@ -40,24 +34,23 @@ public class NoteModifyFragment extends AbstractDocumentEditFragment<Note> {
     @Subscribe(threadMode = ThreadMode.MAIN,sticky = true)
     public void onEventMainThread(FillNoteModifyEvent fillNoteModifyEvent){
         Note note = fillNoteModifyEvent.get();
-        createdDocument = ObjectUtils.clone(note);
+        creatingDocument = ObjectUtils.clone(note);
         editorContent.setText(note.getContent());
         editorContent.setSelection(note.getContent().length());
         WebViewUtil.loadWebContent(displayWebView,note);
     }
 
     @Override
-    protected Note initCreatedDocument() {
+    protected Note creatingDocument() {
         //do nothing
         return null;
     }
 
     @Override
-    protected void sendEventsOnOKClick(String content) {
-        createdDocument.setContent(content);
-        createdDocument.setLastModifyTime(new Date());
-        createdDocument.setVersion(createdDocument.getVersion() == null?0:createdDocument.getVersion()+1);
-        notePresenter.update(createdDocument);
+    protected void onOKClick() {
+        creatingDocument.setLastModifyTime(new Date());
+        creatingDocument.setVersion(creatingDocument.getVersion() == null?0: creatingDocument.getVersion()+1);
+        notePresenter.update(creatingDocument);
     }
 
     private class MyNoteView extends NoteViewAdapter {

@@ -1,24 +1,28 @@
 package com.beyond.note5.view.fragment;
 
+import android.annotation.SuppressLint;
 import android.content.Intent;
 import android.net.Uri;
 import android.os.Bundle;
 import android.support.v4.content.ContextCompat;
+import android.text.Editable;
+import android.text.TextWatcher;
 import android.util.Log;
+import android.view.MotionEvent;
 import android.view.View;
-import android.view.ViewStub;
-import android.widget.ImageButton;
-import android.widget.TextView;
 import android.widget.Toast;
 
 import com.beyond.note5.MyApplication;
 import com.beyond.note5.R;
+import com.beyond.note5.bean.Document;
 import com.beyond.note5.bean.Note;
 import com.beyond.note5.bean.Reminder;
 import com.beyond.note5.bean.Todo;
 import com.beyond.note5.event.FillTodoModifyEvent;
+import com.beyond.note5.event.HideKeyBoardEvent2;
 import com.beyond.note5.event.HideTodoEditorEvent;
 import com.beyond.note5.event.ScrollToTodoByDateEvent;
+import com.beyond.note5.event.ShowKeyBoardEvent;
 import com.beyond.note5.predict.bean.Tag;
 import com.beyond.note5.presenter.CalendarPresenterImpl;
 import com.beyond.note5.presenter.NotePresenterImpl;
@@ -38,13 +42,14 @@ import com.beyond.note5.view.adapter.view.CalendarViewAdapter;
 import com.beyond.note5.view.adapter.view.NoteViewAdapter;
 import com.beyond.note5.view.adapter.view.PredictViewAdapter;
 import com.beyond.note5.view.adapter.view.TodoViewAdapter;
+import com.beyond.note5.view.animator.SmoothScalable;
+import com.beyond.note5.view.animator.SmoothScaleAnimation;
 import com.beyond.note5.view.custom.SelectionListenableEditText;
+import com.beyond.note5.view.listener.OnBackPressListener;
+import com.beyond.note5.view.listener.OnKeyboardChangeListener;
 import com.beyond.note5.view.listener.OnTagClickToAppendListener;
 import com.beyond.note5.view.listener.TimeExpressionDetectiveTextWatcher;
 import com.time.nlp.TimeUnit;
-import com.zhy.view.flowlayout.FlowLayout;
-import com.zhy.view.flowlayout.TagAdapter;
-import com.zhy.view.flowlayout.TagFlowLayout;
 
 import org.apache.commons.lang3.ObjectUtils;
 import org.apache.commons.lang3.StringUtils;
@@ -53,36 +58,25 @@ import org.greenrobot.eventbus.EventBus;
 import org.greenrobot.eventbus.Subscribe;
 import org.greenrobot.eventbus.ThreadMode;
 
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.Date;
 import java.util.Iterator;
 import java.util.List;
 
-public class TodoModifySuperFragment extends TodoEditSuperFragment {
+public class TodoModifySuperFragment extends AbstractTodoEditorFragment implements OnBackPressListener, SmoothScalable,FragmentContainerAware{
 
-    private ImageButton clearButton;
-    private ImageButton convertButton;
-    private ImageButton browserSearchButton;
-    private ImageButton saveButton;
-    private TagFlowLayout flowLayout;
-    private TagAdapter<String> tagAdapter;
+    protected int currentIndex;
 
-    private List<String> tagData = new ArrayList<>();
+    protected View fragmentContainer;
+
+    protected OnKeyboardChangeListener onKeyboardChangeListener;
 
     private TodoCompositePresenter todoCompositePresenter;
     private NotePresenterImpl notePresenter;
 
-
     @Override
-    public void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-        initInjection();
-    }
-
-    private void initInjection() {
-
+    protected void init(Bundle savedInstanceState) {
         todoCompositePresenter = new TodoCompositePresenterImpl.Builder(new TodoPresenterImpl(new MyTodoView()))
                 .calendarPresenter(new CalendarPresenterImpl(getActivity(), new MyCalendarView()))
                 .predictPresenter(new PredictPresenterImpl(new MyPredictView()))
@@ -90,14 +84,35 @@ public class TodoModifySuperFragment extends TodoEditSuperFragment {
         notePresenter = new NotePresenterImpl( new MyNoteView());
     }
 
+    @Override
+    protected Todo creatingDocument() {
+        // do nothing
+        return null;
+    }
+
+    @Override
+    protected void initCommonEvent() {
+
+    }
+
+    @Override
+    protected int getDialogLayoutResId() {
+        return R.layout.fragment_todo_edit;
+    }
+
+    @Override
+    protected int getFragmentLayoutResId() {
+        return R.layout.fragment_todo_edit;
+    }
     //回显
+
     @Subscribe(threadMode = ThreadMode.MAIN, sticky = true)
     public void onEventMainThread(FillTodoModifyEvent fillTodoModifyEvent) {
         final Todo todo = fillTodoModifyEvent.get();
         currentIndex = fillTodoModifyEvent.getIndex();
-        createdDocument = ObjectUtils.clone(todo);
-        contentEditText.setText(createdDocument.getContent());
-        contentEditText.setSelection(createdDocument.getContent().length());
+        creatingDocument = ObjectUtils.clone(todo);
+        editorContent.setText(creatingDocument.getContent());
+        editorContent.setSelection(creatingDocument.getContent().length());
         highlightTimeExpressionAsync();
     }
 
@@ -105,9 +120,9 @@ public class TodoModifySuperFragment extends TodoEditSuperFragment {
         MyApplication.getInstance().getExecutorService().execute(new Runnable() {
             @Override
             public void run() {
-                String beforeContent = createdDocument.getContent();
-                final String html = HighlightUtil.highlightTimeExpression(createdDocument.getContent());
-                String afterContent = createdDocument.getContent();
+                String beforeContent = creatingDocument.getContent();
+                final String html = HighlightUtil.highlightTimeExpression(creatingDocument.getContent());
+                String afterContent = creatingDocument.getContent();
                 if (!StringUtils.equals(beforeContent, afterContent)) { //加个乐观锁， 不知道对不对
                     run();
                 }
@@ -115,11 +130,11 @@ public class TodoModifySuperFragment extends TodoEditSuperFragment {
                     @Override
                     public void run() {
                         if (StringUtils.isNotBlank(html)) {
-                            contentEditText.setText(HtmlUtil.fromHtml(html));
+                            editorContent.setText(HtmlUtil.fromHtml(html));
                         } else {
-                            contentEditText.setText(createdDocument.getContent());
+                            editorContent.setText(creatingDocument.getContent());
                         }
-                        contentEditText.setSelection(createdDocument.getContent().length());
+                        editorContent.setSelection(creatingDocument.getContent().length());
                     }
                 });
 
@@ -128,53 +143,66 @@ public class TodoModifySuperFragment extends TodoEditSuperFragment {
     }
 
     @Override
-    protected void initView(View view) {
-        super.initView(view);
-        ViewStub toolsContainer = view.findViewById(R.id.fragment_edit_todo_view_stub);
-        toolsContainer.inflate();
-        clearButton = view.findViewById(R.id.fragment_edit_todo_clear);
-        convertButton = view.findViewById(R.id.fragment_edit_todo_to_note);
-        browserSearchButton = view.findViewById(R.id.fragment_edit_todo_browser_search);
-        saveButton = view.findViewById(R.id.fragment_edit_todo_save);
+    protected void initFragmentView() {
+        super.initFragmentView();
+        root.setBackgroundColor(ContextCompat.getColor(getActivity(),R.color.white));
 
-        ViewStub tagsContainer = view.findViewById(R.id.fragment_edit_todo_tag_view_stub);
-        tagsContainer.inflate();
-        flowLayout = view.findViewById(R.id.fragment_edit_todo_tags);
-        tagAdapter = new TagAdapter<String>(tagData) {
-            @Override
-            public View getView(FlowLayout parent, int position, String s) {
-                TextView tv = new TextView(getActivity());
-                tv.setTextColor(ContextCompat.getColor(getActivity(), R.color.white));
-                tv.setBackground(getResources().getDrawable(R.drawable.radius_24dp_blue, null));
-                tv.setText(s);
-                return tv;
-            }
-        };
+        editorToolViewStub.inflate();
+        clearButton = root.findViewById(R.id.fragment_edit_todo_clear);
+        convertButton = root.findViewById(R.id.fragment_edit_todo_to_note);
+        browserSearchButton = root.findViewById(R.id.fragment_edit_todo_browser_search);
+        saveButton = root.findViewById(R.id.fragment_edit_todo_save);
+
         flowLayout.setAdapter(tagAdapter);
     }
 
     @Override
-    protected void initEvent(View view) {
-        super.initEvent(view);
+    protected void initFragmentEvent() {
+        super.initFragmentEvent();
+        //防止事件向下传递
+        root.setOnTouchListener(new View.OnTouchListener() {
+            @SuppressLint("ClickableViewAccessibility")
+            @Override
+            public boolean onTouch(View v, MotionEvent event) {
+                return true;
+            }
+        });
+        editorContent.addTextChangedListener(new TextWatcher() {
+            @Override
+            public void beforeTextChanged(CharSequence s, int start, int count, int after) {
+
+            }
+
+            @Override
+            public void onTextChanged(final CharSequence s, int start, int before, int count) {
+                creatingDocument.setContent(s.toString());
+            }
+
+            @Override
+            public void afterTextChanged(Editable s) {
+
+            }
+        });
+
         clearButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                contentEditText.setText(null);
+                editorContent.setText(null);
             }
         });
         convertButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 Note note = new Note();
-                note.setId(createdDocument.getId());
-                note.setContent(createdDocument.getContent());
-                note.setCreateTime(createdDocument.getCreateTime());
+                note.setId(creatingDocument.getId());
+                note.setContent(creatingDocument.getContent());
+                note.setCreateTime(creatingDocument.getCreateTime());
                 note.setLastModifyTime(new Date());
-                note.setVersion(createdDocument.getVersion());
+                note.setVersion(creatingDocument.getVersion());
                 notePresenter.add(note);
-                todoCompositePresenter.delete(createdDocument);
+                todoCompositePresenter.delete(creatingDocument);
                 EventBus.getDefault().post(new HideTodoEditorEvent(currentIndex));
-                InputMethodUtil.hideKeyboard(contentEditText);
+                InputMethodUtil.hideKeyboard(editorContent);
                 ToastUtil.toast(getContext(), "已转化为NOTE", Toast.LENGTH_SHORT);
             }
         });
@@ -182,7 +210,7 @@ public class TodoModifySuperFragment extends TodoEditSuperFragment {
         browserSearchButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                String url = WebViewUtil.getUrlOrSearchUrl(createdDocument);
+                String url = WebViewUtil.getUrlOrSearchUrl(creatingDocument);
                 if (url != null) {
                     Uri uri = Uri.parse(url);
                     Intent intent = new Intent(Intent.ACTION_VIEW, uri);
@@ -200,45 +228,12 @@ public class TodoModifySuperFragment extends TodoEditSuperFragment {
         saveButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                HideTodoEditorEvent hideTodoEditorEvent = new HideTodoEditorEvent(currentIndex);
-                EventBus.getDefault().post(hideTodoEditorEvent);
-                InputMethodUtil.hideKeyboard(contentEditText, onKeyboardChangeListener, false);
-
-                String content = contentEditText.getText().toString();
-                if (StringUtils.isBlank(content)) {
-                    todoCompositePresenter.delete(createdDocument);
-                } else {
-                    createdDocument.setTitle(content.length() > 10 ? content.substring(0, 10) : content);
-                    createdDocument.setContent(content);
-                    createdDocument.setLastModifyTime(new Date());
-                    createdDocument.setVersion(createdDocument.getVersion() == null ? 0 : createdDocument.getVersion() + 1);
-                    processReminder(content);
-                }
-
-
-            }
-
-            private void processReminder(String content) {
-                Reminder reminder = createdDocument.getReminder();
-                Date reminderStart = TimeNLPUtil.parse(content);
-                if (reminderStart != null) {
-                    if (reminder != null) {
-                        reminder.setStart(reminderStart);
-                    } else {
-                        reminder = new Reminder();
-                        reminder.setId(IDUtil.uuid());
-                        reminder.setStart(reminderStart);
-                    }
-                    createdDocument.setReminder(reminder);
-                } else {
-                    todoCompositePresenter.deleteReminder(createdDocument);
-                }
-                todoCompositePresenter.update(createdDocument);
+                onOKClick();
             }
         });
 
-        if (contentEditText instanceof SelectionListenableEditText) {
-            ((SelectionListenableEditText) contentEditText).setOnSelectionChanged(new SelectionListenableEditText.OnSelectionChangeListener() {
+        if (editorContent instanceof SelectionListenableEditText) {
+            ((SelectionListenableEditText) editorContent).setOnSelectionChanged(new SelectionListenableEditText.OnSelectionChangeListener() {
 
                 @Override
                 public void onChanged(String content, int selStart, int selEnd) {
@@ -250,13 +245,13 @@ public class TodoModifySuperFragment extends TodoEditSuperFragment {
             });
         }
 
-        TimeExpressionDetectiveTextWatcher.Builder builder = new TimeExpressionDetectiveTextWatcher.Builder(contentEditText);
+        TimeExpressionDetectiveTextWatcher.Builder builder = new TimeExpressionDetectiveTextWatcher.Builder(editorContent);
         TimeExpressionDetectiveTextWatcher.OnTimeExpressionChangedHandler onTimeExpressionChangedHandler =
                 new TimeExpressionDetectiveTextWatcher.OnTimeExpressionChangedHandler() {
                     @Override
                     public void handle(TimeUnit timeUnit) {
                         Date changedStart = timeUnit.getTime();
-                        Reminder reminder = createdDocument.getReminder();
+                        Reminder reminder = creatingDocument.getReminder();
                         if (reminder == null) {
                             return;
                         }
@@ -267,17 +262,126 @@ public class TodoModifySuperFragment extends TodoEditSuperFragment {
                         }
                     }
                 };
-        contentEditText.addTextChangedListener(
+        editorContent.addTextChangedListener(
                 builder
                         .handler(handler)
 //                        .timeExpressionChangedHandler(onTimeExpressionChangedHandler)
                         .build()
         );
 
-        flowLayout.setOnTagClickListener(new OnTagClickToAppendListener(contentEditText));
+        flowLayout.setOnTagClickListener(new OnTagClickToAppendListener(editorContent));
+    }
+
+    @Override
+    protected void onOKClick() {
+        HideTodoEditorEvent hideTodoEditorEvent = new HideTodoEditorEvent(currentIndex);
+        EventBus.getDefault().post(hideTodoEditorEvent);
+        InputMethodUtil.hideKeyboard(editorContent, onKeyboardChangeListener, false);
+
+        String content = editorContent.getText().toString();
+        if (StringUtils.isBlank(content)) {
+            todoCompositePresenter.delete(creatingDocument);
+        } else {
+            creatingDocument.setTitle(content.length() > 10 ? content.substring(0, 10) : content);
+            creatingDocument.setContent(content);
+            creatingDocument.setLastModifyTime(new Date());
+            creatingDocument.setVersion(creatingDocument.getVersion() == null ? 0 : creatingDocument.getVersion() + 1);
+            processReminder(content);
+        }
+    }
+
+    private void processReminder(String content) {
+        Reminder reminder = creatingDocument.getReminder();
+        Date reminderStart = TimeNLPUtil.parse(content);
+        if (reminderStart != null) {
+            if (reminder != null) {
+                reminder.setStart(reminderStart);
+            } else {
+                reminder = new Reminder();
+                reminder.setId(IDUtil.uuid());
+                reminder.setStart(reminderStart);
+            }
+            creatingDocument.setReminder(reminder);
+        } else {
+            todoCompositePresenter.deleteReminder(creatingDocument);
+        }
+        todoCompositePresenter.update(creatingDocument);
     }
 
 
+    @Subscribe(threadMode = ThreadMode.MAIN, sticky = true)
+    public void initOnKeyboardChangeListener(OnKeyboardChangeListener onKeyboardChangeListener) {
+        this.onKeyboardChangeListener = onKeyboardChangeListener;
+    }
+
+    @Override
+    protected void onFragmentShowKeyboard(ShowKeyBoardEvent event) {
+        super.onFragmentShowKeyboard(event);
+        String type = event.getType();
+        if (StringUtils.equals(Document.TODO, type) && fragmentContainer != null) {
+            fragmentContainer.getLayoutParams().height = InputMethodUtil.getDialogHeightWithSoftInputMethod();
+            fragmentContainer.setLayoutParams(fragmentContainer.getLayoutParams());
+        }
+    }
+
+    @Override
+    protected void onFragmentHideKeyboard(HideKeyBoardEvent2 event) {
+        super.onFragmentHideKeyboard(event);
+        final String type = event.getType();
+        event.get().setHideCallback(new Runnable() {
+            @Override
+            public void run() {
+                if (StringUtils.equals(Document.TODO, type)) {
+                    EventBus.getDefault().post(new HideTodoEditorEvent(currentIndex));
+                }
+            }
+        });
+
+    }
+
+
+    @Override
+    public boolean onBackPressed() {
+        InputMethodUtil.hideKeyboard(editorContent, onKeyboardChangeListener, true);
+        EventBus.getDefault().post(new HideTodoEditorEvent(currentIndex));
+        return true;
+    }
+
+    public void registerHooks(SmoothScaleAnimation smoothScaleAnimation) {
+        smoothScaleAnimation.setAfterShowHook(new Runnable() {
+            @Override
+            public void run() {
+                getActivity().getWindow().getDecorView().setSystemUiVisibility(View.SYSTEM_UI_FLAG_VISIBLE);
+                getActivity().getWindow().setStatusBarColor(ContextCompat.getColor(getActivity(), R.color.white));
+            }
+        });
+        smoothScaleAnimation.setAfterHideHook(new Runnable() {
+            @Override
+            public void run() {
+                fragmentContainer.setVisibility(View.GONE);
+            }
+        });
+        smoothScaleAnimation.setBeforeShowHook(new Runnable() {
+            @Override
+            public void run() {
+                InputMethodUtil.showKeyboard(editorContent);
+            }
+        });
+        smoothScaleAnimation.setBeforeHideHook(new Runnable() {
+            @Override
+            public void run() {
+                getActivity().getWindow().getDecorView().setSystemUiVisibility(View.SYSTEM_UI_FLAG_LIGHT_STATUS_BAR);
+                getActivity().getWindow().setStatusBarColor(ContextCompat.getColor(getActivity(),R.color.white));
+            }
+        });
+    }
+
+    @Override
+    public void setFragmentContainer(View fragmentContainer) {
+        this.fragmentContainer = fragmentContainer;
+    }
+
+    
     private class MyTodoView extends TodoViewAdapter {
 
         @Override

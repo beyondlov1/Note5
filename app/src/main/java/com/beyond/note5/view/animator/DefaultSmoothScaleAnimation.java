@@ -25,6 +25,9 @@ public class DefaultSmoothScaleAnimation implements SmoothScaleAnimation {
     private AnimatorSet hideAnimatorSet = new AnimatorSet();
     private DecelerateInterpolator decelerateInterpolator = new DecelerateInterpolator();
 
+    private boolean showAnimatorRunning = false;
+    private boolean hideAnimatorRunning = false;
+
     @Override
     public View getContainer() {
         return container;
@@ -67,6 +70,13 @@ public class DefaultSmoothScaleAnimation implements SmoothScaleAnimation {
 
     @Override
     public void show() {
+
+        if (showAnimatorRunning){
+            return;
+        }
+
+        showAnimatorRunning = true;
+
         if (beforeShowHook!=null){
             beforeShowHook.run();
         }
@@ -102,18 +112,27 @@ public class DefaultSmoothScaleAnimation implements SmoothScaleAnimation {
             }
         });
         valueAnimator.addListener(new AnimatorListenerAdapter() {
+
             @Override
             public void onAnimationEnd(Animator animation) {
                 super.onAnimationEnd(animation);
                 if (afterShowHook != null) {
                     afterShowHook.run();
                 }
+                showAnimatorRunning = false;
             }
         });
     }
 
     @Override
     public void hide() {
+
+        if (hideAnimatorRunning){
+            return;
+        }
+
+        hideAnimatorRunning = true;
+
         if (beforeHideHook!=null){
             beforeHideHook.run();
         }
@@ -146,12 +165,14 @@ public class DefaultSmoothScaleAnimation implements SmoothScaleAnimation {
         });
 
         hideAnimatorSet.addListener(new AnimatorListenerAdapter() {
+
             @Override
             public void onAnimationEnd(Animator animation) {
                 super.onAnimationEnd(animation);
                 if (afterHideHook != null) {
                     afterHideHook.run();
                 }
+                hideAnimatorRunning =false;
             }
         });
     }
