@@ -11,6 +11,7 @@ public enum  LoadType {
     public void show(WebView webView, Document document) {
         switch (this) {
             case CONTENT:
+                WebViewUtil.loadWebContent(webView,document);
                 break;
             case WEB:
                 String url = WebViewUtil.getUrlOrSearchUrl(document);

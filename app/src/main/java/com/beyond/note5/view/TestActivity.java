@@ -14,7 +14,7 @@ import com.beyond.note5.R;
 import com.beyond.note5.bean.Note;
 import com.beyond.note5.constant.LoadType;
 import com.beyond.note5.utils.PhotoUtil;
-import com.beyond.note5.view.fragment.NoteDetailStage;
+import com.beyond.note5.view.fragment.NoteMultiDetailStage;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -31,7 +31,7 @@ public class TestActivity extends Activity {
             ((Animatable) drawable).start();
         }
 
-        NoteDetailStage detailStage = findViewById(R.id.test_detail_stage);
+        NoteMultiDetailStage detailStage = findViewById(R.id.test_detail_stage);
         List<Note> data = new ArrayList<>();
         Note note1 = Note.newInstance();
         Note note2 = Note.newInstance();
@@ -44,12 +44,10 @@ public class TestActivity extends Activity {
         data.add(note3);
         detailStage.setData(data);
         detailStage.setCurrentIndex(1);
-        detailStage.refresh();
+        detailStage.refresh(LoadType.CONTENT);
         new Handler().postDelayed(new Runnable() {
             @Override
             public void run() {
-                detailStage.setLoadType(LoadType.WEB);
-                detailStage.loadMore();
             }
         }, 2000);
     }

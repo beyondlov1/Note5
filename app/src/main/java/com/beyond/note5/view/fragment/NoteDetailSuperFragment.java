@@ -1,16 +1,14 @@
 package com.beyond.note5.view.fragment;
 
 import android.annotation.SuppressLint;
+import android.app.Dialog;
 import android.content.Intent;
 import android.net.Uri;
 import android.os.Bundle;
-import android.support.annotation.Nullable;
-import android.support.v4.app.DialogFragment;
 import android.support.v4.content.ContextCompat;
 import android.view.LayoutInflater;
 import android.view.MotionEvent;
 import android.view.View;
-import android.view.ViewGroup;
 import android.webkit.WebView;
 import android.widget.ImageButton;
 import android.widget.TextView;
@@ -25,7 +23,6 @@ import com.beyond.note5.event.FillNoteDetailEvent;
 import com.beyond.note5.event.FillNoteModifyEvent;
 import com.beyond.note5.event.HideNoteDetailEvent;
 import com.beyond.note5.event.ScrollToNoteEvent;
-import com.beyond.note5.event.note.UpdateNoteSuccessEvent;
 import com.beyond.note5.presenter.CalendarPresenterImpl;
 import com.beyond.note5.presenter.NotePresenter;
 import com.beyond.note5.presenter.NotePresenterImpl;
@@ -53,15 +50,11 @@ import org.greenrobot.eventbus.ThreadMode;
 import java.util.Date;
 import java.util.List;
 
-public class NoteDetailSuperFragment extends DialogFragment implements OnBackPressListener, SmoothScalable,FragmentContainerAware {
+public class NoteDetailSuperFragment extends AbstractDocumentDialogFragment implements OnBackPressListener, SmoothScalable,FragmentContainerAware {
     private static final String TAG = NoteDetailSuperFragment.class.getSimpleName();
-    protected View root;
-    protected NoteDetailStage noteDetailStage;
+    
+    protected MultiDetailStage<Note> multiDetailStage;
     protected TextView pageCountTextView;
-
-    protected List<Note> data;
-    protected int currIndex;
-    private int firstInIndex;
 
     private LoadType loadType;
 
@@ -84,54 +77,41 @@ public class NoteDetailSuperFragment extends DialogFragment implements OnBackPre
     private NotePresenter notePresenter;
 
     @Override
-    public void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-
-        initInjection();
-    }
-
-    private void initInjection() {
+    protected void init(Bundle savedInstanceState) {
         todoCompositePresenter = new TodoCompositePresenterImpl.Builder(new TodoPresenterImpl(todoView))
                 .calendarPresenter(new CalendarPresenterImpl(getActivity(), calendarView))
                 .predictPresenter(new PredictPresenterImpl(predictView))
                 .build();
         notePresenter = new NotePresenterImpl(new MyNoteView());
-
     }
 
-
-    @SuppressLint("InflateParams")
-    @Nullable
     @Override
-    public View onCreateView(LayoutInflater inflater, @Nullable ViewGroup container, Bundle savedInstanceState) {
-        System.out.println("onCreateView");
-
-        if (root == null) {
-            root = LayoutInflater.from(getActivity()).inflate(R.layout.fragment_note_detail, null);
-        }
-        initView(root);
-        initEvent(root);
-        return root;
+    protected Dialog createDialogInternal(Bundle savedInstanceState) {
+        return null;
     }
 
-    protected void initView(View view) {
-        noteDetailStage = view.findViewById(R.id.fragment_note_detail_view_switcher);
-        pageCountTextView = view.findViewById(R.id.fragment_note_detail_page_count);
-        operationContainer = view.findViewById(R.id.fragment_note_detail_operation_container);
-        operationItemsContainer = view.findViewById(R.id.fragment_note_detail_operation_items);
-        deleteButton = view.findViewById(R.id.fragment_note_detail_operation_delete);
-        searchButton = view.findViewById(R.id.fragment_note_detail_operation_search);
-        browserSearchButton = view.findViewById(R.id.fragment_note_detail_operation_browser_search);
-        stickButton = view.findViewById(R.id.fragment_note_detail_operation_stick);
-        convertButton = view.findViewById(R.id.fragment_note_detail_to_todo);
-        doneButton = view.findViewById(R.id.fragment_note_detail_operation_done);
+    @Override
+    protected void initCommonView() {
+        multiDetailStage = root.findViewById(R.id.fragment_note_detail_view_switcher);
+        multiDetailStage.setViewFactory(new MyViewFactory());
+
+        pageCountTextView = root.findViewById(R.id.fragment_note_detail_page_count);
+        operationContainer = root.findViewById(R.id.fragment_note_detail_operation_container);
+        operationItemsContainer = root.findViewById(R.id.fragment_note_detail_operation_items);
+        deleteButton = root.findViewById(R.id.fragment_note_detail_operation_delete);
+        searchButton = root.findViewById(R.id.fragment_note_detail_operation_search);
+        browserSearchButton = root.findViewById(R.id.fragment_note_detail_operation_browser_search);
+        stickButton = root.findViewById(R.id.fragment_note_detail_operation_stick);
+        convertButton = root.findViewById(R.id.fragment_note_detail_to_todo);
+        doneButton = root.findViewById(R.id.fragment_note_detail_operation_done);
         pageCountTextView.getLayoutParams().height = 100;
         pageCountTextView.setLayoutParams(pageCountTextView.getLayoutParams());
     }
 
-    protected void initEvent(View view) {
+    @Override
+    protected void initCommonEvent() {
         //防止事件向下传递
-        view.setOnTouchListener(new View.OnTouchListener() {
+        root.setOnTouchListener(new View.OnTouchListener() {
             @SuppressLint("ClickableViewAccessibility")
             @Override
             public boolean onTouch(View v, MotionEvent event) {
@@ -141,14 +121,14 @@ public class NoteDetailSuperFragment extends DialogFragment implements OnBackPre
         deleteButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                Note currentNote = data.get(currIndex);
+                Note currentNote = multiDetailStage.getCurrentData();
                 notePresenter.deleteDeep(currentNote);
-                if (data.isEmpty()) {
+                if (multiDetailStage.getData().isEmpty()) {
                     sendHideMessage();
                     return;
                 }
-                if (currIndex == data.size()) {
-                    currIndex--;
+                if (multiDetailStage.getCurrentIndex() == multiDetailStage.getData().size()) {
+                    multiDetailStage.setCurrentIndex(multiDetailStage.getCurrentIndex()-1);
                 }
                 reloadView();
             }
@@ -156,13 +136,13 @@ public class NoteDetailSuperFragment extends DialogFragment implements OnBackPre
         searchButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                loadWebPage();
+                multiDetailStage.load(LoadType.WEB);
             }
         });
         browserSearchButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                String url = WebViewUtil.getUrlOrSearchUrl(data.get(currIndex));
+                String url = WebViewUtil.getUrlOrSearchUrl(multiDetailStage.getCurrentData());
                 if (url != null) {
                     Uri uri = Uri.parse(url);
                     Intent intent = new Intent(Intent.ACTION_VIEW, uri);
@@ -175,7 +155,7 @@ public class NoteDetailSuperFragment extends DialogFragment implements OnBackPre
         convertButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                Note note = data.get(currIndex);
+                Note note = multiDetailStage.getCurrentData();
                 Todo todo = new Todo();
                 todo.setId(note.getId());
                 note.setTitle(note.getTitle());
@@ -190,23 +170,22 @@ public class NoteDetailSuperFragment extends DialogFragment implements OnBackPre
             }
 
         });
-    }
-
-    private void loadWebPage() {
-       noteDetailStage.setLoadType(LoadType.WEB);
-       noteDetailStage.loadMore();
-    }
-
-    @Override
-    public void onStart() {
-        super.onStart();
-        EventBus.getDefault().register(this);
+        pageCountTextView.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                sendHideMessage();
+            }
+        });
     }
 
     @Override
-    public void onStop() {
-        EventBus.getDefault().unregister(this);
-        super.onStop();
+    protected int getDialogLayoutResId() {
+        return R.layout.fragment_note_detail;
+    }
+
+    @Override
+    protected int getFragmentLayoutResId() {
+        return R.layout.fragment_note_detail;
     }
 
     @Subscribe(threadMode = ThreadMode.MAIN, sticky = true)
@@ -214,23 +193,36 @@ public class NoteDetailSuperFragment extends DialogFragment implements OnBackPre
         if (fillNoteDetailEvent.isConsumed()) {
             return;
         }
-        data = fillNoteDetailEvent.get();
-        currIndex = fillNoteDetailEvent.getIndex();
-        firstInIndex = currIndex;
+        multiDetailStage.setData(fillNoteDetailEvent.get());
+        multiDetailStage.setCurrentIndex(fillNoteDetailEvent.getIndex());
+        multiDetailStage.setEnterIndex(multiDetailStage.getCurrentIndex());
         loadType = fillNoteDetailEvent.getLoadType();
         reloadView();
         fillNoteDetailEvent.setConsumed(true);
+    }
+
+    @SuppressWarnings("ConstantConditions")
+    private void reloadView() {
+        multiDetailStage.refresh(loadType);
+        processFrameView();
+        resetLoadType();
+        scrollRecyclerViewTo(multiDetailStage.getCurrentData());
+    }
+
+    private void processFrameView(){
+        processVariableTools();
+        processPageCount();
     }
 
     /**
      * 处理可变的按钮
      */
     private void processVariableTools() {
-        if (CollectionUtils.isEmpty(data)) {
+        if (CollectionUtils.isEmpty(multiDetailStage.getData())) {
             return;
         }
         // 置顶按钮
-        if (data.get(currIndex).getReadFlag() < 0) { // 置顶
+        if (multiDetailStage.getCurrentData().getReadFlag() < 0) { // 置顶
             ((ImageButton) stickButton).setImageDrawable(getResources().getDrawable(R.drawable.ic_thumb_up_blue_400_24dp, null));
         } else { //其他
             ((ImageButton) stickButton).setImageDrawable(getResources().getDrawable(R.drawable.ic_thumb_up_grey_600_24dp, null));
@@ -239,9 +231,9 @@ public class NoteDetailSuperFragment extends DialogFragment implements OnBackPre
         stickButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                Note note = data.get(currIndex);
+                Note note = multiDetailStage.getCurrentData();
                 note.setLastModifyTime(new Date());
-                if (data.get(currIndex).getReadFlag() < 0) { // 置顶
+                if (multiDetailStage.getCurrentData().getReadFlag() < 0) { // 置顶
                     note.setReadFlag(DocumentConst.READ_FLAG_NORMAL);
                     notePresenter.update(note);
                     ToastUtil.toast(getActivity(), "取消置顶", Toast.LENGTH_SHORT);
@@ -257,7 +249,7 @@ public class NoteDetailSuperFragment extends DialogFragment implements OnBackPre
 
 
         // 置顶按钮
-        if (data.get(currIndex).getReadFlag() > 0) { // 置顶
+        if (multiDetailStage.getCurrentData().getReadFlag() > 0) { // 置顶
             ((ImageButton) doneButton).setImageDrawable(getResources().getDrawable(R.drawable.ic_done_blue_24dp, null));
         } else { //其他
             ((ImageButton) doneButton).setImageDrawable(getResources().getDrawable(R.drawable.ic_done_grey_600_24dp, null));
@@ -266,107 +258,31 @@ public class NoteDetailSuperFragment extends DialogFragment implements OnBackPre
         doneButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                Note note = data.get(currIndex);
+                Note note = multiDetailStage.getCurrentData();
                 note.setLastModifyTime(new Date());
-                if (data.get(currIndex).getReadFlag() > 0) {
+                if (multiDetailStage.getCurrentData().getReadFlag() > 0) {
 
-                    Note currentNote = data.get(currIndex);
+                    Note currentNote = multiDetailStage.getCurrentData();
                     currentNote.setReadFlag(DocumentConst.READ_FLAG_NORMAL);
                     notePresenter.update(note);
                     ToastUtil.toast(getActivity(), "取消已读", Toast.LENGTH_SHORT);
                     ((ImageButton) doneButton).setImageDrawable(getResources().getDrawable(R.drawable.ic_done_grey_600_24dp, null));
                 } else { //其他
-                    Note currentNote = data.get(currIndex);
+                    Note currentNote = multiDetailStage.getCurrentData();
                     currentNote.setReadFlag(DocumentConst.READ_FLAG_DONE);
-                    int oldIndex = currIndex;
+                    int oldIndex = multiDetailStage.getCurrentIndex();
                     notePresenter.update(note);
-                    currIndex = oldIndex;
+                    multiDetailStage.setCurrentIndex(oldIndex) ;
+                    reloadView();
                     ToastUtil.toast(getActivity(), "已读", Toast.LENGTH_SHORT);
                 }
             }
         });
     }
 
-    @Subscribe(threadMode = ThreadMode.MAIN)
-    public void onEventMainThread(UpdateNoteSuccessEvent updateNoteSuccessEvent) {
-        Note note = updateNoteSuccessEvent.get();
-        int index = data.indexOf(note);
-        currIndex = index == -1 ? 0 : index;
-        reloadView();
-    }
-
-    @SuppressWarnings("ConstantConditions")
-    private void reloadView() {
-        processVariableTools();
-        initContentEvent();  // FIXME
-        noteDetailStage.setData(data);
-        noteDetailStage.setCurrentIndex(currIndex);
-        noteDetailStage.setEnterIndex(firstInIndex);
-        noteDetailStage.refresh();
-        processPageCount();
-        openWebPage();
-        resetLoadType();
-        scrollRecyclerViewTo(data.get(currIndex));
-    }
-
     private void processPageCount() {
-        String pageCount = String.format("%s/%s", noteDetailStage.getCurrentIndex() + 1, noteDetailStage.getData().size());
+        String pageCount = String.format("%s/%s", multiDetailStage.getCurrentIndex() + 1, multiDetailStage.getData().size());
         pageCountTextView.setText(pageCount);
-    }
-
-    @SuppressLint("ClickableViewAccessibility")
-    private void initContentEvent() {
-        noteDetailStage.setOnViewMadeListener(new DetailStage.OnViewMadeListener() {
-            @Override
-            public void onViewMade(View view) {
-                view.findViewById(R.id.fragment_document_display_web).setOnTouchListener(new OnSlideListener(getActivity()) {
-                    @Override
-                    protected void onSlideLeft() {
-                        next();
-                    }
-
-                    @Override
-                    protected void onSlideRight() {
-                        prev();
-                    }
-
-                    @Override
-                    protected void onSlideUp() {
-                    }
-
-                    @Override
-                    protected void onSlideDown() {
-                    }
-
-                    @Override
-                    protected void onDoubleClick(MotionEvent e) {
-                        showModifyView();
-                    }
-
-                    @Override
-                    protected int getSlideXSensitivity() {
-                        return 250;
-                    }
-
-                    @Override
-                    protected int getSlideYSensitivity() {
-                        return (int) (ViewUtil.getScreenSize().y * 0.33);
-                    }
-                });
-            }
-        });
-        pageCountTextView.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                sendHideMessage();
-            }
-        });
-    }
-
-    private void openWebPage() {
-        if (loadType == LoadType.WEB) {
-            loadWebPage();
-        }
     }
 
     private void scrollRecyclerViewTo(Note note) {
@@ -378,45 +294,36 @@ public class NoteDetailSuperFragment extends DialogFragment implements OnBackPre
     }
 
     private void next() {
-        noteDetailStage.next();
-        processVariableTools();
-        processPageCount();
+        multiDetailStage.next();
+        processFrameView();
     }
 
     private void prev() {
-        noteDetailStage.prev();
-        processVariableTools();
-        processPageCount();
+        multiDetailStage.prev();
+        processFrameView();
     }
 
     protected void showModifyView() {
         NoteModifyFragment noteModifyFragment = new NoteModifyFragment();
         noteModifyFragment.show(getActivity().getSupportFragmentManager(), "modifyDialog");
-        EventBus.getDefault().postSticky(new FillNoteModifyEvent(data.get(currIndex)));
+        EventBus.getDefault().postSticky(new FillNoteModifyEvent(multiDetailStage.getCurrentData()));
     }
 
     @Override
     public boolean onBackPressed() {
-        if (noteDetailStage.getCurrentView() == null){
-            return true;
-        }
-        WebView displayWebView = noteDetailStage.getCurrentWebView();
-        if (WebViewUtil.canGoBack(displayWebView)) {
-            WebViewUtil.goBack(displayWebView);
-        } else {
-            WebViewUtil.clearHistory();
+        boolean consumed = multiDetailStage.onBackPressed();
+        if (!consumed){
             sendHideMessage();
         }
         return true;
     }
 
     private void sendHideMessage() {
-        noteDetailStage.removeAllViews();
-        if (data.isEmpty()) {
-            noteDetailStage.setCurrentIndex(-1);
+        if (multiDetailStage.getData().isEmpty()) {
+            multiDetailStage.setCurrentIndex(-1);
         }
-        HideNoteDetailEvent event = new HideNoteDetailEvent(noteDetailStage.getCurrentIndex());
-        event.setFirstIndex( noteDetailStage.getEnterIndex());
+        HideNoteDetailEvent event = new HideNoteDetailEvent(multiDetailStage.getCurrentIndex());
+        event.setFirstIndex( multiDetailStage.getEnterIndex());
         EventBus.getDefault().post(event);
     }
 
@@ -478,7 +385,63 @@ public class NoteDetailSuperFragment extends DialogFragment implements OnBackPre
     }
 
     private class MyNoteView extends NoteViewAdapter {
-
+        @Override
+        public void onUpdateSuccess(Note note) {
+            int index = multiDetailStage.getData().indexOf(note);
+            multiDetailStage.setCurrentIndex(index == -1 ? 0 : index) ;
+            reloadView();
+        }
     }
 
+    private class MyViewFactory implements MultiDetailStage.ViewFactory{
+
+        @SuppressLint("ClickableViewAccessibility")
+        @Override
+        public View getView() {
+
+            @SuppressLint("InflateParams") View view = LayoutInflater.from(getContext()).inflate(R.layout.fragment_note_detail_content, null);
+            view.setMinimumHeight(2000);
+
+            WebView displayWebView = view.findViewById(R.id.fragment_document_display_web);
+
+            WebViewUtil.configWebView(displayWebView);
+            WebViewUtil.clearHistory();
+            displayWebView.setOnTouchListener(new OnSlideListener(getContext()) {
+                @Override
+                protected void onSlideLeft() {
+                    next();
+                }
+
+                @Override
+                protected void onSlideRight() {
+                    prev();
+                }
+
+                @Override
+                protected void onSlideUp() {
+                }
+
+                @Override
+                protected void onSlideDown() {
+                }
+
+                @Override
+                protected void onDoubleClick(MotionEvent e) {
+                    showModifyView();
+                }
+
+                @Override
+                protected int getSlideXSensitivity() {
+                    return 250;
+                }
+
+                @Override
+                protected int getSlideYSensitivity() {
+                    return (int) (ViewUtil.getScreenSize().y * 0.33);
+                }
+            });
+            return view;
+        }
+
+    }
 }

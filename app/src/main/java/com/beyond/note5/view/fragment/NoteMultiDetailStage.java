@@ -1,10 +1,7 @@
 package com.beyond.note5.view.fragment;
 
-import android.annotation.SuppressLint;
 import android.content.Context;
 import android.util.AttributeSet;
-import android.view.LayoutInflater;
-import android.view.MotionEvent;
 import android.view.View;
 import android.webkit.WebView;
 
@@ -12,14 +9,12 @@ import com.beyond.note5.R;
 import com.beyond.note5.bean.Note;
 import com.beyond.note5.constant.LoadType;
 import com.beyond.note5.utils.ToastUtil;
-import com.beyond.note5.utils.ViewUtil;
 import com.beyond.note5.utils.WebViewUtil;
 import com.beyond.note5.view.custom.ViewSwitcher;
-import com.beyond.note5.view.listener.OnSlideListener;
 
 import java.util.List;
 
-public class NoteDetailStage extends ViewSwitcher implements DetailStage<Note> {
+public class NoteMultiDetailStage extends ViewSwitcher implements MultiDetailStage<Note> {
 
 
     private List<Note> data;
@@ -28,22 +23,25 @@ public class NoteDetailStage extends ViewSwitcher implements DetailStage<Note> {
 
     private int enterIndex;
 
-    private LoadType loadType;
-
-    private OnViewMadeListener onViewMadeListener;
+    private MultiDetailStage.ViewFactory viewFactory;
 
 
-    public NoteDetailStage(Context context) {
+    public NoteMultiDetailStage(Context context) {
         super(context);
     }
 
-    public NoteDetailStage(Context context, AttributeSet attrs) {
+    public NoteMultiDetailStage(Context context, AttributeSet attrs) {
         super(context, attrs);
     }
 
     @Override
     public List<Note> getData() {
         return data;
+    }
+
+    @Override
+    public Note getCurrentData() {
+        return data.get(currentIndex);
     }
 
     @Override
@@ -101,6 +99,11 @@ public class NoteDetailStage extends ViewSwitcher implements DetailStage<Note> {
         }
     }
 
+    @Override
+    public void setViewFactory(MultiDetailStage.ViewFactory viewFactory) {
+        this.viewFactory = viewFactory;
+    }
+
 
     private WebView getNextWebView() {
         return getNextView().findViewById(R.id.fragment_document_display_web);
@@ -111,44 +114,25 @@ public class NoteDetailStage extends ViewSwitcher implements DetailStage<Note> {
     }
 
     @Override
-    public void refresh() {
+    public void refresh(LoadType loadType) {
         removeAllViews();
         setFactory(new ViewSwitcher.ViewFactory() {
             @Override
             public View makeView() {
-                @SuppressLint("InflateParams") View view = LayoutInflater.from(getContext()).inflate(R.layout.fragment_note_detail_content, null);
-                view.setMinimumHeight(2000);
-
-                WebView displayWebView = view.findViewById(R.id.fragment_document_display_web);
-
-                initContentConfig(displayWebView);
-                initContentData(displayWebView);
-                initContentEvent(displayWebView);
-
-                onViewMadeListener.onViewMade(view);
-
-                return view;
+                return viewFactory.getView();
             }
         });
+        load(loadType);
     }
 
     @Override
-    public void setOnViewMadeListener(OnViewMadeListener listener) {
-        this.onViewMadeListener = listener;
-    }
-
-    @Override
-    public void setLoadType(LoadType loadType) {
-        this.loadType = loadType;
-    }
-
-    @Override
-    public void loadMore() {
+    public void load(LoadType loadType) {
         loadType.show(getCurrentWebView(),data.get(currentIndex));
     }
 
-    private void initContentConfig(WebView displayWebView) {
-        WebViewUtil.configWebView(displayWebView);
+    @Override
+    public void clear() {
+        removeAllViews();
     }
 
     private void initContentData(WebView displayWebView) {
@@ -156,41 +140,19 @@ public class NoteDetailStage extends ViewSwitcher implements DetailStage<Note> {
         WebViewUtil.loadWebContent(displayWebView, data.get(getCurrentIndex()));
     }
 
-    @SuppressLint("ClickableViewAccessibility")
-    private void initContentEvent(final WebView displayWebView) {
-        displayWebView.setOnTouchListener(new OnSlideListener(getContext()) {
-            @Override
-            protected void onSlideLeft() {
-                next();
-            }
 
-            @Override
-            protected void onSlideRight() {
-                prev();
-            }
-
-            @Override
-            protected void onSlideUp() {
-            }
-
-            @Override
-            protected void onSlideDown() {
-            }
-
-            @Override
-            protected void onDoubleClick(MotionEvent e) {
-                //TODO:showModifyView();
-            }
-
-            @Override
-            protected int getSlideXSensitivity() {
-                return 250;
-            }
-
-            @Override
-            protected int getSlideYSensitivity() {
-                return (int) (ViewUtil.getScreenSize().y * 0.33);
-            }
-        });
+    @Override
+    public boolean onBackPressed() {
+        if (getCurrentView() == null){
+            return true;
+        }
+        WebView displayWebView = getCurrentWebView();
+        if (WebViewUtil.canGoBack(displayWebView)) {
+            WebViewUtil.goBack(displayWebView);
+            return true;
+        } else {
+            WebViewUtil.clearHistory();
+            return false;
+        }
     }
 }

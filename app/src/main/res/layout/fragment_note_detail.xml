@@ -17,13 +17,13 @@
         android:layout_marginTop="30dp"
         >
 
-        <com.beyond.note5.view.fragment.NoteDetailStage
+        <com.beyond.note5.view.fragment.NoteMultiDetailStage
             android:id="@+id/fragment_note_detail_view_switcher"
             android:layout_width="match_parent"
             android:layout_height="0dp"
             android:layout_weight="1">
 
-        </com.beyond.note5.view.fragment.NoteDetailStage>
+        </com.beyond.note5.view.fragment.NoteMultiDetailStage>
 
         <TextView
             android:id="@+id/fragment_note_detail_page_count"
