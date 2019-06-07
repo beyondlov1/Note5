@@ -17,6 +17,7 @@ import com.beyond.note5.presenter.NotePresenter;
 import com.beyond.note5.presenter.NotePresenterImpl;
 import com.beyond.note5.utils.IDUtil;
 import com.beyond.note5.utils.PhotoUtil;
+import com.beyond.note5.utils.ToastUtil;
 import com.beyond.note5.view.adapter.view.NoteViewAdapter;
 
 import org.apache.commons.io.IOUtils;
@@ -184,5 +185,10 @@ public class ShareActivity extends Activity {
     }
 
     private class MyNoteView extends NoteViewAdapter {
+        @Override
+        public void onAddSuccess(Note document) {
+            super.onAddSuccess(document);
+            ToastUtil.toast(getBaseContext(),"添加成功");
+        }
     }
 }

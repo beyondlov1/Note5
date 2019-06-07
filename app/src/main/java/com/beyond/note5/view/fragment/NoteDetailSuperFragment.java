@@ -54,10 +54,8 @@ public class NoteDetailSuperFragment extends AbstractDocumentDialogFragment impl
     private static final String TAG = NoteDetailSuperFragment.class.getSimpleName();
     
     protected MultiDetailStage<Note> multiDetailStage;
+
     protected TextView pageCountTextView;
-
-    private LoadType loadType;
-
     protected View operationContainer;
     protected View operationItemsContainer;
     protected View deleteButton;
@@ -66,8 +64,9 @@ public class NoteDetailSuperFragment extends AbstractDocumentDialogFragment impl
     protected View stickButton;
     protected View convertButton;
     protected View doneButton;
-
     private View fragmentContainer;
+
+    private LoadType loadType;
 
     private MyCalendarView calendarView = new MyCalendarView();
     private MyPredictView predictView = new MyPredictView();
@@ -124,13 +123,13 @@ public class NoteDetailSuperFragment extends AbstractDocumentDialogFragment impl
                 Note currentNote = multiDetailStage.getCurrentData();
                 notePresenter.deleteDeep(currentNote);
                 if (multiDetailStage.getData().isEmpty()) {
-                    sendHideMessage();
+                    closeWithAnimation();
                     return;
                 }
                 if (multiDetailStage.getCurrentIndex() == multiDetailStage.getData().size()) {
                     multiDetailStage.setCurrentIndex(multiDetailStage.getCurrentIndex()-1);
                 }
-                reloadView();
+                refresh();
             }
         });
         searchButton.setOnClickListener(new View.OnClickListener() {
@@ -165,7 +164,7 @@ public class NoteDetailSuperFragment extends AbstractDocumentDialogFragment impl
                 todo.setVersion(note.getVersion());
                 todoCompositePresenter.add(todo);
                 notePresenter.delete(note);
-                sendHideMessage();
+                closeWithAnimation();
                 ToastUtil.toast(getContext(), "已转化为TODO", Toast.LENGTH_SHORT);
             }
 
@@ -173,7 +172,7 @@ public class NoteDetailSuperFragment extends AbstractDocumentDialogFragment impl
         pageCountTextView.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                sendHideMessage();
+                closeWithAnimation();
             }
         });
     }
@@ -197,12 +196,12 @@ public class NoteDetailSuperFragment extends AbstractDocumentDialogFragment impl
         multiDetailStage.setCurrentIndex(fillNoteDetailEvent.getIndex());
         multiDetailStage.setEnterIndex(multiDetailStage.getCurrentIndex());
         loadType = fillNoteDetailEvent.getLoadType();
-        reloadView();
+        refresh();
         fillNoteDetailEvent.setConsumed(true);
     }
 
     @SuppressWarnings("ConstantConditions")
-    private void reloadView() {
+    private void refresh() {
         multiDetailStage.refresh(loadType);
         processFrameView();
         resetLoadType();
@@ -273,7 +272,7 @@ public class NoteDetailSuperFragment extends AbstractDocumentDialogFragment impl
                     int oldIndex = multiDetailStage.getCurrentIndex();
                     notePresenter.update(note);
                     multiDetailStage.setCurrentIndex(oldIndex) ;
-                    reloadView();
+                    refresh();
                     ToastUtil.toast(getActivity(), "已读", Toast.LENGTH_SHORT);
                 }
             }
@@ -289,10 +288,6 @@ public class NoteDetailSuperFragment extends AbstractDocumentDialogFragment impl
         EventBus.getDefault().post(new ScrollToNoteEvent(note));
     }
 
-    private void resetLoadType() {
-        this.loadType = LoadType.CONTENT;
-    }
-
     private void next() {
         multiDetailStage.next();
         processFrameView();
@@ -301,6 +296,10 @@ public class NoteDetailSuperFragment extends AbstractDocumentDialogFragment impl
     private void prev() {
         multiDetailStage.prev();
         processFrameView();
+    }
+
+    private void resetLoadType() {
+        this.loadType = LoadType.CONTENT;
     }
 
     protected void showModifyView() {
@@ -313,12 +312,12 @@ public class NoteDetailSuperFragment extends AbstractDocumentDialogFragment impl
     public boolean onBackPressed() {
         boolean consumed = multiDetailStage.onBackPressed();
         if (!consumed){
-            sendHideMessage();
+            closeWithAnimation();
         }
         return true;
     }
 
-    private void sendHideMessage() {
+    private void closeWithAnimation() {
         if (multiDetailStage.getData().isEmpty()) {
             multiDetailStage.setCurrentIndex(-1);
         }
@@ -389,7 +388,7 @@ public class NoteDetailSuperFragment extends AbstractDocumentDialogFragment impl
         public void onUpdateSuccess(Note note) {
             int index = multiDetailStage.getData().indexOf(note);
             multiDetailStage.setCurrentIndex(index == -1 ? 0 : index) ;
-            reloadView();
+            refresh();
         }
     }
 
@@ -418,21 +417,13 @@ public class NoteDetailSuperFragment extends AbstractDocumentDialogFragment impl
                 }
 
                 @Override
-                protected void onSlideUp() {
-                }
-
-                @Override
-                protected void onSlideDown() {
-                }
-
-                @Override
                 protected void onDoubleClick(MotionEvent e) {
                     showModifyView();
                 }
 
                 @Override
                 protected int getSlideXSensitivity() {
-                    return 250;
+                    return 100;
                 }
 
                 @Override

@@ -25,6 +25,7 @@ import com.beyond.note5.ocr.OCRCallBack;
 import com.beyond.note5.ocr.OCRTask;
 import com.beyond.note5.presenter.NotePresenter;
 import com.beyond.note5.presenter.NotePresenterImpl;
+import com.beyond.note5.utils.ToastUtil;
 import com.beyond.note5.view.MainActivity;
 import com.beyond.note5.view.NoteView;
 import com.beyond.note5.view.adapter.component.DocumentRecyclerViewAdapter;
@@ -200,12 +201,19 @@ public class NoteListFragment extends Fragment {
 
     @Override
     public void onDestroy() {
-        super.onDestroy();
+        System.out.println("NoteListFragment onDestroy");
         EventBus.getDefault().unregister(this);
+        super.onDestroy();
     }
 
     
     private class MyNoteView extends DocumentViewBase<Note> implements NoteView {
+
+        @Override
+        public void onAddSuccess(Note note) {
+            super.onAddSuccess(note);
+            ToastUtil.toast(getContext(),"添加成功");
+        }
 
         public DocumentRecyclerViewAdapter getRecyclerViewAdapter() {
             return recyclerViewAdapter;
