@@ -16,6 +16,10 @@ import com.beyond.note5.predict.train.filter.TimeExpressionTrainTagFilter;
 import com.beyond.note5.predict.train.filter.UrlTrainTagFilter;
 import com.beyond.note5.utils.PreferenceUtil;
 
+import org.flywaydb.core.Flyway;
+import org.flywaydb.core.api.android.ContextHolder;
+import org.sqldroid.DroidDataSource;
+
 import java.io.File;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -59,7 +63,17 @@ public class MyApplication extends Application {
         DaoMaster daoMaster = new DaoMaster(writableDatabase);
         daoSession = daoMaster.newSession();
 
-        //addColumnDev("note","PRIORITY","int");
+//        addColumnDev("note","PRIORITY1","int");
+
+        DroidDataSource dataSource = new DroidDataSource(getPackageName(), "databases/beyond_not_safe");
+        ContextHolder.setContext(this);
+        Flyway flyway = new Flyway();
+        flyway.setDataSource(dataSource);
+        flyway.setInitOnMigrate(true);
+
+        flyway.migrate();
+
+
     }
 
     //FIXME
@@ -68,7 +82,7 @@ public class MyApplication extends Application {
         if (PreferenceUtil.getBoolean(IS_ALTER_SQL_EXECUTED)){
             return;
         }
-        SQLiteOpenHelper sqLiteOpenHelper = new SQLiteOpenHelper(this,"beyond_not_safe.db",null,1) {
+        SQLiteOpenHelper sqLiteOpenHelper = new SQLiteOpenHelper(this,"beyond_not_safe_flyway_test.db",null,3) {
             @Override
             public void onCreate(SQLiteDatabase db) {
 

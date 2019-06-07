@@ -23,6 +23,11 @@ android {
         sourceCompatibility = '1.8'
         targetCompatibility = '1.8'
     }
+
+    sourceSets {
+        // Place your db/migration folder here
+        main { assets.srcDirs = ['src/main/assets'] }
+    }
 }
 
 buildscript{
@@ -106,7 +111,12 @@ dependencies {
     //svg
     implementation 'com.caverock:androidsvg-aar:1.3'
     implementation 'com.android.support.constraint:constraint-layout:1.1.3'
+
     implementation 'com.jakewharton:butterknife:8.8.1'
     annotationProcessor 'com.jakewharton:butterknife-compiler:8.8.1'
+
+    //flyway
+    implementation 'org.flywaydb:flyway-core:3.0'
+    implementation 'org.sqldroid:sqldroid:1.1.0-rc1'
 }
 
