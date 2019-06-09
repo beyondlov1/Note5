@@ -187,6 +187,11 @@ public class NotePresenterImpl implements NotePresenter {
     }
 
     @Override
+    public List<Note> selectAll() {
+        return noteModel.findAll();
+    }
+
+    @Override
     public void findAllSuccess(List<Note> allNote) {
         if (noteView == null) {
             return;
@@ -269,7 +274,7 @@ public class NotePresenterImpl implements NotePresenter {
         }
         String titleFromHtml = HtmlUtil.getTitleFromHtml(response.body().string());
         if (StringUtils.isNotBlank(titleFromHtml)) {
-           return titleFromHtml;
+            return titleFromHtml;
         }
         return null;
     }

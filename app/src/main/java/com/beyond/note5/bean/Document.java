@@ -1,5 +1,7 @@
 package com.beyond.note5.bean;
 
+import android.util.Log;
+
 import com.beyond.note5.constant.DocumentConst;
 
 import org.greenrobot.greendao.annotation.Entity;
@@ -9,7 +11,7 @@ import org.greenrobot.greendao.annotation.Id;
 import java.util.Date;
 
 @Entity
-public class Document implements Element, Cloneable{
+public class Document implements Cloneable,Tracable{
 
     public final static String NOTE = "note";
     public final static String TODO = "todo";
@@ -106,7 +108,22 @@ public class Document implements Element, Cloneable{
 
     @Override
     protected Object clone() throws CloneNotSupportedException {
-        return super.clone();
+        Document document = (Document) super.clone();
+        try {
+            document = this.getClass().newInstance();
+            document.setId(this.getId());
+            document.setTitle(this.getTitle());
+            document.setContent(this.getContent());
+            document.setCreateTime(this.getCreateTime());
+            document.setLastModifyTime(this.getLastModifyTime());
+            document.setVersion(this.getVersion());
+            document.setType(this.getType());
+            document.setPriority(this.getPriority());
+        } catch (InstantiationException | IllegalAccessException e) {
+            e.printStackTrace();
+            Log.e("Document","克隆失败");
+        }
+        return document;
     }
 
     public Integer getReadFlag() {

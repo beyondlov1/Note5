@@ -21,6 +21,8 @@ public interface CRUDPresenter<T> {
 
     void deleteFail(T document);
 
+    List<T> selectAll();
+
     void findAll();
 
     void findAllSuccess(List<T> allDocument);

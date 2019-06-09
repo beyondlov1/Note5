@@ -24,6 +24,13 @@ public class PreferenceUtil {
                 .apply();
     }
 
+    public static void put(String key, long value) {
+        MyApplication.getInstance().getSharedPreferences(MyApplication.SHARED_PREFERENCES_NAME,Context.MODE_PRIVATE)
+                .edit()
+                .putLong(key, value)
+                .apply();
+    }
+
     public static boolean getBoolean(String key){
        return MyApplication.getInstance().getSharedPreferences(MyApplication.SHARED_PREFERENCES_NAME,Context.MODE_PRIVATE)
                 .getBoolean(key,false);
@@ -42,4 +49,11 @@ public class PreferenceUtil {
         return MyApplication.getInstance().getSharedPreferences(MyApplication.SHARED_PREFERENCES_NAME,Context.MODE_PRIVATE)
                 .getInt(key,0);
     }
+
+    public static Long getLong(String key) {
+        return MyApplication.getInstance().getSharedPreferences(MyApplication.SHARED_PREFERENCES_NAME,Context.MODE_PRIVATE)
+                .getLong(key,0);
+    }
+
+
 }

@@ -24,9 +24,10 @@ public class Todo extends Document {
         todo.setId(IDUtil.uuid());
         todo.setTitle(content.length() > 10 ? content.substring(0, 10) : content);
         todo.setContent(content);
-        todo.setCreateTime(new Date());
+        Date currDate = new Date();
+        todo.setCreateTime(currDate);
         todo.setVersion(0);
-        todo.setLastModifyTime(new Date());
+        todo.setLastModifyTime(currDate);
         todo.setReadFlag(DocumentConst.READ_FLAG_NORMAL);
 
         Date reminderStart = TimeNLPUtil.parse(todo.getContent());
@@ -244,6 +245,16 @@ public class Todo extends Document {
 
     public void setPriority(Integer priority) {
         this.priority = priority;
+    }
+
+    @Override
+    public Object clone() throws CloneNotSupportedException {
+        Todo todo = (Todo) super.clone();
+        todo.setReminderId(reminderId);
+        todo.setReminder(reminder);
+        todo.setContentWithoutTime(contentWithoutTime);
+        todo.setType(type);
+        return todo;
     }
 
 }

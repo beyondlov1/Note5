@@ -11,6 +11,7 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 
+import com.beyond.note5.MyApplication;
 import com.beyond.note5.R;
 import com.beyond.note5.bean.Note;
 import com.beyond.note5.event.HideFABEvent;
@@ -212,6 +213,7 @@ public class NoteListFragment extends Fragment {
         @Override
         public void onAddSuccess(Note note) {
             super.onAddSuccess(note);
+            MyApplication.getInstance().syncNote();
             ToastUtil.toast(getContext(),"添加成功");
         }
 

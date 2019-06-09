@@ -19,11 +19,12 @@ import java.util.List;
 public class Note extends Document {
 
     public static Note newInstance(){
+        Date currDate = new Date();
         Note note = new Note();
         note.setId(IDUtil.uuid());
-        note.setCreateTime(new Date());
+        note.setCreateTime(currDate);
         note.setVersion(0);
-        note.setLastModifyTime(new Date());
+        note.setLastModifyTime(currDate);
         note.setReadFlag(DocumentConst.READ_FLAG_NORMAL);
         return note;
     }
@@ -229,4 +230,29 @@ public class Note extends Document {
     }
 
 
+    @Override
+    public Object clone() throws CloneNotSupportedException {
+        Note note = (Note) super.clone();
+        note.setAttachments(this.attachments);
+        note.setType(this.type);
+        return note;
+    }
+
+    @Override
+    public String toString() {
+        return "Note{" +
+                "id='" + id + '\'' +
+                ", title='" + title + '\'' +
+                ", content='" + content + '\'' +
+                ", type='" + type + '\'' +
+                ", createTime=" + createTime +
+                ", lastModifyTime=" + lastModifyTime +
+                ", version=" + version +
+                ", readFlag=" + readFlag +
+                ", priority=" + priority +
+                ", attachments=" + attachments +
+                ", daoSession=" + daoSession +
+                ", myDao=" + myDao +
+                '}';
+    }
 }

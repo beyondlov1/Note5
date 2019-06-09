@@ -139,6 +139,11 @@ public class TodoPresenterImpl implements TodoPresenter {
     }
 
     @Override
+    public List<Todo> selectAll() {
+        return todoModel.findAll();
+    }
+
+    @Override
     public void findAll() {
         try {
             List<Todo> allTodo = todoModel.findAll();
