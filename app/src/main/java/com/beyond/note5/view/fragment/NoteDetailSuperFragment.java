@@ -23,6 +23,7 @@ import com.beyond.note5.event.FillNoteDetailEvent;
 import com.beyond.note5.event.FillNoteModifyEvent;
 import com.beyond.note5.event.HideNoteDetailEvent;
 import com.beyond.note5.event.ScrollToNoteEvent;
+import com.beyond.note5.event.note.UpdateNoteSuccessEvent;
 import com.beyond.note5.presenter.CalendarPresenterImpl;
 import com.beyond.note5.presenter.NotePresenter;
 import com.beyond.note5.presenter.NotePresenterImpl;
@@ -71,6 +72,7 @@ public class NoteDetailSuperFragment extends AbstractDocumentDialogFragment impl
     private MyCalendarView calendarView = new MyCalendarView();
     private MyPredictView predictView = new MyPredictView();
     private MyTodoView todoView = new MyTodoView();
+    private MyNoteView noteView = new MyNoteView();
 
     private TodoCompositePresenter todoCompositePresenter;
     private NotePresenter notePresenter;
@@ -81,7 +83,7 @@ public class NoteDetailSuperFragment extends AbstractDocumentDialogFragment impl
                 .calendarPresenter(new CalendarPresenterImpl(getActivity(), calendarView))
                 .predictPresenter(new PredictPresenterImpl(predictView))
                 .build();
-        notePresenter = new NotePresenterImpl(new MyNoteView());
+        notePresenter = new NotePresenterImpl(noteView);
     }
 
     @Override
@@ -198,6 +200,11 @@ public class NoteDetailSuperFragment extends AbstractDocumentDialogFragment impl
         loadType = fillNoteDetailEvent.getLoadType();
         refresh();
         fillNoteDetailEvent.setConsumed(true);
+    }
+
+    @Subscribe(threadMode = ThreadMode.MAIN)
+    public void onEventMainThread(UpdateNoteSuccessEvent updateNoteSuccessEvent) {
+        noteView.onUpdateSuccess(updateNoteSuccessEvent.get());
     }
 
     @SuppressWarnings("ConstantConditions")

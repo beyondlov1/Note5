@@ -129,27 +129,5 @@ dependencies {
     implementation 'org.flywaydb:flyway-core:3.0'
     implementation 'org.sqldroid:sqldroid:1.1.0-rc1'
 
-    implementation ('org.apache.jackrabbit:jackrabbit-webdav:2.16.3',{
-        exclude group: 'org.apache.commons', module:'commons-logging'
-        exclude group: 'org.slf4j', module:'jcl-over-slf4j'
-        exclude group: 'org.apache.httpcomponents', module:'httpclient'
-    })
-
-//    implementation 'org.apache.httpcomponents.client5:httpclient5:5.0-beta3'
-    implementation 'cz.msebera.android:httpclient:4.5.3'
-//
-//    configurations {
-//        all*.exclude group: 'org.apache.commons'
-//    }
+    implementation 'com.scwang.smartrefresh:SmartRefreshLayout:1.1.0-alpha-28'
 }
-
-//configurations {
-//    all*.exclude group: 'org.apache.commons'
-//}
-//configurations.all{
-//    resolutionStrategy.force 'org.apache.commons:commons-logging:1.2'
-//    resolutionStrategy.force 'org.apache.commons:commons-lang3:3.8.1'
-//    resolutionStrategy.force 'org.apache.commons:commons-collections4:4.1'
-//    resolutionStrategy.force 'commons-io:commons-io:2.6'
-//    resolutionStrategy.force 'commons-beanutils:commons-beanutils:1.9.3'
-//}

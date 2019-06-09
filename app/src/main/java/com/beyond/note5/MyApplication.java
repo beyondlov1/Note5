@@ -3,6 +3,7 @@ package com.beyond.note5;
 import android.app.Application;
 import android.database.sqlite.SQLiteDatabase;
 import android.os.Environment;
+import android.os.Handler;
 
 import com.beyond.note5.bean.Attachment;
 import com.beyond.note5.bean.Note;
@@ -16,10 +17,10 @@ import com.beyond.note5.predict.bean.TagGraph;
 import com.beyond.note5.predict.train.filter.TimeExpressionTrainTagFilter;
 import com.beyond.note5.predict.train.filter.UrlTrainTagFilter;
 import com.beyond.note5.sync.DataSource;
-import com.beyond.note5.sync.NoteDefaultSynchronizer;
+import com.beyond.note5.sync.synchronizer.NoteSynchronizer;
 import com.beyond.note5.sync.Synchronizer;
-import com.beyond.note5.sync.datasource.NoteLocalDataSource;
-import com.beyond.note5.sync.datasource.dav.NoteDavDataSource;
+import com.beyond.note5.sync.datasource.note.NoteLocalDataSource;
+import com.beyond.note5.sync.datasource.note.NoteDavDataSource;
 import com.beyond.note5.utils.IDUtil;
 import com.beyond.note5.utils.PreferenceUtil;
 
@@ -38,6 +39,8 @@ import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
+import static com.beyond.note5.view.LoginActivity.DAV_LOGIN;
+
 /**
  * @author: beyond
  * @date: 2019/1/30
@@ -53,6 +56,8 @@ public class MyApplication extends Application {
 
     private boolean isApplicationToBeBorn = false;
 
+    private Handler handler = new Handler();
+
     private static MyApplication instance;
 
     public static MyApplication getInstance() {
@@ -67,23 +72,27 @@ public class MyApplication extends Application {
         initPreference();
         initDaoSession();
         initSynchronizer();
+
+        if (PreferenceUtil.getBoolean(DAV_LOGIN,false)){
+            syncNote();
+        }
     }
 
     private void initSynchronizer() {
         localDataSource = new NoteLocalDataSource();
         remoteDataSource = new NoteDavDataSource(PreferenceUtil.getString(SYNC_REMOTE_URL));
-        synchronizer = new NoteDefaultSynchronizer();
+        synchronizer = new NoteSynchronizer();
     }
 
-    public void initPreference(){
+    public void initPreference() {
         String syncRemoteUrl = PreferenceUtil.getString(SYNC_REMOTE_URL);
-        if (StringUtils.isBlank(syncRemoteUrl)){
-            PreferenceUtil.put(SYNC_REMOTE_URL,"https://dav.jianguoyun.com/dav/Note5/data/note.dat");
+        if (StringUtils.isBlank(syncRemoteUrl)) {
+            PreferenceUtil.put(SYNC_REMOTE_URL, "https://dav.jianguoyun.com/dav/Note5/data/note.dat");
         }
 
         String virtualUserId = PreferenceUtil.getString(VIRTUAL_USER_ID);
-        if (StringUtils.isBlank(virtualUserId)){
-            PreferenceUtil.put(VIRTUAL_USER_ID,IDUtil.uuid());
+        if (StringUtils.isBlank(virtualUserId)) {
+            PreferenceUtil.put(VIRTUAL_USER_ID, IDUtil.uuid());
         }
     }
 
@@ -158,8 +167,16 @@ public class MyApplication extends Application {
     private DataSource<Note> remoteDataSource;
     private Synchronizer<Note> synchronizer;
 
-    public void syncNote(){
-        if (synchronizer == null){
+    public void syncNote() {
+        syncNote(null);
+    }
+
+    public void syncNote(Runnable callback) {
+        syncNote(callback, null);
+    }
+
+    public void syncNote(Runnable callback, Runnable fail) {
+        if (synchronizer == null) {
             initSynchronizer();
         }
         getExecutorService().execute(new Runnable() {
@@ -167,15 +184,21 @@ public class MyApplication extends Application {
             public void run() {
                 try {
                     synchronizer.sync(localDataSource, remoteDataSource);
+                    if (callback != null) {
+                        handler.post(callback);
+                    }
                 } catch (Exception e) {
                     e.printStackTrace();
+                    if (fail != null) {
+                        handler.post(fail);
+                    }
                 }
             }
         });
     }
 
 
-    public void test(DataSource<Note> localDataSource,DataSource<Note> remoteDataSource, Synchronizer<Note> synchronizer) throws IOException {
+    public void test(DataSource<Note> localDataSource, DataSource<Note> remoteDataSource, Synchronizer<Note> synchronizer) throws IOException {
         Note note = Note.newInstance();
         Note note1 = Note.newInstance();
         Note note2 = Note.newInstance();

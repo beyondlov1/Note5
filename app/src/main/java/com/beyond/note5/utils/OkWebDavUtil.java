@@ -2,7 +2,7 @@ package com.beyond.note5.utils;
 
 import android.util.Log;
 
-import com.beyond.note5.sync.datasource.dav.BasicAuthenticator;
+import com.beyond.note5.sync.webdav.BasicAuthenticator;
 
 import org.apache.commons.lang3.StringUtils;
 
@@ -17,6 +17,9 @@ import okhttp3.Request;
 import okhttp3.RequestBody;
 import okhttp3.Response;
 import okhttp3.ResponseBody;
+
+import static com.beyond.note5.view.LoginActivity.DAV_LOGIN_PASSWORD;
+import static com.beyond.note5.view.LoginActivity.DAV_LOGIN_USERNAME;
 
 public class OkWebDavUtil {
 
@@ -89,7 +92,8 @@ public class OkWebDavUtil {
         static final OkHttpClient INSTANCE = new OkHttpClient.Builder()
                 .connectTimeout(10000,TimeUnit.MILLISECONDS)
                 .readTimeout(10000, TimeUnit.MILLISECONDS)
-                .authenticator(new BasicAuthenticator("xxxx", "xxxx"))
+                .authenticator(new BasicAuthenticator(PreferenceUtil.getString(DAV_LOGIN_USERNAME),
+                        PreferenceUtil.getString(DAV_LOGIN_PASSWORD)))
                 .build();
     }
 
@@ -128,7 +132,8 @@ public class OkWebDavUtil {
                 .build();
         String root = "https://" + URI.create(url).getHost();
         if (!StringUtils.equalsIgnoreCase(parentUrl, root)) {
-            mkRemoteDir(parentUrl);
+            Response response = mkRemoteDir(parentUrl);
+            response.close();
         }
         return requestForResponse(mkcol);
     }
@@ -138,8 +143,59 @@ public class OkWebDavUtil {
         return body != null ? body.string() : null;
     }
 
+    public static boolean isAvailable(String url){
+        OkHttpClient client =  getClient();
+        //获取文件夹路径
+        int index = StringUtils.lastIndexOf(url, "/");
+        String parentUrl = StringUtils.substring(url, 0, index);
+
+        Request.Builder requestBuilder = new Request.Builder();
+        Request mkcol = requestBuilder
+                .url(parentUrl)
+                .method("MKCOL", null)
+                .build();
+
+        try (Response response = client.newCall(mkcol).execute()) {
+            return response.isSuccessful();
+        } catch (IOException e) {
+            e.printStackTrace();
+            return false;
+        }
+    }
+
+    public static boolean isAvailable(String url,String username,String password){
+        OkHttpClient client = new OkHttpClient.Builder()
+                .connectTimeout(10000,TimeUnit.MILLISECONDS)
+                .readTimeout(10000, TimeUnit.MILLISECONDS)
+                .authenticator(new BasicAuthenticator(username,
+                        password))
+                .build();
+        //获取文件夹路径
+        int index = StringUtils.lastIndexOf(url, "/");
+        String parentUrl = StringUtils.substring(url, 0, index);
+
+        Request.Builder requestBuilder = new Request.Builder();
+        Request mkcol = requestBuilder
+                .url(parentUrl)
+                .method("MKCOL", null)
+                .build();
+
+        try (Response response = client.newCall(mkcol).execute()) {
+            return response.isSuccessful();
+        } catch (IOException e) {
+            e.printStackTrace();
+            return false;
+        }
+    }
+
     public interface Callback<S,T>{
         S onSuccess(T t);
         void onFail();
+    }
+
+    public static void main(String[] args) throws IOException {
+        String url = "https://dav.jianguoyun.com/dav/Note5/data/note.dat";
+        boolean available = isAvailable(url);
+        System.out.println(available);
     }
 }

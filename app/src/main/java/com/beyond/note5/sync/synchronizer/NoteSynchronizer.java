@@ -1,14 +1,15 @@
-package com.beyond.note5.sync;
+package com.beyond.note5.sync.synchronizer;
 
 import com.beyond.note5.bean.Note;
-import com.beyond.note5.sync.datasource.dav.DavDataSource;
-import com.beyond.note5.sync.datasource.dav.DavLock;
-import com.beyond.note5.sync.datasource.dav.Lock;
+import com.beyond.note5.sync.DataSource;
+import com.beyond.note5.sync.datasource.DavDataSource;
+import com.beyond.note5.sync.webdav.DavLock;
+import com.beyond.note5.sync.webdav.Lock;
 import com.beyond.note5.utils.PreferenceUtil;
 
 import java.util.Date;
 
-public class NoteDefaultSynchronizer extends DefaultSynchronizer<Note> {
+public class NoteSynchronizer extends SynchronizerBase<Note> {
 
     private static final String NOTE_LAST_SYNC_TIME  = "note.last.syncNote.time";
 

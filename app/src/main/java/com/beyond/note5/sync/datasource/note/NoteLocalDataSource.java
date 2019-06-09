@@ -1,4 +1,4 @@
-package com.beyond.note5.sync.datasource;
+package com.beyond.note5.sync.datasource.note;
 
 import com.beyond.note5.bean.Note;
 import com.beyond.note5.presenter.NotePresenter;

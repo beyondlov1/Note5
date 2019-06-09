@@ -1,7 +1,9 @@
-package com.beyond.note5.sync;
+package com.beyond.note5.sync.synchronizer;
 
 import com.beyond.note5.bean.Element;
 import com.beyond.note5.bean.Tracable;
+import com.beyond.note5.sync.DataSource;
+import com.beyond.note5.sync.Synchronizer;
 
 import java.io.IOException;
 import java.util.ArrayList;

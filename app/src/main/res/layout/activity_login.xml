@@ -19,6 +19,25 @@
         android:inputType="textPassword"
         android:hint="@string/password"/>
 
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:gravity="end"
+        android:orientation="horizontal">
+        <CheckBox
+            android:id="@+id/login_remember_username"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/rememberUsername"
+            android:paddingEnd="20dp"/>
+        <CheckBox
+            android:id="@+id/login_remember_password"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/rememberPassword"
+            android:paddingEnd="20dp"/>
+    </LinearLayout>
+
     <Button
         android:id="@+id/loginButton"
         android:layout_width="match_parent"

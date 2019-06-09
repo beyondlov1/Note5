@@ -46,8 +46,6 @@
             <!--</intent-filter>-->
         </activity>
 
-        <activity android:name=".view.LoginActivity" />
-
         <activity
             android:name="com.journeyapps.barcodescanner.CaptureActivity"
             android:screenOrientation="fullSensor"
@@ -76,6 +74,9 @@
             android:name=".view.FloatEditorActivity"
             android:launchMode="singleInstance"
             android:theme="@style/TranslucentTheme" />
+
+
+        <activity android:name=".view.DavLoginActivity" />
 
         <provider
             android:name="android.support.v4.content.FileProvider"

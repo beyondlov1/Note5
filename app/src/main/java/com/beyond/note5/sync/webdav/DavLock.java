@@ -1,9 +1,6 @@
-package com.beyond.note5.sync.datasource.dav;
+package com.beyond.note5.sync.webdav;
 
 import com.beyond.note5.utils.OkWebDavUtil;
-import com.beyond.note5.utils.PreferenceUtil;
-
-import static com.beyond.note5.MyApplication.VIRTUAL_USER_ID;
 
 public class DavLock implements Lock{
 
@@ -17,7 +14,7 @@ public class DavLock implements Lock{
         if (isLocked()) {
             return false;
         }
-        return OkWebDavUtil.upload(url, PreferenceUtil.getString(VIRTUAL_USER_ID));
+        return OkWebDavUtil.upload(url, "");
     }
 
     public boolean isLocked() {
@@ -34,12 +31,4 @@ public class DavLock implements Lock{
         return true;
     }
 
-    public static void main(String[] args) {
-        DavLock davLock = new DavLock("https://dav.jianguoyun.com/dav/NoteClould2/test.lock");
-        boolean locked = davLock.isLocked();
-        System.out.println(locked);
-        System.out.println();
-
-        davLock.release();
-    }
 }

@@ -1,6 +1,8 @@
 package com.beyond.note5.view.fragment;
 
+import android.content.Intent;
 import android.os.Bundle;
+import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
 import android.support.v7.widget.RecyclerView;
@@ -18,15 +20,18 @@ import com.beyond.note5.event.HideFABEvent;
 import com.beyond.note5.event.RefreshNoteListEvent;
 import com.beyond.note5.event.ScrollToNoteEvent;
 import com.beyond.note5.event.ShowFABEvent;
-import com.beyond.note5.event.note.UpdateNotePriorityEvent;
+import com.beyond.note5.event.SyncNoteListEvent;
 import com.beyond.note5.event.note.AddNoteSuccessEvent;
 import com.beyond.note5.event.note.DeleteNoteSuccessEvent;
+import com.beyond.note5.event.note.UpdateNotePriorityEvent;
 import com.beyond.note5.event.note.UpdateNoteSuccessEvent;
 import com.beyond.note5.ocr.OCRCallBack;
 import com.beyond.note5.ocr.OCRTask;
 import com.beyond.note5.presenter.NotePresenter;
 import com.beyond.note5.presenter.NotePresenterImpl;
+import com.beyond.note5.utils.PreferenceUtil;
 import com.beyond.note5.utils.ToastUtil;
+import com.beyond.note5.view.DavLoginActivity;
 import com.beyond.note5.view.MainActivity;
 import com.beyond.note5.view.NoteView;
 import com.beyond.note5.view.adapter.component.DocumentRecyclerViewAdapter;
@@ -34,6 +39,8 @@ import com.beyond.note5.view.adapter.component.NoteRecyclerViewAdapter;
 import com.beyond.note5.view.adapter.component.header.ItemDataGenerator;
 import com.beyond.note5.view.adapter.component.header.ReadFlagItemDataGenerator;
 import com.beyond.note5.view.adapter.view.DocumentViewBase;
+import com.scwang.smartrefresh.layout.api.RefreshLayout;
+import com.scwang.smartrefresh.layout.listener.OnRefreshListener;
 
 import org.greenrobot.eventbus.EventBus;
 import org.greenrobot.eventbus.Subscribe;
@@ -44,6 +51,8 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
+import static com.beyond.note5.view.LoginActivity.DAV_LOGIN_REMEMBER_PASSWORD;
+
 /**
  * @author: beyond
  * @date: 2019/1/30
@@ -52,6 +61,7 @@ import java.util.List;
 public class NoteListFragment extends Fragment {
 
     protected RecyclerView recyclerView;
+    private RefreshLayout refreshLayout;
 
     protected DocumentRecyclerViewAdapter recyclerViewAdapter;
 
@@ -86,6 +96,7 @@ public class NoteListFragment extends Fragment {
     }
 
     protected void initView(ViewGroup viewGroup) {
+        refreshLayout = viewGroup.findViewById(R.id.note_refresh_layout);
         recyclerView = viewGroup.findViewById(R.id.note_recycler_view);
         recyclerView.setAdapter(recyclerViewAdapter);
         //设置显示格式
@@ -94,6 +105,25 @@ public class NoteListFragment extends Fragment {
     }
 
     protected void initEvent(ViewGroup viewGroup) {
+        refreshLayout.setOnRefreshListener(new OnRefreshListener() {
+            @Override
+            public void onRefresh(@NonNull RefreshLayout refreshLayout) {
+                ToastUtil.toast(getContext(),"开始同步");
+                if (!PreferenceUtil.getBoolean(DAV_LOGIN_REMEMBER_PASSWORD)){
+                    refreshLayout.finishRefresh();
+                    Intent intent = new Intent(getContext(),DavLoginActivity.class);
+                    startActivity(intent);
+                    return;
+                }
+                MyApplication.getInstance().syncNote(new Runnable() {
+                    @Override
+                    public void run() {
+                        refreshLayout.finishRefresh();
+                        ToastUtil.toast(getContext(),"同步完成");
+                    }
+                });
+            }
+        });
         recyclerView.setOnFlingListener(new RecyclerView.OnFlingListener() {
             @Override
             public boolean onFling(int velocityX, int velocityY) {
@@ -159,7 +189,7 @@ public class NoteListFragment extends Fragment {
         noteView.onAddSuccess(event.get());
     }
 
-    @Subscribe(threadMode = ThreadMode.MAIN)
+    @Subscribe(threadMode = ThreadMode.MAIN,priority = 1)
     public void onReceived(UpdateNoteSuccessEvent event) {
         noteView.onUpdateSuccess(event.get());
     }
@@ -177,6 +207,11 @@ public class NoteListFragment extends Fragment {
     @Subscribe(threadMode = ThreadMode.MAIN)
     public void onReceived(RefreshNoteListEvent event) {
         notePresenter.findAll();
+    }
+
+    @Subscribe(threadMode = ThreadMode.MAIN)
+    public void onReceived(SyncNoteListEvent event) {
+        refreshLayout.autoRefresh();
     }
 
     @Subscribe(threadMode = ThreadMode.MAIN)
@@ -213,7 +248,6 @@ public class NoteListFragment extends Fragment {
         @Override
         public void onAddSuccess(Note note) {
             super.onAddSuccess(note);
-            MyApplication.getInstance().syncNote();
             ToastUtil.toast(getContext(),"添加成功");
         }
 
