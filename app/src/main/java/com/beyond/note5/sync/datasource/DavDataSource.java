@@ -6,6 +6,7 @@ import com.alibaba.fastjson.JSONObject;
 import com.beyond.note5.bean.Document;
 import com.beyond.note5.sync.DataSource;
 import com.beyond.note5.utils.OkWebDavUtil;
+import com.beyond.note5.utils.StringCompressUtil;
 
 import java.io.IOException;
 import java.util.List;
@@ -47,13 +48,13 @@ public abstract class DavDataSource<T extends Document> implements DataSource<T>
     @Override
     public List<T> selectAll() throws IOException {
         String data = download(getDownloadUrl());
-        return JSONObject.parseArray(data,clazz());
+        return JSONObject.parseArray(StringCompressUtil.unCompress(data),clazz());
     }
 
     @Override
     public void cover(List<T> all) throws IOException {
         String jsonString = JSONObject.toJSONString(all);
-        upload(getUploadUrl(), jsonString);
+        upload(getUploadUrl(), StringCompressUtil.compress(jsonString));
     }
 
     @Override

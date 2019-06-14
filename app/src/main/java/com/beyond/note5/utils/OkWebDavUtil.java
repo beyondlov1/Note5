@@ -26,12 +26,24 @@ public class OkWebDavUtil {
     public static OkHttpClient getClient(){
         return OkHttpClientHolder.INSTANCE;
     }
+    private static class OkHttpClientHolder {
+        static final OkHttpClient INSTANCE = new OkHttpClient.Builder()
+                .connectTimeout(10000,TimeUnit.MILLISECONDS)
+                .readTimeout(10000, TimeUnit.MILLISECONDS)
+                .authenticator(new BasicAuthenticator(PreferenceUtil.getString(DAV_LOGIN_USERNAME),
+                        PreferenceUtil.getString(DAV_LOGIN_PASSWORD)))
+                .build();
+    }
 
     public static boolean upload(String url,String content){
+        return upload(getClient(),url,content);
+    }
+
+    public static boolean upload(OkHttpClient client,String url,String content){
         Response response = null;
         Response mkResponse = null;
         try{
-            mkResponse = OkWebDavUtil.mkRemoteDir(url);
+            mkResponse = OkWebDavUtil.mkRemoteDir(client, url);
 
             if (!mkResponse.isSuccessful()){
                 throw new RuntimeException("创建文件夹失败");
@@ -41,7 +53,7 @@ public class OkWebDavUtil {
                     .url(url)
                     .method("PUT",RequestBody.create(MediaType.get("application/x-www-form-urlencoded"),content.getBytes()))
                     .build();
-            response = OkWebDavUtil.requestForResponse(request);
+            response = client.newCall(request).execute();
             if (!response.isSuccessful()){
                 throw new RuntimeException("上传失败");
             }else {
@@ -61,11 +73,15 @@ public class OkWebDavUtil {
     }
 
     public static boolean isFileExist(String url) {
+        return isFileExist(getClient(),url);
+    }
+
+    public static boolean isFileExist(OkHttpClient client, String url) {
         final Request request = new Request.Builder()
                 .url(url)
                 .method("GET",null)
                 .build();
-        Call call = getClient().newCall(request);
+        Call call =client.newCall(request);
         try (Response response = call.execute()) {
             return response.isSuccessful();
         } catch (IOException e) {
@@ -73,12 +89,17 @@ public class OkWebDavUtil {
             return false;
         }
     }
+
     public static void deleteFile(String url) throws IOException {
+        deleteFile(getClient(),url);
+    }
+
+    public static void deleteFile(OkHttpClient client, String url) throws IOException {
         final Request request = new Request.Builder()
                 .url(url)
                 .method("DELETE",null)
                 .build();
-        Call call = getClient().newCall(request);
+        Call call = client.newCall(request);
         try (Response response = call.execute()) {
             if (!response.isSuccessful()){
                 if (isFileExist(url)){
@@ -88,25 +109,20 @@ public class OkWebDavUtil {
         }
     }
 
-    private static class OkHttpClientHolder {
-        static final OkHttpClient INSTANCE = new OkHttpClient.Builder()
-                .connectTimeout(10000,TimeUnit.MILLISECONDS)
-                .readTimeout(10000, TimeUnit.MILLISECONDS)
-                .authenticator(new BasicAuthenticator(PreferenceUtil.getString(DAV_LOGIN_USERNAME),
-                        PreferenceUtil.getString(DAV_LOGIN_PASSWORD)))
-                .build();
+    public static Response requestForResponse(Request request) throws IOException {
+        return requestForResponse(getClient(),request);
     }
 
-    public static Response requestForResponse(Request request) throws IOException {
-        Call call = getClient().newCall(request);
+    public static Response requestForResponse(OkHttpClient client, Request request) throws IOException {
+        Call call = client.newCall(request);
         return call.execute();
     }
 
     public static String requestForString(Request request,Callback<String,String> callback) throws IOException {
-        return requestForString(request,getClient(),callback);
+        return requestForString(getClient(),request,callback);
     }
 
-    public static String requestForString(Request request,OkHttpClient okHttpClient,Callback<String,String> callback) throws IOException {
+    public static String requestForString(OkHttpClient okHttpClient,Request request,Callback<String,String> callback) throws IOException {
         String result = null;
         Call call = okHttpClient.newCall(request);
         try (Response response = call.execute()) {
@@ -121,6 +137,10 @@ public class OkWebDavUtil {
     }
 
     public static Response mkRemoteDir(String url) throws IOException {
+      return mkRemoteDir(getClient(),url);
+    }
+
+    public static Response mkRemoteDir(OkHttpClient client, String url) throws IOException {
         //获取文件夹路径
         int index = StringUtils.lastIndexOf(url, "/");
         String parentUrl = StringUtils.substring(url, 0, index);
@@ -132,15 +152,10 @@ public class OkWebDavUtil {
                 .build();
         String root = "https://" + URI.create(url).getHost();
         if (!StringUtils.equalsIgnoreCase(parentUrl, root)) {
-            Response response = mkRemoteDir(parentUrl);
+            Response response = mkRemoteDir(client,parentUrl);
             response.close();
         }
-        return requestForResponse(mkcol);
-    }
-
-    public static String getContentFromResponse(Response response ) throws IOException {
-        ResponseBody body = response.body();
-        return body != null ? body.string() : null;
+        return requestForResponse(client,mkcol);
     }
 
     public static boolean isAvailable(String url){
@@ -194,8 +209,13 @@ public class OkWebDavUtil {
     }
 
     public static void main(String[] args) throws IOException {
-        String url = "https://dav.jianguoyun.com/dav/Note5/data/note.dat";
-        boolean available = isAvailable(url);
-        System.out.println(available);
+        String url = "https://dav.jianguoyun.com/dav/NoteCloud2/test.txt";
+        OkHttpClient client = new OkHttpClient.Builder()
+                .connectTimeout(10000,TimeUnit.MILLISECONDS)
+                .readTimeout(10000, TimeUnit.MILLISECONDS)
+                .authenticator(new BasicAuthenticator("",
+                        ""))
+                .build();
+        upload(client, url,"我们a");
     }
 }

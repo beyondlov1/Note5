@@ -36,6 +36,10 @@ public abstract class AbstractSynchronizer<T extends Tracable> implements Synchr
             return localData;
         }
 
+        if (localData.isEmpty()){
+            return remoteData;
+        }
+
         //获取本地和远程的文档
         Collections.reverse(localData);
         Collections.reverse(remoteData);
@@ -154,6 +158,11 @@ public abstract class AbstractSynchronizer<T extends Tracable> implements Synchr
     }
 
     protected List<T> getRemoteAddedData(List<T> localData, List<T> remoteData){
+
+        if (localData.isEmpty()){
+            return remoteData;
+        }
+
         //获取本地和远程的文档
         Collections.reverse(localData);
         Collections.reverse(remoteData);

@@ -52,7 +52,7 @@ public class MyApplication extends Application {
     public static final String SHARED_PREFERENCES_NAME = "note5_preferences";
     public static final String DEFAULT_PAGE = "default_page";
     public static final String VIRTUAL_USER_ID = "user.virtual.id";
-    public static final String SYNC_REMOTE_URL = "syncNote.remote.url";
+    public static final String SYNC_REMOTE_URL = "syncNote.remote.rootUrl";
 
     private boolean isApplicationToBeBorn = false;
 

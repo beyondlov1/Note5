@@ -42,7 +42,7 @@ android {
 
 buildscript{
     repositories {
-//        maven { url 'https://dl.google.com/dl/android/maven2/' }
+//        maven { rootUrl 'https://dl.google.com/dl/android/maven2/' }
 //        google()
         jcenter()
         mavenCentral()
