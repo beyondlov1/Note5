@@ -2,7 +2,7 @@ package com.beyond.note5.sync.datasource.note;
 
 import com.beyond.note5.bean.Attachment;
 import com.beyond.note5.bean.Note;
-import com.beyond.note5.sync.datasource.DavDataSource;
+import com.beyond.note5.sync.datasource.SingleDavDataSource;
 
 import org.apache.commons.lang3.ObjectUtils;
 import org.junit.Test;
@@ -13,7 +13,7 @@ import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
 
-public class NoteDavDataSourceTest {
+public class NoteSingleDavDataSourceTest {
 
     @Test
     public void selectAll() {
@@ -21,7 +21,7 @@ public class NoteDavDataSourceTest {
 
     @Test
     public void cover() throws IOException {
-        DavDataSource<Note> davDataSource = new NoteDavDataSource("https://dav.jianguoyun.com/dav/NoteClould2/test");
+        SingleDavDataSource<Note> singleDavDataSource = new NoteSingleDavDataSource("https://dav.jianguoyun.com/dav/NoteClould2/test");
 
         Note note = Note.newInstance();
         Note note1 = Note.newInstance();
@@ -80,8 +80,8 @@ public class NoteDavDataSourceTest {
         note6Clone.setVersion(note6.getVersion()+1);
         remoteList.add(note6Clone); // remote update
 
-        davDataSource.cover(remoteList);
-        List<Note> list = davDataSource.selectAll();
+        singleDavDataSource.cover(remoteList);
+        List<Note> list = singleDavDataSource.selectAll();
         System.out.println(list);
     }
 

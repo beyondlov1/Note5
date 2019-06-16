@@ -1,10 +1,10 @@
 package com.beyond.note5.sync.datasource.note;
 
 import com.beyond.note5.bean.Note;
-import com.beyond.note5.sync.datasource.DavDataSource;
+import com.beyond.note5.sync.datasource.SingleDavDataSource;
 
-public class NoteDavDataSource extends DavDataSource<Note> {
-    public NoteDavDataSource(String url) {
+public class NoteSingleDavDataSource extends SingleDavDataSource<Note> {
+    public NoteSingleDavDataSource(String url) {
         super(url);
     }
 

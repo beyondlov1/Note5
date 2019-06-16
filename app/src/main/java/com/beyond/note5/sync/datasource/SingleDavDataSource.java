@@ -4,7 +4,6 @@ import android.util.Log;
 
 import com.alibaba.fastjson.JSONObject;
 import com.beyond.note5.bean.Document;
-import com.beyond.note5.sync.DataSource;
 import com.beyond.note5.utils.OkWebDavUtil;
 import com.beyond.note5.utils.StringCompressUtil;
 
@@ -16,11 +15,11 @@ import okhttp3.Request;
 import okhttp3.RequestBody;
 import okhttp3.Response;
 
-public abstract class DavDataSource<T extends Document> implements DataSource<T> {
+public abstract class SingleDavDataSource<T extends Document> implements DataSource<T> {
 
     protected String url;
 
-    public DavDataSource(String url) {
+    public SingleDavDataSource(String url) {
         this.url = url;
     }
 
@@ -41,6 +40,11 @@ public abstract class DavDataSource<T extends Document> implements DataSource<T>
 
     @Override
     public T select(T document) {
+        throw new RuntimeException("暂不支持");
+    }
+
+    @Override
+    public T selectById(String id) throws IOException {
         throw new RuntimeException("暂不支持");
     }
 

@@ -2,31 +2,16 @@ package com.beyond.note5.sync.synchronizer;
 
 import com.beyond.note5.bean.Element;
 import com.beyond.note5.bean.Tracable;
-import com.beyond.note5.sync.DataSource;
 import com.beyond.note5.sync.Synchronizer;
 
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Date;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 
-public abstract class AbstractSynchronizer<T extends Tracable> implements Synchronizer<T> {
-
-    @Override
-    public boolean sync(DataSource<T> local, List<DataSource<T>> remotes) throws IOException {
-        List<T> localData = local.selectAll();
-        Map<DataSource, List<T>> remotesData = new HashMap<>();
-        for (DataSource<T> remote : remotes) {
-            remotesData.put(remote, remote.selectAll());
-        }
-
-        return false;
-    }
+public abstract class SynchronizerSupport<T extends Tracable> implements Synchronizer<T> {
 
     protected abstract Date getLastSyncTime();
 

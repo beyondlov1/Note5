@@ -16,12 +16,16 @@ import com.beyond.note5.predict.TagPredictorImpl;
 import com.beyond.note5.predict.bean.TagGraph;
 import com.beyond.note5.predict.train.filter.TimeExpressionTrainTagFilter;
 import com.beyond.note5.predict.train.filter.UrlTrainTagFilter;
-import com.beyond.note5.sync.DataSource;
-import com.beyond.note5.sync.synchronizer.NoteSynchronizer;
 import com.beyond.note5.sync.Synchronizer;
+import com.beyond.note5.sync.datasource.DataSource;
+import com.beyond.note5.sync.datasource.note.NoteDavDataSourceComposite;
+import com.beyond.note5.sync.datasource.note.NoteDistributedDavDataSource;
 import com.beyond.note5.sync.datasource.note.NoteLocalDataSource;
-import com.beyond.note5.sync.datasource.note.NoteDavDataSource;
+import com.beyond.note5.sync.synchronizer.DistributedNoteSynchronizer;
+import com.beyond.note5.sync.webdav.client.DavClient;
+import com.beyond.note5.sync.webdav.client.SardineDavClient;
 import com.beyond.note5.utils.IDUtil;
+import com.beyond.note5.utils.OkWebDavUtil;
 import com.beyond.note5.utils.PreferenceUtil;
 
 import org.apache.commons.lang3.ObjectUtils;
@@ -40,6 +44,8 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
 import static com.beyond.note5.view.LoginActivity.DAV_LOGIN;
+import static com.beyond.note5.view.LoginActivity.DAV_LOGIN_PASSWORD;
+import static com.beyond.note5.view.LoginActivity.DAV_LOGIN_USERNAME;
 
 /**
  * @author: beyond
@@ -53,6 +59,8 @@ public class MyApplication extends Application {
     public static final String DEFAULT_PAGE = "default_page";
     public static final String VIRTUAL_USER_ID = "user.virtual.id";
     public static final String SYNC_REMOTE_URL = "syncNote.remote.rootUrl";
+    public static final String SYNC_REMOTE_ROOT_PATHS = "syncNote.remote.root.paths";
+    private static final String SYNC_REMOTE_DAV_SERVERS = "syncNote.remote.dav.servers";
 
     private boolean isApplicationToBeBorn = false;
 
@@ -78,16 +86,36 @@ public class MyApplication extends Application {
         }
     }
 
+    @SuppressWarnings("unchecked")
     private void initSynchronizer() {
         localDataSource = new NoteLocalDataSource();
-        remoteDataSource = new NoteDavDataSource(PreferenceUtil.getString(SYNC_REMOTE_URL));
-        synchronizer = new NoteSynchronizer();
+
+        DavClient davClient = new SardineDavClient(PreferenceUtil.getString(DAV_LOGIN_USERNAME),PreferenceUtil.getString(DAV_LOGIN_PASSWORD));
+        List<DataSource<Note>> dataSources = new ArrayList<>();
+        String[] servers = StringUtils.split(PreferenceUtil.getString(SYNC_REMOTE_ROOT_PATHS),"|");
+        String[] paths = StringUtils.split(PreferenceUtil.getString(SYNC_REMOTE_ROOT_PATHS),"|");
+        for (String server : servers) {
+            String[] urls = new String[paths.length];
+            for (int i = 0; i < urls.length; i++) {
+                urls[i] = OkWebDavUtil.concat(server, paths[i]);
+            }
+            dataSources.add( new NoteDistributedDavDataSource(davClient, urls));
+        }
+        remoteDataSource = new NoteDavDataSourceComposite(dataSources.toArray(new DataSource[0]));
+        synchronizer = new DistributedNoteSynchronizer();
     }
 
     public void initPreference() {
         String syncRemoteUrl = PreferenceUtil.getString(SYNC_REMOTE_URL);
         if (StringUtils.isBlank(syncRemoteUrl)) {
             PreferenceUtil.put(SYNC_REMOTE_URL, "https://dav.jianguoyun.com/dav/Note5/data/note.dat");
+        }
+
+        String syncRemoteRootUrls = PreferenceUtil.getString(SYNC_REMOTE_ROOT_PATHS);
+        PreferenceUtil.put(SYNC_REMOTE_DAV_SERVERS, "https://dav.jianguoyun.com/dav/nut3/|https://dav.jianguoyun.com/dav/tera3/");
+        PreferenceUtil.put(SYNC_REMOTE_ROOT_PATHS, "note/splice1|note/splice2");
+
+        if (StringUtils.isBlank(syncRemoteRootUrls)) {
         }
 
         String virtualUserId = PreferenceUtil.getString(VIRTUAL_USER_ID);

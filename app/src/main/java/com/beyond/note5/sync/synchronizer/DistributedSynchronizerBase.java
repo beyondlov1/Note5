@@ -1,14 +1,13 @@
 package com.beyond.note5.sync.synchronizer;
 
 import com.beyond.note5.bean.Tracable;
-import com.beyond.note5.sync.DataSource;
+import com.beyond.note5.sync.datasource.DataSource;
 import com.beyond.note5.sync.webdav.Lock;
 
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.List;
 
-public abstract class SynchronizerBase<T extends Tracable> extends AbstractSynchronizer<T> {
+public abstract class DistributedSynchronizerBase<T extends Tracable> extends SynchronizerSupport<T> {
 
     private ThreadLocal<Integer> threadLocal = new ThreadLocal<>();
 
@@ -21,9 +20,46 @@ public abstract class SynchronizerBase<T extends Tracable> extends AbstractSynch
             List<T> remoteList = remote.selectAll();
             List<T> remoteData = remoteList == null ? new ArrayList<>() : remoteList;
 
-            List<T> mergedData = getMergedData(localData, remoteData);
+            if (localData.isEmpty()){
+                for (T remoteDatum : remoteData) {
+                    local.add(remoteDatum);
+                }
 
-            remote.cover(mergedData);
+                saveLastSyncTime(getLatestLastModifyTime(localData,remoteData));
+                resetFailCount();
+                remoteLock.release();
+                return true;
+            }
+            if (remoteData.isEmpty()){
+                for (T localDatum : localData) {
+                    remote.add(localDatum);
+                }
+
+                saveLastSyncTime(getLatestLastModifyTime(localData,remoteData));
+                resetFailCount();
+                remoteLock.release();
+                return true;
+            }
+
+            List<T> localAddedData = getLocalAddedData(localData, remoteData);
+            List<T> localUpdatedData = getLocalUpdatedData(localData, remoteData);
+            List<T> localDeletedData = getLocalDeletedData(localData, remoteData);
+
+            if (!localAddedData.isEmpty()) {
+                for (T datum : localAddedData) {
+                    remote.add(datum);
+                }
+            }
+            if (!localUpdatedData.isEmpty()) {
+                for (T datum : localUpdatedData) {
+                    remote.update(datum);
+                }
+            }
+            if (!localDeletedData.isEmpty()) {
+                for (T datum : localDeletedData) {
+                    remote.delete(datum);
+                }
+            }
 
             List<T> remoteAddedData = getRemoteAddedData(localData, remoteData);
             List<T> remoteUpdatedData = getRemoteUpdatedData(localData, remoteData);
@@ -66,9 +102,6 @@ public abstract class SynchronizerBase<T extends Tracable> extends AbstractSynch
     }
 
     protected abstract void saveLastSyncTime(Long time);
-
-    @Override
-    protected abstract Date getLastSyncTime();
 
     protected abstract Lock getRemoteLock(DataSource<T> remote);
 

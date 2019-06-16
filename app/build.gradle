@@ -38,6 +38,7 @@ android {
         exclude 'META-INF/notice.txt'
         exclude 'META-INF/ASL2.0'
     }
+
 }
 
 buildscript{
@@ -130,4 +131,8 @@ dependencies {
     implementation 'org.sqldroid:sqldroid:1.1.0-rc1'
 
     implementation 'com.scwang.smartrefresh:SmartRefreshLayout:1.1.0-alpha-28'
+
+//    implementation 'com.github.lookfirst:sardine:5.8'
+
+    implementation 'com.thegrizzlylabs.sardine-android:sardine-android:0.4'
 }

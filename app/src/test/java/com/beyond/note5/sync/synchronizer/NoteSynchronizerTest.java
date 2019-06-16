@@ -2,9 +2,12 @@ package com.beyond.note5.sync.synchronizer;
 
 import com.beyond.note5.bean.Attachment;
 import com.beyond.note5.bean.Note;
-import com.beyond.note5.sync.DataSource;
-import com.beyond.note5.sync.datasource.DavDataSource;
-import com.beyond.note5.sync.datasource.note.NoteDavDataSource;
+import com.beyond.note5.sync.datasource.DataSource;
+import com.beyond.note5.sync.datasource.DistributedDavDataSource;
+import com.beyond.note5.sync.datasource.note.NoteDistributedDavDataSource;
+import com.beyond.note5.sync.webdav.CommonTest;
+import com.beyond.note5.sync.webdav.client.DavClient;
+import com.beyond.note5.sync.webdav.client.SardineDavClient;
 
 import org.apache.commons.lang3.ObjectUtils;
 import org.apache.commons.lang3.StringUtils;
@@ -90,7 +93,7 @@ public class NoteSynchronizerTest {
         remoteList.add(note6Clone); // remote update
 
 
-        AbstractSynchronizer<Note> synchronizer = new NoteSynchronizer();
+        SynchronizerSupport<Note> synchronizer = new SingleNoteSynchronizer();
         List<Note> mergedData = synchronizer.getLocalAddedData(localList, remoteList);
         System.out.println("getLocalAddedData:");
         for (Note mergedDatum : mergedData) {
@@ -136,7 +139,10 @@ public class NoteSynchronizerTest {
         System.out.println();
 
 
-        DavDataSource<Note> remoteDataSource = new NoteDavDataSource("https://dav.jianguoyun.com/dav/NoteClould2/test");
+        DavClient davClient = new SardineDavClient(CommonTest.getUsername(),CommonTest.getPassword());
+        DistributedDavDataSource<Note> remoteDataSource = new NoteDistributedDavDataSource(davClient,
+                CommonTest.getExecutorService(),
+                "https://dav.jianguoyun.com/dav/test");
         DataSource<Note> localDataSource = new DataSource<Note>() {
 
             List<Note> notes = localList;
@@ -158,6 +164,13 @@ public class NoteSynchronizerTest {
 
             @Override
             public Note select(Note note) {
+                return notes.get(getIndex(note));
+            }
+
+            @Override
+            public Note selectById(String id) throws IOException {
+                Note note = new Note();
+                note.setId(id);
                 return notes.get(getIndex(note));
             }
 
@@ -214,4 +227,5 @@ public class NoteSynchronizerTest {
         instance.set(year, month, day);
         return instance.getTime();
     }
+
 }

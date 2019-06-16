@@ -3,7 +3,7 @@ package com.beyond.note5.sync.datasource.note;
 import com.beyond.note5.bean.Note;
 import com.beyond.note5.presenter.NotePresenter;
 import com.beyond.note5.presenter.NotePresenterImpl;
-import com.beyond.note5.sync.DataSource;
+import com.beyond.note5.sync.datasource.DataSource;
 import com.beyond.note5.view.adapter.view.NoteViewAdapter;
 
 import java.io.IOException;
@@ -38,6 +38,11 @@ public class NoteLocalDataSource implements DataSource<Note> {
 
     @Override
     public Note select(Note note) {
+        throw new RuntimeException("暂不支持");
+    }
+
+    @Override
+    public Note selectById(String id) throws IOException {
         throw new RuntimeException("暂不支持");
     }
 
