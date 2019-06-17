@@ -54,6 +54,17 @@ public class TodoCompositePresenterImpl implements TodoCompositePresenter {
     }
 
     @Override
+    public void deleteLogic(Todo todo) {
+        todoPresenter.deleteLogic(todo);
+        if (todo.getReminder()!=null) {
+            if (calendarPresenter == null){
+                return;
+            }
+            calendarPresenter.delete(todo);
+        }
+    }
+
+    @Override
     public void findAll() {
         todoPresenter.findAll();
     }

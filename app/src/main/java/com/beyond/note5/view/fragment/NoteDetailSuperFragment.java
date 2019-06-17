@@ -123,7 +123,7 @@ public class NoteDetailSuperFragment extends AbstractDocumentDialogFragment impl
             @Override
             public void onClick(View v) {
                 Note currentNote = multiDetailStage.getCurrentData();
-                notePresenter.deleteDeep(currentNote);
+                notePresenter.deleteDeepLogic(currentNote);
                 if (multiDetailStage.getData().isEmpty()) {
                     closeWithAnimation();
                     return;
@@ -165,7 +165,7 @@ public class NoteDetailSuperFragment extends AbstractDocumentDialogFragment impl
                 todo.setLastModifyTime(new Date());
                 todo.setVersion(note.getVersion());
                 todoCompositePresenter.add(todo);
-                notePresenter.delete(note);
+                notePresenter.deleteLogic(note);
                 closeWithAnimation();
                 ToastUtil.toast(getContext(), "已转化为TODO", Toast.LENGTH_SHORT);
             }

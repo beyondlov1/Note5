@@ -24,6 +24,9 @@ import okhttp3.RequestBody;
 import okhttp3.Response;
 import okhttp3.ResponseBody;
 
+import static com.beyond.note5.view.LoginActivity.DAV_LOGIN_PASSWORD;
+import static com.beyond.note5.view.LoginActivity.DAV_LOGIN_USERNAME;
+
 public class OkWebDavUtil {
 
     private final static Map<String,Boolean> IS_DIR_EXIST = new ConcurrentHashMap<>();
@@ -40,9 +43,9 @@ public class OkWebDavUtil {
         static final OkHttpClient INSTANCE = new OkHttpClient.Builder()
                 .connectTimeout(10000, TimeUnit.MILLISECONDS)
                 .readTimeout(10000, TimeUnit.MILLISECONDS)
-//                .authenticator(new BasicAuthenticator(PreferenceUtil.getString(DAV_LOGIN_USERNAME),
-//                        PreferenceUtil.getString(DAV_LOGIN_PASSWORD)))
-                .authenticator(new BasicAuthenticator("806784568@qq.com",""))
+                .authenticator(new BasicAuthenticator(PreferenceUtil.getString(DAV_LOGIN_USERNAME),
+                        PreferenceUtil.getString(DAV_LOGIN_PASSWORD)))
+//                .authenticator(new BasicAuthenticator("806784568@qq.com",""))
                 .build();
     }
 

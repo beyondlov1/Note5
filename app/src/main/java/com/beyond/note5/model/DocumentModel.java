@@ -15,7 +15,11 @@ public interface DocumentModel<T extends Document> extends Model<T> {
 
     void update(T document);
 
+    void deleteLogic(T document);
+
     void delete(T document);
 
     List<T> findAll();
+
+    List<T> findAllInAll();
 }

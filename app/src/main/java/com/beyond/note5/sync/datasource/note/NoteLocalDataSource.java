@@ -48,7 +48,7 @@ public class NoteLocalDataSource implements DataSource<Note> {
 
     @Override
     public List<Note> selectAll() throws IOException {
-        return notePresenter.selectAll();
+        return notePresenter.selectAllInAll();
     }
 
     @Override

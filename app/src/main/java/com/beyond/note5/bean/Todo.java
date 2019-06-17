@@ -29,6 +29,7 @@ public class Todo extends Document {
         todo.setVersion(0);
         todo.setLastModifyTime(currDate);
         todo.setReadFlag(DocumentConst.READ_FLAG_NORMAL);
+        todo.setValid(true);
 
         Date reminderStart = TimeNLPUtil.parse(todo.getContent());
         if (reminderStart!=null){
@@ -53,6 +54,8 @@ public class Todo extends Document {
     private Integer version;
     private Integer readFlag = DocumentConst.READ_FLAG_NORMAL;
     private Integer priority = DocumentConst.PRIORITY_DEFAULT;
+    private Boolean valid = true;
+
 
     @ToOne(joinProperty = "reminderId")
     private Reminder reminder;
@@ -63,10 +66,14 @@ public class Todo extends Document {
     @Generated(hash = 1860181255)
     private transient TodoDao myDao;
 
-    @Generated(hash = 484795332)
+    @Generated(hash = 1698043777)
+    public Todo() {
+    }
+
+    @Generated(hash = 466496526)
     public Todo(String id, String reminderId, String title, String content,
             String contentWithoutTime, String type, Date createTime, Date lastModifyTime,
-            Integer version, Integer readFlag, Integer priority) {
+            Integer version, Integer readFlag, Integer priority, Boolean valid) {
         this.id = id;
         this.reminderId = reminderId;
         this.title = title;
@@ -78,10 +85,7 @@ public class Todo extends Document {
         this.version = version;
         this.readFlag = readFlag;
         this.priority = priority;
-    }
-
-    @Generated(hash = 1698043777)
-    public Todo() {
+        this.valid = valid;
     }
 
     public String getId() {
@@ -257,4 +261,13 @@ public class Todo extends Document {
         return todo;
     }
 
+    @Override
+    public Boolean getValid() {
+        return valid;
+    }
+
+    @Override
+    public void setValid(Boolean valid) {
+        this.valid = valid;
+    }
 }

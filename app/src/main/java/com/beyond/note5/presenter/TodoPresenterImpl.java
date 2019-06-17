@@ -84,6 +84,17 @@ public class TodoPresenterImpl implements TodoPresenter {
     }
 
     @Override
+    public void deleteLogic(Todo todo) {
+        try {
+            todoModel.deleteLogic(todo);
+            this.deleteSuccess(todo);
+        } catch (Exception e) {
+            e.printStackTrace();
+            this.deleteFail(todo);
+        }
+    }
+
+    @Override
     public void updatePriority(Todo document) {
         try {
             todoModel.update(document);
@@ -139,8 +150,8 @@ public class TodoPresenterImpl implements TodoPresenter {
     }
 
     @Override
-    public List<Todo> selectAll() {
-        return todoModel.findAll();
+    public List<Todo> selectAllInAll() {
+        return todoModel.findAllInAll();
     }
 
     @Override

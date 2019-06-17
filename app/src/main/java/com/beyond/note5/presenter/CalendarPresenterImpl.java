@@ -102,11 +102,6 @@ public class CalendarPresenterImpl implements CalendarPresenter {
     }
 
     @Override
-    public List<Todo> selectAll() {
-        return calendarModel.findAll();
-    }
-
-    @Override
     public void findAll() {
         try {
             List<Todo> all = calendarModel.findAll();

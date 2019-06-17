@@ -40,6 +40,7 @@ public class TodoDao extends AbstractDao<Todo, String> {
         public final static Property Version = new Property(8, Integer.class, "version", false, "VERSION");
         public final static Property ReadFlag = new Property(9, Integer.class, "readFlag", false, "READ_FLAG");
         public final static Property Priority = new Property(10, Integer.class, "priority", false, "PRIORITY");
+        public final static Property Valid = new Property(11, Boolean.class, "valid", false, "VALID");
     }
 
     private DaoSession daoSession;
@@ -68,7 +69,8 @@ public class TodoDao extends AbstractDao<Todo, String> {
                 "\"LAST_MODIFY_TIME\" INTEGER," + // 7: lastModifyTime
                 "\"VERSION\" INTEGER," + // 8: version
                 "\"READ_FLAG\" INTEGER," + // 9: readFlag
-                "\"PRIORITY\" INTEGER);"); // 10: priority
+                "\"PRIORITY\" INTEGER," + // 10: priority
+                "\"VALID\" INTEGER);"); // 11: valid
     }
 
     /** Drops the underlying database table. */
@@ -135,6 +137,11 @@ public class TodoDao extends AbstractDao<Todo, String> {
         if (priority != null) {
             stmt.bindLong(11, priority);
         }
+ 
+        Boolean valid = entity.getValid();
+        if (valid != null) {
+            stmt.bindLong(12, valid ? 1L: 0L);
+        }
     }
 
     @Override
@@ -195,6 +202,11 @@ public class TodoDao extends AbstractDao<Todo, String> {
         if (priority != null) {
             stmt.bindLong(11, priority);
         }
+ 
+        Boolean valid = entity.getValid();
+        if (valid != null) {
+            stmt.bindLong(12, valid ? 1L: 0L);
+        }
     }
 
     @Override
@@ -221,7 +233,8 @@ public class TodoDao extends AbstractDao<Todo, String> {
             cursor.isNull(offset + 7) ? null : new java.util.Date(cursor.getLong(offset + 7)), // lastModifyTime
             cursor.isNull(offset + 8) ? null : cursor.getInt(offset + 8), // version
             cursor.isNull(offset + 9) ? null : cursor.getInt(offset + 9), // readFlag
-            cursor.isNull(offset + 10) ? null : cursor.getInt(offset + 10) // priority
+            cursor.isNull(offset + 10) ? null : cursor.getInt(offset + 10), // priority
+            cursor.isNull(offset + 11) ? null : cursor.getShort(offset + 11) != 0 // valid
         );
         return entity;
     }
@@ -239,6 +252,7 @@ public class TodoDao extends AbstractDao<Todo, String> {
         entity.setVersion(cursor.isNull(offset + 8) ? null : cursor.getInt(offset + 8));
         entity.setReadFlag(cursor.isNull(offset + 9) ? null : cursor.getInt(offset + 9));
         entity.setPriority(cursor.isNull(offset + 10) ? null : cursor.getInt(offset + 10));
+        entity.setValid(cursor.isNull(offset + 11) ? null : cursor.getShort(offset + 11) != 0);
      }
     
     @Override

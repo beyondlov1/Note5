@@ -121,9 +121,31 @@ public class NotePresenterImpl implements NotePresenter {
     }
 
     @Override
+    public void deleteLogic(Note note) {
+        try {
+            noteModel.deleteLogic(note);
+            this.deleteSuccess(note);
+        } catch (Exception e) {
+            e.printStackTrace();
+            this.deleteFail(note);
+        }
+    }
+
+    @Override
     public void deleteDeep(Note note) {
         try {
             noteModel.deleteDeep(note);
+            this.deleteSuccess(note);
+        } catch (Exception e) {
+            e.printStackTrace();
+            this.deleteFail(note);
+        }
+    }
+
+    @Override
+    public void deleteDeepLogic(Note note) {
+        try {
+            noteModel.deleteDeepLogic(note);
             this.deleteSuccess(note);
         } catch (Exception e) {
             e.printStackTrace();
@@ -187,8 +209,8 @@ public class NotePresenterImpl implements NotePresenter {
     }
 
     @Override
-    public List<Note> selectAll() {
-        return noteModel.findAll();
+    public List<Note> selectAllInAll() {
+        return noteModel.findAllInAll();
     }
 
     @Override

@@ -81,7 +81,7 @@ public class MyApplication extends Application {
         initDaoSession();
         initSynchronizer();
 
-        if (PreferenceUtil.getBoolean(DAV_LOGIN,false)){
+        if (PreferenceUtil.getBoolean(DAV_LOGIN, false)) {
             syncNote();
         }
     }
@@ -90,16 +90,16 @@ public class MyApplication extends Application {
     private void initSynchronizer() {
         localDataSource = new NoteLocalDataSource();
 
-        DavClient davClient = new SardineDavClient(PreferenceUtil.getString(DAV_LOGIN_USERNAME),PreferenceUtil.getString(DAV_LOGIN_PASSWORD));
+        DavClient davClient = new SardineDavClient(PreferenceUtil.getString(DAV_LOGIN_USERNAME), PreferenceUtil.getString(DAV_LOGIN_PASSWORD));
         List<DataSource<Note>> dataSources = new ArrayList<>();
-        String[] servers = StringUtils.split(PreferenceUtil.getString(SYNC_REMOTE_ROOT_PATHS),"|");
-        String[] paths = StringUtils.split(PreferenceUtil.getString(SYNC_REMOTE_ROOT_PATHS),"|");
+        String[] servers = StringUtils.split(PreferenceUtil.getString(SYNC_REMOTE_DAV_SERVERS), "|");
+        String[] paths = StringUtils.split(PreferenceUtil.getString(SYNC_REMOTE_ROOT_PATHS), "|");
         for (String server : servers) {
             String[] urls = new String[paths.length];
             for (int i = 0; i < urls.length; i++) {
                 urls[i] = OkWebDavUtil.concat(server, paths[i]);
             }
-            dataSources.add( new NoteDistributedDavDataSource(davClient, urls));
+            dataSources.add(new NoteDistributedDavDataSource(davClient, urls));
         }
         remoteDataSource = new NoteDavDataSourceComposite(dataSources.toArray(new DataSource[0]));
         synchronizer = new DistributedNoteSynchronizer();
@@ -146,9 +146,7 @@ public class MyApplication extends Application {
         Flyway flyway = new Flyway();
         flyway.setDataSource(dataSource);
         flyway.setInitOnMigrate(true);
-
         flyway.migrate();
-
 
     }
 

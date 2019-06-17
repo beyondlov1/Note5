@@ -200,7 +200,7 @@ public class TodoModifySuperFragment extends AbstractTodoEditorFragment implemen
                 note.setLastModifyTime(new Date());
                 note.setVersion(creatingDocument.getVersion());
                 notePresenter.add(note);
-                todoCompositePresenter.delete(creatingDocument);
+                todoCompositePresenter.deleteLogic(creatingDocument);
                 EventBus.getDefault().post(new HideTodoEditorEvent(currentIndex));
                 InputMethodUtil.hideKeyboard(editorContent);
                 ToastUtil.toast(getContext(), "已转化为NOTE", Toast.LENGTH_SHORT);
@@ -280,7 +280,7 @@ public class TodoModifySuperFragment extends AbstractTodoEditorFragment implemen
 
         String content = editorContent.getText().toString();
         if (StringUtils.isBlank(content)) {
-            todoCompositePresenter.delete(creatingDocument);
+            todoCompositePresenter.deleteLogic(creatingDocument);
         } else {
             creatingDocument.setTitle(content.length() > 10 ? content.substring(0, 10) : content);
             creatingDocument.setContent(content);

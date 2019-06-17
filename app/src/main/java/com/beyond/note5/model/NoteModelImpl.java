@@ -16,6 +16,7 @@ import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.io.FileUtils;
 
 import java.io.File;
+import java.util.Date;
 import java.util.List;
 
 /**
@@ -72,6 +73,13 @@ public class NoteModelImpl implements NoteModel {
     }
 
     @Override
+    public void deleteLogic(Note note) {
+        note.setLastModifyTime(new Date());
+        note.setValid(false);
+        noteDao.update(note);
+    }
+
+    @Override
     public void delete(Note note) {
         noteDao.delete(note);
     }
@@ -91,7 +99,31 @@ public class NoteModelImpl implements NoteModel {
     }
 
     @Override
+    public void deleteDeepLogic(Note note) {
+        this.deleteLogic(note);
+        List<Attachment> attachments = note.getAttachments();
+        if (CollectionUtils.isNotEmpty(attachments)) {
+            for (Attachment attachment : attachments) {
+                String path = attachment.getPath();
+                File file = new File(path);
+                FileUtils.deleteQuietly(file);
+            }
+            attachmentDao.deleteInTx(attachments);
+        }
+    }
+
+    @Override
     public List<Note> findAll() {
+        return noteDao.queryBuilder()
+                .where(NoteDao.Properties.Type.eq(Document.NOTE))
+                .where(NoteDao.Properties.Valid.eq(true))
+                .orderAsc(NoteDao.Properties.ReadFlag)
+                .orderDesc(NoteDao.Properties.LastModifyTime)
+                .list();
+    }
+
+    @Override
+    public List<Note> findAllInAll() {
         return noteDao.queryBuilder()
                 .where(NoteDao.Properties.Type.eq(Document.NOTE))
                 .orderAsc(NoteDao.Properties.ReadFlag)

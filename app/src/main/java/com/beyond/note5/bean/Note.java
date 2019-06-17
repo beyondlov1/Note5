@@ -39,6 +39,7 @@ public class Note extends Document {
     private Integer version;
     private Integer readFlag = DocumentConst.READ_FLAG_NORMAL;
     private Integer priority = DocumentConst.PRIORITY_DEFAULT;
+    private Boolean valid = true;
 
     @ToMany(referencedJoinProperty = "noteId")
     private List<Attachment> attachments;
@@ -52,9 +53,9 @@ public class Note extends Document {
     public Note() {
     }
 
-    @Generated(hash = 152564598)
+    @Generated(hash = 1066351799)
     public Note(String id, String title, String content, String type, Date createTime,
-            Date lastModifyTime, Integer version, Integer readFlag, Integer priority) {
+            Date lastModifyTime, Integer version, Integer readFlag, Integer priority, Boolean valid) {
         this.id = id;
         this.title = title;
         this.content = content;
@@ -64,6 +65,7 @@ public class Note extends Document {
         this.version = version;
         this.readFlag = readFlag;
         this.priority = priority;
+        this.valid = valid;
     }
 
     @Override
@@ -254,5 +256,15 @@ public class Note extends Document {
                 ", daoSession=" + daoSession +
                 ", myDao=" + myDao +
                 '}';
+    }
+
+    @Override
+    public Boolean getValid() {
+        return valid;
+    }
+
+    @Override
+    public void setValid(Boolean valid) {
+        this.valid = valid;
     }
 }

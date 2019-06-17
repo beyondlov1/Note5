@@ -26,6 +26,7 @@ public class Document implements Cloneable,Tracable{
     private Integer version;
     private Integer readFlag;
     private Integer priority = DocumentConst.PRIORITY_DEFAULT;
+    private Boolean valid = true;
 
     public Document() {
     }
@@ -35,10 +36,10 @@ public class Document implements Cloneable,Tracable{
         this.content = content;
     }
 
-    @Generated(hash = 287362452)
+    @Generated(hash = 126021078)
     public Document(String id, String title, String content, String type,
             Date createTime, Date lastModifyTime, Integer version, Integer readFlag,
-            Integer priority) {
+            Integer priority, Boolean valid) {
         this.id = id;
         this.title = title;
         this.content = content;
@@ -48,6 +49,7 @@ public class Document implements Cloneable,Tracable{
         this.version = version;
         this.readFlag = readFlag;
         this.priority = priority;
+        this.valid = valid;
     }
 
     public String getId() {
@@ -119,6 +121,7 @@ public class Document implements Cloneable,Tracable{
             document.setVersion(this.getVersion());
             document.setType(this.getType());
             document.setPriority(this.getPriority());
+            document.setValid(this.getValid());
         } catch (InstantiationException | IllegalAccessException e) {
             e.printStackTrace();
             Log.e("Document","克隆失败");
@@ -140,5 +143,13 @@ public class Document implements Cloneable,Tracable{
 
     public void setPriority(Integer priority) {
         this.priority = priority;
+    }
+
+    public Boolean getValid() {
+        return valid;
+    }
+
+    public void setValid(Boolean valid) {
+        this.valid = valid;
     }
 }

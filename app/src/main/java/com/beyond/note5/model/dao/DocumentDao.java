@@ -33,6 +33,7 @@ public class DocumentDao extends AbstractDao<Document, String> {
         public final static Property Version = new Property(6, Integer.class, "version", false, "VERSION");
         public final static Property ReadFlag = new Property(7, Integer.class, "readFlag", false, "READ_FLAG");
         public final static Property Priority = new Property(8, Integer.class, "priority", false, "PRIORITY");
+        public final static Property Valid = new Property(9, Boolean.class, "valid", false, "VALID");
     }
 
 
@@ -56,7 +57,8 @@ public class DocumentDao extends AbstractDao<Document, String> {
                 "\"LAST_MODIFY_TIME\" INTEGER," + // 5: lastModifyTime
                 "\"VERSION\" INTEGER," + // 6: version
                 "\"READ_FLAG\" INTEGER," + // 7: readFlag
-                "\"PRIORITY\" INTEGER);"); // 8: priority
+                "\"PRIORITY\" INTEGER," + // 8: priority
+                "\"VALID\" INTEGER);"); // 9: valid
     }
 
     /** Drops the underlying database table. */
@@ -113,6 +115,11 @@ public class DocumentDao extends AbstractDao<Document, String> {
         if (priority != null) {
             stmt.bindLong(9, priority);
         }
+ 
+        Boolean valid = entity.getValid();
+        if (valid != null) {
+            stmt.bindLong(10, valid ? 1L: 0L);
+        }
     }
 
     @Override
@@ -163,6 +170,11 @@ public class DocumentDao extends AbstractDao<Document, String> {
         if (priority != null) {
             stmt.bindLong(9, priority);
         }
+ 
+        Boolean valid = entity.getValid();
+        if (valid != null) {
+            stmt.bindLong(10, valid ? 1L: 0L);
+        }
     }
 
     @Override
@@ -181,7 +193,8 @@ public class DocumentDao extends AbstractDao<Document, String> {
             cursor.isNull(offset + 5) ? null : new java.util.Date(cursor.getLong(offset + 5)), // lastModifyTime
             cursor.isNull(offset + 6) ? null : cursor.getInt(offset + 6), // version
             cursor.isNull(offset + 7) ? null : cursor.getInt(offset + 7), // readFlag
-            cursor.isNull(offset + 8) ? null : cursor.getInt(offset + 8) // priority
+            cursor.isNull(offset + 8) ? null : cursor.getInt(offset + 8), // priority
+            cursor.isNull(offset + 9) ? null : cursor.getShort(offset + 9) != 0 // valid
         );
         return entity;
     }
@@ -197,6 +210,7 @@ public class DocumentDao extends AbstractDao<Document, String> {
         entity.setVersion(cursor.isNull(offset + 6) ? null : cursor.getInt(offset + 6));
         entity.setReadFlag(cursor.isNull(offset + 7) ? null : cursor.getInt(offset + 7));
         entity.setPriority(cursor.isNull(offset + 8) ? null : cursor.getInt(offset + 8));
+        entity.setValid(cursor.isNull(offset + 9) ? null : cursor.getShort(offset + 9) != 0);
      }
     
     @Override
