@@ -86,6 +86,23 @@ public class OkWebDavUtil {
         }
     }
 
+    public static String download(String url) {
+        Request.Builder requestBuilder = new Request.Builder();
+        Request get = requestBuilder
+                .url(url)
+                .method("GET", null)
+                .build();
+        try (Response response = getClient().newCall(get).execute()) {
+            if (response.isSuccessful()) {
+                assert response.body() != null;
+                return response.body().string();
+            }
+        } catch (IOException e) {
+            throw new RuntimeException("获取远程文件失败", e);
+        }
+        return null;
+    }
+
     public static String download(OkHttpClient client, String url) {
         Request.Builder requestBuilder = new Request.Builder();
         Request get = requestBuilder

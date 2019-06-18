@@ -14,7 +14,7 @@ public abstract class DistributedSynchronizerBase<T extends Tracable> extends Sy
     public synchronized boolean sync(DataSource<T> local, DataSource<T> remote) throws Exception {
 
         Lock remoteLock = getRemoteLock(remote);
-        if (remoteLock.tryLock()) {
+        if (remoteLock.tryLock(60000L)) {
             List<T> localList = local.selectAll();
             List<T> localData = localList == null ? new ArrayList<>() : localList;
             List<T> remoteList = remote.selectAll();

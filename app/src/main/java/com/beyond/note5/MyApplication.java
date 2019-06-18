@@ -32,6 +32,7 @@ import org.apache.commons.lang3.ObjectUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.flywaydb.core.Flyway;
 import org.flywaydb.core.api.android.ContextHolder;
+import org.greenrobot.greendao.database.Database;
 import org.sqldroid.DroidDataSource;
 
 import java.io.File;
@@ -131,15 +132,6 @@ public class MyApplication extends Application {
     }
 
     private void initDaoSession() {
-//        DaoMaster.DevOpenHelper helper = new DaoMaster.DevOpenHelper(this, "beyond.db");
-//        Database database = helper.getEncryptedWritableDb("beyond");
-//        DaoMaster daoMaster = new DaoMaster(database);
-//        daoSession = daoMaster.newSession();
-
-        DaoMaster.DevOpenHelper helper = new DaoMaster.DevOpenHelper(this, "beyond_not_safe.db");
-        SQLiteDatabase writableDatabase = helper.getWritableDatabase();
-        DaoMaster daoMaster = new DaoMaster(writableDatabase);
-        daoSession = daoMaster.newSession();
 
         DroidDataSource dataSource = new DroidDataSource(getPackageName(), "databases/beyond_not_safe");
         ContextHolder.setContext(this);
@@ -147,6 +139,21 @@ public class MyApplication extends Application {
         flyway.setDataSource(dataSource);
         flyway.setInitOnMigrate(true);
         flyway.migrate();
+
+//        DaoMaster.DevOpenHelper helper = new DaoMaster.DevOpenHelper(this, "beyond.db");
+//        Database database = helper.getEncryptedWritableDb("beyond");
+//        DaoMaster daoMaster = new DaoMaster(database);
+//        daoSession = daoMaster.newSession();
+
+        DaoMaster.OpenHelper helper = new DaoMaster.OpenHelper(this, "beyond_not_safe.db"){
+            @Override
+            public void onCreate(Database db) {
+                // do nothing
+            }
+        };
+        SQLiteDatabase writableDatabase = helper.getWritableDatabase();
+        DaoMaster daoMaster = new DaoMaster(writableDatabase);
+        daoSession = daoMaster.newSession();
 
     }
 
