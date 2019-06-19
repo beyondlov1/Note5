@@ -1,26 +1,27 @@
 package com.beyond.note5.sync.datasource;
 
-import android.util.Log;
-
 import com.alibaba.fastjson.JSONObject;
 import com.beyond.note5.bean.Document;
-import com.beyond.note5.utils.OkWebDavUtil;
+import com.beyond.note5.sync.webdav.DavLock;
+import com.beyond.note5.sync.webdav.Lock;
+import com.beyond.note5.sync.webdav.client.DavClient;
 import com.beyond.note5.utils.StringCompressUtil;
 
 import java.io.IOException;
 import java.util.List;
 
-import okhttp3.MediaType;
-import okhttp3.Request;
-import okhttp3.RequestBody;
-import okhttp3.Response;
+public abstract class SingleDavDataSource<T extends Document> extends DavDataSourceBase<T> {
 
-public abstract class SingleDavDataSource<T extends Document> implements DataSource<T> {
+    private final DavClient client;
 
     protected String url;
 
-    public SingleDavDataSource(String url) {
+    private final Lock lock;
+
+    public SingleDavDataSource(DavClient client, String url) {
         this.url = url;
+        this.client = client;
+        this.lock = new DavLock(client, url + ".lock");
     }
 
     @Override
@@ -51,58 +52,23 @@ public abstract class SingleDavDataSource<T extends Document> implements DataSou
     @SuppressWarnings("unchecked")
     @Override
     public List<T> selectAll() throws IOException {
-        String data = download(getDownloadUrl());
-        return JSONObject.parseArray(StringCompressUtil.unCompress(data),clazz());
+        if (client.exists(getDownloadUrl())) {
+            String data = client.get(getDownloadUrl());
+            return JSONObject.parseArray(StringCompressUtil.unCompress(data), clazz());
+        }else {
+            client.put(getDownloadUrl(),"");
+        }
+        return null;
     }
 
     @Override
     public void cover(List<T> all) throws IOException {
         String jsonString = JSONObject.toJSONString(all);
-        upload(getUploadUrl(), StringCompressUtil.compress(jsonString));
+        client.put(getUploadUrl(), StringCompressUtil.compress(jsonString));
     }
 
     @Override
-    public abstract Class clazz();
-
-    private void upload(String url, String content) {
-
-        final Request request = new Request.Builder()
-                .url(url)
-                .method("PUT",RequestBody.create(MediaType.get("application/x-www-form-urlencoded"),content.getBytes()))
-                .build();
-        try ( Response mkResponse = OkWebDavUtil.mkRemoteDir(url);Response response = OkWebDavUtil.requestForResponse(request)) {
-            if (!mkResponse.isSuccessful()){
-                throw new RuntimeException("创建文件夹失败");
-            }
-
-            if (!response.isSuccessful()) {
-                throw new RuntimeException("上传失败");
-            }
-        } catch (Exception e) {
-            Log.e("dav", "request fail");
-            throw new RuntimeException("上传失败");
-        }
-
-    }
-
-    private String download(String url) throws IOException {
-        final Request request = new Request.Builder()
-                .url(url)
-                .method("GET",null)
-                .build();
-
-        return OkWebDavUtil.requestForString(request, new OkWebDavUtil.Callback<String, String>() {
-            @Override
-            public String onSuccess(String s) {
-                return s;
-            }
-
-            @Override
-            public void onFail() {
-                upload(url, "");
-            }
-        });
-    }
+    public abstract Class<T> clazz();
 
     public String getDownloadUrl() {
         return url;
@@ -110,5 +76,10 @@ public abstract class SingleDavDataSource<T extends Document> implements DataSou
 
     public String getUploadUrl() {
         return url;
+    }
+
+    @Override
+    protected Lock getLock() {
+        return lock;
     }
 }

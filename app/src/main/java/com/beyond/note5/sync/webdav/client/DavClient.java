@@ -9,4 +9,5 @@ public interface DavClient {
     List<String> listAllFileName(String dirUrl) throws IOException;
     List<String> listAllFilePath(String dirUrl) throws IOException;
     void delete(String url) throws IOException;
+    boolean exists(String url) throws IOException;
 }

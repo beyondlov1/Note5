@@ -119,7 +119,13 @@ public class NoteListFragment extends Fragment {
                     @Override
                     public void run() {
                         refreshLayout.finishRefresh();
-                        ToastUtil.toast(getContext(),"同步完成");
+                        ToastUtil.toast(getContext(), "同步完成");
+                    }
+                }, new Runnable() {
+                    @Override
+                    public void run() {
+                        refreshLayout.finishRefresh();
+                        ToastUtil.toast(getContext(), "同步失败");
                     }
                 });
             }

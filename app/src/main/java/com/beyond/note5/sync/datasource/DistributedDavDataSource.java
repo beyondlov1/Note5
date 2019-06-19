@@ -6,9 +6,10 @@ import com.alibaba.fastjson.JSONException;
 import com.alibaba.fastjson.JSONObject;
 import com.beyond.note5.MyApplication;
 import com.beyond.note5.bean.Document;
+import com.beyond.note5.sync.webdav.DavLock;
+import com.beyond.note5.sync.webdav.Lock;
 import com.beyond.note5.sync.webdav.client.DavClient;
 import com.beyond.note5.utils.OkWebDavUtil;
-import com.thegrizzlylabs.sardineandroid.impl.SardineException;
 
 import org.apache.commons.lang3.StringUtils;
 
@@ -23,7 +24,7 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Future;
 
 
-public abstract class DistributedDavDataSource<T extends Document> implements DataSource<T> {
+public abstract class DistributedDavDataSource<T extends Document> extends DavDataSourceBase<T> {
 
     private static final String DOCUMENT_DIR = "/Note5/data/";
 
@@ -33,16 +34,21 @@ public abstract class DistributedDavDataSource<T extends Document> implements Da
 
     private final String[] rootUrls;
 
+    private final Lock lock;
+
+
     public DistributedDavDataSource(DavClient client, String... rootUrls) {
         this.client = client;
         this.rootUrls = rootUrls;
         this.executorService = MyApplication.getInstance().getExecutorService();
+        this.lock = new DavLock(client, OkWebDavUtil.concat(rootUrls[0], DOCUMENT_DIR) + "distributeLock.lock");
     }
 
     public DistributedDavDataSource(DavClient client, ExecutorService executorService, String... rootUrls) {
         this.client = client;
         this.rootUrls = rootUrls;
         this.executorService = executorService;
+        this.lock = new DavLock(client, OkWebDavUtil.concat(rootUrls[0], DOCUMENT_DIR) + "distributeLock.lock");
     }
 
     @Override
@@ -68,16 +74,7 @@ public abstract class DistributedDavDataSource<T extends Document> implements Da
 
     @Override
     public T selectById(String id) throws IOException {
-        try {
-            return decode(client.get(getDocumentUrl(rootUrls, id)));
-        }catch (SardineException e){
-            int statusCode = e.getStatusCode();
-            if (statusCode == 404){
-                return null;
-            }
-            e.printStackTrace();
-        }
-        return null;
+        return decode(client.get(getDocumentUrl(rootUrls, id)));
     }
 
     @Override
@@ -158,15 +155,14 @@ public abstract class DistributedDavDataSource<T extends Document> implements Da
     }
 
     private T decode(String target) {
+        if (target == null) {
+            return null;
+        }
         try {
             return JSONObject.parseObject(target, (Type) clazz());
         } catch (JSONException e) {
             return null;
         }
-    }
-
-    public String getLockUrl() {
-        return OkWebDavUtil.concat(rootUrls[0], DOCUMENT_DIR) + "distributeLock.lock";
     }
 
     @SuppressWarnings("unchecked")
@@ -176,5 +172,33 @@ public abstract class DistributedDavDataSource<T extends Document> implements Da
         ParameterizedType parameterizedType = (ParameterizedType) genericSuperclass;
         Type[] actualTypeArguments = parameterizedType.getActualTypeArguments();
         return (Class<T>) actualTypeArguments[0];
+    }
+
+    @Override
+    protected Lock getLock() {
+        return lock;
+    }
+
+
+    @Override
+    public String[] getNodes() {
+        return rootUrls;
+    }
+
+    @Override
+    public String[] getPaths() {
+        String[] paths = new String[1];
+        paths[0] = DOCUMENT_DIR;
+        return paths;
+    }
+
+    @Override
+    public String getNode(T t) {
+        return getRootUrl(rootUrls,t.getId());
+    }
+
+    @Override
+    public String getPath(T t) {
+        return getPath(t.getId());
     }
 }

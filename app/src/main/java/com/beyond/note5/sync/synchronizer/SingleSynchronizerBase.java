@@ -1,8 +1,6 @@
 package com.beyond.note5.sync.synchronizer;
 
 import com.beyond.note5.bean.Tracable;
-import com.beyond.note5.sync.datasource.DataSource;
-import com.beyond.note5.sync.webdav.Lock;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -11,10 +9,9 @@ public abstract class SingleSynchronizerBase<T extends Tracable> extends Synchro
 
     private ThreadLocal<Integer> threadLocal = new ThreadLocal<>();
 
-    public synchronized boolean sync(DataSource<T> local, DataSource<T> remote) throws Exception {
+    public synchronized boolean sync() throws Exception {
 
-        Lock remoteLock = getRemoteLock(remote);
-        if (remoteLock.tryLock()) {
+        if (remote.tryLock()) {
             List<T> localList = local.selectAll();
             List<T> localData = localList == null ? new ArrayList<>() : localList;
             List<T> remoteList = remote.selectAll();
@@ -47,7 +44,7 @@ public abstract class SingleSynchronizerBase<T extends Tracable> extends Synchro
 
             saveLastSyncTime(getLatestLastModifyTime(localData,remoteData));
             resetFailCount();
-            remoteLock.release();
+            remote.release();
             return true;
         }
 
@@ -59,14 +56,12 @@ public abstract class SingleSynchronizerBase<T extends Tracable> extends Synchro
             e.printStackTrace();
         }
 
-        sync(local, remote);
+        sync();
 
         return true;
     }
 
     protected abstract void saveLastSyncTime(Long time);
-
-    protected abstract Lock getRemoteLock(DataSource<T> remote);
 
     private void checkFailCount() {
         Integer integer = threadLocal.get();

@@ -3,6 +3,7 @@ package com.beyond.note5.sync.datasource.note;
 import com.beyond.note5.bean.Attachment;
 import com.beyond.note5.bean.Note;
 import com.beyond.note5.sync.datasource.SingleDavDataSource;
+import com.beyond.note5.sync.webdav.CommonTest;
 
 import org.apache.commons.lang3.ObjectUtils;
 import org.junit.Test;
@@ -21,7 +22,8 @@ public class NoteSingleDavDataSourceTest {
 
     @Test
     public void cover() throws IOException {
-        SingleDavDataSource<Note> singleDavDataSource = new NoteSingleDavDataSource("https://dav.jianguoyun.com/dav/NoteClould2/test");
+        SingleDavDataSource<Note> singleDavDataSource = new NoteSingleDavDataSource(CommonTest.getClient(),
+                "https://dav.jianguoyun.com/dav/NoteClould2/test");
 
         Note note = Note.newInstance();
         Note note1 = Note.newInstance();

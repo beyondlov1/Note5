@@ -15,6 +15,8 @@ import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.List;
 
+import okhttp3.Response;
+
 public class SardineDavClient implements DavClient {
 
     private Sardine sardine;
@@ -93,10 +95,24 @@ public class SardineDavClient implements DavClient {
         closeResponse();
     }
 
+    @Override
+    public boolean exists(String url) throws IOException {
+        boolean exists = sardine.exists(url);
+        closeResponse();
+        return exists;
+    }
+
     private void closeResponse() {
         if (sardine instanceof OkHttpSardine2) {
             ((OkHttpSardine2) sardine).closeCurrentResponse();
         }
+    }
+
+    private Response getResponse(){
+        if (sardine instanceof OkHttpSardine2) {
+            ((OkHttpSardine2) sardine).getResponse();
+        }
+        throw new RuntimeException("not supported");
     }
 
 }

@@ -3,6 +3,7 @@ package com.beyond.note5.sync.synchronizer;
 import com.beyond.note5.bean.Element;
 import com.beyond.note5.bean.Tracable;
 import com.beyond.note5.sync.Synchronizer;
+import com.beyond.note5.sync.datasource.DataSource;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -12,8 +13,22 @@ import java.util.List;
 import java.util.Set;
 
 public abstract class SynchronizerSupport<T extends Tracable> implements Synchronizer<T> {
+    
+    protected DataSource<T> local;
+    
+    protected DataSource<T> remote;
 
-    protected abstract Date getLastSyncTime();
+    @Override
+    public void setLocalDataSource(DataSource<T> local) {
+        this.local = local;
+    }
+
+    @Override
+    public void setRemoteDataSource(DataSource<T> remote) {
+        this.remote = remote;
+    }
+
+    protected abstract Date getLastSyncTime(T t);
 
     protected List<T> getMergedData(List<T> localData, List<T> remoteData) {
 
@@ -49,7 +64,7 @@ public abstract class SynchronizerSupport<T extends Tracable> implements Synchro
         for (T localDatum : localData) {
 
             // 添加本地新增和修改的
-            if (localDatum != null && localDatum.getLastModifyTime().compareTo(getLastSyncTime()) > 0) {
+            if (localDatum != null && localDatum.getLastModifyTime().compareTo(getLastSyncTime(localDatum)) > 0) {
                 modifyIdsSet.add(localDatum.getId());
             }
 
@@ -121,7 +136,7 @@ public abstract class SynchronizerSupport<T extends Tracable> implements Synchro
         for (T localDatum : localData) {
 
             // 添加本地新增和修改的
-            if (localDatum != null && localDatum.getLastModifyTime().compareTo(getLastSyncTime()) > 0) {
+            if (localDatum != null && localDatum.getLastModifyTime().compareTo(getLastSyncTime(localDatum)) > 0) {
                 modifyIdsSet.add(localDatum.getId());
             }
 
@@ -169,7 +184,7 @@ public abstract class SynchronizerSupport<T extends Tracable> implements Synchro
         for (T remoteDatum : remoteData) {
 
             // 添加本地新增和修改的
-            if (remoteDatum != null && remoteDatum.getLastModifyTime().compareTo(getLastSyncTime()) > 0) {
+            if (remoteDatum != null && remoteDatum.getLastModifyTime().compareTo(getLastSyncTime(remoteDatum)) > 0) {
                 modifyIdsSet.add(remoteDatum.getId());
             }
 
@@ -209,7 +224,7 @@ public abstract class SynchronizerSupport<T extends Tracable> implements Synchro
 
         Set<String> modifyIdsSet = new HashSet<>();//去重
         for (T localDatum : localData) {
-            if (localDatum != null && localDatum.getLastModifyTime().compareTo(getLastSyncTime()) > 0) {
+            if (localDatum != null && localDatum.getLastModifyTime().compareTo(getLastSyncTime(localDatum)) > 0) {
                 modifyIdsSet.add(localDatum.getId());
             }
 
@@ -263,7 +278,7 @@ public abstract class SynchronizerSupport<T extends Tracable> implements Synchro
         for (T remoteDatum : remoteData) {
 
             // 添加本地新增和修改的
-            if (remoteDatum != null && remoteDatum.getLastModifyTime().compareTo(getLastSyncTime()) > 0) {
+            if (remoteDatum != null && remoteDatum.getLastModifyTime().compareTo(getLastSyncTime(remoteDatum)) > 0) {
                 modifyIdsSet.add(remoteDatum.getId());
             }
 
@@ -316,7 +331,7 @@ public abstract class SynchronizerSupport<T extends Tracable> implements Synchro
         for (T remoteDatum : remoteData) {
 
             // 添加本地新增和修改的
-            if (remoteDatum != null && remoteDatum.getLastModifyTime().compareTo(getLastSyncTime()) > 0) {
+            if (remoteDatum != null && remoteDatum.getLastModifyTime().compareTo(getLastSyncTime(remoteDatum)) > 0) {
                 modifyIdsSet.add(remoteDatum.getId());
             }
 
@@ -371,7 +386,7 @@ public abstract class SynchronizerSupport<T extends Tracable> implements Synchro
         Set<String> modifyIdsSet = new HashSet<>();//去重
         for (T localDatum : localData) {
             // 添加本地新增和修改的
-            if (localDatum != null && localDatum.getLastModifyTime().compareTo(getLastSyncTime()) > 0) {
+            if (localDatum != null && localDatum.getLastModifyTime().compareTo(getLastSyncTime(localDatum)) > 0) {
                 modifyIdsSet.add(localDatum.getId());
             }
 

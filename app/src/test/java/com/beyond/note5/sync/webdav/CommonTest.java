@@ -2,6 +2,8 @@ package com.beyond.note5.sync.webdav;
 
 import com.beyond.note5.bean.Attachment;
 import com.beyond.note5.bean.Note;
+import com.beyond.note5.sync.webdav.client.DavClient;
+import com.beyond.note5.sync.webdav.client.SardineDavClient;
 
 import org.apache.commons.lang3.StringUtils;
 import org.junit.Test;
@@ -69,6 +71,9 @@ public class CommonTest {
         return "";
     }
 
+    public static DavClient getClient(){
+        return new SardineDavClient(getUsername(),getPassword());
+    }
     public static ExecutorService getExecutorService(){
         return Executors.newCachedThreadPool();
     }

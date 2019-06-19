@@ -4,6 +4,7 @@ import com.beyond.note5.bean.Tracable;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
@@ -12,17 +13,19 @@ import java.util.concurrent.ExecutorService;
 import static com.beyond.note5.utils.AsyncUtil.computeAllAsyn;
 import static com.beyond.note5.utils.AsyncUtil.computeAsyn;
 
-public abstract class DavDataSourceComposite<T extends Tracable> implements DataSource<T> {
+public abstract class DavDataSourceComposite<T extends Tracable> implements DavDataSource<T> {
 
-    private DataSource<T>[] subDataSources;
+    private final DavDataSource<T>[] subDataSources;
 
     private ExecutorService executorService;
 
-    public DavDataSourceComposite(DataSource<T>... subDataSources) {
+    @SafeVarargs
+    public DavDataSourceComposite(DavDataSource<T>... subDataSources) {
         this.subDataSources = subDataSources;
     }
 
-    public DavDataSourceComposite(ExecutorService executorService, DataSource<T>... subDataSources) {
+    @SafeVarargs
+    public DavDataSourceComposite(ExecutorService executorService, DavDataSource<T>... subDataSources) {
         this.subDataSources = subDataSources;
         this.executorService = executorService;
     }
@@ -32,7 +35,7 @@ public abstract class DavDataSourceComposite<T extends Tracable> implements Data
         chooseDataSource(t.getId()).add(t);
     }
 
-    private DataSource<T> chooseDataSource(String id) {
+    private DavDataSource<T> chooseDataSource(String id) {
         if (subDataSources.length == 0) {
             throw new RuntimeException("url不能为空");
         }
@@ -40,7 +43,7 @@ public abstract class DavDataSourceComposite<T extends Tracable> implements Data
             return subDataSources[0];
         }
 
-        int index = Math.abs(id.hashCode()/10) % subDataSources.length;
+        int index = Math.abs(id.hashCode() / 10) % subDataSources.length;
         return subDataSources[index];
     }
 
@@ -111,4 +114,67 @@ public abstract class DavDataSourceComposite<T extends Tracable> implements Data
         }
     }
 
+    @Override
+    public boolean tryLock() {
+        boolean isSuccessful = true;
+        for (DataSource<T> subDataSource : subDataSources) {
+            isSuccessful = isSuccessful && subDataSource.tryLock();
+        }
+        return isSuccessful;
+    }
+
+    @Override
+    public boolean tryLock(Long time) {
+        boolean isSuccessful = true;
+        for (DataSource<T> subDataSource : subDataSources) {
+            isSuccessful = isSuccessful && subDataSource.tryLock(time);
+        }
+        return isSuccessful;
+    }
+
+    @Override
+    public boolean isLocked() {
+        boolean isSuccessful = true;
+        for (DataSource<T> subDataSource : subDataSources) {
+            isSuccessful = isSuccessful && subDataSource.isLocked();
+        }
+        return isSuccessful;
+    }
+
+    @Override
+    public boolean release() {
+        boolean isSuccessful = true;
+        for (DataSource<T> subDataSource : subDataSources) {
+            isSuccessful = isSuccessful && subDataSource.release();
+        }
+        return isSuccessful;
+    }
+
+    @Override
+    public String[] getNodes() {
+        List<String> nodes = new ArrayList<>();
+        for (DavDataSource<T> subDataSource : subDataSources) {
+            nodes.addAll(Arrays.asList(subDataSource.getNodes()));
+        }
+        return nodes.toArray(new String[0]);
+    }
+
+    @Override
+    public String[] getPaths() {
+        List<String> nodes = new ArrayList<>();
+        for (DavDataSource<T> subDataSource : subDataSources) {
+            nodes.addAll(Arrays.asList(subDataSource.getPaths()));
+        }
+        return nodes.toArray(new String[0]);
+    }
+
+    @Override
+    public String getNode(T t) {
+        return  chooseDataSource(t.getId()).getNode(t);
+    }
+
+    @Override
+    public String getPath(T t) {
+        return  chooseDataSource(t.getId()).getPath(t);
+    }
 }

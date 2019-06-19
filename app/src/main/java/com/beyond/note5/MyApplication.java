@@ -18,10 +18,11 @@ import com.beyond.note5.predict.train.filter.TimeExpressionTrainTagFilter;
 import com.beyond.note5.predict.train.filter.UrlTrainTagFilter;
 import com.beyond.note5.sync.Synchronizer;
 import com.beyond.note5.sync.datasource.DataSource;
+import com.beyond.note5.sync.datasource.DavDataSource;
 import com.beyond.note5.sync.datasource.note.NoteDavDataSourceComposite;
 import com.beyond.note5.sync.datasource.note.NoteDistributedDavDataSource;
 import com.beyond.note5.sync.datasource.note.NoteLocalDataSource;
-import com.beyond.note5.sync.synchronizer.DistributedNoteSynchronizer;
+import com.beyond.note5.sync.synchronizer.DistributedNoteSynchronizer2;
 import com.beyond.note5.sync.webdav.client.DavClient;
 import com.beyond.note5.sync.webdav.client.SardineDavClient;
 import com.beyond.note5.utils.IDUtil;
@@ -92,7 +93,7 @@ public class MyApplication extends Application {
         localDataSource = new NoteLocalDataSource();
 
         DavClient davClient = new SardineDavClient(PreferenceUtil.getString(DAV_LOGIN_USERNAME), PreferenceUtil.getString(DAV_LOGIN_PASSWORD));
-        List<DataSource<Note>> dataSources = new ArrayList<>();
+        List<DavDataSource<Note>> dataSources = new ArrayList<>();
         String[] servers = StringUtils.split(PreferenceUtil.getString(SYNC_REMOTE_DAV_SERVERS), "|");
         String[] paths = StringUtils.split(PreferenceUtil.getString(SYNC_REMOTE_ROOT_PATHS), "|");
         for (String server : servers) {
@@ -102,8 +103,8 @@ public class MyApplication extends Application {
             }
             dataSources.add(new NoteDistributedDavDataSource(davClient, urls));
         }
-        remoteDataSource = new NoteDavDataSourceComposite(dataSources.toArray(new DataSource[0]));
-        synchronizer = new DistributedNoteSynchronizer();
+        remoteDataSource = new NoteDavDataSourceComposite(dataSources.toArray(new DavDataSource[0]));
+        synchronizer = new DistributedNoteSynchronizer2();
     }
 
     public void initPreference() {
@@ -204,11 +205,11 @@ public class MyApplication extends Application {
         syncNote(null);
     }
 
-    public void syncNote(Runnable callback) {
-        syncNote(callback, null);
+    public void syncNote(Runnable success) {
+        syncNote(success, null);
     }
 
-    public void syncNote(Runnable callback, Runnable fail) {
+    public void syncNote(Runnable success, Runnable fail) {
         if (synchronizer == null) {
             initSynchronizer();
         }
@@ -216,9 +217,11 @@ public class MyApplication extends Application {
             @Override
             public void run() {
                 try {
-                    synchronizer.sync(localDataSource, remoteDataSource);
-                    if (callback != null) {
-                        handler.post(callback);
+                    synchronizer.setLocalDataSource(localDataSource);
+                    synchronizer.setRemoteDataSource(remoteDataSource);
+                    synchronizer.sync();
+                    if (success != null) {
+                        handler.post(success);
                     }
                 } catch (Exception e) {
                     e.printStackTrace();
@@ -301,7 +304,9 @@ public class MyApplication extends Application {
         remoteList.add(note6Clone); // remote update
 
         try {
-            synchronizer.sync(localDataSource, remoteDataSource);
+            synchronizer.sync();
+            synchronizer.setLocalDataSource(localDataSource);
+            synchronizer.setRemoteDataSource(remoteDataSource);
             System.out.println();
             System.out.println();
 

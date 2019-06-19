@@ -145,6 +145,26 @@ public class NoteSynchronizerTest {
                 "https://dav.jianguoyun.com/dav/test");
         DataSource<Note> localDataSource = new DataSource<Note>() {
 
+            @Override
+            public boolean tryLock() {
+                return false;
+            }
+
+            @Override
+            public boolean tryLock(Long time) {
+                return false;
+            }
+
+            @Override
+            public boolean isLocked() {
+                return false;
+            }
+
+            @Override
+            public boolean release() {
+                return false;
+            }
+
             List<Note> notes = localList;
 
             @Override

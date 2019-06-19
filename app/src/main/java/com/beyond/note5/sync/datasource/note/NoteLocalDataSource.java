@@ -57,8 +57,28 @@ public class NoteLocalDataSource implements DataSource<Note> {
     }
 
     @Override
-    public Class clazz() {
+    public Class<Note> clazz() {
         return Note.class;
+    }
+
+    @Override
+    public boolean tryLock() {
+        return false;
+    }
+
+    @Override
+    public boolean tryLock(Long time) {
+        return false;
+    }
+
+    @Override
+    public boolean isLocked() {
+        return false;
+    }
+
+    @Override
+    public boolean release() {
+        return false;
     }
 
     private class MyNoteView extends NoteViewAdapter {

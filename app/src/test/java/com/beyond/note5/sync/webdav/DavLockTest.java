@@ -1,14 +1,20 @@
 package com.beyond.note5.sync.webdav;
 
+import com.beyond.note5.sync.webdav.client.DavClient;
+import com.beyond.note5.sync.webdav.client.SardineDavClient;
+
 import org.junit.Test;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
 
 public class DavLockTest {
 
     @Test
     public void tryLock() {
-        DavLock davLock = new DavLock("https://dav.jianguoyun.com/dav/NoteClould2/test.lock");
+        DavClient client = new SardineDavClient("", "");
+
+        DavLock davLock = new DavLock(client, "https://dav.jianguoyun.com/dav/NoteClould2/test.tryLock");
 
         assertFalse(davLock.isLocked());
 

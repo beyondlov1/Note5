@@ -1,55 +1,77 @@
 package com.beyond.note5.sync.webdav;
 
-import com.alibaba.fastjson.JSONObject;
-import com.beyond.note5.utils.OkWebDavUtil;
+import android.util.Log;
 
+import com.alibaba.fastjson.JSONObject;
+import com.beyond.note5.sync.webdav.client.DavClient;
+
+import java.io.IOException;
 import java.util.Date;
 
-public class DavLock implements Lock{
+public class DavLock implements Lock {
 
     private String url;
 
-    public DavLock(String url) {
+    private DavClient client;
+
+    public DavLock(DavClient client, String url) {
         this.url = url;
+        this.client = client;
     }
 
     public boolean tryLock() {
         if (isLocked()) {
             return false;
         }
-        return OkWebDavUtil.upload(url, "");
+        try {
+            client.put(url, "");
+            return true;
+        } catch (IOException e) {
+            e.printStackTrace();
+            return false;
+        }
     }
 
     @Override
     public boolean tryLock(Long time) {
-        if (isLocked()) {
-            String json = OkWebDavUtil.download(url);
-            LockTimeUnit lockTimeUnit = JSONObject.parseObject(json, LockTimeUnit.class);
-            if (lockTimeUnit!=null && lockTimeUnit.expired()){
-                String lockJson = JSONObject.toJSONString(new LockTimeUnit(new Date(), time));
-                return OkWebDavUtil.upload(url, lockJson);
+        try {
+            if (isLocked()) {
+                String json = client.get(url);
+                LockTimeUnit lockTimeUnit = JSONObject.parseObject(json, LockTimeUnit.class);
+                if (lockTimeUnit != null && lockTimeUnit.expired()) {
+                    String lockJson = JSONObject.toJSONString(new LockTimeUnit(new Date(), time));
+                    client.put(url, lockJson);
+                }
+                return false;
             }
+            String json = JSONObject.toJSONString(new LockTimeUnit(new Date(), time));
+            client.put(url, json);
+            return true;
+        }catch (Exception e){
+            Log.e(getClass().getSimpleName(),"tryLock fail",e);
             return false;
         }
-        String json = JSONObject.toJSONString(new LockTimeUnit(new Date(), time));
-        return OkWebDavUtil.upload(url, json);
     }
 
     public boolean isLocked() {
-        return OkWebDavUtil.isFileExist(url);
+        try {
+            return client.exists(url);
+        } catch (IOException e) {
+            throw new RuntimeException("isLocked error");
+        }
     }
 
     public boolean release() {
         try {
-            OkWebDavUtil.deleteFile(url);
-        } catch (Exception e) {
-            e.printStackTrace();
+            client.delete(url);
+            return true;
+        } catch (IOException e) {
+            Log.e(getClass().getSimpleName(),"release fail",e);
             return false;
         }
-        return true;
     }
 
-    private static class LockTimeUnit{
+    private static class LockTimeUnit {
         private Date lastLockTime;
         private Long lockPeriod;
 

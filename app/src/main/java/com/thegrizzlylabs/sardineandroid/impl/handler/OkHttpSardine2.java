@@ -84,6 +84,10 @@ public class OkHttpSardine2 extends OkHttpSardine {
         setCredentials(username, password, false);
     }
 
+    public void getResponse() {
+        responseContainer.get();
+    }
+
     private class AuthenticationInterceptor implements Interceptor {
 
         private String userName;
