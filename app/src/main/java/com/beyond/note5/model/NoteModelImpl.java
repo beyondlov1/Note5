@@ -7,10 +7,13 @@ import com.beyond.note5.MyApplication;
 import com.beyond.note5.bean.Attachment;
 import com.beyond.note5.bean.Document;
 import com.beyond.note5.bean.Note;
+import com.beyond.note5.sync.model.bean.SyncLogInfo;
 import com.beyond.note5.model.dao.AttachmentDao;
 import com.beyond.note5.model.dao.DaoSession;
 import com.beyond.note5.model.dao.NoteDao;
+import com.beyond.note5.model.dao.SyncLogInfoDao;
 import com.beyond.note5.utils.PhotoUtil;
+import com.beyond.note5.utils.PreferenceUtil;
 
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.io.FileUtils;
@@ -30,6 +33,8 @@ public class NoteModelImpl implements NoteModel {
 
     private AttachmentDao attachmentDao;
 
+    private SyncLogInfoDao syncLogInfoDao;
+
     public static NoteModel getSingletonInstance(){
         return NoteModelHolder.noteModel;
     }
@@ -42,6 +47,7 @@ public class NoteModelImpl implements NoteModel {
         DaoSession daoSession = MyApplication.getInstance().getDaoSession();
         noteDao = daoSession.getNoteDao();
         attachmentDao = daoSession.getAttachmentDao();
+        syncLogInfoDao = daoSession.getSyncLogInfoDao();
     }
 
     @Override
@@ -61,6 +67,7 @@ public class NoteModelImpl implements NoteModel {
             }
         }
 
+        addInsertLog(note);
     }
 
     @Override
@@ -70,6 +77,8 @@ public class NoteModelImpl implements NoteModel {
         if (CollectionUtils.isNotEmpty(attachments)) {
             attachmentDao.updateInTx(attachments);
         }
+
+        addUpdateLog(note);
     }
 
     @Override
@@ -77,6 +86,8 @@ public class NoteModelImpl implements NoteModel {
         note.setLastModifyTime(new Date());
         note.setValid(false);
         noteDao.update(note);
+
+        addUpdateLog(note);
     }
 
     @Override
@@ -110,6 +121,8 @@ public class NoteModelImpl implements NoteModel {
             }
             attachmentDao.deleteInTx(attachments);
         }
+
+        addUpdateLog(note);
     }
 
     @Override
@@ -131,5 +144,27 @@ public class NoteModelImpl implements NoteModel {
                 .list();
     }
 
+    @Override
+    public Note findById(String id) {
+        return noteDao.load(id);
+    }
 
+
+    private void addInsertLog(Note note){
+        SyncLogInfo syncLogInfo = new SyncLogInfo();
+        syncLogInfo.setId(note.getId());
+        syncLogInfo.setOperation(SyncLogInfo.ADD);
+        syncLogInfo.setOperationTime(note.getLastModifyTime());
+        syncLogInfo.setSource(PreferenceUtil.getString(MyApplication.VIRTUAL_USER_ID));
+        syncLogInfoDao.insert(syncLogInfo);
+    }
+
+    private void addUpdateLog(Note note){
+        SyncLogInfo syncLogInfo = new SyncLogInfo();
+        syncLogInfo.setId(note.getId());
+        syncLogInfo.setOperation(SyncLogInfo.UPDATE);
+        syncLogInfo.setOperationTime(note.getLastModifyTime());
+        syncLogInfo.setSource(PreferenceUtil.getString(MyApplication.VIRTUAL_USER_ID));
+        syncLogInfoDao.insert(syncLogInfo);
+    }
 }

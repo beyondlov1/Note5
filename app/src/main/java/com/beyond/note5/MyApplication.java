@@ -16,13 +16,14 @@ import com.beyond.note5.predict.TagPredictorImpl;
 import com.beyond.note5.predict.bean.TagGraph;
 import com.beyond.note5.predict.train.filter.TimeExpressionTrainTagFilter;
 import com.beyond.note5.predict.train.filter.UrlTrainTagFilter;
+import com.beyond.note5.sync.model.impl.LSTDavModel;
 import com.beyond.note5.sync.Synchronizer;
 import com.beyond.note5.sync.datasource.DataSource;
 import com.beyond.note5.sync.datasource.DavDataSource;
-import com.beyond.note5.sync.datasource.note.NoteDavDataSourceComposite;
-import com.beyond.note5.sync.datasource.note.NoteDistributedDavDataSource;
+import com.beyond.note5.sync.datasource.DistributedDavDataSource;
 import com.beyond.note5.sync.datasource.note.NoteLocalDataSource;
-import com.beyond.note5.sync.synchronizer.DistributedNoteSynchronizer2;
+import com.beyond.note5.sync.synchronizer2.DavSynchronizer2;
+import com.beyond.note5.sync.webdav.DavLock;
 import com.beyond.note5.sync.webdav.client.DavClient;
 import com.beyond.note5.sync.webdav.client.SardineDavClient;
 import com.beyond.note5.utils.IDUtil;
@@ -64,6 +65,11 @@ public class MyApplication extends Application {
     public static final String SYNC_REMOTE_ROOT_PATHS = "syncNote.remote.root.paths";
     private static final String SYNC_REMOTE_DAV_SERVERS = "syncNote.remote.dav.servers";
 
+    public static final String LOG_PATH = "LOCK/sync.log";
+    public static final String LOCK_PATH = "/LOCK/distributeLock.lock";
+    public static final String LST_PATH = "/LOCK/lastSyncTime.mark";
+
+
     private boolean isApplicationToBeBorn = false;
 
     private Handler handler = new Handler();
@@ -90,21 +96,30 @@ public class MyApplication extends Application {
 
     @SuppressWarnings("unchecked")
     private void initSynchronizer() {
-        localDataSource = new NoteLocalDataSource();
+        DataSource<Note> localDataSource = new NoteLocalDataSource();
 
         DavClient davClient = new SardineDavClient(PreferenceUtil.getString(DAV_LOGIN_USERNAME), PreferenceUtil.getString(DAV_LOGIN_PASSWORD));
         List<DavDataSource<Note>> dataSources = new ArrayList<>();
         String[] servers = StringUtils.split(PreferenceUtil.getString(SYNC_REMOTE_DAV_SERVERS), "|");
         String[] paths = StringUtils.split(PreferenceUtil.getString(SYNC_REMOTE_ROOT_PATHS), "|");
         for (String server : servers) {
-            String[] urls = new String[paths.length];
-            for (int i = 0; i < urls.length; i++) {
-                urls[i] = OkWebDavUtil.concat(server, paths[i]);
-            }
-            dataSources.add(new NoteDistributedDavDataSource(davClient, urls));
+            DavDataSource davDataSource = new DistributedDavDataSource.Builder<Note>()
+                    .clazz(Note.class)
+                    .davClient(davClient)
+                    .executorService(getExecutorService())
+                    .server(server)
+                    .paths(paths)
+                    .lock(new DavLock(davClient, OkWebDavUtil.concat(server, LOCK_PATH)))
+                    .lstRecorder(new LSTDavModel(davClient, OkWebDavUtil.concat(server, LST_PATH)))
+                    .build();
+
+            dataSources.add(davDataSource);
         }
-        remoteDataSource = new NoteDavDataSourceComposite(dataSources.toArray(new DavDataSource[0]));
-        synchronizer = new DistributedNoteSynchronizer2();
+
+        synchronizer = new DavSynchronizer2.Builder<Note>()
+                .localDataSource(localDataSource)
+                .remoteDataSource(dataSources.get(0))
+                .build();
     }
 
     public void initPreference() {
@@ -134,7 +149,7 @@ public class MyApplication extends Application {
 
     private void initDaoSession() {
 
-        DroidDataSource dataSource = new DroidDataSource(getPackageName(), "databases/beyond_not_safe");
+        DroidDataSource dataSource = new DroidDataSource(getPackageName(), "databases/beyond_not_safe_2");
         ContextHolder.setContext(this);
         Flyway flyway = new Flyway();
         flyway.setDataSource(dataSource);
@@ -146,7 +161,7 @@ public class MyApplication extends Application {
 //        DaoMaster daoMaster = new DaoMaster(database);
 //        daoSession = daoMaster.newSession();
 
-        DaoMaster.OpenHelper helper = new DaoMaster.OpenHelper(this, "beyond_not_safe.db"){
+        DaoMaster.OpenHelper helper = new DaoMaster.OpenHelper(this, "beyond_not_safe_2.db"){
             @Override
             public void onCreate(Database db) {
                 // do nothing
@@ -197,8 +212,6 @@ public class MyApplication extends Application {
         isApplicationToBeBorn = false;
     }
 
-    private DataSource<Note> localDataSource;
-    private DataSource<Note> remoteDataSource;
     private Synchronizer<Note> synchronizer;
 
     public void syncNote() {
@@ -217,8 +230,6 @@ public class MyApplication extends Application {
             @Override
             public void run() {
                 try {
-                    synchronizer.setLocalDataSource(localDataSource);
-                    synchronizer.setRemoteDataSource(remoteDataSource);
                     synchronizer.sync();
                     if (success != null) {
                         handler.post(success);
@@ -305,8 +316,6 @@ public class MyApplication extends Application {
 
         try {
             synchronizer.sync();
-            synchronizer.setLocalDataSource(localDataSource);
-            synchronizer.setRemoteDataSource(remoteDataSource);
             System.out.println();
             System.out.println();
 

@@ -11,8 +11,8 @@ import java.io.IOException;
 import java.util.List;
 import java.util.concurrent.ExecutionException;
 
+import static com.beyond.note5.sync.webdav.CommonTest.getDistributedDavDataSource;
 import static com.beyond.note5.sync.webdav.CommonTest.getExampleNotes;
-import static com.beyond.note5.sync.webdav.CommonTest.getRootUrl;
 
 public class DavDataSourceCompositeTest {
 
@@ -20,27 +20,7 @@ public class DavDataSourceCompositeTest {
     DavClient teraClient = new SardineDavClient(CommonTest.getUsername(),CommonTest.getPassword());
 
 
-    DistributedDavDataSource<Note> NutStoreDataSource = new DistributedDavDataSource<Note>(nutStoreClient,CommonTest.getExecutorService(),
-            getRootUrl()+"nutStore1",getRootUrl()+"nutStore2") {
-        @Override
-        public Class<Note> clazz() {
-            return Note.class;
-        }
-    };
-    DistributedDavDataSource<Note> TeraDataSource = new DistributedDavDataSource<Note>(teraClient,CommonTest.getExecutorService(),
-            getRootUrl()+"tera1",getRootUrl()+"tera2") {
-        @Override
-        public Class<Note> clazz() {
-            return Note.class;
-        }
-    };
-    DavDataSourceComposite<Note> davDataSourceComposite = new DavDataSourceComposite<Note>(NutStoreDataSource,TeraDataSource) {
-
-        @Override
-        public Class<Note> clazz() {
-            return Note.class;
-        }
-    };
+    DavDataSource<Note> davDataSourceComposite = getDistributedDavDataSource();
 
     @Test
     public void add() throws IOException {

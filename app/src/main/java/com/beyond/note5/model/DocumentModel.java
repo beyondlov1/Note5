@@ -22,4 +22,6 @@ public interface DocumentModel<T extends Document> extends Model<T> {
     List<T> findAll();
 
     List<T> findAllInAll();
+
+    T findById(String id);
 }

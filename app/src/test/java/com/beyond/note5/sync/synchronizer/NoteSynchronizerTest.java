@@ -3,8 +3,7 @@ package com.beyond.note5.sync.synchronizer;
 import com.beyond.note5.bean.Attachment;
 import com.beyond.note5.bean.Note;
 import com.beyond.note5.sync.datasource.DataSource;
-import com.beyond.note5.sync.datasource.DistributedDavDataSource;
-import com.beyond.note5.sync.datasource.note.NoteDistributedDavDataSource;
+import com.beyond.note5.sync.datasource.DavDataSource;
 import com.beyond.note5.sync.webdav.CommonTest;
 import com.beyond.note5.sync.webdav.client.DavClient;
 import com.beyond.note5.sync.webdav.client.SardineDavClient;
@@ -22,7 +21,7 @@ import java.util.List;
 public class NoteSynchronizerTest {
 
     @Test
-    public void sync() {
+    public void sync() throws IOException {
 
         Note note = Note.newInstance();
         Note note1 = Note.newInstance();
@@ -140,9 +139,8 @@ public class NoteSynchronizerTest {
 
 
         DavClient davClient = new SardineDavClient(CommonTest.getUsername(),CommonTest.getPassword());
-        DistributedDavDataSource<Note> remoteDataSource = new NoteDistributedDavDataSource(davClient,
-                CommonTest.getExecutorService(),
-                "https://dav.jianguoyun.com/dav/test");
+        DavDataSource<Note> remoteDataSource   = CommonTest.getDistributedDavDataSource();
+
         DataSource<Note> localDataSource = new DataSource<Note>() {
 
             @Override
@@ -166,6 +164,11 @@ public class NoteSynchronizerTest {
             }
 
             List<Note> notes = localList;
+
+            @Override
+            public String getKey() {
+                return null;
+            }
 
             @Override
             public void add(Note note) {
@@ -205,11 +208,6 @@ public class NoteSynchronizerTest {
                 notes.addAll(all);
             }
 
-            @Override
-            public Class clazz() {
-                return Note.class;
-            }
-
             private int getIndex(Note n) {
                 int index = 0;
                 for (Note note : notes) {
@@ -224,7 +222,7 @@ public class NoteSynchronizerTest {
         };
 
         try {
-            synchronizer.sync(localDataSource, remoteDataSource);
+            synchronizer.sync();
             System.out.println();
             System.out.println();
 

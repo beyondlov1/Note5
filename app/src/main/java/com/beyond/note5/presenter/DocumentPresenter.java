@@ -19,4 +19,5 @@ public interface DocumentPresenter<T>  extends CRUDPresenter<T>{
 
     List<T> selectAllInAll();
 
+    T selectById(String id);
 }

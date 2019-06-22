@@ -14,10 +14,14 @@ import java.net.URI;
 import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 import okhttp3.Response;
 
 public class SardineDavClient implements DavClient {
+
+    private final static Map<String,Boolean> IS_DIR_EXIST = new ConcurrentHashMap<>();
 
     private Sardine sardine;
 
@@ -33,7 +37,7 @@ public class SardineDavClient implements DavClient {
     @Override
     public void put(String url, String content) throws IOException {
         String dirUrl = StringUtils.substringBeforeLast(url, "/");
-        OkWebDavUtil.mkRemoteDir(sardine, dirUrl);
+        mkDir(dirUrl);
         sardine.put(url, content.getBytes());
         closeResponse();
     }
@@ -47,11 +51,17 @@ public class SardineDavClient implements DavClient {
         }
     }
 
+    /**
+     * 这里webdav访问如果同一时间访问多次， 会产生503的错误， 所以不得已改成同步的
+     * @param dirUrl
+     * @return
+     * @throws IOException
+     */
     @Override
     public List<String> listAllFileName(String dirUrl) throws IOException {
         List<String> result = new ArrayList<>();
-        OkWebDavUtil.mkRemoteDir(sardine, dirUrl);
-        List<DavResource> list = sardine.list(dirUrl, 1);
+        mkDir(dirUrl);
+        List<DavResource> list = sardine.list(dirUrl);
         for (DavResource davResource : list) {
             if (StringUtils.equals(
                     ("https://" + URI.create(dirUrl).getHost() + davResource.getPath()).replace("/", ""),
@@ -71,7 +81,7 @@ public class SardineDavClient implements DavClient {
     }
 
     @Override
-    public List<String> listAllFilePath(String dirUrl) throws IOException {
+    public synchronized List<String> listAllFilePath(String dirUrl) throws IOException {
         List<String> result = new ArrayList<>();
         List<DavResource> list = sardine.list(dirUrl, 1);
         for (DavResource davResource : list) {
@@ -100,6 +110,31 @@ public class SardineDavClient implements DavClient {
         boolean exists = sardine.exists(url);
         closeResponse();
         return exists;
+    }
+
+    @Override
+    public boolean mkDir(String dirUrl) {
+        if (IS_DIR_EXIST.get(dirUrl)!=null&& IS_DIR_EXIST.get(dirUrl)){
+            return true;
+        }
+        //获取文件夹路径
+        String parentUrl = StringUtils.substringBeforeLast(dirUrl, "/");
+        String root = "https://" + URI.create(dirUrl).getHost();
+        if (!OkWebDavUtil.urlEquals(parentUrl,root)) {
+            mkDir(parentUrl);
+        }
+        try {
+            sardine.createDirectory(dirUrl);
+            IS_DIR_EXIST.put(dirUrl,true);
+            return true;
+        }catch (IOException e){
+            //ignore
+            return false;
+        }finally {
+            if (sardine instanceof OkHttpSardine2){
+                ((OkHttpSardine2) sardine).closeCurrentResponse();
+            }
+        }
     }
 
     private void closeResponse() {

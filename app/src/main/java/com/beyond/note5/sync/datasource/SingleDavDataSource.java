@@ -67,7 +67,6 @@ public abstract class SingleDavDataSource<T extends Document> extends DavDataSou
         client.put(getUploadUrl(), StringCompressUtil.compress(jsonString));
     }
 
-    @Override
     public abstract Class<T> clazz();
 
     public String getDownloadUrl() {

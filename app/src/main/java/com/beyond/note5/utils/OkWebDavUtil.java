@@ -238,7 +238,7 @@ public class OkWebDavUtil {
         }
     }
 
-    private static boolean urlEquals(String url1, String url2) {
+    public static boolean urlEquals(String url1, String url2) {
         return  StringUtils.equalsIgnoreCase(
                 url1.replace("/", ""),
                 url2.replace("/", ""));

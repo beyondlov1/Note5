@@ -2,8 +2,12 @@ package com.beyond.note5.sync.webdav;
 
 import com.beyond.note5.bean.Attachment;
 import com.beyond.note5.bean.Note;
+import com.beyond.note5.sync.model.impl.LSTDavModel;
+import com.beyond.note5.sync.datasource.DavDataSource;
+import com.beyond.note5.sync.datasource.DistributedDavDataSource;
 import com.beyond.note5.sync.webdav.client.DavClient;
 import com.beyond.note5.sync.webdav.client.SardineDavClient;
+import com.beyond.note5.utils.OkWebDavUtil;
 
 import org.apache.commons.lang3.StringUtils;
 import org.junit.Test;
@@ -77,6 +81,37 @@ public class CommonTest {
     public static ExecutorService getExecutorService(){
         return Executors.newCachedThreadPool();
     }
+
+    public static DavDataSource<Note> getDistributedDavDataSource() {
+        DavClient davClient = new SardineDavClient(getUsername(),getPassword());
+        String server = OkWebDavUtil.concat(getRootUrl(),"test/t1/");
+        String[] paths = StringUtils.split("/baidu/|/google/", "|");
+        return new DistributedDavDataSource.Builder<Note>()
+                .clazz(Note.class)
+                .davClient(davClient)
+                .executorService(getExecutorService())
+                .server(server)
+                .paths(paths)
+                .lock(new DavLock(davClient, OkWebDavUtil.concat(server, "LOCK/distribute.lock")))
+                .lstRecorder(new LSTDavModel(davClient, OkWebDavUtil.concat(server, "LOCK/LST.mark")))
+                .build();
+    }
+
+    public static DavDataSource<Note> getDistributedDavDataSource2() {
+        DavClient davClient = new SardineDavClient(getUsername(),getPassword());
+        String server = OkWebDavUtil.concat(getRootUrl(),"test/t2/");
+        String[] paths = StringUtils.split("/baidu/|/google/", "|");
+        return new DistributedDavDataSource.Builder<Note>()
+                .clazz(Note.class)
+                .davClient(davClient)
+                .executorService(getExecutorService())
+                .server(server)
+                .paths(paths)
+                .lock(new DavLock(davClient, OkWebDavUtil.concat(server, "LOCK/distribute.lock")))
+                .lstRecorder(new LSTDavModel(davClient, OkWebDavUtil.concat(server, "LOCK/LST.mark")))
+                .build();
+    }
+
 
     @Test
     public void split(){

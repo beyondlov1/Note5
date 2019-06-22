@@ -36,12 +36,6 @@ public class DavLock implements Lock {
     public boolean tryLock(Long time) {
         try {
             if (isLocked()) {
-                String json = client.get(url);
-                LockTimeUnit lockTimeUnit = JSONObject.parseObject(json, LockTimeUnit.class);
-                if (lockTimeUnit != null && lockTimeUnit.expired()) {
-                    String lockJson = JSONObject.toJSONString(new LockTimeUnit(new Date(), time));
-                    client.put(url, lockJson);
-                }
                 return false;
             }
             String json = JSONObject.toJSONString(new LockTimeUnit(new Date(), time));
@@ -55,9 +49,15 @@ public class DavLock implements Lock {
 
     public boolean isLocked() {
         try {
-            return client.exists(url);
+            if (client.exists(url)){
+                String json = client.get(url);
+                LockTimeUnit lockTimeUnit = JSONObject.parseObject(json, LockTimeUnit.class);
+                return lockTimeUnit == null || !lockTimeUnit.expired();
+            }else {
+                return false;
+            }
         } catch (IOException e) {
-            throw new RuntimeException("isLocked error");
+            return false;
         }
     }
 
@@ -74,6 +74,9 @@ public class DavLock implements Lock {
     private static class LockTimeUnit {
         private Date lastLockTime;
         private Long lockPeriod;
+
+        public LockTimeUnit() {
+        }
 
         LockTimeUnit(Date lastLockTime, Long lockPeriod) {
             this.lastLockTime = lastLockTime;

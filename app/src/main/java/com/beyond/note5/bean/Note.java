@@ -152,11 +152,6 @@ public class Note extends Document {
         this.attachments = attachments;
     }
 
-    /** Resets a to-many relationship, making the next get call to query for a fresh result. */
-    @Generated(hash = 1946849745)
-    public synchronized void resetAttachments() {
-        attachments = null;
-    }
 
     /**
      * Convenient call for {@link org.greenrobot.greendao.AbstractDao#delete(Object)}.
@@ -267,4 +262,11 @@ public class Note extends Document {
     public void setValid(Boolean valid) {
         this.valid = valid;
     }
+
+    /** Resets a to-many relationship, making the next get call to query for a fresh result. */
+    @Generated(hash = 1946849745)
+    public synchronized void resetAttachments() {
+        attachments = null;
+    }
+
 }

@@ -4,7 +4,7 @@ import com.beyond.note5.bean.Tracable;
 
 import java.util.ArrayList;
 import java.util.List;
-
+@Deprecated
 public abstract class SingleSynchronizerBase<T extends Tracable> extends SynchronizerSupport<T> {
 
     private ThreadLocal<Integer> threadLocal = new ThreadLocal<>();

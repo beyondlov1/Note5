@@ -1,33 +1,28 @@
 package com.beyond.note5.sync.datasource;
 
 import com.beyond.note5.bean.Note;
-import com.beyond.note5.sync.datasource.note.NoteDistributedDavDataSource;
 import com.beyond.note5.sync.webdav.CommonTest;
-import com.beyond.note5.sync.webdav.client.DavClient;
-import com.beyond.note5.sync.webdav.client.SardineDavClient;
 
 import org.junit.Test;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.Callable;
+import java.util.concurrent.ExecutionException;
 
+import static com.beyond.note5.sync.webdav.CommonTest.getDistributedDavDataSource;
+import static com.beyond.note5.sync.webdav.CommonTest.getDistributedDavDataSource2;
 import static com.beyond.note5.sync.webdav.CommonTest.getExampleNotes;
-import static com.beyond.note5.sync.webdav.CommonTest.getRootUrl;
+import static com.beyond.note5.sync.webdav.CommonTest.getExecutorService;
+import static com.beyond.note5.utils.AsyncUtil.computeAllAsyn;
 
 public class DistributedDavDataSourceTest {
 
-    DavClient client = new SardineDavClient(CommonTest.getUsername(),CommonTest.getPassword());
+    DavDataSource<Note> distributedDavDataSource = CommonTest.getDistributedDavDataSource();
 
     @Test
     public void add() throws IOException {
-        DistributedDavDataSource<Note> distributedDavDataSource = new DistributedDavDataSource<Note>(client,CommonTest.getExecutorService(),
-                getRootUrl()) {
-
-            @Override
-            public Class<Note> clazz() {
-                return Note.class;
-            }
-        };
 
         distributedDavDataSource.add(getExampleNotes().get(0));
         distributedDavDataSource.add(getExampleNotes().get(1));
@@ -35,14 +30,6 @@ public class DistributedDavDataSourceTest {
 
     @Test
     public void distributeAdd() throws IOException {
-
-        DistributedDavDataSource<Note> distributedDavDataSource = new DistributedDavDataSource<Note>(client,CommonTest.getExecutorService(),
-                getRootUrl(),getRootUrl()+"NoteCloud2") {
-            @Override
-            public Class<Note> clazz() {
-                return Note.class;
-            }
-        };
 
         distributedDavDataSource.add(getExampleNotes().get(0));
         distributedDavDataSource.add(getExampleNotes().get(1));
@@ -52,26 +39,11 @@ public class DistributedDavDataSourceTest {
 
     @Test
     public void delete() throws IOException {
-
-        DistributedDavDataSource<Note> distributedDavDataSource = new DistributedDavDataSource<Note>(client,CommonTest.getExecutorService(),
-                getRootUrl(),getRootUrl()+"NoteCloud2") {
-            @Override
-            public Class<Note> clazz() {
-                return Note.class;
-            }
-        };
         distributedDavDataSource.delete(getExampleNotes().get(0));
     }
 
     @Test
     public void update() throws IOException {
-        DistributedDavDataSource<Note> distributedDavDataSource = new DistributedDavDataSource<Note>(client,CommonTest.getExecutorService(),
-                getRootUrl(),getRootUrl()+"NoteCloud2") {
-            @Override
-            public Class<Note> clazz() {
-                return Note.class;
-            }
-        };
         Note note = getExampleNotes().get(0);
         note.setContent("updated1");
         distributedDavDataSource.update(note);
@@ -79,32 +51,39 @@ public class DistributedDavDataSourceTest {
 
     @Test
     public void select() throws IOException {
-        DistributedDavDataSource<Note> distributedDavDataSource = new DistributedDavDataSource<Note>(client,CommonTest.getExecutorService(),
-                getRootUrl(),getRootUrl()+"NoteCloud2") {
-            @Override
-            public Class<Note> clazz() {
-                return Note.class;
-            }
-        };
-        Note note = getExampleNotes().get(0);
+        Note note = getExampleNotes().get(2);
         Note selected = distributedDavDataSource.select(note);
         assert selected.getId().equals(note.getId());
     }
 
-    @Test
-    public void selectAll() throws IOException {
-        DistributedDavDataSource<Note> distributedDavDataSource = new DistributedDavDataSource<Note>(client,CommonTest.getExecutorService(),
-                getRootUrl(),getRootUrl()+"NoteCloud2") {
-            @Override
-            public Class<Note> clazz() {
-                return Note.class;
-            }
-        };
 
+    @Test
+    public void selectAll() throws IOException, ExecutionException, InterruptedException {
         List<Note> list = distributedDavDataSource.selectAll();
         for (Note note : list) {
             System.out.println(note);
         }
+    }
+
+    @Test
+    public void selectAll2() throws IOException, ExecutionException, InterruptedException {
+        List<DataSource<Note>> subDataSources = new ArrayList<>();
+        DavDataSource<Note> distributedDavDataSource1 = getDistributedDavDataSource();
+        DavDataSource<Note> distributedDavDataSource2 = getDistributedDavDataSource2();
+        subDataSources.add(distributedDavDataSource1);
+        subDataSources.add(distributedDavDataSource2);
+
+        List<Callable<List<Note>>> callables = new ArrayList<>();
+        for (DataSource<Note> subDataSource : subDataSources) {
+            callables.add(new Callable<List<Note>>() {
+                @Override
+                public List<Note> call() throws Exception {
+                    return subDataSource.selectAll();
+                }
+            });
+        }
+        List<Note> list = computeAllAsyn(getExecutorService(), callables);
+        System.out.println(list);
     }
 
 
@@ -112,11 +91,4 @@ public class DistributedDavDataSourceTest {
     public void cover() {
     }
 
-    @Test
-    public void clazz(){
-        DistributedDavDataSource distributedDavDataSource = new NoteDistributedDavDataSource(client,CommonTest.getExecutorService(),
-                getRootUrl(),getRootUrl()+"NoteCloud2");
-        Class clazz = distributedDavDataSource.clazz();
-        System.out.println(clazz);
-    }
 }

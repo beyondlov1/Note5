@@ -20,7 +20,8 @@ public class AsyncUtil {
         }
 
         for (Future<List<S>> future : futures) {
-            List<S> list = future.get();
+            List<S> list;
+            list = future.get();
             if (list != null) {
                 result.addAll(list);
             }

@@ -5,6 +5,7 @@ import com.beyond.note5.utils.PreferenceUtil;
 
 import java.util.Date;
 
+@Deprecated
 public class DistributedNoteSynchronizer extends DistributedSynchronizerBase<Note> {
 
     private static final String NOTE_LAST_SYNC_TIME  = "note.last.syncNote.time";

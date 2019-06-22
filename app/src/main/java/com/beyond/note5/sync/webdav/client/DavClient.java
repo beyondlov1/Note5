@@ -10,4 +10,5 @@ public interface DavClient {
     List<String> listAllFilePath(String dirUrl) throws IOException;
     void delete(String url) throws IOException;
     boolean exists(String url) throws IOException;
+    boolean mkDir(String dirUrl);
 }

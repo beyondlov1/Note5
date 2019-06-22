@@ -1,20 +1,37 @@
 package com.beyond.note5.sync.synchronizer;
 
 import com.beyond.note5.bean.Tracable;
-import com.beyond.note5.sync.datasource.DataSource;
 
+import org.apache.commons.lang3.time.DateUtils;
+
+import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
-
+@Deprecated
 public abstract class DistributedSynchronizerBase2<T extends Tracable> extends SynchronizerSupport<T> {
 
     private ThreadLocal<Integer> threadLocal = new ThreadLocal<>();
 
-    public synchronized boolean sync(DataSource<T> local, DataSource<T> remote) throws Exception {
+    public synchronized boolean sync() throws Exception {
+
+        if (local == null|| remote == null){
+            throw new RuntimeException("datasource can not be null");
+        }
 
         if (remote.tryLock(60000L)) {
+
             List<T> localList = local.selectAll();
             List<T> localData = localList == null ? new ArrayList<>() : localList;
+
+            if (DateUtils.isSameInstant(this.getLocalLastSyncTime(),this.getRemoteLastSyncTime())){
+                pushDirectly(localData, this.getLocalLastSyncTime());
+                saveLastSyncTime(getLatestLastModifyTime(localData));
+                resetFailCount();
+                remote.release();
+                return true;
+            }
+
             List<T> remoteList = remote.selectAll();
             List<T> remoteData = remoteList == null ? new ArrayList<>() : remoteList;
 
@@ -94,12 +111,77 @@ public abstract class DistributedSynchronizerBase2<T extends Tracable> extends S
             e.printStackTrace();
         }
 
-        sync(local, remote);
+        sync();
 
         return true;
     }
 
-    protected abstract void saveLastSyncTime(Long time);
+    protected abstract Date getRemoteLastSyncTime() throws IOException;
+
+    protected abstract Date getLocalLastSyncTime() throws IOException;
+
+    private Long getLatestLastModifyTime(List<T> localData) {
+        Date latestTime = null;
+        for (T localDatum : localData) {
+            if (latestTime == null){
+                latestTime = localDatum.getLastModifyTime();
+                continue;
+            }
+            if (localDatum.getLastModifyTime().compareTo(latestTime) > 0){
+                latestTime = localDatum.getLastModifyTime();
+            }
+        }
+
+        if (latestTime == null){
+            latestTime = new Date(0);
+        }
+        return latestTime.getTime();
+    }
+
+    private void pushDirectly(List<T> localData, Date lastSyncTime) throws IOException {
+        List<T> localAddedData = getLocalAddedData(localData,lastSyncTime);
+        List<T> localUpdatedData = getLocalUpdatedData(localData,lastSyncTime);
+        if (!localAddedData.isEmpty()) {
+            for (T datum : localAddedData) {
+                remote.add(datum);
+            }
+        }
+        if (!localUpdatedData.isEmpty()) {
+            for (T datum : localUpdatedData) {
+                remote.update(datum);
+            }
+        }
+    }
+
+    private List<T> getLocalAddedData(List<T> localData, Date lastSyncTime){
+
+        List<T> result = new ArrayList<>();
+
+        for (T localDatum : localData) {
+            if (localDatum.getLastModifyTime().after(lastSyncTime)
+                    && DateUtils.isSameInstant(localDatum.getCreateTime(),localDatum.getLastModifyTime())){
+                result.add(localDatum);
+            }
+        }
+
+        return result;
+    }
+
+    private List<T> getLocalUpdatedData(List<T> localData, Date lastSyncTime){
+
+        List<T> result = new ArrayList<>();
+
+        for (T localDatum : localData) {
+            if (localDatum.getLastModifyTime().after(lastSyncTime)
+                    && !DateUtils.isSameInstant(localDatum.getCreateTime(),localDatum.getLastModifyTime())){
+                result.add(localDatum);
+            }
+        }
+
+        return result;
+    }
+
+    protected abstract void saveLastSyncTime(Long time) throws IOException;
 
     private void checkFailCount() {
         Integer integer = threadLocal.get();

@@ -134,6 +134,11 @@ public class TodoModelImpl implements TodoModel {
     }
 
     @Override
+    public Todo findById(String id) {
+        return todoDao.load(id);
+    }
+
+    @Override
     public void deleteReminder(Todo todo) {
         Reminder reminder = todo.getReminder();
         if (reminder !=null){

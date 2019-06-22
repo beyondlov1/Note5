@@ -214,6 +214,11 @@ public class NotePresenterImpl implements NotePresenter {
     }
 
     @Override
+    public Note selectById(String id) {
+        return noteModel.findById(id);
+    }
+
+    @Override
     public void findAllSuccess(List<Note> allNote) {
         if (noteView == null) {
             return;

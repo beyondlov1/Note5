@@ -6,7 +6,8 @@ import java.io.IOException;
 import java.util.List;
 import java.util.concurrent.ExecutionException;
 
-public interface DataSource<T> extends Lock {
+public interface DataSource<T> extends Lock{
+    String getKey();
     void add(T t) throws IOException;
     void delete(T t) throws IOException;
     void update(T t) throws IOException;
@@ -14,5 +15,4 @@ public interface DataSource<T> extends Lock {
     T selectById(String id) throws IOException;
     List<T> selectAll() throws IOException, ExecutionException, InterruptedException;
     void cover(List<T> all) throws IOException, ExecutionException, InterruptedException;
-    Class<T> clazz();
 }

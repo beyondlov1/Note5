@@ -1,10 +1,16 @@
-package com.beyond.note5.sync.synchronizer;
+package com.beyond.note5.sync.synchronizer2;
 
+import com.beyond.note5.MyApplication;
 import com.beyond.note5.bean.Element;
 import com.beyond.note5.bean.Tracable;
+import com.beyond.note5.model.dao.SyncInfoDao;
 import com.beyond.note5.sync.model.LSTModel;
+import com.beyond.note5.sync.model.impl.SqlLSTModel;
 import com.beyond.note5.sync.Synchronizer;
 import com.beyond.note5.sync.datasource.DataSource;
+import com.beyond.note5.sync.datasource.DavDataSource;
+
+import org.apache.commons.lang3.time.DateUtils;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -13,111 +19,202 @@ import java.util.Date;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
-@Deprecated
-public abstract class SynchronizerSupport<T extends Tracable> implements Synchronizer<T> {
 
-    protected DataSource<T> local;
-    
-    protected DataSource<T> remote;
+@Deprecated
+public class DavSynchronizer<T extends Tracable> implements Synchronizer<T> {
+
+    private ThreadLocal<Integer> threadLocal = new ThreadLocal<>();
+
+    private DataSource<T> local;
+
+    private DavDataSource<T> remote;
 
     private LSTModel localLSTModel;
 
-    private LSTModel remoteLSTModel;
+    private DavSynchronizer(){
 
-    public void setLocalDataSource(DataSource<T> local) {
-        this.local = local;
     }
 
-    public void setRemoteDataSource(DataSource<T> remote) {
-        this.remote = remote;
-    }
+    @Override
+    public synchronized boolean sync() throws Exception {
+        List<T> localList = local.selectAll();
+        List<T> localData = localList == null ? new ArrayList<>() : localList;
 
-    protected Date getLastSyncTime(T t) throws IOException{
-        return localLSTModel.getLastSyncTime();
-    }
-
-    protected List<T> getMergedData(List<T> localData, List<T> remoteData) throws IOException {
-
-        if (remoteData.isEmpty()){
-            return localData;
+        if (DateUtils.isSameInstant(this.localLSTModel.getLastSyncTime(),this.remote.getLastSyncTime())){
+            return syncBaseOnLocal(localData);
         }
 
-        if (localData.isEmpty()){
-            return remoteData;
-        }
+        if (remote.tryLock(60000L)) {
 
-        //获取本地和远程的文档
-        Collections.reverse(localData);
-        Collections.reverse(remoteData);
+            List<T> remoteList = remote.selectAll();
+            List<T> remoteData = remoteList == null ? new ArrayList<>() : remoteList;
 
-        //获取远程和本地所有id
-        List<String> localIds = new ArrayList<>();
-        List<String> remoteIds = new ArrayList<>();
-        for (T localDatum : localData) {
-            localIds.add(localDatum.getId());
-        }
-        for (T remoteDatum : remoteData) {
-            remoteIds.add(remoteDatum.getId());
-        }
-
-        //获取动过的id
-        List<String> deletedDocumentIds = new ArrayList<>();
-        List<String> modifyDocumentIds = new ArrayList<>();
-        List<String> addDocumentIds = new ArrayList<>();
-
-
-        Set<String> modifyIdsSet = new HashSet<>();//去重
-        for (T localDatum : localData) {
-
-            // 添加本地新增和修改的
-            if (localDatum != null && localDatum.getLastModifyTime().compareTo(getLastSyncTime(localDatum)) > 0) {
-                modifyIdsSet.add(localDatum.getId());
-            }
-
-        }
-
-        // 添加本地删除的
-        for (String remoteId : remoteIds) {
-            if (!localIds.contains(remoteId)) {
-                deletedDocumentIds.add(remoteId);
-            }
-        }
-
-        for (String modifyId : modifyIdsSet) {
-            if (remoteIds.contains(modifyId)) {
-                modifyDocumentIds.add(modifyId);
-            } else {
-                addDocumentIds.add(modifyId);
-            }
-        }
-
-
-        //以远程的为主
-        List<T> result = new ArrayList<>();
-        for (T remoteDatum : remoteData) {
-            if (deletedDocumentIds.contains(remoteDatum.getId())) {//删除的不添加
-                continue;
-            }
-            if (modifyDocumentIds.contains(remoteDatum.getId())) {//本地更新的
-                T localDatum = getById(localData, remoteDatum.getId());
-                if (localDatum != null && localDatum.getLastModifyTime().compareTo(remoteDatum.getLastModifyTime()) < 0) {
-                    if (localDatum.getVersion() < remoteDatum.getVersion()) {
-                        result.add(remoteDatum);
-                    } else {
-                        result.add(localDatum);
-                    }
-                } else {
-                    result.add(localDatum);
+            if (localData.isEmpty()){
+                for (T remoteDatum : remoteData) {
+                    local.add(remoteDatum);
                 }
-                continue;
+
+                saveLastSyncTime(getLatestLastModifyTime(localData,remoteData));
+                resetFailCount();
+                remote.release();
+                return true;
             }
-            result.add(remoteDatum);
+            if (remoteData.isEmpty()){
+                for (T localDatum : localData) {
+                    remote.add(localDatum);
+                }
+
+                saveLastSyncTime(getLatestLastModifyTime(localData,remoteData));
+                resetFailCount();
+                remote.release();
+                return true;
+            }
+
+            List<T> localAddedData = getLocalAddedData(localData, remoteData);
+            List<T> localUpdatedData = getLocalUpdatedData(localData, remoteData);
+            List<T> localDeletedData = getLocalDeletedData(localData, remoteData);
+
+            if (!localAddedData.isEmpty()) {
+                for (T datum : localAddedData) {
+                    remote.add(datum);
+                }
+            }
+            if (!localUpdatedData.isEmpty()) {
+                for (T datum : localUpdatedData) {
+                    remote.update(datum);
+                }
+            }
+            if (!localDeletedData.isEmpty()) {
+                for (T datum : localDeletedData) {
+                    remote.delete(datum);
+                }
+            }
+
+            List<T> remoteAddedData = getRemoteAddedData(localData, remoteData);
+            List<T> remoteUpdatedData = getRemoteUpdatedData(localData, remoteData);
+            List<T> remoteDeleteData = getRemoteDeleteData(localData, remoteData);
+
+            if (!remoteAddedData.isEmpty()) {
+                for (T datum : remoteAddedData) {
+                    local.add(datum);
+                }
+            }
+            if (!remoteUpdatedData.isEmpty()) {
+                for (T datum : remoteUpdatedData) {
+                    local.update(datum);
+                }
+            }
+            if (!remoteDeleteData.isEmpty()) {
+                for (T datum : remoteDeleteData) {
+                    local.delete(datum);
+                }
+            }
+
+
+            saveLastSyncTime(getLatestLastModifyTime(localData,remoteData));
+            resetFailCount();
+            remote.release();
+            return true;
         }
 
-        for (String addDocumentId : addDocumentIds) {//本地添加的
-            result.add(getById(localData, addDocumentId));
+        checkFailCount();
+
+        try {
+            Thread.sleep(1000);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
         }
-        return result;
+
+        sync();
+
+        return true;
+    }
+
+    private boolean syncBaseOnLocal(List<T> localData) throws IOException {
+        Date lastSyncTime = this.localLSTModel.getLastSyncTime();
+        List<T> localAddedData = getLocalAddedData(localData,lastSyncTime);
+        List<T> localUpdatedData = getLocalUpdatedData(localData,lastSyncTime);
+
+        if (localAddedData.isEmpty()&&localUpdatedData.isEmpty()){
+            return false;
+        }
+        if (remote.tryLock(60000L)){
+            if (!localAddedData.isEmpty()) {
+                for (T datum : localAddedData) {
+                    remote.add(datum);
+                }
+            }
+            if (!localUpdatedData.isEmpty()) {
+                for (T datum : localUpdatedData) {
+                    remote.update(datum);
+                }
+            }
+
+            saveLastSyncTime(getLatestLastModifyTime(localData));
+            resetFailCount();
+            remote.release();
+            return true;
+        }
+
+        checkFailCount();
+
+        try {
+            Thread.sleep(1000);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+
+        return syncBaseOnLocal(localData);
+    }
+
+    private void saveLastSyncTime(Date date) throws IOException {
+        localLSTModel.setLastSyncTime(date);
+        remote.setLastSyncTime(date);
+    }
+
+    public static class Builder<T extends Tracable>{
+
+        private DataSource<T> local;
+
+        private DavDataSource<T> remote;
+
+        private SyncInfoDao syncInfoDao;
+
+        public Builder() {
+        }
+
+        public Builder<T> syncInfoDao(SyncInfoDao syncInfoDao){
+            this.syncInfoDao = syncInfoDao;
+            return this;
+        }
+
+        public Builder localDataSource(DataSource<T> local) {
+            this.local = local;
+            return this;
+        }
+
+        public Builder remoteDataSource(DataSource<T> remote) {
+            if (remote instanceof DavDataSource){
+                this.remote = (DavDataSource<T>) remote;
+            }else {
+                throw new RuntimeException("not supported");
+            }
+            return this;
+        }
+
+        public DavSynchronizer<T> build(){
+            DavSynchronizer<T> synchronizer= new DavSynchronizer<>();
+            if (local == null || remote == null){
+                throw new RuntimeException("local and remote can not be null");
+            }
+            synchronizer.local = local;
+            synchronizer.remote = remote;
+            if (syncInfoDao == null){
+                syncInfoDao = MyApplication.getInstance().getDaoSession().getSyncInfoDao();
+            }
+            synchronizer.localLSTModel = new SqlLSTModel(local,remote,syncInfoDao);
+            return synchronizer;
+        }
     }
 
     protected List<T> getLocalAddedData(List<T> localData, List<T> remoteData) throws IOException {
@@ -420,7 +517,7 @@ public abstract class SynchronizerSupport<T extends Tracable> implements Synchro
         return result;
     }
 
-    protected Long getLatestLastModifyTime(List<T> localData, List<T> remoteData) {
+    protected Date getLatestLastModifyTime(List<T> localData, List<T> remoteData) {
         Date latestTime = null;
         for (T localDatum : localData) {
             if (latestTime == null){
@@ -445,7 +542,7 @@ public abstract class SynchronizerSupport<T extends Tracable> implements Synchro
         if (latestTime == null){
             latestTime = new Date(0);
         }
-        return latestTime.getTime();
+        return latestTime;
     }
 
     private <S extends Element> S getById(List<S> list, String id) {
@@ -459,6 +556,72 @@ public abstract class SynchronizerSupport<T extends Tracable> implements Synchro
             return null;
         }
         return list.get(index);
+    }
+
+    protected Date getLastSyncTime(T t) throws IOException{
+        return localLSTModel.getLastSyncTime();
+    }
+
+    private Date getLatestLastModifyTime(List<T> localData) {
+        Date latestTime = null;
+        for (T localDatum : localData) {
+            if (latestTime == null){
+                latestTime = localDatum.getLastModifyTime();
+                continue;
+            }
+            if (localDatum.getLastModifyTime().compareTo(latestTime) > 0){
+                latestTime = localDatum.getLastModifyTime();
+            }
+        }
+
+        if (latestTime == null){
+            latestTime = new Date(0);
+        }
+        return latestTime;
+    }
+
+    private List<T> getLocalAddedData(List<T> localData, Date lastSyncTime){
+
+        List<T> result = new ArrayList<>();
+
+        for (T localDatum : localData) {
+            if (localDatum.getLastModifyTime().after(lastSyncTime)
+                    && DateUtils.isSameInstant(localDatum.getCreateTime(),localDatum.getLastModifyTime())){
+                result.add(localDatum);
+            }
+        }
+
+        return result;
+    }
+
+    private List<T> getLocalUpdatedData(List<T> localData, Date lastSyncTime){
+
+        List<T> result = new ArrayList<>();
+
+        for (T localDatum : localData) {
+            if (localDatum.getLastModifyTime().after(lastSyncTime)
+                    && !DateUtils.isSameInstant(localDatum.getCreateTime(),localDatum.getLastModifyTime())){
+                result.add(localDatum);
+            }
+        }
+
+        return result;
+    }
+
+    private void checkFailCount() {
+        Integer integer = threadLocal.get();
+        if (integer == null) {
+            threadLocal.set(0);
+        }
+        if (threadLocal.get() > 10) {
+            throw new RuntimeException("同步失败超过3次");
+        }
+
+        threadLocal.set(threadLocal.get() + 1);
+    }
+
+    private void resetFailCount() {
+        threadLocal.set(0);
     }
 
 }

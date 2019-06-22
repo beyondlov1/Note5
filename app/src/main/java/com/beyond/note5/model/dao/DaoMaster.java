@@ -27,6 +27,7 @@ public class DaoMaster extends AbstractDaoMaster {
         TodoDao.createTable(db, ifNotExists);
         DocumentDao.createTable(db, ifNotExists);
         SyncInfoDao.createTable(db, ifNotExists);
+        SyncLogInfoDao.createTable(db, ifNotExists);
     }
 
     /** Drops underlying database table using DAOs. */
@@ -37,6 +38,7 @@ public class DaoMaster extends AbstractDaoMaster {
         TodoDao.dropTable(db, ifExists);
         DocumentDao.dropTable(db, ifExists);
         SyncInfoDao.dropTable(db, ifExists);
+        SyncLogInfoDao.dropTable(db, ifExists);
     }
 
     /**
@@ -61,6 +63,7 @@ public class DaoMaster extends AbstractDaoMaster {
         registerDaoClass(TodoDao.class);
         registerDaoClass(DocumentDao.class);
         registerDaoClass(SyncInfoDao.class);
+        registerDaoClass(SyncLogInfoDao.class);
     }
 
     public DaoSession newSession() {

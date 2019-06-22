@@ -1,10 +1,10 @@
 package com.beyond.note5.sync.datasource;
 
 import com.beyond.note5.bean.Tracable;
+import com.beyond.note5.sync.webdav.client.DavClient;
 
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
@@ -117,7 +117,7 @@ public abstract class DavDataSourceComposite<T extends Tracable> implements DavD
     @Override
     public boolean tryLock() {
         boolean isSuccessful = true;
-        for (DataSource<T> subDataSource : subDataSources) {
+        for (DavDataSource<T> subDataSource : subDataSources) {
             isSuccessful = isSuccessful && subDataSource.tryLock();
         }
         return isSuccessful;
@@ -126,7 +126,7 @@ public abstract class DavDataSourceComposite<T extends Tracable> implements DavD
     @Override
     public boolean tryLock(Long time) {
         boolean isSuccessful = true;
-        for (DataSource<T> subDataSource : subDataSources) {
+        for (DavDataSource<T> subDataSource : subDataSources) {
             isSuccessful = isSuccessful && subDataSource.tryLock(time);
         }
         return isSuccessful;
@@ -135,7 +135,7 @@ public abstract class DavDataSourceComposite<T extends Tracable> implements DavD
     @Override
     public boolean isLocked() {
         boolean isSuccessful = true;
-        for (DataSource<T> subDataSource : subDataSources) {
+        for (DavDataSource<T> subDataSource : subDataSources) {
             isSuccessful = isSuccessful && subDataSource.isLocked();
         }
         return isSuccessful;
@@ -144,37 +144,40 @@ public abstract class DavDataSourceComposite<T extends Tracable> implements DavD
     @Override
     public boolean release() {
         boolean isSuccessful = true;
-        for (DataSource<T> subDataSource : subDataSources) {
+        for (DavDataSource<T> subDataSource : subDataSources) {
             isSuccessful = isSuccessful && subDataSource.release();
         }
         return isSuccessful;
     }
 
     @Override
-    public String[] getNodes() {
-        List<String> nodes = new ArrayList<>();
-        for (DavDataSource<T> subDataSource : subDataSources) {
-            nodes.addAll(Arrays.asList(subDataSource.getNodes()));
-        }
-        return nodes.toArray(new String[0]);
+    public String getServer() {
+        return getKey();
     }
 
     @Override
     public String[] getPaths() {
-        List<String> nodes = new ArrayList<>();
-        for (DavDataSource<T> subDataSource : subDataSources) {
-            nodes.addAll(Arrays.asList(subDataSource.getPaths()));
-        }
-        return nodes.toArray(new String[0]);
-    }
-
-    @Override
-    public String getNode(T t) {
-        return  chooseDataSource(t.getId()).getNode(t);
+        return null;
     }
 
     @Override
     public String getPath(T t) {
-        return  chooseDataSource(t.getId()).getPath(t);
+        return chooseDataSource(t.getId()).getPath(t);
+    }
+
+
+    @Override
+    public String getKey() {
+        StringBuilder sb = new StringBuilder();
+        for (DavDataSource<T> subDataSource : subDataSources) {
+            sb.append("_");
+            sb.append(subDataSource.getServer());
+        }
+        return sb.toString();
+    }
+
+    @Override
+    public DavClient getClient() {
+        return null;
     }
 }

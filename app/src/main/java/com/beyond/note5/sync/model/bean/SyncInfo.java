@@ -1,4 +1,4 @@
-package com.beyond.note5.bean;
+package com.beyond.note5.sync.model.bean;
 
 import org.greenrobot.greendao.annotation.Entity;
 import org.greenrobot.greendao.annotation.Generated;
@@ -11,23 +11,22 @@ public class SyncInfo {
 
     @Id
     private String id;
-    private String node;
-    private String path;
+    private String localKey;
+    private String remoteKey;
     private Date lastSyncTime;
 
-
-    @Generated(hash = 1170332257)
-    public SyncInfo(String id, String node, String path, Date lastSyncTime) {
+    @Generated(hash = 525848672)
+    public SyncInfo(String id, String localKey, String remoteKey,
+            Date lastSyncTime) {
         this.id = id;
-        this.node = node;
-        this.path = path;
+        this.localKey = localKey;
+        this.remoteKey = remoteKey;
         this.lastSyncTime = lastSyncTime;
     }
 
     @Generated(hash = 57154307)
     public SyncInfo() {
     }
-
 
     public String getId() {
         return id;
@@ -37,20 +36,20 @@ public class SyncInfo {
         this.id = id;
     }
 
-    public String getNode() {
-        return node;
+    public String getLocalKey() {
+        return localKey;
     }
 
-    public void setNode(String node) {
-        this.node = node;
+    public void setLocalKey(String localKey) {
+        this.localKey = localKey;
     }
 
-    public String getPath() {
-        return path;
+    public String getRemoteKey() {
+        return remoteKey;
     }
 
-    public void setPath(String path) {
-        this.path = path;
+    public void setRemoteKey(String remoteKey) {
+        this.remoteKey = remoteKey;
     }
 
     public Date getLastSyncTime() {
