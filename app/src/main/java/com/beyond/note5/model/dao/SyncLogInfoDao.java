@@ -25,11 +25,12 @@ public class SyncLogInfoDao extends AbstractDao<SyncLogInfo, String> {
      */
     public static class Properties {
         public final static Property Id = new Property(0, String.class, "id", true, "ID");
-        public final static Property RefPath = new Property(1, String.class, "refPath", false, "REF_PATH");
-        public final static Property RefServer = new Property(2, String.class, "refServer", false, "REF_SERVER");
-        public final static Property Operation = new Property(3, String.class, "operation", false, "OPERATION");
-        public final static Property OperationTime = new Property(4, java.util.Date.class, "operationTime", false, "OPERATION_TIME");
-        public final static Property Source = new Property(5, String.class, "source", false, "SOURCE");
+        public final static Property DocumentId = new Property(1, String.class, "documentId", false, "DOCUMENT_ID");
+        public final static Property RefPath = new Property(2, String.class, "refPath", false, "REF_PATH");
+        public final static Property RefServer = new Property(3, String.class, "refServer", false, "REF_SERVER");
+        public final static Property Operation = new Property(4, String.class, "operation", false, "OPERATION");
+        public final static Property OperationTime = new Property(5, java.util.Date.class, "operationTime", false, "OPERATION_TIME");
+        public final static Property Source = new Property(6, String.class, "source", false, "SOURCE");
     }
 
 
@@ -46,11 +47,12 @@ public class SyncLogInfoDao extends AbstractDao<SyncLogInfo, String> {
         String constraint = ifNotExists? "IF NOT EXISTS ": "";
         db.execSQL("CREATE TABLE " + constraint + "\"SYNC_LOG_INFO\" (" + //
                 "\"ID\" TEXT PRIMARY KEY NOT NULL ," + // 0: id
-                "\"REF_PATH\" TEXT," + // 1: refPath
-                "\"REF_SERVER\" TEXT," + // 2: refServer
-                "\"OPERATION\" TEXT," + // 3: operation
-                "\"OPERATION_TIME\" INTEGER," + // 4: operationTime
-                "\"SOURCE\" TEXT);"); // 5: source
+                "\"DOCUMENT_ID\" TEXT," + // 1: documentId
+                "\"REF_PATH\" TEXT," + // 2: refPath
+                "\"REF_SERVER\" TEXT," + // 3: refServer
+                "\"OPERATION\" TEXT," + // 4: operation
+                "\"OPERATION_TIME\" INTEGER," + // 5: operationTime
+                "\"SOURCE\" TEXT);"); // 6: source
     }
 
     /** Drops the underlying database table. */
@@ -68,29 +70,34 @@ public class SyncLogInfoDao extends AbstractDao<SyncLogInfo, String> {
             stmt.bindString(1, id);
         }
  
+        String documentId = entity.getDocumentId();
+        if (documentId != null) {
+            stmt.bindString(2, documentId);
+        }
+ 
         String refPath = entity.getRefPath();
         if (refPath != null) {
-            stmt.bindString(2, refPath);
+            stmt.bindString(3, refPath);
         }
  
         String refServer = entity.getRefServer();
         if (refServer != null) {
-            stmt.bindString(3, refServer);
+            stmt.bindString(4, refServer);
         }
  
         String operation = entity.getOperation();
         if (operation != null) {
-            stmt.bindString(4, operation);
+            stmt.bindString(5, operation);
         }
  
         java.util.Date operationTime = entity.getOperationTime();
         if (operationTime != null) {
-            stmt.bindLong(5, operationTime.getTime());
+            stmt.bindLong(6, operationTime.getTime());
         }
  
         String source = entity.getSource();
         if (source != null) {
-            stmt.bindString(6, source);
+            stmt.bindString(7, source);
         }
     }
 
@@ -103,29 +110,34 @@ public class SyncLogInfoDao extends AbstractDao<SyncLogInfo, String> {
             stmt.bindString(1, id);
         }
  
+        String documentId = entity.getDocumentId();
+        if (documentId != null) {
+            stmt.bindString(2, documentId);
+        }
+ 
         String refPath = entity.getRefPath();
         if (refPath != null) {
-            stmt.bindString(2, refPath);
+            stmt.bindString(3, refPath);
         }
  
         String refServer = entity.getRefServer();
         if (refServer != null) {
-            stmt.bindString(3, refServer);
+            stmt.bindString(4, refServer);
         }
  
         String operation = entity.getOperation();
         if (operation != null) {
-            stmt.bindString(4, operation);
+            stmt.bindString(5, operation);
         }
  
         java.util.Date operationTime = entity.getOperationTime();
         if (operationTime != null) {
-            stmt.bindLong(5, operationTime.getTime());
+            stmt.bindLong(6, operationTime.getTime());
         }
  
         String source = entity.getSource();
         if (source != null) {
-            stmt.bindString(6, source);
+            stmt.bindString(7, source);
         }
     }
 
@@ -138,11 +150,12 @@ public class SyncLogInfoDao extends AbstractDao<SyncLogInfo, String> {
     public SyncLogInfo readEntity(Cursor cursor, int offset) {
         SyncLogInfo entity = new SyncLogInfo( //
             cursor.isNull(offset + 0) ? null : cursor.getString(offset + 0), // id
-            cursor.isNull(offset + 1) ? null : cursor.getString(offset + 1), // refPath
-            cursor.isNull(offset + 2) ? null : cursor.getString(offset + 2), // refServer
-            cursor.isNull(offset + 3) ? null : cursor.getString(offset + 3), // operation
-            cursor.isNull(offset + 4) ? null : new java.util.Date(cursor.getLong(offset + 4)), // operationTime
-            cursor.isNull(offset + 5) ? null : cursor.getString(offset + 5) // source
+            cursor.isNull(offset + 1) ? null : cursor.getString(offset + 1), // documentId
+            cursor.isNull(offset + 2) ? null : cursor.getString(offset + 2), // refPath
+            cursor.isNull(offset + 3) ? null : cursor.getString(offset + 3), // refServer
+            cursor.isNull(offset + 4) ? null : cursor.getString(offset + 4), // operation
+            cursor.isNull(offset + 5) ? null : new java.util.Date(cursor.getLong(offset + 5)), // operationTime
+            cursor.isNull(offset + 6) ? null : cursor.getString(offset + 6) // source
         );
         return entity;
     }
@@ -150,11 +163,12 @@ public class SyncLogInfoDao extends AbstractDao<SyncLogInfo, String> {
     @Override
     public void readEntity(Cursor cursor, SyncLogInfo entity, int offset) {
         entity.setId(cursor.isNull(offset + 0) ? null : cursor.getString(offset + 0));
-        entity.setRefPath(cursor.isNull(offset + 1) ? null : cursor.getString(offset + 1));
-        entity.setRefServer(cursor.isNull(offset + 2) ? null : cursor.getString(offset + 2));
-        entity.setOperation(cursor.isNull(offset + 3) ? null : cursor.getString(offset + 3));
-        entity.setOperationTime(cursor.isNull(offset + 4) ? null : new java.util.Date(cursor.getLong(offset + 4)));
-        entity.setSource(cursor.isNull(offset + 5) ? null : cursor.getString(offset + 5));
+        entity.setDocumentId(cursor.isNull(offset + 1) ? null : cursor.getString(offset + 1));
+        entity.setRefPath(cursor.isNull(offset + 2) ? null : cursor.getString(offset + 2));
+        entity.setRefServer(cursor.isNull(offset + 3) ? null : cursor.getString(offset + 3));
+        entity.setOperation(cursor.isNull(offset + 4) ? null : cursor.getString(offset + 4));
+        entity.setOperationTime(cursor.isNull(offset + 5) ? null : new java.util.Date(cursor.getLong(offset + 5)));
+        entity.setSource(cursor.isNull(offset + 6) ? null : cursor.getString(offset + 6));
      }
     
     @Override

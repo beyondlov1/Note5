@@ -7,6 +7,7 @@ import android.os.Handler;
 
 import com.beyond.note5.bean.Attachment;
 import com.beyond.note5.bean.Note;
+import com.beyond.note5.bean.Todo;
 import com.beyond.note5.model.PredictModel;
 import com.beyond.note5.model.PredictModelImpl;
 import com.beyond.note5.model.dao.DaoMaster;
@@ -16,13 +17,14 @@ import com.beyond.note5.predict.TagPredictorImpl;
 import com.beyond.note5.predict.bean.TagGraph;
 import com.beyond.note5.predict.train.filter.TimeExpressionTrainTagFilter;
 import com.beyond.note5.predict.train.filter.UrlTrainTagFilter;
-import com.beyond.note5.sync.model.impl.LSTDavModel;
 import com.beyond.note5.sync.Synchronizer;
 import com.beyond.note5.sync.datasource.DataSource;
 import com.beyond.note5.sync.datasource.DavDataSource;
-import com.beyond.note5.sync.datasource.DistributedDavDataSource;
-import com.beyond.note5.sync.datasource.note.NoteLocalDataSource;
-import com.beyond.note5.sync.synchronizer2.DavSynchronizer2;
+import com.beyond.note5.sync.datasource.impl.DefaultDavDataSource;
+import com.beyond.note5.sync.datasource.impl.NoteSqlDataSource;
+import com.beyond.note5.sync.datasource.impl.TodoSqlDataSource;
+import com.beyond.note5.sync.model.impl.LSTDavModel;
+import com.beyond.note5.sync.synchronizer.DavSynchronizer;
 import com.beyond.note5.sync.webdav.DavLock;
 import com.beyond.note5.sync.webdav.client.DavClient;
 import com.beyond.note5.sync.webdav.client.SardineDavClient;
@@ -61,13 +63,19 @@ public class MyApplication extends Application {
     public static final String SHARED_PREFERENCES_NAME = "note5_preferences";
     public static final String DEFAULT_PAGE = "default_page";
     public static final String VIRTUAL_USER_ID = "user.virtual.id";
-    public static final String SYNC_REMOTE_URL = "syncNote.remote.rootUrl";
-    public static final String SYNC_REMOTE_ROOT_PATHS = "syncNote.remote.root.paths";
-    private static final String SYNC_REMOTE_DAV_SERVERS = "syncNote.remote.dav.servers";
+    public static final String SYNC_REMOTE_URL = "sync.remote.rootUrl";
+    private static final String NOTE_SYNC_REMOTE_DAV_SERVERS = "note.sync.remote.dav.servers";
+    public static final String NOTE_SYNC_REMOTE_ROOT_PATHS = "note.sync.remote.root.paths";
+    private static final String TODO_SYNC_REMOTE_DAV_SERVERS = "todo.sync.remote.dav.servers";
+    public static final String TODO_SYNC_REMOTE_ROOT_PATHS = "todo.sync.remote.root.paths";
 
     public static final String LOG_PATH = "LOCK/sync.log";
-    public static final String LOCK_PATH = "/LOCK/distributeLock.lock";
-    public static final String LST_PATH = "/LOCK/lastSyncTime.mark";
+    public static final String NOTE_LOCK_PATH = "/LOCK/note_lock.lock";
+    public static final String NOTE_LST_PATH = "/LOCK/note_last_sync_time.mark";
+    public static final String NOTE_LOG_PATH = "/LOCK/note_sync.log";
+    public static final String TODO_LOCK_PATH = "/LOCK/todo_lock.lock";
+    public static final String TODO_LST_PATH = "/LOCK/todo_last_sync_time.mark";
+    public static final String TODO_LOG_PATH = "/LOCK/todo_sync.log";
 
 
     private boolean isApplicationToBeBorn = false;
@@ -75,6 +83,9 @@ public class MyApplication extends Application {
     private Handler handler = new Handler();
 
     private static MyApplication instance;
+
+    private Synchronizer<Note> noteSynchronizer;
+    private DavSynchronizer<Todo> todoSynchronizer;
 
     public static MyApplication getInstance() {
         return instance;
@@ -90,35 +101,60 @@ public class MyApplication extends Application {
         initSynchronizer();
 
         if (PreferenceUtil.getBoolean(DAV_LOGIN, false)) {
-            syncNote();
+            sync();
         }
     }
 
     @SuppressWarnings("unchecked")
     private void initSynchronizer() {
-        DataSource<Note> localDataSource = new NoteLocalDataSource();
+        DataSource<Note> noteLocalDataSource = new NoteSqlDataSource();
 
         DavClient davClient = new SardineDavClient(PreferenceUtil.getString(DAV_LOGIN_USERNAME), PreferenceUtil.getString(DAV_LOGIN_PASSWORD));
-        List<DavDataSource<Note>> dataSources = new ArrayList<>();
-        String[] servers = StringUtils.split(PreferenceUtil.getString(SYNC_REMOTE_DAV_SERVERS), "|");
-        String[] paths = StringUtils.split(PreferenceUtil.getString(SYNC_REMOTE_ROOT_PATHS), "|");
-        for (String server : servers) {
-            DavDataSource davDataSource = new DistributedDavDataSource.Builder<Note>()
+        List<DavDataSource<Note>> noteDataSources = new ArrayList<>();
+        List<DavDataSource<Todo>> todoDataSources = new ArrayList<>();
+        String[] noteServers = StringUtils.split(PreferenceUtil.getString(NOTE_SYNC_REMOTE_DAV_SERVERS), "|");
+        String[] notePaths = StringUtils.split(PreferenceUtil.getString(NOTE_SYNC_REMOTE_ROOT_PATHS), "|");
+        for (String server : noteServers) {
+            DavDataSource<Note> noteDavDataSource = new DefaultDavDataSource.Builder<Note>()
                     .clazz(Note.class)
                     .davClient(davClient)
                     .executorService(getExecutorService())
                     .server(server)
-                    .paths(paths)
-                    .lock(new DavLock(davClient, OkWebDavUtil.concat(server, LOCK_PATH)))
-                    .lstRecorder(new LSTDavModel(davClient, OkWebDavUtil.concat(server, LST_PATH)))
+                    .paths(notePaths)
+                    .lock(new DavLock(davClient, OkWebDavUtil.concat(server, NOTE_LOCK_PATH)))
+                    .lstRecorder(new LSTDavModel(davClient, OkWebDavUtil.concat(server, NOTE_LST_PATH)))
                     .build();
 
-            dataSources.add(davDataSource);
+            noteDataSources.add(noteDavDataSource);
+        }
+        noteSynchronizer = new DavSynchronizer.Builder<Note>()
+                .localDataSource(noteLocalDataSource)
+                .remoteDataSource(noteDataSources.get(0))
+                .logPath(NOTE_LOG_PATH)
+                .build();
+
+        DataSource<Todo> todoLocalDataSource = new TodoSqlDataSource();
+        String[] todoServers = StringUtils.split(PreferenceUtil.getString(TODO_SYNC_REMOTE_DAV_SERVERS), "|");
+        String[] todoPaths = StringUtils.split(PreferenceUtil.getString(TODO_SYNC_REMOTE_ROOT_PATHS), "|");
+        for (String server : todoServers) {
+            DavDataSource<Todo> todoDavDataSource = new DefaultDavDataSource.Builder<Todo>()
+                    .clazz(Todo.class)
+                    .davClient(davClient)
+                    .executorService(getExecutorService())
+                    .server(server)
+                    .paths(todoPaths)
+                    .lock(new DavLock(davClient, OkWebDavUtil.concat(server, TODO_LOCK_PATH)))
+                    .lstRecorder(new LSTDavModel(davClient, OkWebDavUtil.concat(server, TODO_LST_PATH)))
+                    .build();
+
+            todoDataSources.add(todoDavDataSource);
         }
 
-        synchronizer = new DavSynchronizer2.Builder<Note>()
-                .localDataSource(localDataSource)
-                .remoteDataSource(dataSources.get(0))
+
+        todoSynchronizer = new DavSynchronizer.Builder<Todo>()
+                .localDataSource(todoLocalDataSource)
+                .remoteDataSource(todoDataSources.get(0))
+                .logPath(TODO_LOG_PATH)
                 .build();
     }
 
@@ -128,12 +164,13 @@ public class MyApplication extends Application {
             PreferenceUtil.put(SYNC_REMOTE_URL, "https://dav.jianguoyun.com/dav/Note5/data/note.dat");
         }
 
-        String syncRemoteRootUrls = PreferenceUtil.getString(SYNC_REMOTE_ROOT_PATHS);
-        PreferenceUtil.put(SYNC_REMOTE_DAV_SERVERS, "https://dav.jianguoyun.com/dav/nut3/|https://dav.jianguoyun.com/dav/tera3/");
-        PreferenceUtil.put(SYNC_REMOTE_ROOT_PATHS, "note/splice1|note/splice2");
+        String noteSyncRemoteRootUrls = PreferenceUtil.getString(NOTE_SYNC_REMOTE_ROOT_PATHS);
+        PreferenceUtil.put(NOTE_SYNC_REMOTE_DAV_SERVERS, "https://dav.jianguoyun.com/dav/nut3/|https://dav.jianguoyun.com/dav/tera3/");
+        PreferenceUtil.put(NOTE_SYNC_REMOTE_ROOT_PATHS, "note/splice1|note/splice2");
 
-        if (StringUtils.isBlank(syncRemoteRootUrls)) {
-        }
+        String syncRemoteRootUrls = PreferenceUtil.getString(TODO_SYNC_REMOTE_ROOT_PATHS);
+        PreferenceUtil.put(TODO_SYNC_REMOTE_DAV_SERVERS, "https://dav.jianguoyun.com/dav/nut3/|https://dav.jianguoyun.com/dav/tera3/");
+        PreferenceUtil.put(TODO_SYNC_REMOTE_ROOT_PATHS, "todo/splice1|todo/splice2");
 
         String virtualUserId = PreferenceUtil.getString(VIRTUAL_USER_ID);
         if (StringUtils.isBlank(virtualUserId)) {
@@ -212,25 +249,40 @@ public class MyApplication extends Application {
         isApplicationToBeBorn = false;
     }
 
-    private Synchronizer<Note> synchronizer;
 
-    public void syncNote() {
-        syncNote(null);
+    public void sync() {
+        sync(null);
     }
 
-    public void syncNote(Runnable success) {
-        syncNote(success, null);
+    public void sync(Runnable success) {
+        sync(success, null);
     }
 
-    public void syncNote(Runnable success, Runnable fail) {
-        if (synchronizer == null) {
+    public void sync(Runnable success, Runnable fail) {
+        if (noteSynchronizer == null || todoSynchronizer == null) {
             initSynchronizer();
         }
         getExecutorService().execute(new Runnable() {
             @Override
             public void run() {
                 try {
-                    synchronizer.sync();
+                    noteSynchronizer.sync();
+                    if (success != null) {
+                        handler.post(success);
+                    }
+                } catch (Exception e) {
+                    e.printStackTrace();
+                    if (fail != null) {
+                        handler.post(fail);
+                    }
+                }
+            }
+        });
+        getExecutorService().execute(new Runnable() {
+            @Override
+            public void run() {
+                try {
+                    todoSynchronizer.sync();
                     if (success != null) {
                         handler.post(success);
                     }

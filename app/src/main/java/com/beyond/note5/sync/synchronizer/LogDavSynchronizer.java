@@ -1,4 +1,4 @@
-package com.beyond.note5.sync.synchronizer2;
+package com.beyond.note5.sync.synchronizer;
 
 import com.beyond.note5.sync.model.bean.SyncLogInfo;
 import com.beyond.note5.sync.model.impl.LogDavModelImpl;
@@ -31,7 +31,7 @@ public class LogDavSynchronizer implements Synchronizer<SyncLogInfo> {
         for (SyncLogInfo syncLogInfo : remoteModified) {
             boolean found = false;
             for (SyncLogInfo logInfo : localModified) {
-                if (StringUtils.equals(logInfo.getId(),syncLogInfo.getId())){
+                if (StringUtils.equals(logInfo.getDocumentId(),syncLogInfo.getDocumentId())){
                     localData.add(logInfo.getOperationTime().after(syncLogInfo.getOperationTime())?logInfo:syncLogInfo);
                     found = true;
                 }

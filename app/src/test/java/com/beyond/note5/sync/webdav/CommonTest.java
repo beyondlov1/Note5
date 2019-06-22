@@ -4,7 +4,7 @@ import com.beyond.note5.bean.Attachment;
 import com.beyond.note5.bean.Note;
 import com.beyond.note5.sync.model.impl.LSTDavModel;
 import com.beyond.note5.sync.datasource.DavDataSource;
-import com.beyond.note5.sync.datasource.DistributedDavDataSource;
+import com.beyond.note5.sync.datasource.impl.DefaultDavDataSource;
 import com.beyond.note5.sync.webdav.client.DavClient;
 import com.beyond.note5.sync.webdav.client.SardineDavClient;
 import com.beyond.note5.utils.OkWebDavUtil;
@@ -86,7 +86,7 @@ public class CommonTest {
         DavClient davClient = new SardineDavClient(getUsername(),getPassword());
         String server = OkWebDavUtil.concat(getRootUrl(),"test/t1/");
         String[] paths = StringUtils.split("/baidu/|/google/", "|");
-        return new DistributedDavDataSource.Builder<Note>()
+        return new DefaultDavDataSource.Builder<Note>()
                 .clazz(Note.class)
                 .davClient(davClient)
                 .executorService(getExecutorService())
@@ -101,7 +101,7 @@ public class CommonTest {
         DavClient davClient = new SardineDavClient(getUsername(),getPassword());
         String server = OkWebDavUtil.concat(getRootUrl(),"test/t2/");
         String[] paths = StringUtils.split("/baidu/|/google/", "|");
-        return new DistributedDavDataSource.Builder<Note>()
+        return new DefaultDavDataSource.Builder<Note>()
                 .clazz(Note.class)
                 .davClient(davClient)
                 .executorService(getExecutorService())

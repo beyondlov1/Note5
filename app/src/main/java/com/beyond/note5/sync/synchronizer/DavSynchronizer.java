@@ -1,4 +1,4 @@
-package com.beyond.note5.sync.synchronizer2;
+package com.beyond.note5.sync.synchronizer;
 
 import com.beyond.note5.MyApplication;
 import com.beyond.note5.sync.model.bean.SyncLogInfo;
@@ -13,14 +13,16 @@ import com.beyond.note5.sync.datasource.DataSource;
 import com.beyond.note5.sync.datasource.DavDataSource;
 import com.beyond.note5.utils.OkWebDavUtil;
 
+import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.time.DateUtils;
 
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.Iterator;
 import java.util.List;
 
-public class DavSynchronizer2<T extends Tracable> implements Synchronizer<T> {
+public class DavSynchronizer<T extends Tracable> implements Synchronizer<T> {
 
     private ThreadLocal<Integer> threadLocal = new ThreadLocal<>();
 
@@ -34,7 +36,7 @@ public class DavSynchronizer2<T extends Tracable> implements Synchronizer<T> {
 
     private LogDavSynchronizer logSynchronizer;
 
-    private DavSynchronizer2(){
+    private DavSynchronizer(){
 
     }
 
@@ -56,6 +58,27 @@ public class DavSynchronizer2<T extends Tracable> implements Synchronizer<T> {
             List<SyncLogInfo> localUpdated = localLogSqlModel.getLocalUpdated(localLSTModel.getLastSyncTime());
             List<SyncLogInfo> remoteAdded = localLogSqlModel.getRemoteAdded(localLSTModel.getLastSyncTime());
             List<SyncLogInfo> remoteUpdated = localLogSqlModel.getRemoteUpdated(localLSTModel.getLastSyncTime());
+
+
+            // 如果有相同的documentId（比如先添加后更新），则只增加
+            Iterator<SyncLogInfo> localIterator = localUpdated.listIterator();
+            while (localIterator.hasNext()) {
+                SyncLogInfo next = localIterator.next();
+                for (SyncLogInfo syncLogInfo : localAdded) {
+                    if (StringUtils.equals(syncLogInfo.getDocumentId(),next.getDocumentId())){
+                        localIterator.remove();
+                    }
+                }
+            }
+            Iterator<SyncLogInfo> remoteIterator = remoteUpdated.listIterator();
+            while (remoteIterator.hasNext()) {
+                SyncLogInfo next = remoteIterator.next();
+                for (SyncLogInfo syncLogInfo : remoteAdded) {
+                    if (StringUtils.equals(syncLogInfo.getDocumentId(),next.getDocumentId())){
+                        remoteIterator.remove();
+                    }
+                }
+            }
 
             List<T> localAddedData = getLocalData(localAdded);
             List<T> localUpdatedData = getLocalData(localUpdated);
@@ -148,7 +171,7 @@ public class DavSynchronizer2<T extends Tracable> implements Synchronizer<T> {
     private List<T> getRemoteData(List<SyncLogInfo> logs) throws IOException {
         List<T> result = new ArrayList<>();
         for (SyncLogInfo syncLogInfo : logs) {
-            T t = remote.selectById(syncLogInfo.getId());
+            T t = remote.selectById(syncLogInfo.getDocumentId());
             result.add(t);
         }
         return result;
@@ -157,7 +180,7 @@ public class DavSynchronizer2<T extends Tracable> implements Synchronizer<T> {
     private List<T> getLocalData(List<SyncLogInfo> logs) throws IOException {
         List<T> result = new ArrayList<>();
         for (SyncLogInfo syncLogInfo : logs) {
-            T t = local.selectById(syncLogInfo.getId());
+            T t = local.selectById(syncLogInfo.getDocumentId());
             result.add(t);
         }
         return result;
@@ -298,8 +321,8 @@ public class DavSynchronizer2<T extends Tracable> implements Synchronizer<T> {
             return this;
         }
 
-        public DavSynchronizer2<T> build(){
-            DavSynchronizer2<T> synchronizer= new DavSynchronizer2<>();
+        public DavSynchronizer<T> build(){
+            DavSynchronizer<T> synchronizer= new DavSynchronizer<>();
             if (local == null || remote == null){
                 throw new RuntimeException("local and remote can not be null");
             }

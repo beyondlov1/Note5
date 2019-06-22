@@ -7,7 +7,11 @@ import com.beyond.note5.bean.Reminder;
 import com.beyond.note5.bean.Todo;
 import com.beyond.note5.model.dao.DaoSession;
 import com.beyond.note5.model.dao.ReminderDao;
+import com.beyond.note5.model.dao.SyncLogInfoDao;
 import com.beyond.note5.model.dao.TodoDao;
+import com.beyond.note5.sync.model.bean.SyncLogInfo;
+import com.beyond.note5.utils.IDUtil;
+import com.beyond.note5.utils.PreferenceUtil;
 
 import java.util.Date;
 import java.util.List;
@@ -18,6 +22,7 @@ public class TodoModelImpl implements TodoModel {
 
     private TodoDao todoDao;
     private ReminderDao reminderDao;
+    private SyncLogInfoDao syncLogInfoDao;
 
     public static TodoModel getSingletonInstance(){
         return TodoModelHolder.TODO_MODEL;
@@ -31,6 +36,7 @@ public class TodoModelImpl implements TodoModel {
         DaoSession daoSession = MyApplication.getInstance().getDaoSession();
         todoDao = daoSession.getTodoDao();
         reminderDao = daoSession.getReminderDao();
+        syncLogInfoDao = daoSession.getSyncLogInfoDao();
     }
 
     @Override
@@ -39,6 +45,8 @@ public class TodoModelImpl implements TodoModel {
         if (todo.getReminder() != null) {
             reminderDao.insert(todo.getReminder());
         }
+
+        addInsertLog(todo);
     }
 
     @Override
@@ -58,6 +66,9 @@ public class TodoModelImpl implements TodoModel {
             }
         }
 
+
+        addUpdateLog(todo);
+
     }
 
     @Override
@@ -65,6 +76,9 @@ public class TodoModelImpl implements TodoModel {
         todo.setLastModifyTime(new Date());
         todo.setValid(false);
         todoDao.update(todo);
+
+        addUpdateLog(todo);
+
     }
 
     @Override
@@ -145,4 +159,25 @@ public class TodoModelImpl implements TodoModel {
             reminderDao.delete(reminder);
         }
     }
+
+    private void addInsertLog(Todo todo){
+        SyncLogInfo syncLogInfo = new SyncLogInfo();
+        syncLogInfo.setId(IDUtil.uuid());
+        syncLogInfo.setDocumentId(todo.getId());
+        syncLogInfo.setOperation(SyncLogInfo.ADD);
+        syncLogInfo.setOperationTime(todo.getLastModifyTime());
+        syncLogInfo.setSource(PreferenceUtil.getString(MyApplication.VIRTUAL_USER_ID));
+        syncLogInfoDao.insert(syncLogInfo);
+    }
+
+    private void addUpdateLog(Todo todo){
+        SyncLogInfo syncLogInfo = new SyncLogInfo();
+        syncLogInfo.setId(IDUtil.uuid());
+        syncLogInfo.setDocumentId(todo.getId());
+        syncLogInfo.setOperation(SyncLogInfo.UPDATE);
+        syncLogInfo.setOperationTime(todo.getLastModifyTime());
+        syncLogInfo.setSource(PreferenceUtil.getString(MyApplication.VIRTUAL_USER_ID));
+        syncLogInfoDao.insert(syncLogInfo);
+    }
+
 }

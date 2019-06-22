@@ -115,7 +115,7 @@ public class NoteListFragment extends Fragment {
                     startActivity(intent);
                     return;
                 }
-                MyApplication.getInstance().syncNote(new Runnable() {
+                MyApplication.getInstance().sync(new Runnable() {
                     @Override
                     public void run() {
                         refreshLayout.finishRefresh();

@@ -17,7 +17,7 @@ import static com.beyond.note5.sync.webdav.CommonTest.getExampleNotes;
 import static com.beyond.note5.sync.webdav.CommonTest.getExecutorService;
 import static com.beyond.note5.utils.AsyncUtil.computeAllAsyn;
 
-public class DistributedDavDataSourceTest {
+public class DefaultDavDataSourceTest {
 
     DavDataSource<Note> distributedDavDataSource = CommonTest.getDistributedDavDataSource();
 

@@ -12,6 +12,7 @@ import com.beyond.note5.model.dao.AttachmentDao;
 import com.beyond.note5.model.dao.DaoSession;
 import com.beyond.note5.model.dao.NoteDao;
 import com.beyond.note5.model.dao.SyncLogInfoDao;
+import com.beyond.note5.utils.IDUtil;
 import com.beyond.note5.utils.PhotoUtil;
 import com.beyond.note5.utils.PreferenceUtil;
 
@@ -152,7 +153,8 @@ public class NoteModelImpl implements NoteModel {
 
     private void addInsertLog(Note note){
         SyncLogInfo syncLogInfo = new SyncLogInfo();
-        syncLogInfo.setId(note.getId());
+        syncLogInfo.setId(IDUtil.uuid());
+        syncLogInfo.setDocumentId(note.getId());
         syncLogInfo.setOperation(SyncLogInfo.ADD);
         syncLogInfo.setOperationTime(note.getLastModifyTime());
         syncLogInfo.setSource(PreferenceUtil.getString(MyApplication.VIRTUAL_USER_ID));
@@ -161,7 +163,8 @@ public class NoteModelImpl implements NoteModel {
 
     private void addUpdateLog(Note note){
         SyncLogInfo syncLogInfo = new SyncLogInfo();
-        syncLogInfo.setId(note.getId());
+        syncLogInfo.setId(IDUtil.uuid());
+        syncLogInfo.setDocumentId(note.getId());
         syncLogInfo.setOperation(SyncLogInfo.UPDATE);
         syncLogInfo.setOperationTime(note.getLastModifyTime());
         syncLogInfo.setSource(PreferenceUtil.getString(MyApplication.VIRTUAL_USER_ID));

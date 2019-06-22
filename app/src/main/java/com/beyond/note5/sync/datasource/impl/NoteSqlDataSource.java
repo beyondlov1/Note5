@@ -1,33 +1,31 @@
-package com.beyond.note5.sync.datasource.note;
+package com.beyond.note5.sync.datasource.impl;
 
 import com.beyond.note5.MyApplication;
 import com.beyond.note5.bean.Note;
-import com.beyond.note5.sync.model.bean.SyncInfo;
-import com.beyond.note5.model.dao.SyncInfoDao;
 import com.beyond.note5.presenter.NotePresenter;
 import com.beyond.note5.presenter.NotePresenterImpl;
 import com.beyond.note5.sync.datasource.DataSource;
-import com.beyond.note5.utils.IDUtil;
+import com.beyond.note5.utils.PreferenceUtil;
 import com.beyond.note5.view.adapter.view.NoteViewAdapter;
 
 import java.io.IOException;
-import java.util.Date;
 import java.util.List;
 
-public class NoteLocalDataSource implements DataSource<Note> {
+public class NoteSqlDataSource implements DataSource<Note> {
 
     private NotePresenter notePresenter;
 
-    private final SyncInfoDao syncInfoDao;
-
-    public NoteLocalDataSource() {
+    public NoteSqlDataSource() {
         this.notePresenter = new NotePresenterImpl(new MyNoteView());
-        syncInfoDao = MyApplication.getInstance().getDaoSession().getSyncInfoDao();
     }
 
-    public NoteLocalDataSource(NotePresenter notePresenter) {
+    public NoteSqlDataSource(NotePresenter notePresenter) {
         this.notePresenter = notePresenter;
-        syncInfoDao = MyApplication.getInstance().getDaoSession().getSyncInfoDao();
+    }
+
+    @Override
+    public String getKey() {
+        return PreferenceUtil.getString(MyApplication.VIRTUAL_USER_ID);
     }
 
     @Override
@@ -63,37 +61,6 @@ public class NoteLocalDataSource implements DataSource<Note> {
     @Override
     public void cover(List<Note> all) throws IOException {
         throw new RuntimeException("暂不支持");
-    }
-
-    @Override
-    public String getKey() {
-        return null;
-    }
-
-    public Date getLastSyncTime(String syncTargetKey) {
-        SyncInfo syncInfo = syncInfoDao.queryBuilder()
-                .where(SyncInfoDao.Properties.RemoteKey.eq(syncTargetKey))
-                .unique();
-        if (syncInfo!=null){
-            return syncInfo.getLastSyncTime();
-        }else {
-            return new Date(0);
-        }
-    }
-
-    public void setLastSyncTime(String syncTargetKey, Date date) throws IOException {
-        SyncInfo syncInfo = syncInfoDao.queryBuilder()
-                .where(SyncInfoDao.Properties.RemoteKey.eq(syncTargetKey))
-                .unique();
-        if (syncInfo == null){
-            SyncInfo info = new SyncInfo();
-            info.setId(IDUtil.uuid());
-            info.setRemoteKey(syncTargetKey);
-            info.setLastSyncTime(date);
-            syncInfoDao.insert(info);
-        }else {
-            syncInfoDao.update(syncInfo);
-        }
     }
 
     @Override

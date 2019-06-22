@@ -1,10 +1,11 @@
-package com.beyond.note5.sync.datasource;
+package com.beyond.note5.sync.datasource.impl;
 
 import android.util.Log;
 
 import com.alibaba.fastjson.JSONException;
 import com.alibaba.fastjson.JSONObject;
 import com.beyond.note5.bean.Document;
+import com.beyond.note5.sync.datasource.DavDataSource;
 import com.beyond.note5.sync.model.LSTModel;
 import com.beyond.note5.sync.webdav.Lock;
 import com.beyond.note5.sync.webdav.client.DavClient;
@@ -23,7 +24,7 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Future;
 
 
-public class DistributedDavDataSource<T extends Document> implements DavDataSource<T> {
+public class DefaultDavDataSource<T extends Document> implements DavDataSource<T> {
 
     private DavClient client;
 
@@ -39,7 +40,7 @@ public class DistributedDavDataSource<T extends Document> implements DavDataSour
 
     private LSTModel LSTModel;
 
-    private DistributedDavDataSource() {
+    private DefaultDavDataSource() {
 
     }
 
@@ -293,7 +294,7 @@ public class DistributedDavDataSource<T extends Document> implements DavDataSour
         }
 
         public DavDataSource<T> build() {
-            DistributedDavDataSource<T> davDataSource = new DistributedDavDataSource<T>();
+            DefaultDavDataSource<T> davDataSource = new DefaultDavDataSource<T>();
 
             if (client == null || server == null || lock == null || executorService == null || clazz == null) {
                 throw new RuntimeException("dav datasource build fail");

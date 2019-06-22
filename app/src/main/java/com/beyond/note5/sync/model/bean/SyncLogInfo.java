@@ -13,16 +13,18 @@ public class SyncLogInfo {
     public static final String ADD = "add";
     @Id
     private String id;
+    private String documentId;
     private String refPath;
     private String refServer;
     private String operation;
     private Date operationTime;
     private String source;
 
-    @Generated(hash = 1282716146)
-    public SyncLogInfo(String id, String refPath, String refServer,
-            String operation, Date operationTime, String source) {
+    @Generated(hash = 1829562042)
+    public SyncLogInfo(String id, String documentId, String refPath,
+            String refServer, String operation, Date operationTime, String source) {
         this.id = id;
+        this.documentId = documentId;
         this.refPath = refPath;
         this.refServer = refServer;
         this.operation = operation;
@@ -86,5 +88,11 @@ public class SyncLogInfo {
     }
     public void setSource(String source) {
         this.source = source;
+    }
+    public String getDocumentId() {
+        return this.documentId;
+    }
+    public void setDocumentId(String documentId) {
+        this.documentId = documentId;
     }
 }
