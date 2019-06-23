@@ -2,7 +2,9 @@ package com.beyond.note5.view.fragment;
 
 import android.annotation.SuppressLint;
 import android.content.Context;
+import android.content.Intent;
 import android.os.Bundle;
+import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
 import android.support.v7.widget.RecyclerView;
@@ -16,22 +18,28 @@ import android.view.ViewGroup;
 import com.beyond.note5.MyApplication;
 import com.beyond.note5.R;
 import com.beyond.note5.bean.Todo;
-import com.beyond.note5.event.todo.AddTodoSuccessEvent;
-import com.beyond.note5.event.todo.CompleteTodoEvent;
-import com.beyond.note5.event.todo.DeleteTodoSuccessEvent;
 import com.beyond.note5.event.HideFABEvent;
 import com.beyond.note5.event.InCompleteTodoEvent;
 import com.beyond.note5.event.RefreshTodoListEvent;
 import com.beyond.note5.event.ScrollToTodoByDateEvent;
 import com.beyond.note5.event.ScrollToTodoEvent;
 import com.beyond.note5.event.ShowFABEvent;
+import com.beyond.note5.event.todo.AddTodoSuccessEvent;
+import com.beyond.note5.event.todo.CompleteTodoEvent;
+import com.beyond.note5.event.todo.DeleteTodoSuccessEvent;
 import com.beyond.note5.event.todo.UpdateTodoPriorityEvent;
 import com.beyond.note5.event.todo.UpdateTodoSuccessEvent;
 import com.beyond.note5.presenter.CalendarPresenterImpl;
 import com.beyond.note5.presenter.PredictPresenterImpl;
+import com.beyond.note5.presenter.SyncPresenter;
 import com.beyond.note5.presenter.TodoCompositePresenter;
 import com.beyond.note5.presenter.TodoCompositePresenterImpl;
 import com.beyond.note5.presenter.TodoPresenterImpl;
+import com.beyond.note5.presenter.TodoSyncPresenterImpl;
+import com.beyond.note5.utils.PreferenceUtil;
+import com.beyond.note5.utils.ToastUtil;
+import com.beyond.note5.view.DavLoginActivity;
+import com.beyond.note5.view.SyncView;
 import com.beyond.note5.view.TodoView;
 import com.beyond.note5.view.adapter.component.DocumentRecyclerViewAdapter;
 import com.beyond.note5.view.adapter.component.TodoRecyclerViewAdapter;
@@ -41,6 +49,8 @@ import com.beyond.note5.view.adapter.component.header.ReminderTimeItemDataGenera
 import com.beyond.note5.view.adapter.view.CalendarViewAdapter;
 import com.beyond.note5.view.adapter.view.DocumentViewBase;
 import com.beyond.note5.view.adapter.view.PredictViewAdapter;
+import com.scwang.smartrefresh.layout.api.RefreshLayout;
+import com.scwang.smartrefresh.layout.listener.OnRefreshListener;
 
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.time.DateFormatUtils;
@@ -54,6 +64,7 @@ import java.util.Iterator;
 import java.util.List;
 
 import static com.beyond.note5.model.TodoModelImpl.IS_SHOW_READ_FLAG_DONE;
+import static com.beyond.note5.view.LoginActivity.DAV_LOGIN_REMEMBER_PASSWORD;
 
 /**
  * @author: beyond
@@ -63,14 +74,19 @@ import static com.beyond.note5.model.TodoModelImpl.IS_SHOW_READ_FLAG_DONE;
 public class TodoListFragment extends Fragment {
 
     protected RecyclerView recyclerView;
+    private RefreshLayout refreshLayout;
+
     protected DocumentRecyclerViewAdapter recyclerViewAdapter;
     protected List<Todo> data = new ArrayList<>();
 
     MyCalendarView calendarView = new MyCalendarView();
     MyPredictView predictView = new MyPredictView();
     MyTodoView todoView = new MyTodoView();
+    MySyncView syncView = new MySyncView();
 
     TodoCompositePresenter todoCompositePresenter;
+
+    private SyncPresenter syncPresenter;
 
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
@@ -81,11 +97,12 @@ public class TodoListFragment extends Fragment {
     }
 
     private void initInjection() {
-
         todoCompositePresenter = new TodoCompositePresenterImpl.Builder(new TodoPresenterImpl(todoView))
                 .calendarPresenter(new CalendarPresenterImpl(getActivity(), calendarView))
                 .predictPresenter(new PredictPresenterImpl(predictView))
                 .build();
+
+        syncPresenter = new TodoSyncPresenterImpl(syncView);
     }
 
     @Nullable
@@ -99,6 +116,7 @@ public class TodoListFragment extends Fragment {
     }
 
     private void initView(ViewGroup viewGroup) {
+        refreshLayout = viewGroup.findViewById(R.id.todo_refresh_layout);
         recyclerView = viewGroup.findViewById(R.id.todo_recycler_view);
         recyclerView.setAdapter(recyclerViewAdapter);
         //设置显示格式
@@ -108,6 +126,20 @@ public class TodoListFragment extends Fragment {
 
     @SuppressLint("ClickableViewAccessibility")
     protected void initEvent() {
+
+        refreshLayout.setOnRefreshListener(new OnRefreshListener() {
+            @Override
+            public void onRefresh(@NonNull RefreshLayout refreshLayout) {
+                ToastUtil.toast(getContext(), "开始同步");
+                if (!PreferenceUtil.getBoolean(DAV_LOGIN_REMEMBER_PASSWORD)) {
+                    refreshLayout.finishRefresh();
+                    Intent intent = new Intent(getContext(), DavLoginActivity.class);
+                    startActivity(intent);
+                    return;
+                }
+                syncPresenter.sync();
+            }
+        });
 
         // 点击切换显示模式（是否显示已读）
         recyclerView.setOnTouchListener(new View.OnTouchListener() {
@@ -349,5 +381,19 @@ public class TodoListFragment extends Fragment {
     }
 
     private class MyCalendarView extends CalendarViewAdapter {
+    }
+
+    private class MySyncView implements SyncView {
+        @Override
+        public void onSyncSuccess() {
+            refreshLayout.finishRefresh();
+            ToastUtil.toast(getContext(),"Todo同步成功");
+        }
+
+        @Override
+        public void onSyncFail() {
+            refreshLayout.finishRefresh();
+            ToastUtil.toast(getContext(),"Todo同步失败");
+        }
     }
 }

@@ -383,4 +383,17 @@ public class MyApplication extends Application {
         }
     }
 
+    public Synchronizer<Note> getNoteSynchronizer() {
+        if (noteSynchronizer == null) {
+            initSynchronizer();
+        }
+        return noteSynchronizer;
+    }
+
+    public Synchronizer<Todo> getTodoSynchronizer() {
+        if (todoSynchronizer == null) {
+            initSynchronizer();
+        }
+        return todoSynchronizer;
+    }
 }

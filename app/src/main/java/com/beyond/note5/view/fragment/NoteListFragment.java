@@ -13,7 +13,6 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 
-import com.beyond.note5.MyApplication;
 import com.beyond.note5.R;
 import com.beyond.note5.bean.Note;
 import com.beyond.note5.event.HideFABEvent;
@@ -29,11 +28,14 @@ import com.beyond.note5.ocr.OCRCallBack;
 import com.beyond.note5.ocr.OCRTask;
 import com.beyond.note5.presenter.NotePresenter;
 import com.beyond.note5.presenter.NotePresenterImpl;
+import com.beyond.note5.presenter.NoteSyncPresenterImpl;
+import com.beyond.note5.presenter.SyncPresenter;
 import com.beyond.note5.utils.PreferenceUtil;
 import com.beyond.note5.utils.ToastUtil;
 import com.beyond.note5.view.DavLoginActivity;
 import com.beyond.note5.view.MainActivity;
 import com.beyond.note5.view.NoteView;
+import com.beyond.note5.view.SyncView;
 import com.beyond.note5.view.adapter.component.DocumentRecyclerViewAdapter;
 import com.beyond.note5.view.adapter.component.NoteRecyclerViewAdapter;
 import com.beyond.note5.view.adapter.component.header.ItemDataGenerator;
@@ -69,7 +71,11 @@ public class NoteListFragment extends Fragment {
 
     protected NotePresenter notePresenter;
 
+    protected SyncPresenter syncPresenter;
+
     protected NoteView noteView;
+
+    protected SyncView syncView;
 
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
@@ -81,7 +87,9 @@ public class NoteListFragment extends Fragment {
 
     private void initInjection() {
         noteView = new MyNoteView();
+        syncView = new MySyncView();
         notePresenter = new NotePresenterImpl(noteView);
+        syncPresenter = new NoteSyncPresenterImpl(syncView);
     }
 
     @Nullable
@@ -108,33 +116,21 @@ public class NoteListFragment extends Fragment {
         refreshLayout.setOnRefreshListener(new OnRefreshListener() {
             @Override
             public void onRefresh(@NonNull RefreshLayout refreshLayout) {
-                ToastUtil.toast(getContext(),"开始同步");
-                if (!PreferenceUtil.getBoolean(DAV_LOGIN_REMEMBER_PASSWORD)){
+                ToastUtil.toast(getContext(), "开始同步");
+                if (!PreferenceUtil.getBoolean(DAV_LOGIN_REMEMBER_PASSWORD)) {
                     refreshLayout.finishRefresh();
-                    Intent intent = new Intent(getContext(),DavLoginActivity.class);
+                    Intent intent = new Intent(getContext(), DavLoginActivity.class);
                     startActivity(intent);
                     return;
                 }
-                MyApplication.getInstance().sync(new Runnable() {
-                    @Override
-                    public void run() {
-                        refreshLayout.finishRefresh();
-                        ToastUtil.toast(getContext(), "同步完成");
-                    }
-                }, new Runnable() {
-                    @Override
-                    public void run() {
-                        refreshLayout.finishRefresh();
-                        ToastUtil.toast(getContext(), "同步失败");
-                    }
-                });
+                syncPresenter.sync();
             }
         });
         recyclerView.setOnFlingListener(new RecyclerView.OnFlingListener() {
             @Override
             public boolean onFling(int velocityX, int velocityY) {
                 //上划
-                if (velocityY<0){
+                if (velocityY < 0) {
                     EventBus.getDefault().post(new ShowFABEvent(R.id.note_recycler_view));
                 }
                 return false;
@@ -145,7 +141,7 @@ public class NoteListFragment extends Fragment {
             public void onScrollStateChanged(RecyclerView recyclerView, int newState) {
                 super.onScrollStateChanged(recyclerView, newState);
                 //未到滚动的高度
-                if(!recyclerView.canScrollVertically(1)&&!recyclerView.canScrollVertically(-1)){
+                if (!recyclerView.canScrollVertically(1) && !recyclerView.canScrollVertically(-1)) {
                     EventBus.getDefault().post(new ShowFABEvent(R.id.note_recycler_view));
                     return;
                 }
@@ -162,24 +158,24 @@ public class NoteListFragment extends Fragment {
 
         });
     }
-    
+
     @SuppressWarnings("ResultOfMethodCallIgnored")
     @Deprecated
     private void testOcr(Note note) {
-        if (note.getAttachments()==null||note.getAttachments().isEmpty()){
+        if (note.getAttachments() == null || note.getAttachments().isEmpty()) {
             return;
         }
-        try (FileInputStream fileInputStream = new FileInputStream(note.getAttachments().get(0).getPath())){
-            byte[] bytes=new byte[fileInputStream.available()];
+        try (FileInputStream fileInputStream = new FileInputStream(note.getAttachments().get(0).getPath())) {
+            byte[] bytes = new byte[fileInputStream.available()];
             fileInputStream.read(bytes);
             String base64String = Base64.encodeToString(bytes, Base64.DEFAULT);
-            base64String = "data:image/jpeg;base64,"+base64String;
-            Log.d(MainActivity.class.getName(),base64String);
+            base64String = "data:image/jpeg;base64," + base64String;
+            Log.d(MainActivity.class.getName(), base64String);
             OCRTask ocrTask = new OCRTask("2dcb07678f88957", false, base64String, "eng", new OCRCallBack() {
 
                 @Override
                 public void getOCRCallBackResult(String response) {
-                    Log.d(MainActivity.class.getName(),response);
+                    Log.d(MainActivity.class.getName(), response);
                 }
             });
             ocrTask.execute();
@@ -195,7 +191,7 @@ public class NoteListFragment extends Fragment {
         noteView.onAddSuccess(event.get());
     }
 
-    @Subscribe(threadMode = ThreadMode.MAIN,priority = 1)
+    @Subscribe(threadMode = ThreadMode.MAIN, priority = 1)
     public void onReceived(UpdateNoteSuccessEvent event) {
         noteView.onUpdateSuccess(event.get());
     }
@@ -221,7 +217,7 @@ public class NoteListFragment extends Fragment {
     }
 
     @Subscribe(threadMode = ThreadMode.MAIN)
-    public void onReceived(ScrollToNoteEvent event){
+    public void onReceived(ScrollToNoteEvent event) {
         Note note = event.get();
         int position = recyclerViewAdapter.getItemDataGenerator().getPosition(note);
         recyclerView.scrollToPosition(position);
@@ -248,13 +244,13 @@ public class NoteListFragment extends Fragment {
         super.onDestroy();
     }
 
-    
+
     private class MyNoteView extends DocumentViewBase<Note> implements NoteView {
 
         @Override
         public void onAddSuccess(Note note) {
             super.onAddSuccess(note);
-            ToastUtil.toast(getContext(),"添加成功");
+            ToastUtil.toast(getContext(), "添加成功");
         }
 
         public DocumentRecyclerViewAdapter getRecyclerViewAdapter() {
@@ -267,6 +263,20 @@ public class NoteListFragment extends Fragment {
 
         public List<Note> getData() {
             return data;
+        }
+    }
+
+    private class MySyncView implements SyncView {
+        @Override
+        public void onSyncSuccess() {
+            refreshLayout.finishRefresh();
+            ToastUtil.toast(getContext(), "Note同步成功");
+        }
+
+        @Override
+        public void onSyncFail() {
+            refreshLayout.finishRefresh();
+            ToastUtil.toast(getContext(), "Note同步失败");
         }
     }
 }
