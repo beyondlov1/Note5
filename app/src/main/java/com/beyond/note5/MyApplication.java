@@ -186,7 +186,7 @@ public class MyApplication extends Application {
 
     private void initDaoSession() {
 
-        DroidDataSource dataSource = new DroidDataSource(getPackageName(), "databases/beyond_not_safe_2");
+        DroidDataSource dataSource = new DroidDataSource(getPackageName(), "databases/beyond_not_safe");
         ContextHolder.setContext(this);
         Flyway flyway = new Flyway();
         flyway.setDataSource(dataSource);
@@ -198,7 +198,7 @@ public class MyApplication extends Application {
 //        DaoMaster daoMaster = new DaoMaster(database);
 //        daoSession = daoMaster.newSession();
 
-        DaoMaster.OpenHelper helper = new DaoMaster.OpenHelper(this, "beyond_not_safe_2.db"){
+        DaoMaster.OpenHelper helper = new DaoMaster.OpenHelper(this, "beyond_not_safe.db"){
             @Override
             public void onCreate(Database db) {
                 // do nothing
@@ -209,6 +209,7 @@ public class MyApplication extends Application {
         daoSession = daoMaster.newSession();
 
     }
+
 
     private ExecutorService executorService;
 

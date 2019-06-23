@@ -391,7 +391,7 @@ public class OkHttpSardine2 extends OkHttpSardine {
                 .method("PROPFIND", null)
                 .build();
 
-        return execute(request, new ExistsResponseHandler());
+        return execute(request, new ExistsResponseHandler2());
     }
 
     @Override

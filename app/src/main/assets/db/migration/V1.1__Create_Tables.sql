@@ -1,4 +1,4 @@
-create table NOTE (  
+create table if not exists  NOTE (
                 ID text primary key not null,
                 TITLE text,
                 CONTENT text,
@@ -9,7 +9,7 @@ create table NOTE (
                 READ_FLAG integer,
                 PRIORITY integer);
                 
-create table TODO (  
+create table if not exists  TODO (
                 ID text primary key not null ,
                 REMINDER_ID text,   
                 TITLE text,  
@@ -22,7 +22,7 @@ create table TODO (
                 READ_FLAG integer,  
                 PRIORITY integer);
 
-create table DOCUMENT ( 
+create table if not exists  DOCUMENT (
                 ID text primary key not null ,  
                 TITLE text,  
                 CONTENT text, 
@@ -33,14 +33,14 @@ create table DOCUMENT (
                 READ_FLAG integer,  
                 PRIORITY integer);
 
-create table  ATTACHMENT (
+create table if not exists  ATTACHMENT (
                 ID text primary key not null ,
                 NOTE_ID text,
                 NAME text,
                 TYPE text,
                 PATH text);
 
-create table  REMINDER (
+create table if not exists  REMINDER (
                 ID text primary key not null ,
                 CALENDAR_ID integer,
                 CALENDAR_EVENT_ID integer,
