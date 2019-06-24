@@ -64,6 +64,11 @@ public class NoteSqlDataSource implements DataSource<Note> {
     }
 
     @Override
+    public Class<Note> clazz() {
+        return Note.class;
+    }
+
+    @Override
     public boolean tryLock() {
         return false;
     }

@@ -14,14 +14,16 @@ import java.util.List;
 
 import static com.beyond.note5.MyApplication.VIRTUAL_USER_ID;
 
-public class LogSqlModelImpl implements LogSqlModel {
+public class LogSqlModelImpl<T> implements LogSqlModel {
 
     private SyncLogInfoDao logInfoDao;
 
-    public LogSqlModelImpl(SyncLogInfoDao logInfoDao) {
-        this.logInfoDao = logInfoDao;
-    }
+    private String type;
 
+    public LogSqlModelImpl(SyncLogInfoDao logInfoDao,String type) {
+        this.logInfoDao = logInfoDao;
+        this.type = type;
+    }
 
     @Override
     public void saveAll(List<SyncLogInfo> syncLogInfos) throws IOException {
@@ -53,6 +55,7 @@ public class LogSqlModelImpl implements LogSqlModel {
                 .where(SyncLogInfoDao.Properties.Source.eq(PreferenceUtil.getString(VIRTUAL_USER_ID)))
                 .where(SyncLogInfoDao.Properties.Operation.eq(SyncLogInfo.ADD))
                 .where(SyncLogInfoDao.Properties.OperationTime.gt(lastSyncTime))
+                .where(SyncLogInfoDao.Properties.Type.eq(type))
                 .list();
     }
 
@@ -62,6 +65,7 @@ public class LogSqlModelImpl implements LogSqlModel {
                 .where(SyncLogInfoDao.Properties.Source.eq(PreferenceUtil.getString(VIRTUAL_USER_ID)))
                 .where(SyncLogInfoDao.Properties.OperationTime.gt(lastSyncTime))
                 .where(SyncLogInfoDao.Properties.Operation.eq(SyncLogInfo.UPDATE))
+                .where(SyncLogInfoDao.Properties.Type.eq(type))
                 .list();
     }
 
@@ -71,6 +75,7 @@ public class LogSqlModelImpl implements LogSqlModel {
                 .where(SyncLogInfoDao.Properties.Source.notEq(PreferenceUtil.getString(VIRTUAL_USER_ID)))
                 .where(SyncLogInfoDao.Properties.Operation.eq(SyncLogInfo.ADD))
                 .where(SyncLogInfoDao.Properties.OperationTime.gt(lastSyncTime))
+                .where(SyncLogInfoDao.Properties.Type.eq(type))
                 .list();
     }
 
@@ -80,6 +85,7 @@ public class LogSqlModelImpl implements LogSqlModel {
                 .where(SyncLogInfoDao.Properties.Source.notEq(PreferenceUtil.getString(VIRTUAL_USER_ID)))
                 .where(SyncLogInfoDao.Properties.OperationTime.gt(lastSyncTime))
                 .where(SyncLogInfoDao.Properties.Operation.eq(SyncLogInfo.UPDATE))
+                .where(SyncLogInfoDao.Properties.Type.eq(type))
                 .list();
     }
 
@@ -87,6 +93,7 @@ public class LogSqlModelImpl implements LogSqlModel {
     public Date getLatestLastModifyTime() {
         SyncLogInfo log = logInfoDao.queryBuilder()
                 .orderDesc(SyncLogInfoDao.Properties.OperationTime)
+                .where(SyncLogInfoDao.Properties.Type.eq(type))
                 .limit(1)
                 .unique();
         if (log==null){
@@ -94,4 +101,5 @@ public class LogSqlModelImpl implements LogSqlModel {
         }
         return log.getOperationTime();
     }
+
 }

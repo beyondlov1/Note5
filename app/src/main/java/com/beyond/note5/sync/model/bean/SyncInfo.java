@@ -1,10 +1,10 @@
 package com.beyond.note5.sync.model.bean;
 
 import org.greenrobot.greendao.annotation.Entity;
-import org.greenrobot.greendao.annotation.Generated;
 import org.greenrobot.greendao.annotation.Id;
 
 import java.util.Date;
+import org.greenrobot.greendao.annotation.Generated;
 
 @Entity
 public class SyncInfo {
@@ -14,18 +14,28 @@ public class SyncInfo {
     private String localKey;
     private String remoteKey;
     private Date lastSyncTime;
+    private String type;
 
-    @Generated(hash = 525848672)
-    public SyncInfo(String id, String localKey, String remoteKey,
-            Date lastSyncTime) {
+    @Generated(hash = 1042216664)
+    public SyncInfo(String id, String localKey, String remoteKey, Date lastSyncTime,
+            String type) {
         this.id = id;
         this.localKey = localKey;
         this.remoteKey = remoteKey;
         this.lastSyncTime = lastSyncTime;
+        this.type = type;
     }
 
     @Generated(hash = 57154307)
     public SyncInfo() {
+    }
+
+    public String getType() {
+        return type;
+    }
+
+    public void setType(String type) {
+        this.type = type;
     }
 
     public String getId() {

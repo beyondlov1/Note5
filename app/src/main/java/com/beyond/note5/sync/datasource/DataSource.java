@@ -15,4 +15,5 @@ public interface DataSource<T> extends Lock{
     T selectById(String id) throws IOException;
     List<T> selectAll() throws IOException, ExecutionException, InterruptedException;
     void cover(List<T> all) throws IOException, ExecutionException, InterruptedException;
+    Class<T> clazz();
 }

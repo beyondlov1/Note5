@@ -3,6 +3,7 @@ package com.beyond.note5.sync.webdav.client;
 import com.beyond.note5.utils.OkWebDavUtil;
 import com.thegrizzlylabs.sardineandroid.DavResource;
 import com.thegrizzlylabs.sardineandroid.Sardine;
+import com.thegrizzlylabs.sardineandroid.impl.SardineException;
 import com.thegrizzlylabs.sardineandroid.impl.handler.OkHttpSardine2;
 
 import org.apache.commons.io.IOUtils;
@@ -16,6 +17,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import okhttp3.Response;
 
@@ -24,6 +26,8 @@ public class SardineDavClient implements DavClient {
     private final static Map<String,Boolean> IS_DIR_EXIST = new ConcurrentHashMap<>();
 
     private Sardine sardine;
+
+    private AtomicInteger failCount = new AtomicInteger(0);
 
     public SardineDavClient(Sardine sardine) {
         this.sardine = sardine;
@@ -38,8 +42,24 @@ public class SardineDavClient implements DavClient {
     public void put(String url, String content) throws IOException {
         String dirUrl = StringUtils.substringBeforeLast(url, "/");
         mkDir(dirUrl);
-        sardine.put(url, content.getBytes());
-        closeResponse();
+        try {
+            sardine.put(url, content.getBytes());
+            failCount.set(0);
+        }catch (SardineException e){
+            if (e.getStatusCode() == 409){
+                if (failCount.get()>2){
+                    throw e;
+                }
+                IS_DIR_EXIST.remove(dirUrl);
+                closeResponse();
+                failCount.getAndAdd(1);
+                put(url,content);
+            }else{
+                throw e;
+            }
+        }finally {
+            closeResponse();
+        }
     }
 
     @Override

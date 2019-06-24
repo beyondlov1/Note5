@@ -148,6 +148,11 @@ public class DefaultDavDataSource<T extends Document> implements DavDataSource<T
         throw new RuntimeException("not available");
     }
 
+    @Override
+    public Class<T> clazz() {
+        return clazz;
+    }
+
     private String getDocumentUrl(T t) {
         return getDocumentUrl(t.getId());
     }

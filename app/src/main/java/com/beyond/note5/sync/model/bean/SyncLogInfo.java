@@ -19,10 +19,11 @@ public class SyncLogInfo {
     private String operation;
     private Date operationTime;
     private String source;
+    private String type;
 
-    @Generated(hash = 1829562042)
-    public SyncLogInfo(String id, String documentId, String refPath,
-            String refServer, String operation, Date operationTime, String source) {
+    @Generated(hash = 1761960630)
+    public SyncLogInfo(String id, String documentId, String refPath, String refServer, String operation,
+            Date operationTime, String source, String type) {
         this.id = id;
         this.documentId = documentId;
         this.refPath = refPath;
@@ -30,6 +31,7 @@ public class SyncLogInfo {
         this.operation = operation;
         this.operationTime = operationTime;
         this.source = source;
+        this.type = type;
     }
     @Generated(hash = 496388046)
     public SyncLogInfo() {
@@ -72,17 +74,21 @@ public class SyncLogInfo {
         if (o == null || getClass() != o.getClass()) return false;
         SyncLogInfo that = (SyncLogInfo) o;
         return Objects.equals(id, that.id) &&
+                Objects.equals(documentId, that.documentId) &&
                 Objects.equals(refPath, that.refPath) &&
                 Objects.equals(refServer, that.refServer) &&
                 Objects.equals(operation, that.operation) &&
-                Objects.equals(operationTime, that.operationTime);
+                Objects.equals(operationTime, that.operationTime) &&
+                Objects.equals(source, that.source) &&
+                Objects.equals(type, that.type);
     }
 
     @Override
     public int hashCode() {
 
-        return Objects.hash(id, refPath, refServer, operation, operationTime);
+        return Objects.hash(id, documentId, refPath, refServer, operation, operationTime, source, type);
     }
+
     public String getSource() {
         return this.source;
     }
@@ -94,5 +100,11 @@ public class SyncLogInfo {
     }
     public void setDocumentId(String documentId) {
         this.documentId = documentId;
+    }
+    public String getType() {
+        return this.type;
+    }
+    public void setType(String type) {
+        this.type = type;
     }
 }

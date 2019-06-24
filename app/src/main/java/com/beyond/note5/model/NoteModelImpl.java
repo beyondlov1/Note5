@@ -112,7 +112,10 @@ public class NoteModelImpl implements NoteModel {
 
     @Override
     public void deleteDeepLogic(Note note) {
-        this.deleteLogic(note);
+        note.setLastModifyTime(new Date());
+        note.setValid(false);
+        noteDao.update(note);
+
         List<Attachment> attachments = note.getAttachments();
         if (CollectionUtils.isNotEmpty(attachments)) {
             for (Attachment attachment : attachments) {
@@ -158,6 +161,7 @@ public class NoteModelImpl implements NoteModel {
         syncLogInfo.setOperation(SyncLogInfo.ADD);
         syncLogInfo.setOperationTime(note.getLastModifyTime());
         syncLogInfo.setSource(PreferenceUtil.getString(MyApplication.VIRTUAL_USER_ID));
+        syncLogInfo.setType(Note.class.getSimpleName().toLowerCase());
         syncLogInfoDao.insert(syncLogInfo);
     }
 
@@ -168,6 +172,7 @@ public class NoteModelImpl implements NoteModel {
         syncLogInfo.setOperation(SyncLogInfo.UPDATE);
         syncLogInfo.setOperationTime(note.getLastModifyTime());
         syncLogInfo.setSource(PreferenceUtil.getString(MyApplication.VIRTUAL_USER_ID));
+        syncLogInfo.setType(Note.class.getSimpleName().toLowerCase());
         syncLogInfoDao.insert(syncLogInfo);
     }
 }

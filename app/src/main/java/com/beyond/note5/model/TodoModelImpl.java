@@ -167,6 +167,7 @@ public class TodoModelImpl implements TodoModel {
         syncLogInfo.setOperation(SyncLogInfo.ADD);
         syncLogInfo.setOperationTime(todo.getLastModifyTime());
         syncLogInfo.setSource(PreferenceUtil.getString(MyApplication.VIRTUAL_USER_ID));
+        syncLogInfo.setType(Todo.class.getSimpleName().toLowerCase());
         syncLogInfoDao.insert(syncLogInfo);
     }
 
@@ -177,6 +178,7 @@ public class TodoModelImpl implements TodoModel {
         syncLogInfo.setOperation(SyncLogInfo.UPDATE);
         syncLogInfo.setOperationTime(todo.getLastModifyTime());
         syncLogInfo.setSource(PreferenceUtil.getString(MyApplication.VIRTUAL_USER_ID));
+        syncLogInfo.setType(Todo.class.getSimpleName().toLowerCase());
         syncLogInfoDao.insert(syncLogInfo);
     }
 

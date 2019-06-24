@@ -65,6 +65,11 @@ public class TodoSqlDataSource implements DataSource<Todo> {
     }
 
     @Override
+    public Class<Todo> clazz() {
+        return Todo.class;
+    }
+
+    @Override
     public boolean tryLock() {
         return false;
     }

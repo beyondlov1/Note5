@@ -28,6 +28,7 @@ public class SqlLSTModel implements LSTModel {
     public Date getLastSyncTime() throws IOException {
         SyncInfo syncInfo = syncInfoDao.queryBuilder()
                 .where(SyncInfoDao.Properties.RemoteKey.eq(remoteDataSource.getKey()))
+                .where(SyncInfoDao.Properties.Type.eq(remoteDataSource.clazz().getSimpleName().toLowerCase()))
                 .unique();
         return syncInfo == null?new Date(0):syncInfo.getLastSyncTime();
     }
@@ -36,6 +37,7 @@ public class SqlLSTModel implements LSTModel {
     public void setLastSyncTime(Date date) throws IOException {
         SyncInfo syncInfo = syncInfoDao.queryBuilder()
                 .where(SyncInfoDao.Properties.RemoteKey.eq(remoteDataSource.getKey()))
+                .where(SyncInfoDao.Properties.Type.eq(remoteDataSource.clazz().getSimpleName().toLowerCase()))
                 .unique();
         if (syncInfo == null){
             SyncInfo info = new SyncInfo();
@@ -43,6 +45,7 @@ public class SqlLSTModel implements LSTModel {
             info.setLocalKey(localDataSource.getKey());
             info.setRemoteKey(remoteDataSource.getKey());
             info.setLastSyncTime(date);
+            info.setType(remoteDataSource.clazz().getSimpleName().toLowerCase());
             syncInfoDao.insert(info);
         }else {
             syncInfo.setLastSyncTime(date);
