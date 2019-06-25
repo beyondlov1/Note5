@@ -17,6 +17,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.greenrobot.eventbus.EventBus;
 
 import java.io.IOException;
+import java.util.Date;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.TimeUnit;
@@ -216,6 +217,11 @@ public class NotePresenterImpl implements NotePresenter {
     @Override
     public Note selectById(String id) {
         return noteModel.findById(id);
+    }
+
+    @Override
+    public List<Note> selectByModifiedDate(Date date) {
+        return noteModel.findByModifiedDate(date);
     }
 
     @Override

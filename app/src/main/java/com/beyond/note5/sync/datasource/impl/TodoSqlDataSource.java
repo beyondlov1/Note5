@@ -10,6 +10,7 @@ import com.beyond.note5.utils.PreferenceUtil;
 import com.beyond.note5.view.adapter.view.TodoViewAdapter;
 
 import java.io.IOException;
+import java.util.Date;
 import java.util.List;
 
 public class TodoSqlDataSource implements DataSource<Todo> {
@@ -57,6 +58,11 @@ public class TodoSqlDataSource implements DataSource<Todo> {
     @Override
     public List<Todo> selectAll() throws IOException {
         return todoPresenter.selectAllInAll();
+    }
+
+    @Override
+    public List<Todo> selectByModifiedDate(Date date) throws IOException {
+        return todoPresenter.selectByModifiedDate(date);
     }
 
     @Override

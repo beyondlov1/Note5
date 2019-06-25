@@ -9,6 +9,7 @@ import com.beyond.note5.utils.PreferenceUtil;
 import com.beyond.note5.view.adapter.view.NoteViewAdapter;
 
 import java.io.IOException;
+import java.util.Date;
 import java.util.List;
 
 public class NoteSqlDataSource implements DataSource<Note> {
@@ -56,6 +57,11 @@ public class NoteSqlDataSource implements DataSource<Note> {
     @Override
     public List<Note> selectAll() throws IOException {
         return notePresenter.selectAllInAll();
+    }
+
+    @Override
+    public List<Note> selectByModifiedDate(Date date) throws IOException {
+        return notePresenter.selectByModifiedDate(date);
     }
 
     @Override

@@ -23,8 +23,8 @@ import com.beyond.note5.sync.datasource.DavDataSource;
 import com.beyond.note5.sync.datasource.impl.DefaultDavDataSource;
 import com.beyond.note5.sync.datasource.impl.NoteSqlDataSource;
 import com.beyond.note5.sync.datasource.impl.TodoSqlDataSource;
-import com.beyond.note5.sync.model.impl.LSTDavModel;
-import com.beyond.note5.sync.synchronizer.DavSynchronizer;
+import com.beyond.note5.sync.model.impl.SelfLSTDavModel;
+import com.beyond.note5.sync.synchronizer.DavSynchronizer3;
 import com.beyond.note5.sync.webdav.DavLock;
 import com.beyond.note5.sync.webdav.client.DavClient;
 import com.beyond.note5.sync.webdav.client.SardineDavClient;
@@ -85,7 +85,7 @@ public class MyApplication extends Application {
     private static MyApplication instance;
 
     private Synchronizer<Note> noteSynchronizer;
-    private DavSynchronizer<Todo> todoSynchronizer;
+    private Synchronizer<Todo> todoSynchronizer;
 
     public static MyApplication getInstance() {
         return instance;
@@ -122,12 +122,12 @@ public class MyApplication extends Application {
                     .server(server)
                     .paths(notePaths)
                     .lock(new DavLock(davClient, OkWebDavUtil.concat(server, NOTE_LOCK_PATH)))
-                    .lstRecorder(new LSTDavModel(davClient, OkWebDavUtil.concat(server, NOTE_LST_PATH)))
+                    .lstRecorder(new SelfLSTDavModel((SardineDavClient) davClient, OkWebDavUtil.concat(server, "note")))
                     .build();
 
             noteDataSources.add(noteDavDataSource);
         }
-        noteSynchronizer = new DavSynchronizer.Builder<Note>()
+        noteSynchronizer = new DavSynchronizer3.Builder<Note>()
                 .localDataSource(noteLocalDataSource)
                 .remoteDataSource(noteDataSources.get(0))
                 .logPath(NOTE_LOG_PATH)
@@ -144,14 +144,14 @@ public class MyApplication extends Application {
                     .server(server)
                     .paths(todoPaths)
                     .lock(new DavLock(davClient, OkWebDavUtil.concat(server, TODO_LOCK_PATH)))
-                    .lstRecorder(new LSTDavModel(davClient, OkWebDavUtil.concat(server, TODO_LST_PATH)))
+                    .lstRecorder(new SelfLSTDavModel((SardineDavClient) davClient, OkWebDavUtil.concat(server, "todo")))
                     .build();
 
             todoDataSources.add(todoDavDataSource);
         }
 
 
-        todoSynchronizer = new DavSynchronizer.Builder<Todo>()
+        todoSynchronizer = new DavSynchronizer3.Builder<Todo>()
                 .localDataSource(todoLocalDataSource)
                 .remoteDataSource(todoDataSources.get(0))
                 .logPath(TODO_LOG_PATH)

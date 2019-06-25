@@ -153,6 +153,16 @@ public class NoteModelImpl implements NoteModel {
         return noteDao.load(id);
     }
 
+    @Override
+    public List<Note> findByModifiedDate(Date date) {
+        return noteDao.queryBuilder()
+                .where(NoteDao.Properties.Type.eq(Document.NOTE))
+                .where(NoteDao.Properties.LastModifyTime.gt(date))
+                .orderAsc(NoteDao.Properties.ReadFlag)
+                .orderDesc(NoteDao.Properties.LastModifyTime)
+                .list();
+    }
+
 
     private void addInsertLog(Note note){
         SyncLogInfo syncLogInfo = new SyncLogInfo();

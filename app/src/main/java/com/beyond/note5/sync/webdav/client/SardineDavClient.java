@@ -14,6 +14,7 @@ import java.io.InputStream;
 import java.net.URI;
 import java.nio.charset.Charset;
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -79,7 +80,51 @@ public class SardineDavClient implements DavClient {
      */
     @Override
     public List<String> listAllFileName(String dirUrl) throws IOException {
-        List<String> result = new ArrayList<>();
+        return listAllFileName(dirUrl,null);
+    }
+
+    @Override
+    public synchronized List<String> listAllFilePath(String dirUrl) throws IOException {
+        return listAllFilePath(dirUrl,null);
+    }
+
+    @Override
+    public synchronized List<String> listAllFileName(String dirUrl, DavFilter filter) throws IOException {
+        List<DavResource> davResources = listAllFileResource(dirUrl);
+        Iterator<DavResource> iterator = davResources.iterator();
+        while (iterator.hasNext()) {
+            DavResource davResource = iterator.next();
+            if (filter!=null && filter.filter(davResource)){
+               iterator.remove();
+            }
+        }
+        List<String>  result = new ArrayList<>();
+        for (DavResource davResource : davResources) {
+            result.add(davResource.getName());
+        }
+        return result;
+    }
+
+    @Override
+    public synchronized List<String> listAllFilePath(String dirUrl, DavFilter filter) throws IOException {
+        List<DavResource> davResources = listAllFileResource(dirUrl);
+        Iterator<DavResource> iterator = davResources.iterator();
+        while (iterator.hasNext()) {
+            DavResource davResource = iterator.next();
+            if (filter!=null && filter.filter(davResource)){
+                iterator.remove();
+            }
+        }
+        List<String>  result = new ArrayList<>();
+        for (DavResource davResource : davResources) {
+            result.add(davResource.getPath());
+        }
+        return result;
+    }
+
+    public synchronized List<DavResource> listAllFileResource(String dirUrl) throws IOException {
+
+        List<DavResource> result = new ArrayList<>();
         mkDir(dirUrl);
         List<DavResource> list = sardine.list(dirUrl);
         for (DavResource davResource : list) {
@@ -89,31 +134,12 @@ public class SardineDavClient implements DavClient {
                 continue;
             }
             if (davResource.isDirectory()) {
-                List<String> subNames = listAllFileName(
+                List<DavResource> subResource = listAllFileResource(
                         "https://" + URI.create(dirUrl).getHost() + davResource.getPath());
-                result.addAll(subNames);
+                result.addAll(subResource);
                 continue;
             }
-            result.add(davResource.getName());
-        }
-        closeResponse();
-        return result;
-    }
-
-    @Override
-    public synchronized List<String> listAllFilePath(String dirUrl) throws IOException {
-        List<String> result = new ArrayList<>();
-        List<DavResource> list = sardine.list(dirUrl, 1);
-        for (DavResource davResource : list) {
-            if (StringUtils.equals("https://" + OkWebDavUtil.concat(URI.create(dirUrl).getHost() + davResource.getPath(), "/"), dirUrl)) {
-                continue;
-            }
-            if (davResource.isDirectory()) {
-                List<String> subNames = listAllFilePath("https://" + OkWebDavUtil.concat(URI.create(dirUrl).getHost() + davResource.getPath(), "/"));
-                result.addAll(subNames);
-                continue;
-            }
-            result.add(davResource.getPath());
+            result.add(davResource);
         }
         closeResponse();
         return result;

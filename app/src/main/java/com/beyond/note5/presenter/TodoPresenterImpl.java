@@ -2,6 +2,7 @@ package com.beyond.note5.presenter;
 
 import android.support.annotation.Nullable;
 
+import com.beyond.note5.bean.Note;
 import com.beyond.note5.bean.Todo;
 import com.beyond.note5.event.todo.AddTodoSuccessEvent;
 import com.beyond.note5.event.todo.DeleteTodoSuccessEvent;
@@ -14,6 +15,7 @@ import com.beyond.note5.view.TodoView;
 import org.apache.commons.lang3.StringUtils;
 import org.greenrobot.eventbus.EventBus;
 
+import java.util.Date;
 import java.util.List;
 
 public class TodoPresenterImpl implements TodoPresenter {
@@ -184,6 +186,11 @@ public class TodoPresenterImpl implements TodoPresenter {
             return;
         }
         todoView.onFindAllFail();
+    }
+
+    @Override
+    public List<Todo> selectByModifiedDate(Date date) {
+        return todoModel.findByModifiedDate(date);
     }
 
     @Override

@@ -9,6 +9,8 @@ import com.beyond.note5.sync.datasource.DavDataSource;
 import com.beyond.note5.sync.model.LSTModel;
 import com.beyond.note5.sync.webdav.Lock;
 import com.beyond.note5.sync.webdav.client.DavClient;
+import com.beyond.note5.sync.webdav.client.DavFilter;
+import com.beyond.note5.sync.webdav.client.PostLastModifyTimeDavFilter;
 import com.beyond.note5.utils.OkWebDavUtil;
 
 import org.apache.commons.lang3.StringUtils;
@@ -77,70 +79,7 @@ public class DefaultDavDataSource<T extends Document> implements DavDataSource<T
 
     @Override
     public List<T> selectAll() throws IOException {
-
-        if (paths == null) {
-            throw new RuntimeException("paths is null");
-        }
-
-        /**
-         * 单线程方法
-         */
-        if (executorService == null) {
-            List<T> result = new ArrayList<>();
-            for (String path : paths) {
-                List<String> ids = client.listAllFileName(OkWebDavUtil.concat(server, path));
-                for (String id : ids) {
-                    if (id.contains(".")) {
-                        return null;
-                    }
-                    try {
-                        T t = clazz.newInstance();
-                        t.setId(id);
-                        result.add(select(t));
-                    } catch (InstantiationException | IllegalAccessException e) {
-                        e.printStackTrace();
-                    }
-                }
-            }
-            return result;
-        }
-
-        /**
-         * 多线程方法
-         */
-        List<Future<T>> resultFutures = new ArrayList<>();
-        for (String path : paths) {
-            List<String> ids = client.listAllFileName(OkWebDavUtil.concat(server, path));
-            for (String id : ids) {
-                Future<T> future = executorService.submit(new Callable<T>() {
-                    @Override
-                    public T call() throws Exception {
-                        if (id.contains(".")) {
-                            return null;
-                        }
-                        T t = clazz.newInstance();
-                        t.setId(id);
-                        return select(t);
-                    }
-                });
-                resultFutures.add(future);
-            }
-        }
-
-        List<T> result = new ArrayList<>();
-        try {
-            for (Future<T> future : resultFutures) {
-                T t = future.get();
-                if (t != null) {
-                    result.add(t);
-                }
-            }
-            return result;
-        } catch (InterruptedException | ExecutionException e) {
-            e.printStackTrace();
-            Log.e(getClass().getSimpleName(), "", e);
-        }
-        return result;
+        return selectByModifiedDate(null);
     }
 
     @Override
@@ -234,6 +173,77 @@ public class DefaultDavDataSource<T extends Document> implements DavDataSource<T
     @Override
     public DavClient getClient() {
         return client;
+    }
+
+    @Override
+    public List<T> selectByModifiedDate(Date date) throws IOException {
+        if (paths == null) {
+            throw new RuntimeException("paths is null");
+        }
+
+        DavFilter davFilter = null;
+        if (date != null) {
+            davFilter = new PostLastModifyTimeDavFilter(date);
+        }
+        /**
+         * 单线程方法
+         */
+        if (executorService == null) {
+            List<T> result = new ArrayList<>();
+            for (String path : paths) {
+                List<String> ids = client.listAllFileName(OkWebDavUtil.concat(server, path), davFilter);
+                for (String id : ids) {
+                    if (id.contains(".")) {
+                        return null;
+                    }
+                    try {
+                        T t = clazz.newInstance();
+                        t.setId(id);
+                        result.add(select(t));
+                    } catch (InstantiationException | IllegalAccessException e) {
+                        e.printStackTrace();
+                    }
+                }
+            }
+            return result;
+        }
+
+        /**
+         * 多线程方法
+         */
+        List<Future<T>> resultFutures = new ArrayList<>();
+        for (String path : paths) {
+            List<String> ids = client.listAllFileName(OkWebDavUtil.concat(server, path), davFilter);
+            for (String id : ids) {
+                Future<T> future = executorService.submit(new Callable<T>() {
+                    @Override
+                    public T call() throws Exception {
+                        if (id.contains(".")) {
+                            return null;
+                        }
+                        T t = clazz.newInstance();
+                        t.setId(id);
+                        return select(t);
+                    }
+                });
+                resultFutures.add(future);
+            }
+        }
+
+        List<T> result = new ArrayList<>();
+        try {
+            for (Future<T> future : resultFutures) {
+                T t = future.get();
+                if (t != null) {
+                    result.add(t);
+                }
+            }
+            return result;
+        } catch (InterruptedException | ExecutionException e) {
+            e.printStackTrace();
+            Log.e(getClass().getSimpleName(), "", e);
+        }
+        return result;
     }
 
 

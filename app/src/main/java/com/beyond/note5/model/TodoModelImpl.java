@@ -3,6 +3,7 @@ package com.beyond.note5.model;
 import android.content.Context;
 
 import com.beyond.note5.MyApplication;
+import com.beyond.note5.bean.Document;
 import com.beyond.note5.bean.Reminder;
 import com.beyond.note5.bean.Todo;
 import com.beyond.note5.model.dao.DaoSession;
@@ -150,6 +151,16 @@ public class TodoModelImpl implements TodoModel {
     @Override
     public Todo findById(String id) {
         return todoDao.load(id);
+    }
+
+    @Override
+    public List<Todo> findByModifiedDate(Date date) {
+        return todoDao.queryBuilder()
+                .where(TodoDao.Properties.Type.eq(Document.TODO))
+                .where(TodoDao.Properties.LastModifyTime.gt(date))
+                .orderAsc(TodoDao.Properties.ReadFlag)
+                .orderDesc(TodoDao.Properties.LastModifyTime)
+                .list();
     }
 
     @Override

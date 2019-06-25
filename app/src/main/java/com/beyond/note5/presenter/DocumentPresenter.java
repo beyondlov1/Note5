@@ -1,5 +1,6 @@
 package com.beyond.note5.presenter;
 
+import java.util.Date;
 import java.util.List;
 
 /**
@@ -20,4 +21,6 @@ public interface DocumentPresenter<T>  extends CRUDPresenter<T>{
     List<T> selectAllInAll();
 
     T selectById(String id);
+
+    List<T> selectByModifiedDate(Date date);
 }
