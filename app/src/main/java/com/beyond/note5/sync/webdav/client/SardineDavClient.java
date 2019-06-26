@@ -11,7 +11,6 @@ import org.apache.commons.lang3.StringUtils;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.net.URI;
 import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.Iterator;
@@ -22,9 +21,11 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 import okhttp3.Response;
 
+import static com.beyond.note5.utils.OkWebDavUtil.getRootUrl;
+
 public class SardineDavClient implements DavClient {
 
-    private final static Map<String,Boolean> IS_DIR_EXIST = new ConcurrentHashMap<>();
+    private final static Map<String, Boolean> IS_DIR_EXIST = new ConcurrentHashMap<>();
 
     private Sardine sardine;
 
@@ -46,19 +47,19 @@ public class SardineDavClient implements DavClient {
         try {
             sardine.put(url, content.getBytes());
             failCount.set(0);
-        }catch (SardineException e){
-            if (e.getStatusCode() == 409){
-                if (failCount.get()>2){
+        } catch (SardineException e) {
+            if (e.getStatusCode() == 409) {
+                if (failCount.get() > 2) {
                     throw e;
                 }
                 IS_DIR_EXIST.remove(dirUrl);
                 closeResponse();
                 failCount.getAndAdd(1);
-                put(url,content);
-            }else{
+                put(url, content);
+            } else {
                 throw e;
             }
-        }finally {
+        } finally {
             closeResponse();
         }
     }
@@ -74,18 +75,24 @@ public class SardineDavClient implements DavClient {
 
     /**
      * 这里webdav访问如果同一时间访问多次， 会产生503的错误， 所以不得已改成同步的
+     *
      * @param dirUrl
      * @return
      * @throws IOException
      */
     @Override
     public List<String> listAllFileName(String dirUrl) throws IOException {
-        return listAllFileName(dirUrl,null);
+        return listAllFileName(dirUrl, null);
     }
 
     @Override
     public synchronized List<String> listAllFilePath(String dirUrl) throws IOException {
-        return listAllFilePath(dirUrl,null);
+        return listAllFilePath(dirUrl, null);
+    }
+
+    @Override
+    public List<String> listAllFileUrl(String dirUrl) throws IOException {
+        return listAllFileUrl(dirUrl, null);
     }
 
     @Override
@@ -94,11 +101,11 @@ public class SardineDavClient implements DavClient {
         Iterator<DavResource> iterator = davResources.iterator();
         while (iterator.hasNext()) {
             DavResource davResource = iterator.next();
-            if (filter!=null && filter.filter(davResource)){
-               iterator.remove();
+            if (filter != null && filter.filter(davResource)) {
+                iterator.remove();
             }
         }
-        List<String>  result = new ArrayList<>();
+        List<String> result = new ArrayList<>();
         for (DavResource davResource : davResources) {
             result.add(davResource.getName());
         }
@@ -111,13 +118,24 @@ public class SardineDavClient implements DavClient {
         Iterator<DavResource> iterator = davResources.iterator();
         while (iterator.hasNext()) {
             DavResource davResource = iterator.next();
-            if (filter!=null && filter.filter(davResource)){
+            if (filter != null && filter.filter(davResource)) {
                 iterator.remove();
             }
         }
-        List<String>  result = new ArrayList<>();
+        List<String> result = new ArrayList<>();
         for (DavResource davResource : davResources) {
             result.add(davResource.getPath());
+        }
+        return result;
+    }
+
+    @Override
+    public List<String> listAllFileUrl(String dirUrl, DavFilter filter) throws IOException {
+        List<String> paths = listAllFilePath(dirUrl, filter);
+        String prefix = getRootUrl(dirUrl);
+        List<String> result = new ArrayList<>(paths.size());
+        for (String path : paths) {
+            result.add(prefix + path);
         }
         return result;
     }
@@ -128,14 +146,14 @@ public class SardineDavClient implements DavClient {
         mkDir(dirUrl);
         List<DavResource> list = sardine.list(dirUrl);
         for (DavResource davResource : list) {
-            if (StringUtils.equals(
-                    ("https://" + URI.create(dirUrl).getHost() + davResource.getPath()).replace("/", ""),
-                    dirUrl.replace("/", ""))) {
+            if (OkWebDavUtil.urlEquals(
+                    getRootUrl(dirUrl) + davResource.getPath(),
+                    dirUrl)) {
                 continue;
             }
             if (davResource.isDirectory()) {
                 List<DavResource> subResource = listAllFileResource(
-                        "https://" + URI.create(dirUrl).getHost() + davResource.getPath());
+                        getRootUrl(dirUrl) + davResource.getPath());
                 result.addAll(subResource);
                 continue;
             }
@@ -160,24 +178,24 @@ public class SardineDavClient implements DavClient {
 
     @Override
     public boolean mkDir(String dirUrl) {
-        if (IS_DIR_EXIST.get(dirUrl)!=null&& IS_DIR_EXIST.get(dirUrl)){
+        if (IS_DIR_EXIST.get(dirUrl) != null && IS_DIR_EXIST.get(dirUrl)) {
             return true;
         }
         //获取文件夹路径
         String parentUrl = StringUtils.substringBeforeLast(dirUrl, "/");
-        String root = "https://" + URI.create(dirUrl).getHost();
-        if (!OkWebDavUtil.urlEquals(parentUrl,root)) {
+        String root = OkWebDavUtil.getRootUrl(dirUrl);
+        if (!OkWebDavUtil.urlEquals(parentUrl, root)) {
             mkDir(parentUrl);
         }
         try {
             sardine.createDirectory(dirUrl);
-            IS_DIR_EXIST.put(dirUrl,true);
+            IS_DIR_EXIST.put(dirUrl, true);
             return true;
-        }catch (IOException e){
+        } catch (IOException e) {
             //ignore
             return false;
-        }finally {
-            if (sardine instanceof OkHttpSardine2){
+        } finally {
+            if (sardine instanceof OkHttpSardine2) {
                 ((OkHttpSardine2) sardine).closeCurrentResponse();
             }
         }
@@ -189,7 +207,7 @@ public class SardineDavClient implements DavClient {
         }
     }
 
-    private Response getResponse(){
+    private Response getResponse() {
         if (sardine instanceof OkHttpSardine2) {
             ((OkHttpSardine2) sardine).getResponse();
         }

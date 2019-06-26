@@ -302,6 +302,12 @@ public class OkWebDavUtil {
         return url;
     }
 
+    public static String getRootUrl(String dirUrl) {
+        URI uri = URI.create(dirUrl);
+        return uri.getScheme() + "://" + uri.getAuthority();
+    }
+
+
     public interface Callback<S, T> {
         S onSuccess(T t);
 

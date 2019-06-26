@@ -23,14 +23,15 @@ import com.beyond.note5.sync.datasource.DavDataSource;
 import com.beyond.note5.sync.datasource.impl.DefaultDavDataSource;
 import com.beyond.note5.sync.datasource.impl.NoteSqlDataSource;
 import com.beyond.note5.sync.datasource.impl.TodoSqlDataSource;
-import com.beyond.note5.sync.model.impl.SelfLSTDavModel;
-import com.beyond.note5.sync.synchronizer.DavSynchronizer3;
+import com.beyond.note5.sync.model.impl.LSTDavModel;
+import com.beyond.note5.sync.synchronizer.DavSynchronizer2;
 import com.beyond.note5.sync.webdav.DavLock;
 import com.beyond.note5.sync.webdav.client.DavClient;
 import com.beyond.note5.sync.webdav.client.SardineDavClient;
 import com.beyond.note5.utils.IDUtil;
 import com.beyond.note5.utils.OkWebDavUtil;
 import com.beyond.note5.utils.PreferenceUtil;
+import com.beyond.note5.utils.ToastUtil;
 
 import org.apache.commons.lang3.ObjectUtils;
 import org.apache.commons.lang3.StringUtils;
@@ -101,7 +102,17 @@ public class MyApplication extends Application {
         initSynchronizer();
 
         if (PreferenceUtil.getBoolean(DAV_LOGIN, false)) {
-            sync();
+            sync(new Runnable() {
+                @Override
+                public void run() {
+                    ToastUtil.toast(getApplicationContext(),"同步成功");
+                }
+            }, new Runnable() {
+                @Override
+                public void run() {
+                    ToastUtil.toast(getApplicationContext(),"同步失败");
+                }
+            });
         }
     }
 
@@ -109,7 +120,8 @@ public class MyApplication extends Application {
     private void initSynchronizer() {
         DataSource<Note> noteLocalDataSource = new NoteSqlDataSource();
 
-        DavClient davClient = new SardineDavClient(PreferenceUtil.getString(DAV_LOGIN_USERNAME), PreferenceUtil.getString(DAV_LOGIN_PASSWORD));
+//        DavClient davClient = new SardineDavClient("admin","admin");
+        DavClient davClient = new SardineDavClient(PreferenceUtil.getString(DAV_LOGIN_USERNAME),PreferenceUtil.getString(DAV_LOGIN_PASSWORD));
         List<DavDataSource<Note>> noteDataSources = new ArrayList<>();
         List<DavDataSource<Todo>> todoDataSources = new ArrayList<>();
         String[] noteServers = StringUtils.split(PreferenceUtil.getString(NOTE_SYNC_REMOTE_DAV_SERVERS), "|");
@@ -118,18 +130,18 @@ public class MyApplication extends Application {
             DavDataSource<Note> noteDavDataSource = new DefaultDavDataSource.Builder<Note>()
                     .clazz(Note.class)
                     .davClient(davClient)
-                    .executorService(getExecutorService())
+                    .executorService(null) // 防止坚果云503
                     .server(server)
                     .paths(notePaths)
                     .lock(new DavLock(davClient, OkWebDavUtil.concat(server, NOTE_LOCK_PATH)))
-                    .lstRecorder(new SelfLSTDavModel((SardineDavClient) davClient, OkWebDavUtil.concat(server, "note")))
+                    .lstRecorder(new LSTDavModel( davClient, OkWebDavUtil.concat(server, NOTE_LST_PATH)))
                     .build();
 
             noteDataSources.add(noteDavDataSource);
         }
-        noteSynchronizer = new DavSynchronizer3.Builder<Note>()
+        noteSynchronizer = new DavSynchronizer2.Builder<Note>()
                 .localDataSource(noteLocalDataSource)
-                .remoteDataSource(noteDataSources.get(0))
+                .remoteDataSource(noteDataSources.get(1))
                 .logPath(NOTE_LOG_PATH)
                 .build();
 
@@ -140,20 +152,20 @@ public class MyApplication extends Application {
             DavDataSource<Todo> todoDavDataSource = new DefaultDavDataSource.Builder<Todo>()
                     .clazz(Todo.class)
                     .davClient(davClient)
-                    .executorService(getExecutorService())
+                    .executorService(null) // 防止坚果云503
                     .server(server)
                     .paths(todoPaths)
                     .lock(new DavLock(davClient, OkWebDavUtil.concat(server, TODO_LOCK_PATH)))
-                    .lstRecorder(new SelfLSTDavModel((SardineDavClient) davClient, OkWebDavUtil.concat(server, "todo")))
+                    .lstRecorder(new LSTDavModel( davClient, OkWebDavUtil.concat(server, TODO_LST_PATH)))
                     .build();
 
             todoDataSources.add(todoDavDataSource);
         }
 
 
-        todoSynchronizer = new DavSynchronizer3.Builder<Todo>()
+        todoSynchronizer = new DavSynchronizer2.Builder<Todo>()
                 .localDataSource(todoLocalDataSource)
-                .remoteDataSource(todoDataSources.get(0))
+                .remoteDataSource(todoDataSources.get(1))
                 .logPath(TODO_LOG_PATH)
                 .build();
     }
@@ -165,11 +177,11 @@ public class MyApplication extends Application {
         }
 
         String noteSyncRemoteRootUrls = PreferenceUtil.getString(NOTE_SYNC_REMOTE_ROOT_PATHS);
-        PreferenceUtil.put(NOTE_SYNC_REMOTE_DAV_SERVERS, "https://dav.jianguoyun.com/dav/nut3/|https://dav.jianguoyun.com/dav/tera3/");
+        PreferenceUtil.put(NOTE_SYNC_REMOTE_DAV_SERVERS, "http://192.168.1.103:8070/repository/default/nut3/|https://dav.jianguoyun.com/dav/tera3/");
         PreferenceUtil.put(NOTE_SYNC_REMOTE_ROOT_PATHS, "note/splice1|note/splice2");
 
         String syncRemoteRootUrls = PreferenceUtil.getString(TODO_SYNC_REMOTE_ROOT_PATHS);
-        PreferenceUtil.put(TODO_SYNC_REMOTE_DAV_SERVERS, "https://dav.jianguoyun.com/dav/nut3/|https://dav.jianguoyun.com/dav/tera3/");
+        PreferenceUtil.put(TODO_SYNC_REMOTE_DAV_SERVERS, "http://192.168.1.103:8070/repository/default/nut3/|https://dav.jianguoyun.com/dav/tera3/");
         PreferenceUtil.put(TODO_SYNC_REMOTE_ROOT_PATHS, "todo/splice1|todo/splice2");
 
         String virtualUserId = PreferenceUtil.getString(VIRTUAL_USER_ID);
@@ -268,21 +280,6 @@ public class MyApplication extends Application {
             public void run() {
                 try {
                     noteSynchronizer.sync();
-                    if (success != null) {
-                        handler.post(success);
-                    }
-                } catch (Exception e) {
-                    e.printStackTrace();
-                    if (fail != null) {
-                        handler.post(fail);
-                    }
-                }
-            }
-        });
-        getExecutorService().execute(new Runnable() {
-            @Override
-            public void run() {
-                try {
                     todoSynchronizer.sync();
                     if (success != null) {
                         handler.post(success);

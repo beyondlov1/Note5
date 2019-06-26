@@ -3,6 +3,7 @@ package com.beyond.note5.sync.webdav;
 import com.beyond.note5.sync.webdav.client.DavClient;
 import com.beyond.note5.sync.webdav.client.SardineDavClient;
 import com.beyond.note5.utils.OkWebDavUtil;
+import com.thegrizzlylabs.sardineandroid.DavResource;
 import com.thegrizzlylabs.sardineandroid.Sardine;
 import com.thegrizzlylabs.sardineandroid.impl.OkHttpSardine;
 
@@ -74,9 +75,27 @@ public class SardineDavClientTest {
     @Test
     public void listAllFilePath() throws IOException {
         DavClient client = new SardineDavClient(CommonTest.getUsername(),CommonTest.getPassword());
-        List<String> paths = client.listAllFilePath(OkWebDavUtil.concat(CommonTest.getRootUrl(), "/NoteCloud2/"));
+        List<String> paths = client.listAllFilePath(OkWebDavUtil.concat(CommonTest.getRootUrl(), "/nut3/todo/splice2/"));
         for (String path : paths) {
             System.out.println(path);
+        }
+    }
+
+    @Test
+    public void listAllFileUrl() throws IOException {
+        DavClient client = new SardineDavClient(CommonTest.getUsername(),CommonTest.getPassword());
+        List<String> urls = client.listAllFileUrl(OkWebDavUtil.concat(CommonTest.getRootUrl(), "/nut3/todo/splice2/"));
+        for (String path : urls) {
+            System.out.println(path);
+        }
+    }
+
+    @Test
+    public void listAllFileResource() throws IOException {
+        SardineDavClient client = new SardineDavClient(CommonTest.getUsername(),CommonTest.getPassword());
+        List<DavResource> resources = client.listAllFileResource(OkWebDavUtil.concat(CommonTest.getRootUrl(), "/nut3/note/"));
+        for (DavResource resource : resources) {
+            System.out.println(resource.getModified());
         }
     }
 

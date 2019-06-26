@@ -100,7 +100,7 @@ public class DavSynchronizer3<T extends Tracable> implements Synchronizer<T> {
                     local.add(remoteDatum);
                 }
 
-                saveLastSyncTime(getLatestLastModifyTime(localData, remoteData,remoteLastSyncTime));
+                saveLastSyncTime(getLatestLastModifyTime(localData, remoteData));
                 resetFailCount();
                 remote.release();
                 return true;
@@ -133,7 +133,7 @@ public class DavSynchronizer3<T extends Tracable> implements Synchronizer<T> {
                     addAll(localAddedData);
                     addAll(localUpdatedData);
                 }
-            }, remoteModified,remoteLastSyncTime));
+            }, remoteModified));
             resetFailCount();
             remote.release();
             return true;
@@ -178,15 +178,6 @@ public class DavSynchronizer3<T extends Tracable> implements Synchronizer<T> {
             result.add(remote.selectById(remoteAddedId));
         }
         return result;
-    }
-
-    private Date getLatestLastModifyTime(List<T> localData, List<T> remoteData, Date remoteLastSyncTime){
-        Date latestLastModifyTime = getLatestLastModifyTime(localData, remoteData);
-        if (latestLastModifyTime.before(remoteLastSyncTime)){
-            return remoteLastSyncTime;
-        }else {
-            return latestLastModifyTime;
-        }
     }
 
     private Date getLatestLastModifyTime(List<T> localData, List<T> remoteData) {

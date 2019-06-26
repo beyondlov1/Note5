@@ -1,7 +1,9 @@
 package com.beyond.note5.sync.model.impl;
 
+import com.alibaba.fastjson.JSONObject;
 import com.beyond.note5.sync.model.LSTModel;
 import com.beyond.note5.sync.webdav.client.SardineDavClient;
+import com.beyond.note5.utils.OkWebDavUtil;
 import com.thegrizzlylabs.sardineandroid.DavResource;
 
 import org.apache.commons.lang3.time.DateUtils;
@@ -41,7 +43,10 @@ public class SelfLSTDavModel implements LSTModel {
                 }
             }
         });
-        return davResources.get(davResources.size()-1).getModified();
+        String rootUrl = OkWebDavUtil.getRootUrl(dirUrl);
+        String json = client.get(rootUrl + davResources.get(davResources.size() - 1).getPath());
+        JSONObject jsonObject = JSONObject.parseObject(json);
+        return jsonObject.getDate("lastModifyTime");
     }
 
     @Override

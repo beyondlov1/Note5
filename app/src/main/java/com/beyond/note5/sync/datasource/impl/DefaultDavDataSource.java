@@ -311,7 +311,7 @@ public class DefaultDavDataSource<T extends Document> implements DavDataSource<T
         public DavDataSource<T> build() {
             DefaultDavDataSource<T> davDataSource = new DefaultDavDataSource<T>();
 
-            if (client == null || server == null || lock == null || executorService == null || clazz == null) {
+            if (client == null || server == null || lock == null || clazz == null) {
                 throw new RuntimeException("dav datasource build fail");
             }
             davDataSource.client = client;

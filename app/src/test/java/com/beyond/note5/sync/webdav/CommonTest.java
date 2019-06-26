@@ -21,7 +21,7 @@ import static com.beyond.note5.utils.StringCompressUtilTest.setTime;
 
 public class CommonTest {
     public static String getRootUrl(){
-        return "https://dav.jianguoyun.com/dav/";
+        return "http://localhost:8070/repository/default/";
     }
     public static List<Note> getExampleNotes(){
         Note note = Note.newInstance();
@@ -68,11 +68,11 @@ public class CommonTest {
         return list;
     }
     public static String getUsername(){
-        return "806784568@qq.com";
+        return "admin";
     }
 
     public static String getPassword(){
-        return "";
+        return "admin";
     }
 
     public static DavClient getClient(){
