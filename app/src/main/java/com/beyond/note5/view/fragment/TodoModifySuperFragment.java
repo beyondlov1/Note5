@@ -111,6 +111,7 @@ public class TodoModifySuperFragment extends AbstractTodoEditorFragment implemen
         final Todo todo = fillTodoModifyEvent.get();
         currentIndex = fillTodoModifyEvent.getIndex();
         creatingDocument = ObjectUtils.clone(todo);
+        creatingDocument.__setDaoSession(MyApplication.getInstance().getDaoSession());
         editorContent.setText(creatingDocument.getContent());
         editorContent.setSelection(creatingDocument.getContent().length());
         highlightTimeExpressionAsync();
