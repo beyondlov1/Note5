@@ -1,9 +1,11 @@
 package com.beyond.note5.sync.datasource;
 
-import com.beyond.note5.sync.model.LSTModel;
+import com.beyond.note5.sync.model.bean.TraceInfo;
 import com.beyond.note5.sync.webdav.client.DavClient;
 
-public interface DavDataSource<T> extends DataSource<T>, LSTModel {
+import java.io.IOException;
+
+public interface DavDataSource<T> extends DataSource<T> {
     String getServer();
 
     String[] getPaths();
@@ -12,4 +14,7 @@ public interface DavDataSource<T> extends DataSource<T>, LSTModel {
 
     DavClient getClient();
 
+    TraceInfo getTraceInfo() throws IOException;
+    
+    void setTraceInfo(TraceInfo traceInfo) throws IOException;
 }

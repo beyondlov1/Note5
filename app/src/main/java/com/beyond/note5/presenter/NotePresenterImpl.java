@@ -202,7 +202,7 @@ public class NotePresenterImpl implements NotePresenter {
     public void findAll() {
         try {
             List<Note> allNote = noteModel.findAll();
-            this.findAllSuccess(allNote);
+            findAllSuccess(allNote);
         } catch (Exception e) {
             e.printStackTrace();
             this.findAllFail();

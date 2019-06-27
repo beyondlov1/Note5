@@ -1,0 +1,1 @@
+alter  table SYNC_INFO add column LAST_MODIFY_TIME integer;

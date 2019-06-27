@@ -534,8 +534,8 @@ public class OkHttpSardine2 extends OkHttpSardine {
                                 && propstat.getProp().getResourcetype() != null
                                 && propstat.getProp().getResourcetype().getPrincipal() != null) {
                             collections.add(new DavPrincipal(DavPrincipal.PrincipalType.HREF,
-                                    r.getHref()/*.getLastSyncTime(0)*/,
-                                    propstat.getProp().getDisplayname()/*.getContent().getLastSyncTime(0)*/));
+                                    r.getHref()/*.get(0)*/,
+                                    propstat.getProp().getDisplayname()/*.getContent().get(0)*/));
                         }
                     }
                 }

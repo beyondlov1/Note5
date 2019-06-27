@@ -1,7 +1,7 @@
 package com.beyond.note5.sync.model.impl;
 
 import com.alibaba.fastjson.JSONObject;
-import com.beyond.note5.sync.model.LSTModel;
+import com.beyond.note5.sync.model.LMTSharedSource;
 import com.beyond.note5.sync.webdav.client.SardineDavClient;
 import com.beyond.note5.utils.OkWebDavUtil;
 import com.thegrizzlylabs.sardineandroid.DavResource;
@@ -14,19 +14,20 @@ import java.util.Comparator;
 import java.util.Date;
 import java.util.List;
 
-public class SelfLSTDavModel implements LSTModel {
+@Deprecated
+public class SelfDavSharedLMT implements LMTSharedSource {
 
     private SardineDavClient client;
 
     private String dirUrl;
 
-    public SelfLSTDavModel(SardineDavClient client, String dirUrl) {
+    public SelfDavSharedLMT(SardineDavClient client, String dirUrl) {
         this.client = client;
         this.dirUrl = dirUrl;
     }
 
     @Override
-    public Date getLastSyncTime() throws IOException {
+    public Date get() throws IOException {
         List<DavResource> davResources = client.listAllFileResource(dirUrl);
         if (davResources.isEmpty()){
             return new Date(0);
@@ -50,7 +51,7 @@ public class SelfLSTDavModel implements LSTModel {
     }
 
     @Override
-    public void setLastSyncTime(Date date) throws IOException {
+    public void set(Date date) throws IOException {
         // do nothing
     }
 }

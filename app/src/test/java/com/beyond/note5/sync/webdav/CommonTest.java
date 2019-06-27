@@ -2,7 +2,7 @@ package com.beyond.note5.sync.webdav;
 
 import com.beyond.note5.bean.Attachment;
 import com.beyond.note5.bean.Note;
-import com.beyond.note5.sync.model.impl.LSTDavModel;
+import com.beyond.note5.sync.model.impl.DavSharedLMT;
 import com.beyond.note5.sync.datasource.DavDataSource;
 import com.beyond.note5.sync.datasource.impl.DefaultDavDataSource;
 import com.beyond.note5.sync.webdav.client.DavClient;
@@ -93,7 +93,7 @@ public class CommonTest {
                 .server(server)
                 .paths(paths)
                 .lock(new DavLock(davClient, OkWebDavUtil.concat(server, "LOCK/distribute.lock")))
-                .lstRecorder(new LSTDavModel(davClient, OkWebDavUtil.concat(server, "LOCK/LST.mark")))
+                .sharedSource(new DavSharedLMT(davClient, OkWebDavUtil.concat(server, "LOCK/LST.mark")))
                 .build();
     }
 
@@ -108,7 +108,7 @@ public class CommonTest {
                 .server(server)
                 .paths(paths)
                 .lock(new DavLock(davClient, OkWebDavUtil.concat(server, "LOCK/distribute.lock")))
-                .lstRecorder(new LSTDavModel(davClient, OkWebDavUtil.concat(server, "LOCK/LST.mark")))
+                .sharedSource(new DavSharedLMT(davClient, OkWebDavUtil.concat(server, "LOCK/LST.mark")))
                 .build();
     }
 

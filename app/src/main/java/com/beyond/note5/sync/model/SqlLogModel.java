@@ -6,7 +6,7 @@ import java.io.IOException;
 import java.util.Date;
 import java.util.List;
 
-public interface LogSqlModel {
+public interface SqlLogModel {
 
     void saveAll(List<SyncLogInfo> t) throws IOException;
 

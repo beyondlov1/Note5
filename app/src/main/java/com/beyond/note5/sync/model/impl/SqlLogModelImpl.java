@@ -2,7 +2,7 @@ package com.beyond.note5.sync.model.impl;
 
 import com.beyond.note5.sync.model.bean.SyncLogInfo;
 import com.beyond.note5.model.dao.SyncLogInfoDao;
-import com.beyond.note5.sync.model.LogSqlModel;
+import com.beyond.note5.sync.model.SqlLogModel;
 import com.beyond.note5.utils.PreferenceUtil;
 
 import org.apache.commons.collections4.ListUtils;
@@ -14,13 +14,13 @@ import java.util.List;
 
 import static com.beyond.note5.MyApplication.VIRTUAL_USER_ID;
 
-public class LogSqlModelImpl<T> implements LogSqlModel {
+public class SqlLogModelImpl<T> implements SqlLogModel {
 
     private SyncLogInfoDao logInfoDao;
 
     private String type;
 
-    public LogSqlModelImpl(SyncLogInfoDao logInfoDao,String type) {
+    public SqlLogModelImpl(SyncLogInfoDao logInfoDao, String type) {
         this.logInfoDao = logInfoDao;
         this.type = type;
     }

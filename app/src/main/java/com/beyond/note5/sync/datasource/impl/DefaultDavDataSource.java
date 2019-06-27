@@ -6,7 +6,8 @@ import com.alibaba.fastjson.JSONException;
 import com.alibaba.fastjson.JSONObject;
 import com.beyond.note5.bean.Document;
 import com.beyond.note5.sync.datasource.DavDataSource;
-import com.beyond.note5.sync.model.LSTModel;
+import com.beyond.note5.sync.model.SharedSource;
+import com.beyond.note5.sync.model.bean.TraceInfo;
 import com.beyond.note5.sync.webdav.Lock;
 import com.beyond.note5.sync.webdav.client.DavClient;
 import com.beyond.note5.sync.webdav.client.DavFilter;
@@ -40,7 +41,7 @@ public class DefaultDavDataSource<T extends Document> implements DavDataSource<T
 
     private Class<T> clazz;
 
-    private LSTModel LSTModel;
+    private SharedSource<TraceInfo> trace;
 
     private DefaultDavDataSource() {
 
@@ -75,6 +76,19 @@ public class DefaultDavDataSource<T extends Document> implements DavDataSource<T
     @Override
     public T selectById(String id) throws IOException {
         return decode(client.get(getDocumentUrl(id)));
+    }
+
+    public List<T> selectAllValid() throws IOException {
+        List<T> result = new ArrayList<>();
+        List<T> all = selectAll();
+        if (all!=null){
+            for (T t : all) {
+                if (t.getValid()){
+                    result.add(t);
+                }
+            }
+        }
+        return result;
     }
 
     @Override
@@ -176,6 +190,16 @@ public class DefaultDavDataSource<T extends Document> implements DavDataSource<T
     }
 
     @Override
+    public TraceInfo getTraceInfo() throws IOException {
+        return trace.get();
+    }
+
+    @Override
+    public void setTraceInfo(TraceInfo traceInfo) throws IOException {
+        trace.set(traceInfo);
+    }
+
+    @Override
     public List<T> selectByModifiedDate(Date date) throws IOException {
         if (paths == null) {
             throw new RuntimeException("paths is null");
@@ -247,17 +271,6 @@ public class DefaultDavDataSource<T extends Document> implements DavDataSource<T
     }
 
 
-    @Override
-    public Date getLastSyncTime() throws IOException {
-        return LSTModel.getLastSyncTime();
-    }
-
-    @Override
-    public void setLastSyncTime(Date date) throws IOException {
-        LSTModel.setLastSyncTime(date);
-    }
-
-
     public static class Builder<T extends Document> {
         private DavClient client;
 
@@ -271,7 +284,7 @@ public class DefaultDavDataSource<T extends Document> implements DavDataSource<T
 
         private Class<T> clazz;
 
-        private LSTModel recorder;
+        private SharedSource<TraceInfo> trace;
 
         public Builder<T> davClient(DavClient client) {
             this.client = client;
@@ -303,8 +316,8 @@ public class DefaultDavDataSource<T extends Document> implements DavDataSource<T
             return this;
         }
 
-        public Builder<T> lstRecorder(LSTModel recorder) {
-            this.recorder = recorder;
+        public Builder<T> sharedSource(SharedSource<TraceInfo> trace) {
+            this.trace = trace;
             return this;
         }
 
@@ -320,7 +333,7 @@ public class DefaultDavDataSource<T extends Document> implements DavDataSource<T
             davDataSource.lock = lock;
             davDataSource.executorService = executorService;
             davDataSource.clazz = clazz;
-            davDataSource.LSTModel = recorder;
+            davDataSource.trace = trace;
             return davDataSource;
         }
     }

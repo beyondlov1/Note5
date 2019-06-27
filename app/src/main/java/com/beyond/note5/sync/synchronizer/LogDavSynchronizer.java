@@ -1,8 +1,8 @@
 package com.beyond.note5.sync.synchronizer;
 
 import com.beyond.note5.sync.model.bean.SyncLogInfo;
-import com.beyond.note5.sync.model.impl.LogDavModelImpl;
-import com.beyond.note5.sync.model.LogSqlModel;
+import com.beyond.note5.sync.model.impl.DavLogModelImpl;
+import com.beyond.note5.sync.model.SqlLogModel;
 import com.beyond.note5.sync.Synchronizer;
 
 import org.apache.commons.collections4.ListUtils;
@@ -12,11 +12,11 @@ import java.util.List;
 
 public class LogDavSynchronizer implements Synchronizer<SyncLogInfo> {
 
-    private LogSqlModel local;
+    private SqlLogModel local;
 
-    private LogDavModelImpl remote;
+    private DavLogModelImpl remote;
 
-    public LogDavSynchronizer(LogSqlModel local, LogDavModelImpl remote) {
+    public LogDavSynchronizer(SqlLogModel local, DavLogModelImpl remote) {
         this.local = local;
         this.remote = remote;
     }

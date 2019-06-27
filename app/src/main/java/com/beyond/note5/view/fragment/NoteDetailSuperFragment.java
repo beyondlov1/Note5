@@ -393,6 +393,9 @@ public class NoteDetailSuperFragment extends AbstractDocumentDialogFragment impl
     private class MyNoteView extends NoteViewAdapter {
         @Override
         public void onUpdateSuccess(Note note) {
+            if (multiDetailStage.getData() == null){
+                return;
+            }
             int index = multiDetailStage.getData().indexOf(note);
             multiDetailStage.setCurrentIndex(index == -1 ? 0 : index) ;
             refresh();

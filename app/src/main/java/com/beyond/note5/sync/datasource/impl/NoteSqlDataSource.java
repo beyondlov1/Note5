@@ -2,11 +2,15 @@ package com.beyond.note5.sync.datasource.impl;
 
 import com.beyond.note5.MyApplication;
 import com.beyond.note5.bean.Note;
+import com.beyond.note5.event.note.AddNoteSuccessEvent;
+import com.beyond.note5.event.note.DeleteNoteSuccessEvent;
 import com.beyond.note5.presenter.NotePresenter;
 import com.beyond.note5.presenter.NotePresenterImpl;
 import com.beyond.note5.sync.datasource.DataSource;
 import com.beyond.note5.utils.PreferenceUtil;
 import com.beyond.note5.view.adapter.view.NoteViewAdapter;
+
+import org.greenrobot.eventbus.EventBus;
 
 import java.io.IOException;
 import java.util.Date;
@@ -41,7 +45,13 @@ public class NoteSqlDataSource implements DataSource<Note> {
 
     @Override
     public void update(Note note) {
+        Note oldNote = notePresenter.selectById(note.getId());
         notePresenter.update(note);
+        if (!oldNote.getValid() && note.getValid()){
+            EventBus.getDefault().post(new AddNoteSuccessEvent(note));
+        }else if (oldNote.getValid() && !note.getValid()){
+            EventBus.getDefault().post(new DeleteNoteSuccessEvent(note));
+        }
     }
 
     @Override

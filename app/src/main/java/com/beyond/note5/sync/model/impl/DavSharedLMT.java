@@ -1,24 +1,25 @@
 package com.beyond.note5.sync.model.impl;
 
-import com.beyond.note5.sync.model.LSTModel;
+import com.beyond.note5.sync.model.LMTSharedSource;
 import com.beyond.note5.sync.webdav.client.DavClient;
 
 import java.io.IOException;
 import java.util.Date;
 
-public class LSTDavModel implements LSTModel {
+@Deprecated
+public class DavSharedLMT implements LMTSharedSource {
 
     private DavClient client;
 
     private String url;
 
-    public LSTDavModel(DavClient client, String url) {
+    public DavSharedLMT(DavClient client, String url) {
         this.client = client;
         this.url = url;
     }
 
     @Override
-    public Date getLastSyncTime() throws IOException {
+    public Date get() throws IOException {
         if (client.exists(url)){
             return new Date(Long.valueOf(client.get(url)));
         }else {
@@ -27,7 +28,7 @@ public class LSTDavModel implements LSTModel {
     }
 
     @Override
-    public void setLastSyncTime(Date date) throws IOException {
+    public void set(Date date) throws IOException {
         client.put(url,date.getTime()+"");
     }
 }

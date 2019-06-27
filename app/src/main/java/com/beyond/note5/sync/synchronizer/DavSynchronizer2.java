@@ -5,11 +5,11 @@ import com.beyond.note5.bean.Tracable;
 import com.beyond.note5.sync.Synchronizer;
 import com.beyond.note5.sync.datasource.DataSource;
 import com.beyond.note5.sync.datasource.DavDataSource;
-import com.beyond.note5.sync.model.LSTModel;
-import com.beyond.note5.sync.model.LogSqlModel;
+import com.beyond.note5.sync.model.SqlLogModel;
 import com.beyond.note5.sync.model.bean.SyncLogInfo;
-import com.beyond.note5.sync.model.impl.LogSqlModelImpl;
-import com.beyond.note5.sync.model.impl.SqlLSTModel;
+import com.beyond.note5.sync.model.bean.TraceInfo;
+import com.beyond.note5.sync.model.impl.SqlLogModelImpl;
+import com.beyond.note5.sync.model.impl.SqlSharedTraceInfo;
 
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.time.DateUtils;
@@ -32,9 +32,9 @@ public class DavSynchronizer2<T extends Tracable> implements Synchronizer<T> {
 
     private DavDataSource<T> remote;
 
-    private LSTModel localLSTModel;
+    private SqlLogModel localSqlLogModel;
 
-    private LogSqlModel localLogSqlModel;
+    private SqlSharedTraceInfo localSharedTraceInfo;
 
     private DavSynchronizer2() {
 
@@ -45,23 +45,25 @@ public class DavSynchronizer2<T extends Tracable> implements Synchronizer<T> {
         List<T> localList = local.selectAll();
         List<T> localData = localList == null ? new ArrayList<>() : localList;
 
-        Date remoteLastSyncTime = this.remote.getLastSyncTime();
-        Date localLastSyncTime = this.localLSTModel.getLastSyncTime();
+        TraceInfo remoteTraceInfo = this.remote.getTraceInfo();
+        TraceInfo localTraceInfo = this.localSharedTraceInfo.get();
 
-        if (DateUtils.isSameInstant(remoteLastSyncTime, new Date(0))) {
-            localLSTModel.setLastSyncTime(new Date(0));
+        Date remoteLastModifyTime = remoteTraceInfo.getLastModifyTime();
+        Date localLastModifyTime = localTraceInfo.getLastModifyTime();
+
+        if (DateUtils.isSameInstant(remoteLastModifyTime, new Date(0))) {
+            localSharedTraceInfo.set(TraceInfo.ZERO);
             return syncBaseOnLocal(localData);
         }
 
-        if (DateUtils.isSameInstant(localLastSyncTime, remoteLastSyncTime)) {
+        if (DateUtils.isSameInstant(localLastModifyTime, remoteLastModifyTime)) {
             return syncBaseOnLocal(localData);
         }
 
         if (remote.tryLock(60000L)) {
 
-            Date lastSyncTime = localLSTModel.getLastSyncTime();
-            List<SyncLogInfo> localAdded = localLogSqlModel.getLocalAdded(lastSyncTime);
-            List<SyncLogInfo> localUpdated = localLogSqlModel.getLocalUpdated(lastSyncTime);
+            List<SyncLogInfo> localAdded = localSqlLogModel.getLocalAdded(localLastModifyTime);
+            List<SyncLogInfo> localUpdated = localSqlLogModel.getLocalUpdated(localLastModifyTime);
             // 如果有相同的documentId（比如先添加后更新），则只增加
             Iterator<SyncLogInfo> localIterator = localUpdated.listIterator();
             while (localIterator.hasNext()) {
@@ -77,7 +79,7 @@ public class DavSynchronizer2<T extends Tracable> implements Synchronizer<T> {
 
 
             List<String> remoteModifiedIds = new ArrayList<>();
-            List<T> remoteModified = remote.selectByModifiedDate(lastSyncTime);
+            List<T> remoteModified = remote.selectByModifiedDate(remoteTraceInfo.getLastSyncTime());
             if (remoteModified != null) {
                 for (T t : remoteModified) {
                     remoteModifiedIds.add(t.getId());
@@ -218,9 +220,9 @@ public class DavSynchronizer2<T extends Tracable> implements Synchronizer<T> {
     }
 
     private boolean syncBaseOnLocal(List<T> localData) throws Exception {
-        Date lastSyncTime = this.localLSTModel.getLastSyncTime();
-        List<T> localAddedData = getLocalAddedData(localData, lastSyncTime);
-        List<T> localUpdatedData = getLocalUpdatedData(localData, lastSyncTime);
+        Date lastModifyTime = this.localSharedTraceInfo.get().getLastModifyTime();
+        List<T> localAddedData = getLocalAddedData(localData, lastModifyTime);
+        List<T> localUpdatedData = getLocalUpdatedData(localData, lastModifyTime);
 
         if (localAddedData.isEmpty() && localUpdatedData.isEmpty()) {
             return false;
@@ -302,8 +304,9 @@ public class DavSynchronizer2<T extends Tracable> implements Synchronizer<T> {
     }
 
     private void saveLastSyncTime(Date date) throws IOException {
-        localLSTModel.setLastSyncTime(date);
-        remote.setLastSyncTime(date);
+        TraceInfo traceInfo = TraceInfo.create(date, new Date());
+        localSharedTraceInfo.set(traceInfo);
+        remote.setTraceInfo(traceInfo);
     }
 
     private void checkFailCount() {
@@ -359,8 +362,8 @@ public class DavSynchronizer2<T extends Tracable> implements Synchronizer<T> {
             }
             synchronizer.local = local;
             synchronizer.remote = remote;
-            synchronizer.localLSTModel = new SqlLSTModel(local, remote, MyApplication.getInstance().getDaoSession().getSyncInfoDao());
-            synchronizer.localLogSqlModel = new LogSqlModelImpl(MyApplication.getInstance().getDaoSession().getSyncLogInfoDao(),
+            synchronizer.localSharedTraceInfo = new SqlSharedTraceInfo(local, remote, MyApplication.getInstance().getDaoSession().getSyncInfoDao());
+            synchronizer.localSqlLogModel = new SqlLogModelImpl(MyApplication.getInstance().getDaoSession().getSyncLogInfoDao(),
                     local.clazz().getSimpleName().toLowerCase());
             return synchronizer;
         }
