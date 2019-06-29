@@ -20,7 +20,9 @@ import com.beyond.note5.sync.Synchronizer;
 import com.beyond.note5.sync.datasource.DataSource;
 import com.beyond.note5.sync.datasource.DavDataSource;
 import com.beyond.note5.sync.datasource.impl.DefaultDavDataSource;
+import com.beyond.note5.sync.datasource.impl.NoteDavDataSourceWrap;
 import com.beyond.note5.sync.datasource.impl.NoteSqlDataSource;
+import com.beyond.note5.sync.datasource.impl.NoteSqlDataSourceWrap;
 import com.beyond.note5.sync.datasource.impl.TodoSqlDataSource;
 import com.beyond.note5.sync.model.impl.DavSharedTraceInfo;
 import com.beyond.note5.sync.synchronizer.DavSynchronizer2;
@@ -100,19 +102,22 @@ public class MyApplication extends Application {
         initSynchronizer();
 
         if (PreferenceUtil.getBoolean(DAV_LOGIN, false)) {
-            ToastUtil.toast(getApplicationContext(),"开始同步");
+            ToastUtil.toast(getApplicationContext(), "开始同步");
             sync(new Runnable() {
                 @Override
                 public void run() {
-                    ToastUtil.toast(getApplicationContext(),"同步成功");
+                    ToastUtil.toast(getApplicationContext(), "同步成功");
                 }
             }, new Runnable() {
                 @Override
                 public void run() {
-                    ToastUtil.toast(getApplicationContext(),"同步失败");
+                    ToastUtil.toast(getApplicationContext(), "同步失败");
                 }
             });
         }
+
+        File fileStorageDir = getFileStorageDir();
+        System.out.println(fileStorageDir.getAbsolutePath());
     }
 
     public void initPreference() {
@@ -137,29 +142,31 @@ public class MyApplication extends Application {
 
     @SuppressWarnings("unchecked")
     private void initSynchronizer() {
-        DataSource<Note> noteLocalDataSource = new NoteSqlDataSource();
 
 //        DavClient davClient = new SardineDavClient("admin","admin");
-        DavClient davClient = new SardineDavClient(PreferenceUtil.getString(DAV_LOGIN_USERNAME),PreferenceUtil.getString(DAV_LOGIN_PASSWORD));
+        DavClient davClient = new SardineDavClient(PreferenceUtil.getString(DAV_LOGIN_USERNAME), PreferenceUtil.getString(DAV_LOGIN_PASSWORD));
+
+        NoteSqlDataSource noteLocalDataSource = new NoteSqlDataSource();
+
         List<DavDataSource<Note>> noteDataSources = new ArrayList<>();
         List<DavDataSource<Todo>> todoDataSources = new ArrayList<>();
         String[] noteServers = StringUtils.split(PreferenceUtil.getString(NOTE_SYNC_REMOTE_DAV_SERVERS), "|");
         String[] notePaths = StringUtils.split(PreferenceUtil.getString(NOTE_SYNC_REMOTE_ROOT_PATHS), "|");
         for (String server : noteServers) {
-            DavDataSource<Note> noteDavDataSource = new DefaultDavDataSource.Builder<Note>()
+            DefaultDavDataSource<Note> noteDavDataSource = new DefaultDavDataSource.Builder<Note>()
                     .clazz(Note.class)
                     .davClient(davClient)
                     .executorService(null) // 防止坚果云503
                     .server(server)
                     .paths(notePaths)
                     .lock(new DavLock(davClient, OkWebDavUtil.concat(server, NOTE_LOCK_PATH)))
-                    .sharedSource(new DavSharedTraceInfo( davClient, OkWebDavUtil.concat(server, NOTE_LST_PATH)))
+                    .sharedSource(new DavSharedTraceInfo(davClient, OkWebDavUtil.concat(server, NOTE_LST_PATH)))
                     .build();
 
-            noteDataSources.add(noteDavDataSource);
+            noteDataSources.add(new NoteDavDataSourceWrap(noteDavDataSource));
         }
         noteSynchronizer = new DavSynchronizer2.Builder<Note>()
-                .localDataSource(noteLocalDataSource)
+                .localDataSource(new NoteSqlDataSourceWrap(noteLocalDataSource, noteDataSources.get(1)))
                 .remoteDataSource(noteDataSources.get(1))
                 .logPath(NOTE_LOG_PATH)
                 .build();
@@ -175,7 +182,7 @@ public class MyApplication extends Application {
                     .server(server)
                     .paths(todoPaths)
                     .lock(new DavLock(davClient, OkWebDavUtil.concat(server, TODO_LOCK_PATH)))
-                    .sharedSource(new DavSharedTraceInfo( davClient, OkWebDavUtil.concat(server, TODO_LST_PATH)))
+                    .sharedSource(new DavSharedTraceInfo(davClient, OkWebDavUtil.concat(server, TODO_LST_PATH)))
                     .build();
 
             todoDataSources.add(todoDavDataSource);
@@ -203,7 +210,7 @@ public class MyApplication extends Application {
 //        DaoMaster daoMaster = new DaoMaster(database);
 //        daoSession = daoMaster.newSession();
 
-        DaoMaster.OpenHelper helper = new DaoMaster.OpenHelper(this, "beyond_not_safe.db"){
+        DaoMaster.OpenHelper helper = new DaoMaster.OpenHelper(this, "beyond_not_safe.db") {
             @Override
             public void onCreate(Database db) {
                 // do nothing
@@ -291,5 +298,9 @@ public class MyApplication extends Application {
             initSynchronizer();
         }
         return todoSynchronizer;
+    }
+
+    public File getFileStorageDir() {
+        return this.getExternalFilesDir(Environment.DIRECTORY_PICTURES);
     }
 }

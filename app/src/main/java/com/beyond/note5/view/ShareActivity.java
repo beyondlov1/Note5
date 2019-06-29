@@ -84,7 +84,7 @@ public class ShareActivity extends Activity {
     private Note generateNoteFromSend(Intent intent) {
         String title = intent.getStringExtra(Intent.EXTRA_SUBJECT);
         String content = intent.getStringExtra(Intent.EXTRA_TEXT);
-        Note note = Note.newInstance();
+        Note note = Note.create();
         note.setTitle(title);
         if (content.startsWith("null ")){
             content = content.substring(5);
@@ -96,7 +96,7 @@ public class ShareActivity extends Activity {
     @RequiresApi(api = Build.VERSION_CODES.M)
     private Note generateNoteFromProcessText(Intent intent) {
         String content = intent.getStringExtra(Intent.EXTRA_PROCESS_TEXT);
-        Note note = Note.newInstance();
+        Note note = Note.create();
         note.setContent(content);
         return note;
     }
@@ -126,7 +126,7 @@ public class ShareActivity extends Activity {
                 return null;
             }
 
-            Note note = Note.newInstance();
+            Note note = Note.create();
             note.setId(noteId);
             note.setContent(content.toString());
             note.setAttachments(attachments);

@@ -122,7 +122,7 @@ public class TodoEditFragment extends AbstractTodoEditorFragment {
         if (StringUtils.isBlank(content)) {
             return;
         }
-        Todo todo = Todo.newTodo(content);
+        Todo todo = Todo.create(content);
         todoCompositePresenter.add(todo);
     }
 

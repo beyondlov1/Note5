@@ -18,7 +18,7 @@ import java.util.List;
 @Entity
 public class Note extends Document {
 
-    public static Note newInstance(){
+    public static Note create(){
         Date currDate = new Date();
         Note note = new Note();
         note.setId(IDUtil.uuid());

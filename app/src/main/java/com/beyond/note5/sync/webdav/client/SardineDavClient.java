@@ -9,6 +9,8 @@ import com.thegrizzlylabs.sardineandroid.impl.handler.OkHttpSardine2;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
 
+import java.io.File;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.Charset;
@@ -65,9 +67,59 @@ public class SardineDavClient implements DavClient {
     }
 
     @Override
+    public void upload(String path, String url) throws IOException {
+        upload(new File(path), url);
+    }
+
+    @Override
+    public void upload(File file, String url) throws IOException {
+        upload(file, url, null);
+    }
+
+    @Override
+    public void upload(File file, String url, String contentType) throws IOException {
+        String dirUrl = StringUtils.substringBeforeLast(url, "/");
+        mkDir(dirUrl);
+        try {
+            sardine.put(url, file, contentType);
+            failCount.set(0);
+        } catch (SardineException e) {
+            if (e.getStatusCode() == 409) {
+                if (failCount.get() > 2) {
+                    throw e;
+                }
+                IS_DIR_EXIST.remove(dirUrl);
+                closeResponse();
+                failCount.getAndAdd(1);
+                sardine.put(url, file, contentType);
+            } else {
+                throw e;
+            }
+        } finally {
+            closeResponse();
+        }
+    }
+
+    @Override
     public String get(String url) throws IOException {
         try (InputStream inputStream = sardine.get(url)) {
             return IOUtils.toString(inputStream, Charset.defaultCharset());
+        } finally {
+            closeResponse();
+        }
+    }
+
+    @Override
+    public void download(String url, String path) throws IOException {
+        download(url, new File(path));
+    }
+
+    @Override
+    public void download(String url, File file) throws IOException {
+        try (InputStream inputStream = sardine.get(url);
+             FileOutputStream output = new FileOutputStream(file)) {
+            IOUtils.copy(inputStream, output);
+            output.flush();
         } finally {
             closeResponse();
         }

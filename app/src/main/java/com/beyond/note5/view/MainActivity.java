@@ -538,7 +538,7 @@ public class MainActivity extends FragmentActivity implements
     }
 
     private void addQRCodeNote(String content) {
-        Note note = Note.newInstance();
+        Note note = Note.create();
         note.setContent(content);
         notePresenter.add(note);
     }
@@ -558,7 +558,7 @@ public class MainActivity extends FragmentActivity implements
         attachment.setPath(currPhotoPath);
         attachments.add(attachment);
 
-        Note note = Note.newInstance();
+        Note note = Note.create();
         note.setId(noteId);
         note.setContent(content);
         note.setAttachments(attachments);

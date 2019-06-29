@@ -19,7 +19,7 @@ import java.util.Date;
 @Entity
 public class Todo extends Document {
 
-    public static Todo newTodo(String content){
+    public static Todo create(String content){
         Todo todo = new Todo();
         todo.setId(IDUtil.uuid());
         todo.setTitle(content.length() > 10 ? content.substring(0, 10) : content);

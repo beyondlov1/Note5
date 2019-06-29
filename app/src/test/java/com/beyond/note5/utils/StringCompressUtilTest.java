@@ -33,13 +33,13 @@ public class StringCompressUtilTest {
 
     public static String getExampleStr(){
 
-        Note note = Note.newInstance();
-        Note note1 = Note.newInstance();
-        Note note2 = Note.newInstance();
-        Note note3 = Note.newInstance();
-        Note note4 = Note.newInstance();
-        Note note5 = Note.newInstance();
-        Note note6 = Note.newInstance();
+        Note note = Note.create();
+        Note note1 = Note.create();
+        Note note2 = Note.create();
+        Note note3 = Note.create();
+        Note note4 = Note.create();
+        Note note5 = Note.create();
+        Note note6 = Note.create();
 
         note.setId("0");
         note1.setId("1");

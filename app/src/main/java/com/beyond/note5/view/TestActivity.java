@@ -33,9 +33,9 @@ public class TestActivity extends Activity {
 
         NoteMultiDetailStage detailStage = findViewById(R.id.test_detail_stage);
         List<Note> data = new ArrayList<>();
-        Note note1 = Note.newInstance();
-        Note note2 = Note.newInstance();
-        Note note3 = Note.newInstance();
+        Note note1 = Note.create();
+        Note note2 = Note.create();
+        Note note3 = Note.create();
         note1.setContent("ab1");
         note2.setContent("ab2");
         note3.setContent("ab3");

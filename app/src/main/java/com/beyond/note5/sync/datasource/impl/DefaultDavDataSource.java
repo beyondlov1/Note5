@@ -6,6 +6,7 @@ import com.alibaba.fastjson.JSONException;
 import com.alibaba.fastjson.JSONObject;
 import com.beyond.note5.bean.Document;
 import com.beyond.note5.sync.datasource.DavDataSource;
+import com.beyond.note5.sync.datasource.DavPathStrategy;
 import com.beyond.note5.sync.model.SharedSource;
 import com.beyond.note5.sync.model.bean.TraceInfo;
 import com.beyond.note5.sync.webdav.Lock;
@@ -13,8 +14,6 @@ import com.beyond.note5.sync.webdav.client.DavClient;
 import com.beyond.note5.sync.webdav.client.DavFilter;
 import com.beyond.note5.sync.webdav.client.PostLastModifyTimeDavFilter;
 import com.beyond.note5.utils.OkWebDavUtil;
-
-import org.apache.commons.lang3.StringUtils;
 
 import java.io.IOException;
 import java.lang.reflect.Type;
@@ -42,6 +41,8 @@ public class DefaultDavDataSource<T extends Document> implements DavDataSource<T
     private Class<T> clazz;
 
     private SharedSource<TraceInfo> trace;
+
+    private DavPathStrategy davPathStrategy;
 
     private DefaultDavDataSource() {
 
@@ -115,21 +116,7 @@ public class DefaultDavDataSource<T extends Document> implements DavDataSource<T
     }
 
     private String getPathById(String id) {
-        if (paths.length == 0) {
-            throw new RuntimeException("url不能为空");
-        }
-        if (paths.length == 1) {
-            if (paths[0].endsWith("/")) {
-                return StringUtils.substringBeforeLast(paths[0], "/");
-            }
-            return paths[0];
-        }
-
-        int index = Math.abs(id.hashCode()) % paths.length;
-        if (paths[index].endsWith("/")) {
-            return StringUtils.substringBeforeLast(paths[index], "/");
-        }
-        return paths[index];
+        return davPathStrategy.getStoragePath(id);
     }
 
     private String encode(T t) {
@@ -197,6 +184,11 @@ public class DefaultDavDataSource<T extends Document> implements DavDataSource<T
     @Override
     public void setTraceInfo(TraceInfo traceInfo) throws IOException {
         trace.set(traceInfo);
+    }
+
+    @Override
+    public DavPathStrategy getPathStrategy() {
+        return davPathStrategy;
     }
 
     @Override
@@ -286,6 +278,8 @@ public class DefaultDavDataSource<T extends Document> implements DavDataSource<T
 
         private SharedSource<TraceInfo> trace;
 
+        private DavPathStrategy davPathStrategy;
+
         public Builder<T> davClient(DavClient client) {
             this.client = client;
             return this;
@@ -321,7 +315,12 @@ public class DefaultDavDataSource<T extends Document> implements DavDataSource<T
             return this;
         }
 
-        public DavDataSource<T> build() {
+        public Builder<T> davPathStrategy(DavPathStrategy davPathStrategy){
+            this.davPathStrategy = davPathStrategy;
+            return this;
+        }
+
+        public DefaultDavDataSource<T> build() {
             DefaultDavDataSource<T> davDataSource = new DefaultDavDataSource<T>();
 
             if (client == null || server == null || lock == null || clazz == null) {
@@ -334,6 +333,9 @@ public class DefaultDavDataSource<T extends Document> implements DavDataSource<T
             davDataSource.executorService = executorService;
             davDataSource.clazz = clazz;
             davDataSource.trace = trace;
+            if (davPathStrategy == null){
+                davDataSource.davPathStrategy = new DefaultDavPathStrategy(server,paths);
+            }
             return davDataSource;
         }
     }

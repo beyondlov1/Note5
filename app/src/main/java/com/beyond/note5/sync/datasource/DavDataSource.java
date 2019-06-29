@@ -17,4 +17,6 @@ public interface DavDataSource<T> extends DataSource<T> {
     TraceInfo getTraceInfo() throws IOException;
     
     void setTraceInfo(TraceInfo traceInfo) throws IOException;
+
+    DavPathStrategy getPathStrategy();
 }
