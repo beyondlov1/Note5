@@ -29,7 +29,7 @@ public class OkWebDavUtilTest {
             Future<Object> future = executorService.submit(new Callable<Object>() {
                 @Override
                 public Object call() throws Exception {
-                    OkWebDavUtil.mkRemoteDir(sardine, CommonTest.getRootUrl(), "/test/yes/");
+                    OkWebDavUtil.mkRemoteDirQuietly(sardine, CommonTest.getRootUrl(), "/test/yes/");
                     return null;
                 }
             });

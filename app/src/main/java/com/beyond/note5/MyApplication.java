@@ -5,8 +5,11 @@ import android.database.sqlite.SQLiteDatabase;
 import android.os.Environment;
 import android.os.Handler;
 
+import com.beyond.note5.bean.Account;
 import com.beyond.note5.bean.Note;
 import com.beyond.note5.bean.Todo;
+import com.beyond.note5.model.AccountModel;
+import com.beyond.note5.model.AccountModelImpl;
 import com.beyond.note5.model.PredictModel;
 import com.beyond.note5.model.PredictModelImpl;
 import com.beyond.note5.model.dao.DaoMaster;
@@ -34,6 +37,7 @@ import com.beyond.note5.utils.OkWebDavUtil;
 import com.beyond.note5.utils.PreferenceUtil;
 import com.beyond.note5.utils.ToastUtil;
 
+import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.flywaydb.core.Flyway;
 import org.flywaydb.core.api.android.ContextHolder;
@@ -45,10 +49,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-
-import static com.beyond.note5.view.LoginActivity.DAV_LOGIN;
-import static com.beyond.note5.view.LoginActivity.DAV_LOGIN_PASSWORD;
-import static com.beyond.note5.view.LoginActivity.DAV_LOGIN_USERNAME;
 
 /**
  * @author: beyond
@@ -69,6 +69,7 @@ public class MyApplication extends Application {
 
     public static final String LOG_PATH = "LOCK/sync.log";
     public static final String NOTE_LOCK_PATH = "/LOCK/note_lock.lock";
+    public static final String LOGIN_PATH = "/LOCK/";
     public static final String NOTE_LST_PATH = "/LOCK/note_last_sync_time.mark";
     public static final String NOTE_LOG_PATH = "/LOCK/note_sync.log";
     public static final String TODO_LOCK_PATH = "/LOCK/todo_lock.lock";
@@ -84,9 +85,13 @@ public class MyApplication extends Application {
     private Synchronizer<Note> noteSynchronizer;
     private Synchronizer<Todo> todoSynchronizer;
 
+    private List<Synchronizer<Note>> noteSynchronizers;
+    private List<Synchronizer<Todo>> todoSynchronizers;
+
     private DaoSession daoSession;
     private ExecutorService executorService;
     private PredictModel predictModel;
+    private AccountModel accountModel;
 
     public static MyApplication getInstance() {
         return instance;
@@ -101,7 +106,7 @@ public class MyApplication extends Application {
         initDaoSession();
         initSynchronizer();
 
-        if (PreferenceUtil.getBoolean(DAV_LOGIN, false)) {
+        if (CollectionUtils.isNotEmpty(noteSynchronizers) && CollectionUtils.isNotEmpty(todoSynchronizers)) {
             ToastUtil.toast(getApplicationContext(), "开始同步");
             sync(new Runnable() {
                 @Override
@@ -116,8 +121,6 @@ public class MyApplication extends Application {
             });
         }
 
-        File fileStorageDir = getFileStorageDir();
-        System.out.println(fileStorageDir.getAbsolutePath());
     }
 
     public void initPreference() {
@@ -143,57 +146,59 @@ public class MyApplication extends Application {
     @SuppressWarnings("unchecked")
     private void initSynchronizer() {
 
-//        DavClient davClient = new SardineDavClient("admin","admin");
-        DavClient davClient = new SardineDavClient(PreferenceUtil.getString(DAV_LOGIN_USERNAME), PreferenceUtil.getString(DAV_LOGIN_PASSWORD));
+        accountModel = new AccountModelImpl();
+        List<Account> accounts = accountModel.findAllValid();
 
-        NoteSqlDataSource noteLocalDataSource = new NoteSqlDataSource();
+        if (accounts.isEmpty()) {
+            return;
+        }
 
-        List<DavDataSource<Note>> noteDataSources = new ArrayList<>();
-        List<DavDataSource<Todo>> todoDataSources = new ArrayList<>();
-        String[] noteServers = StringUtils.split(PreferenceUtil.getString(NOTE_SYNC_REMOTE_DAV_SERVERS), "|");
-        String[] notePaths = StringUtils.split(PreferenceUtil.getString(NOTE_SYNC_REMOTE_ROOT_PATHS), "|");
-        for (String server : noteServers) {
+        noteSynchronizers = new ArrayList<>();
+        todoSynchronizers = new ArrayList<>();
+
+        for (Account account : accounts) {
+            String server = account.getServer();
+            DavClient davClient = new SardineDavClient(account.getUsername(), account.getPassword());
+
+            NoteSqlDataSource noteLocalDataSource = new NoteSqlDataSource();
+            String[] notePaths = StringUtils.split(PreferenceUtil.getString(NOTE_SYNC_REMOTE_ROOT_PATHS), "|");
             DefaultDavDataSource<Note> noteDavDataSource = new DefaultDavDataSource.Builder<Note>()
                     .clazz(Note.class)
                     .davClient(davClient)
                     .executorService(null) // 防止坚果云503
-                    .server(server)
+                    .server(OkWebDavUtil.concat(server, ""))
                     .paths(notePaths)
                     .lock(new DavLock(davClient, OkWebDavUtil.concat(server, NOTE_LOCK_PATH)))
                     .sharedSource(new DavSharedTraceInfo(davClient, OkWebDavUtil.concat(server, NOTE_LST_PATH)))
                     .build();
 
-            noteDataSources.add(new NoteDavDataSourceWrap(noteDavDataSource));
-        }
-        noteSynchronizer = new DavSynchronizer2.Builder<Note>()
-                .localDataSource(new NoteSqlDataSourceWrap(noteLocalDataSource, noteDataSources.get(1)))
-                .remoteDataSource(noteDataSources.get(1))
-                .logPath(NOTE_LOG_PATH)
-                .build();
+            NoteDavDataSourceWrap noteDavDataSourceWrap = new NoteDavDataSourceWrap(noteDavDataSource);
+            noteSynchronizers.add(new DavSynchronizer2.Builder<Note>()
+                    .localDataSource(new NoteSqlDataSourceWrap(noteLocalDataSource, noteDavDataSourceWrap))
+                    .remoteDataSource(noteDavDataSourceWrap)
+                    .logPath(NOTE_LOG_PATH)
+                    .build());
 
-        DataSource<Todo> todoLocalDataSource = new TodoSqlDataSource();
-        String[] todoServers = StringUtils.split(PreferenceUtil.getString(TODO_SYNC_REMOTE_DAV_SERVERS), "|");
-        String[] todoPaths = StringUtils.split(PreferenceUtil.getString(TODO_SYNC_REMOTE_ROOT_PATHS), "|");
-        for (String server : todoServers) {
+
+            DataSource<Todo> todoLocalDataSource = new TodoSqlDataSource();
+            String[] todoPaths = StringUtils.split(PreferenceUtil.getString(TODO_SYNC_REMOTE_ROOT_PATHS), "|");
             DavDataSource<Todo> todoDavDataSource = new DefaultDavDataSource.Builder<Todo>()
                     .clazz(Todo.class)
                     .davClient(davClient)
                     .executorService(null) // 防止坚果云503
-                    .server(server)
+                    .server(OkWebDavUtil.concat(server, ""))
                     .paths(todoPaths)
                     .lock(new DavLock(davClient, OkWebDavUtil.concat(server, TODO_LOCK_PATH)))
                     .sharedSource(new DavSharedTraceInfo(davClient, OkWebDavUtil.concat(server, TODO_LST_PATH)))
                     .build();
 
-            todoDataSources.add(todoDavDataSource);
+            todoSynchronizers.add(new DavSynchronizer2.Builder<Todo>()
+                    .localDataSource(todoLocalDataSource)
+                    .remoteDataSource(todoDavDataSource)
+                    .logPath(TODO_LOG_PATH)
+                    .build());
         }
 
-
-        todoSynchronizer = new DavSynchronizer2.Builder<Todo>()
-                .localDataSource(todoLocalDataSource)
-                .remoteDataSource(todoDataSources.get(1))
-                .logPath(TODO_LOG_PATH)
-                .build();
     }
 
     private void initDaoSession() {
@@ -264,15 +269,33 @@ public class MyApplication extends Application {
     }
 
     public void sync(Runnable success, Runnable fail) {
-        if (noteSynchronizer == null || todoSynchronizer == null) {
+        if (CollectionUtils.isEmpty(noteSynchronizers)||CollectionUtils.isEmpty(todoSynchronizers)) {
             initSynchronizer();
         }
         getExecutorService().execute(new Runnable() {
             @Override
             public void run() {
                 try {
-                    noteSynchronizer.sync();
-                    todoSynchronizer.sync();
+                    for (Synchronizer<Note> synchronizer : noteSynchronizers) {
+                        try {
+                            synchronizer.sync();
+                        }catch (Exception e){
+                            e.printStackTrace();
+                            if (fail != null) {
+                                handler.post(fail);
+                            }
+                        }
+                    }
+                    for (Synchronizer<Todo> synchronizer : todoSynchronizers) {
+                        try {
+                            synchronizer.sync();
+                        }catch (Exception e){
+                            e.printStackTrace();
+                            if (fail != null) {
+                                handler.post(fail);
+                            }
+                        }
+                    }
                     if (success != null) {
                         handler.post(success);
                     }
@@ -292,6 +315,12 @@ public class MyApplication extends Application {
         }
         return noteSynchronizer;
     }
+    public List<Synchronizer<Note>> getNoteSynchronizers() {
+        if (CollectionUtils.isEmpty(noteSynchronizers)) {
+            initSynchronizer();
+        }
+        return noteSynchronizers;
+    }
 
     public Synchronizer<Todo> getTodoSynchronizer() {
         if (todoSynchronizer == null) {
@@ -299,8 +328,18 @@ public class MyApplication extends Application {
         }
         return todoSynchronizer;
     }
+    public List<Synchronizer<Todo>> getTodoSynchronizers() {
+        if (CollectionUtils.isEmpty(todoSynchronizers)) {
+            initSynchronizer();
+        }
+        return todoSynchronizers;
+    }
 
     public File getFileStorageDir() {
         return this.getExternalFilesDir(Environment.DIRECTORY_PICTURES);
+    }
+
+    public AccountModel getAccountModel() {
+        return accountModel;
     }
 }

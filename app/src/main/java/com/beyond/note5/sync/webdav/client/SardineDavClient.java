@@ -45,7 +45,7 @@ public class SardineDavClient implements DavClient {
     @Override
     public void put(String url, String content) throws IOException {
         String dirUrl = StringUtils.substringBeforeLast(url, "/");
-        mkDir(dirUrl);
+        mkDirQuietly(dirUrl);
         try {
             sardine.put(url, content.getBytes());
             failCount.set(0);
@@ -79,7 +79,7 @@ public class SardineDavClient implements DavClient {
     @Override
     public void upload(File file, String url, String contentType) throws IOException {
         String dirUrl = StringUtils.substringBeforeLast(url, "/");
-        mkDir(dirUrl);
+        mkDirQuietly(dirUrl);
         try {
             sardine.put(url, file, contentType);
             failCount.set(0);
@@ -195,7 +195,7 @@ public class SardineDavClient implements DavClient {
     public synchronized List<DavResource> listAllFileResource(String dirUrl) throws IOException {
 
         List<DavResource> result = new ArrayList<>();
-        mkDir(dirUrl);
+        mkDirQuietly(dirUrl);
         List<DavResource> list = sardine.list(dirUrl);
         for (DavResource davResource : list) {
             if (OkWebDavUtil.urlEquals(
@@ -229,7 +229,7 @@ public class SardineDavClient implements DavClient {
     }
 
     @Override
-    public boolean mkDir(String dirUrl) {
+    public boolean mkDirQuietly(String dirUrl) {
         if (IS_DIR_EXIST.get(dirUrl) != null && IS_DIR_EXIST.get(dirUrl)) {
             return true;
         }
@@ -237,7 +237,7 @@ public class SardineDavClient implements DavClient {
         String parentUrl = StringUtils.substringBeforeLast(dirUrl, "/");
         String root = OkWebDavUtil.getRootUrl(dirUrl);
         if (!OkWebDavUtil.urlEquals(parentUrl, root)) {
-            mkDir(parentUrl);
+            mkDirQuietly(parentUrl);
         }
         try {
             sardine.createDirectory(dirUrl);

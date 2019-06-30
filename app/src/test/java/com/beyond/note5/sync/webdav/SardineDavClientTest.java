@@ -47,7 +47,7 @@ public class SardineDavClientTest {
     public void listAllFileName2() throws IOException {
         Sardine sardine = new OkHttpSardine();
         sardine.setCredentials(CommonTest.getUsername(), CommonTest.getPassword());
-        OkWebDavUtil.mkRemoteDir(sardine, OkWebDavUtil.concat(CommonTest.getRootUrl(), "/test/d454fd/67467/6ty546"));
+        OkWebDavUtil.mkRemoteDirQuietly(sardine, OkWebDavUtil.concat(CommonTest.getRootUrl(), "/test/d454fd/67467/6ty546"));
     }
 
     @Test
@@ -109,7 +109,7 @@ public class SardineDavClientTest {
     @Test
     public void mkDir(){
         DavClient client = new SardineDavClient(CommonTest.getUsername(),CommonTest.getPassword());
-        boolean success = client.mkDir(OkWebDavUtil.concat(CommonTest.getRootUrl(), "/NoteCloud2/43"));
+        boolean success = client.mkDirQuietly(OkWebDavUtil.concat(CommonTest.getRootUrl(), "/NoteCloud2/43"));
         assert success;
     }
 }

@@ -20,5 +20,5 @@ public interface DavClient {
     List<String> listAllFileUrl(String dirUrl, DavFilter filter) throws IOException;
     void delete(String url) throws IOException;
     boolean exists(String url) throws IOException;
-    boolean mkDir(String dirUrl);
+    boolean mkDirQuietly(String dirUrl);
 }

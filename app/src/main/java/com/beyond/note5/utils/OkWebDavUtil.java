@@ -206,8 +206,8 @@ public class OkWebDavUtil {
         return requestForResponse(client, mkcol);
     }
 
-    public static void mkRemoteDir(Sardine client, String root, String path) throws IOException {
-        mkRemoteDir(client,concat(root,path));
+    public static void mkRemoteDirQuietly(Sardine client, String root, String path) throws IOException {
+        mkRemoteDirQuietly(client,concat(root,path));
     }
 
     /**
@@ -216,15 +216,15 @@ public class OkWebDavUtil {
      * @param dirUrl
      * @throws IOException
      */
-    public static void mkRemoteDir(Sardine client, String dirUrl) throws IOException {
+    public static void mkRemoteDirQuietly(Sardine client, String dirUrl) throws IOException {
         if (IS_DIR_EXIST.get(dirUrl)!=null&& IS_DIR_EXIST.get(dirUrl)){
             return;
         }
         //获取文件夹路径
         String parentUrl = StringUtils.substringBeforeLast(dirUrl, "/");
-        String root = "https://" + URI.create(dirUrl).getHost();
-        if (!OkWebDavUtil.urlEquals(parentUrl,root)) {
-             mkRemoteDir(client, parentUrl);
+        String root = getRootUrl(dirUrl);
+        if (!urlEquals(parentUrl, root)) {
+            mkRemoteDirQuietly(client,parentUrl);
         }
         try {
             client.createDirectory(dirUrl);
@@ -264,28 +264,26 @@ public class OkWebDavUtil {
         }
     }
 
-    public static boolean isAvailable(String url, String username, String password) {
-        OkHttpClient client = new OkHttpClient.Builder()
-                .connectTimeout(10000, TimeUnit.MILLISECONDS)
-                .readTimeout(10000, TimeUnit.MILLISECONDS)
-                .authenticator(new BasicAuthenticator(username,
-                        password))
-                .build();
-        //获取文件夹路径
-        int index = StringUtils.lastIndexOf(url, "/");
-        String parentUrl = StringUtils.substring(url, 0, index);
-
-        Request.Builder requestBuilder = new Request.Builder();
-        Request mkcol = requestBuilder
-                .url(parentUrl)
-                .method("MKCOL", null)
-                .build();
-
-        try (Response response = client.newCall(mkcol).execute()) {
-            return response.isSuccessful();
+    public static boolean isAvailable(String rootUrl, String url, String username, String password) {
+        Sardine sardine = new OkHttpSardine2();
+        sardine.setCredentials(username, password);
+        try {
+            String dirUrl = StringUtils.substringBeforeLast(url, "/");
+            mkDir(rootUrl,dirUrl,sardine);
+            return true;
         } catch (IOException e) {
             e.printStackTrace();
             return false;
+        }
+    }
+
+    public static void mkDir(String rootUrl, String dirUrl,Sardine sardine) throws IOException {
+        String parentUrl = StringUtils.substringBeforeLast(dirUrl, "/");
+        if (!OkWebDavUtil.urlEquals(parentUrl, rootUrl)) {
+            mkDir(rootUrl,parentUrl,sardine);
+        }
+        if (!sardine.exists(dirUrl)){
+            sardine.createDirectory(dirUrl);
         }
     }
 

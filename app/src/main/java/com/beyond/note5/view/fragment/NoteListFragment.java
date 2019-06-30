@@ -13,7 +13,9 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 
+import com.beyond.note5.MyApplication;
 import com.beyond.note5.R;
+import com.beyond.note5.bean.Account;
 import com.beyond.note5.bean.Note;
 import com.beyond.note5.event.HideFABEvent;
 import com.beyond.note5.event.RefreshNoteListEvent;
@@ -30,7 +32,6 @@ import com.beyond.note5.presenter.NotePresenter;
 import com.beyond.note5.presenter.NotePresenterImpl;
 import com.beyond.note5.presenter.NoteSyncPresenterImpl;
 import com.beyond.note5.presenter.SyncPresenter;
-import com.beyond.note5.utils.PreferenceUtil;
 import com.beyond.note5.utils.ToastUtil;
 import com.beyond.note5.view.DavLoginActivity;
 import com.beyond.note5.view.MainActivity;
@@ -52,8 +53,6 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
-
-import static com.beyond.note5.view.LoginActivity.DAV_LOGIN_REMEMBER_PASSWORD;
 
 /**
  * @author: beyond
@@ -117,7 +116,8 @@ public class NoteListFragment extends Fragment {
             @Override
             public void onRefresh(@NonNull RefreshLayout refreshLayout) {
                 ToastUtil.toast(getContext(), "开始同步");
-                if (!PreferenceUtil.getBoolean(DAV_LOGIN_REMEMBER_PASSWORD)) {
+                List<Account> all = MyApplication.getInstance().getAccountModel().findAllValid();
+                if (all == null || all.isEmpty()) {
                     refreshLayout.finishRefresh();
                     Intent intent = new Intent(getContext(), DavLoginActivity.class);
                     startActivity(intent);
