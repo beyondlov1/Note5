@@ -1,5 +1,7 @@
 package com.beyond.note5.sync.datasource.impl;
 
+import android.util.Log;
+
 import com.beyond.note5.MyApplication;
 import com.beyond.note5.bean.Attachment;
 import com.beyond.note5.bean.Note;
@@ -10,6 +12,7 @@ import com.beyond.note5.sync.model.bean.TraceInfo;
 import com.beyond.note5.sync.webdav.client.DavClient;
 import com.beyond.note5.utils.OkWebDavUtil;
 
+import java.io.File;
 import java.io.IOException;
 import java.util.Date;
 import java.util.List;
@@ -35,10 +38,14 @@ public class NoteDavDataSourceWrap implements DavDataSource<Note> {
         List<Attachment> attachments = note.getAttachments();
         if (attachments!= null && !attachments.isEmpty()){
             for (Attachment attachment : attachments) {
-                getClient().upload(
-                        getLocalPath(attachment),
-                        getRemoteUrl(note, server, attachment)
-                );
+                if (new File(attachment.getPath()).exists()){
+                    getClient().upload(
+                            getLocalPath(attachment),
+                            getRemoteUrl(note, server, attachment)
+                    );
+                }else {
+                    Log.i(getClass().getSimpleName(),"附件不存在");
+                }
             }
         }
     }
