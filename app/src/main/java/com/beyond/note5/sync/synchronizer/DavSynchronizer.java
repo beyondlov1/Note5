@@ -51,11 +51,11 @@ public class DavSynchronizer<T extends Tracable> implements Synchronizer<T> {
         List<T> localList = local.selectAll();
         List<T> localData = localList == null ? new ArrayList<>() : localList;
 
-        Date remoteLastModifyTime = this.remote.getTraceInfo().getLastModifyTime();
-        Date localLastModifyTime = this.localSharedTraceInfo.get().getLastModifyTime();
+        Date remoteLastModifyTime = this.remote.getTraceInfo(local).getLastModifyTime();
+        Date localLastModifyTime = this.remote.getTraceInfo(remote).getLastModifyTime();
 
         if (DateUtils.isSameInstant(remoteLastModifyTime,new Date(0))){
-            localSharedTraceInfo.set(TraceInfo.ZERO);
+            local.setTraceInfo(TraceInfo.ZERO,remote);
             return syncBaseOnLocal(localData);
         }
 
@@ -67,7 +67,7 @@ public class DavSynchronizer<T extends Tracable> implements Synchronizer<T> {
 
             logSynchronizer.sync();
 
-            Date lastModifyTime = localSharedTraceInfo.get().getLastModifyTime();
+            Date lastModifyTime = local.getTraceInfo(remote).getLastModifyTime();
             List<SyncLogInfo> localAdded = localSqlLogModel.getLocalAdded(lastModifyTime);
             List<SyncLogInfo> localUpdated = localSqlLogModel.getLocalUpdated(lastModifyTime);
             List<SyncLogInfo> remoteAdded = localSqlLogModel.getRemoteAdded(lastModifyTime);
@@ -201,7 +201,7 @@ public class DavSynchronizer<T extends Tracable> implements Synchronizer<T> {
     }
 
     private boolean syncBaseOnLocal(List<T> localData) throws Exception {
-        Date lastModifyTime = this.localSharedTraceInfo.get().getLastModifyTime();
+        Date lastModifyTime = this.local.getTraceInfo(remote).getLastModifyTime();
         List<T> localAddedData = getLocalAddedData(localData, lastModifyTime);
         List<T> localUpdatedData = getLocalUpdatedData(localData, lastModifyTime);
 
@@ -286,8 +286,9 @@ public class DavSynchronizer<T extends Tracable> implements Synchronizer<T> {
     }
 
     private void saveLastSyncTime(Date date) throws IOException {
-        localSharedTraceInfo.set(TraceInfo.create(date,new Date()));
-        remote.setTraceInfo(TraceInfo.create(date,new Date()));
+        TraceInfo traceInfo = TraceInfo.create(date, new Date());
+        local.setTraceInfo(traceInfo,remote);
+        remote.setTraceInfo(traceInfo,local);
     }
 
     private void checkFailCount() {

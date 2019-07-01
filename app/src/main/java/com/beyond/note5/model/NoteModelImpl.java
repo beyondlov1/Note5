@@ -163,6 +163,13 @@ public class NoteModelImpl implements NoteModel {
                 .list();
     }
 
+    @Override
+    public List<Note> findByIds(List<String> ids) {
+        return noteDao.queryBuilder()
+                .where(NoteDao.Properties.Id.in(ids))
+                .list();
+    }
+
 
     private void addInsertLog(Note note){
         SyncLogInfo syncLogInfo = new SyncLogInfo();

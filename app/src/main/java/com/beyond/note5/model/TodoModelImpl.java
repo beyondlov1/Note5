@@ -164,6 +164,13 @@ public class TodoModelImpl implements TodoModel {
     }
 
     @Override
+    public List<Todo> findByIds(List<String> ids) {
+        return todoDao.queryBuilder()
+                .where(TodoDao.Properties.Id.in(ids))
+                .list();
+    }
+
+    @Override
     public void deleteReminder(Todo todo) {
         Reminder reminder = todo.getReminder();
         if (reminder !=null){

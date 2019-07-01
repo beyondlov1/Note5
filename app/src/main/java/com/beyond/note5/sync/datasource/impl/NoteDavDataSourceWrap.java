@@ -3,6 +3,7 @@ package com.beyond.note5.sync.datasource.impl;
 import com.beyond.note5.MyApplication;
 import com.beyond.note5.bean.Attachment;
 import com.beyond.note5.bean.Note;
+import com.beyond.note5.sync.datasource.DataSource;
 import com.beyond.note5.sync.datasource.DavDataSource;
 import com.beyond.note5.sync.datasource.DavPathStrategy;
 import com.beyond.note5.sync.model.bean.TraceInfo;
@@ -73,6 +74,11 @@ public class NoteDavDataSourceWrap implements DavDataSource<Note> {
         return defaultDavDataSource.selectById(id);
     }
 
+    @Override
+    public List<Note> selectByIds(List<String> ids) throws IOException {
+        return defaultDavDataSource.selectByIds(ids);
+    }
+
     public List<Note> selectAllValid() throws IOException {
         return defaultDavDataSource.selectAllValid();
     }
@@ -133,13 +139,13 @@ public class NoteDavDataSourceWrap implements DavDataSource<Note> {
     }
 
     @Override
-    public TraceInfo getTraceInfo() throws IOException {
-        return defaultDavDataSource.getTraceInfo();
+    public TraceInfo getTraceInfo(DataSource<Note> targetDataSource) throws IOException {
+        return defaultDavDataSource.getTraceInfo(targetDataSource);
     }
 
     @Override
-    public void setTraceInfo(TraceInfo traceInfo) throws IOException {
-        defaultDavDataSource.setTraceInfo(traceInfo);
+    public void setTraceInfo(TraceInfo traceInfo, DataSource<Note> targetDataSource) throws IOException {
+        defaultDavDataSource.setTraceInfo(traceInfo,targetDataSource);
     }
 
     @Override
@@ -151,4 +157,6 @@ public class NoteDavDataSourceWrap implements DavDataSource<Note> {
     public List<Note> selectByModifiedDate(Date date) throws IOException {
         return defaultDavDataSource.selectByModifiedDate(date);
     }
+
+
 }

@@ -7,6 +7,7 @@ import com.beyond.note5.bean.Attachment;
 import com.beyond.note5.bean.Note;
 import com.beyond.note5.sync.datasource.DataSource;
 import com.beyond.note5.sync.datasource.DavDataSource;
+import com.beyond.note5.sync.model.bean.TraceInfo;
 import com.beyond.note5.utils.OkWebDavUtil;
 
 import java.io.IOException;
@@ -80,6 +81,11 @@ public class NoteSqlDataSourceWrap implements DataSource<Note> {
     }
 
     @Override
+    public List<Note> selectByIds(List<String> ids) {
+        return noteSqlDataSource.selectByIds(ids);
+    }
+
+    @Override
     public List<Note> selectAll() throws IOException {
         return noteSqlDataSource.selectAll();
     }
@@ -87,6 +93,16 @@ public class NoteSqlDataSourceWrap implements DataSource<Note> {
     @Override
     public List<Note> selectByModifiedDate(Date date) throws IOException {
         return noteSqlDataSource.selectByModifiedDate(date);
+    }
+
+    @Override
+    public TraceInfo getTraceInfo(DataSource<Note> targetDataSource) throws IOException {
+        return noteSqlDataSource.getTraceInfo(targetDataSource);
+    }
+
+    @Override
+    public void setTraceInfo(TraceInfo traceInfo, DataSource<Note> targetDataSource) throws IOException {
+        noteSqlDataSource.setTraceInfo(traceInfo,targetDataSource);
     }
 
     @Override

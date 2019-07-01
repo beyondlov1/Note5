@@ -4,9 +4,13 @@ import com.beyond.note5.MyApplication;
 import com.beyond.note5.bean.Note;
 import com.beyond.note5.event.note.AddNoteSuccessEvent;
 import com.beyond.note5.event.note.DeleteNoteSuccessEvent;
+import com.beyond.note5.model.dao.SyncInfoDao;
 import com.beyond.note5.presenter.NotePresenter;
 import com.beyond.note5.presenter.NotePresenterImpl;
 import com.beyond.note5.sync.datasource.DataSource;
+import com.beyond.note5.sync.model.bean.SyncInfo;
+import com.beyond.note5.sync.model.bean.TraceInfo;
+import com.beyond.note5.utils.IDUtil;
 import com.beyond.note5.utils.PreferenceUtil;
 import com.beyond.note5.view.adapter.view.NoteViewAdapter;
 
@@ -65,6 +69,11 @@ public class NoteSqlDataSource implements DataSource<Note> {
     }
 
     @Override
+    public List<Note> selectByIds(List<String> ids) {
+        return notePresenter.selectByIds(ids);
+    }
+
+    @Override
     public List<Note> selectAll() throws IOException {
         return notePresenter.selectAllInAll();
     }
@@ -72,6 +81,38 @@ public class NoteSqlDataSource implements DataSource<Note> {
     @Override
     public List<Note> selectByModifiedDate(Date date) throws IOException {
         return notePresenter.selectByModifiedDate(date);
+    }
+
+    @Override
+    public TraceInfo getTraceInfo(DataSource<Note> remoteDataSource) throws IOException {
+        SyncInfo syncInfo = MyApplication.getInstance().getDaoSession().getSyncInfoDao().queryBuilder()
+                .where(SyncInfoDao.Properties.RemoteKey.eq(remoteDataSource.getKey()))
+                .where(SyncInfoDao.Properties.Type.eq(remoteDataSource.clazz().getSimpleName().toLowerCase()))
+                .unique();
+        return syncInfo == null?TraceInfo.ZERO:TraceInfo.create(syncInfo.getLastModifyTime(),syncInfo.getLastSyncTime());
+    }
+
+    @Override
+    public void setTraceInfo(TraceInfo traceInfo, DataSource<Note> remoteDataSource) throws IOException {
+        SyncInfoDao syncInfoDao = MyApplication.getInstance().getDaoSession().getSyncInfoDao();
+        SyncInfo syncInfo = syncInfoDao.queryBuilder()
+                .where(SyncInfoDao.Properties.RemoteKey.eq(remoteDataSource.getKey()))
+                .where(SyncInfoDao.Properties.Type.eq(remoteDataSource.clazz().getSimpleName().toLowerCase()))
+                .unique();
+        if (syncInfo == null){
+            SyncInfo info = new SyncInfo();
+            info.setId(IDUtil.uuid());
+            info.setLocalKey(getKey());
+            info.setRemoteKey(remoteDataSource.getKey());
+            info.setLastModifyTime(traceInfo.getLastModifyTime());
+            info.setLastSyncTime(traceInfo.getLastSyncTime());
+            info.setType(remoteDataSource.clazz().getSimpleName().toLowerCase());
+            syncInfoDao.insert(info);
+        }else {
+            syncInfo.setLastModifyTime(traceInfo.getLastModifyTime());
+            syncInfo.setLastSyncTime(traceInfo.getLastSyncTime());
+            syncInfoDao.update(syncInfo);
+        }
     }
 
     @Override

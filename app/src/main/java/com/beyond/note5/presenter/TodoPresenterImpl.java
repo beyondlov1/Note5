@@ -2,7 +2,6 @@ package com.beyond.note5.presenter;
 
 import android.support.annotation.Nullable;
 
-import com.beyond.note5.bean.Note;
 import com.beyond.note5.bean.Todo;
 import com.beyond.note5.event.todo.AddTodoSuccessEvent;
 import com.beyond.note5.event.todo.DeleteTodoSuccessEvent;
@@ -191,6 +190,11 @@ public class TodoPresenterImpl implements TodoPresenter {
     @Override
     public List<Todo> selectByModifiedDate(Date date) {
         return todoModel.findByModifiedDate(date);
+    }
+
+    @Override
+    public List<Todo> selectByIds(List<String> ids) {
+        return todoModel.findByIds(ids);
     }
 
     @Override

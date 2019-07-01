@@ -220,6 +220,11 @@ public class NotePresenterImpl implements NotePresenter {
     }
 
     @Override
+    public List<Note> selectByIds(List<String> ids) {
+        return noteModel.findByIds(ids);
+    }
+
+    @Override
     public List<Note> selectByModifiedDate(Date date) {
         return noteModel.findByModifiedDate(date);
     }

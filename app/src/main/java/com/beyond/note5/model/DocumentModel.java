@@ -27,4 +27,6 @@ public interface DocumentModel<T extends Document> extends Model<T> {
     T findById(String id);
 
     List<T> findByModifiedDate(Date date);
+
+    List<T> findByIds(List<String> ids);
 }

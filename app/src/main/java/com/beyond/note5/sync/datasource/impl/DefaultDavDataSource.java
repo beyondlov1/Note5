@@ -5,6 +5,7 @@ import android.util.Log;
 import com.alibaba.fastjson.JSONException;
 import com.alibaba.fastjson.JSONObject;
 import com.beyond.note5.bean.Document;
+import com.beyond.note5.sync.datasource.DataSource;
 import com.beyond.note5.sync.datasource.DavDataSource;
 import com.beyond.note5.sync.datasource.DavPathStrategy;
 import com.beyond.note5.sync.model.SharedSource;
@@ -77,6 +78,15 @@ public class DefaultDavDataSource<T extends Document> implements DavDataSource<T
     @Override
     public T selectById(String id) throws IOException {
         return decode(client.get(getDocumentUrl(id)));
+    }
+
+    @Override
+    public List<T> selectByIds(List<String> ids) throws IOException {
+        List<T> result = new ArrayList<>();
+        for (String id : ids) {
+            result.add(selectById(id));
+        }
+        return result;
     }
 
     public List<T> selectAllValid() throws IOException {
@@ -177,14 +187,15 @@ public class DefaultDavDataSource<T extends Document> implements DavDataSource<T
     }
 
     @Override
-    public TraceInfo getTraceInfo() throws IOException {
+    public TraceInfo getTraceInfo(DataSource<T> targetDataSource) throws IOException {
         return trace.get();
     }
 
     @Override
-    public void setTraceInfo(TraceInfo traceInfo) throws IOException {
+    public void setTraceInfo(TraceInfo traceInfo, DataSource<T> targetDataSource) throws IOException {
         trace.set(traceInfo);
     }
+
 
     @Override
     public DavPathStrategy getPathStrategy() {
@@ -261,7 +272,6 @@ public class DefaultDavDataSource<T extends Document> implements DavDataSource<T
         }
         return result;
     }
-
 
     public static class Builder<T extends Document> {
         private DavClient client;

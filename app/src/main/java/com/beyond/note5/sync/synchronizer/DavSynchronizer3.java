@@ -31,7 +31,7 @@ public class DavSynchronizer3<T extends Tracable> implements Synchronizer<T> {
 
     private DataSource<T> local;
 
-    private DavDataSource<T> remote;
+    private DataSource<T> remote;
 
     private SharedSource<TraceInfo> localSharedTraceInfo;
 
@@ -46,11 +46,11 @@ public class DavSynchronizer3<T extends Tracable> implements Synchronizer<T> {
         List<T> localList = local.selectAll();
         List<T> localData = localList == null ? new ArrayList<>() : localList;
 
-        Date remoteLastModifyTime = this.remote.getTraceInfo().getLastModifyTime();
+        Date remoteLastModifyTime = this.remote.getTraceInfo(local).getLastModifyTime();
         Date localLastModifyTime = this.localSharedTraceInfo.get().getLastModifyTime();
 
         if (DateUtils.isSameInstant(remoteLastModifyTime, new Date(0))) {
-            localSharedTraceInfo.set(TraceInfo.ZERO);
+            local.setTraceInfo(TraceInfo.ZERO,remote);
             return syncBaseOnLocal(localData);
         }
 
@@ -303,8 +303,9 @@ public class DavSynchronizer3<T extends Tracable> implements Synchronizer<T> {
     }
 
     private void saveLastSyncTime(Date date) throws IOException {
-        localSharedTraceInfo.set(TraceInfo.create(date,new Date()));
-        remote.setTraceInfo(TraceInfo.create(date,new Date()));
+        TraceInfo traceInfo = TraceInfo.create(date, new Date());
+        local.setTraceInfo(traceInfo,remote);
+        remote.setTraceInfo(traceInfo,local);
     }
 
     private void checkFailCount() {
