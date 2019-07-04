@@ -106,6 +106,36 @@ public class NoteDavDataSourceWrap implements DavDataSource<Note> {
     }
 
     @Override
+    public List<Note> getModifiedData(TraceInfo traceInfo) throws IOException {
+        return defaultDavDataSource.getModifiedData(traceInfo);
+    }
+
+    @Override
+    public void save(Note note) throws IOException {
+        defaultDavDataSource.save(note);
+    }
+
+    @Override
+    public void saveAll(List<Note> notes) throws IOException {
+        defaultDavDataSource.saveAll(notes);
+    }
+
+    @Override
+    public boolean isChanged(DataSource<Note> targetDataSource) throws IOException {
+        return defaultDavDataSource.isChanged(targetDataSource);
+    }
+
+    @Override
+    public TraceInfo getCorrespondTraceInfo(DataSource<Note> targetDataSource) throws IOException {
+        return defaultDavDataSource.getCorrespondTraceInfo(targetDataSource);
+    }
+
+    @Override
+    public void setCorrespondTraceInfo(TraceInfo traceInfo, DataSource<Note> targetDataSource) throws IOException {
+        defaultDavDataSource.setCorrespondTraceInfo(traceInfo,targetDataSource);
+    }
+
+    @Override
     public boolean tryLock(Long time) {
         return defaultDavDataSource.tryLock(time);
     }
@@ -146,13 +176,13 @@ public class NoteDavDataSourceWrap implements DavDataSource<Note> {
     }
 
     @Override
-    public TraceInfo getTraceInfo(DataSource<Note> targetDataSource) throws IOException {
-        return defaultDavDataSource.getTraceInfo(targetDataSource);
+    public TraceInfo getLatestTraceInfo() throws IOException {
+        return defaultDavDataSource.getLatestTraceInfo();
     }
 
     @Override
-    public void setTraceInfo(TraceInfo traceInfo, DataSource<Note> targetDataSource) throws IOException {
-        defaultDavDataSource.setTraceInfo(traceInfo,targetDataSource);
+    public void setLatestTraceInfo(TraceInfo traceInfo) throws IOException {
+        defaultDavDataSource.setLatestTraceInfo(traceInfo);
     }
 
     @Override

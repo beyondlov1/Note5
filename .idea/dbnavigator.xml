@@ -32,11 +32,13 @@
     <last-used-providers />
   </component>
   <component name="DBNavigator.Project.FileConnectionMappingManager">
-    <mapping file-url="file://$PROJECT_DIR$/app/src/main/assets/db/migration/V1.5__Add_Last_Modify_Time.sql" connection-id="virtual-sqlite-connection" session-id="MAIN" current-schema="" />
-    <mapping file-url="file://$PROJECT_DIR$/app/src/main/assets/db/migration/V1.2__Add_Valid.sql" connection-id="virtual-sqlite-connection" session-id="MAIN" current-schema="" />
-    <mapping file-url="file://$PROJECT_DIR$/app/src/main/assets/db/migration/V1.3__Create_Sync_Info_Table.sql" connection-id="virtual-sqlite-connection" session-id="MAIN" current-schema="" />
     <mapping file-url="file://$PROJECT_DIR$/app/src/main/assets/db/migration/V1.4__Create_Sync_Log_Info_Table.sql" connection-id="virtual-sqlite-connection" session-id="MAIN" current-schema="" />
     <mapping file-url="file://$PROJECT_DIR$/app/src/main/assets/db/migration/V1.1__Create_Tables.sql" connection-id="virtual-sqlite-connection" session-id="MAIN" current-schema="" />
+    <mapping file-url="file://$PROJECT_DIR$/app/src/main/assets/db/migration/V1.7__Add_Create_Time.sql" connection-id="virtual-sqlite-connection" session-id="MAIN" current-schema="" />
+    <mapping file-url="file://$PROJECT_DIR$/app/src/main/assets/db/migration/V1.5__Add_Last_Modify_Time.sql" connection-id="virtual-sqlite-connection" session-id="MAIN" current-schema="" />
+    <mapping file-url="file://$PROJECT_DIR$/app/src/main/assets/db/migration/V1.8__Add_Last_Sync_Time_Start.sql" connection-id="virtual-sqlite-connection" session-id="MAIN" current-schema="" />
+    <mapping file-url="file://$PROJECT_DIR$/app/src/main/assets/db/migration/V1.2__Add_Valid.sql" connection-id="virtual-sqlite-connection" session-id="MAIN" current-schema="" />
+    <mapping file-url="file://$PROJECT_DIR$/app/src/main/assets/db/migration/V1.3__Create_Sync_Info_Table.sql" connection-id="virtual-sqlite-connection" session-id="MAIN" current-schema="" />
   </component>
   <component name="DBNavigator.Project.MethodExecutionManager">
     <method-browser />

@@ -6,11 +6,9 @@ import com.beyond.note5.sync.Synchronizer;
 import com.beyond.note5.sync.datasource.DataSource;
 import com.beyond.note5.sync.datasource.DavDataSource;
 import com.beyond.note5.sync.model.SqlLogModel;
-import com.beyond.note5.sync.model.SharedSource;
 import com.beyond.note5.sync.model.bean.SyncLogInfo;
 import com.beyond.note5.sync.model.bean.TraceInfo;
 import com.beyond.note5.sync.model.impl.SqlLogModelImpl;
-import com.beyond.note5.sync.model.impl.SqlSharedTraceInfo;
 
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.time.DateUtils;
@@ -22,121 +20,80 @@ import java.util.Iterator;
 import java.util.List;
 
 /**
- * 利用webdav的propfind获取所有file的modifiedDate， 从而与本地的lastSyncTime进行比较
+ * 基于DavSynchronizer2进行改进， 性能可能下降， 但是更加普适化
+ *
  * @param <T>
  */
-public class DavSynchronizer3<T extends Tracable> implements Synchronizer<T> {
+public class DavSynchronizer4<T extends Tracable> implements Synchronizer<T> {
 
     private ThreadLocal<Integer> threadLocal = new ThreadLocal<>();
 
-    private DataSource<T> local;
+    private DataSource<T> dataSource1;
 
-    private DataSource<T> remote;
-
-    private SharedSource<TraceInfo> localSharedTraceInfo;
+    private DataSource<T> dataSource2;
 
     private SqlLogModel localSqlLogModel;
 
-    private DavSynchronizer3() {
+    private Date syncStart;
+
+    private DavSynchronizer4() {
 
     }
 
     @Override
     public synchronized boolean sync() throws Exception {
-        List<T> localList = local.selectAll();
-        List<T> localData = localList == null ? new ArrayList<>() : localList;
 
-        Date remoteLastModifyTime = this.remote.getCorrespondTraceInfo(local).getLastModifyTime();
-        Date localLastModifyTime = this.localSharedTraceInfo.get().getLastModifyTime();
-
-        if (DateUtils.isSameInstant(remoteLastModifyTime, new Date(0))) {
-            local.setCorrespondTraceInfo(TraceInfo.ZERO,remote);
-            return syncBaseOnLocal(localData);
+        if (syncStart == null){
+            syncStart = new Date();
         }
 
-        if (DateUtils.isSameInstant(localLastModifyTime, remoteLastModifyTime)) {
-            return syncBaseOnLocal(localData);
+        TraceInfo traceInfo1 = this.dataSource1.getCorrespondTraceInfo(dataSource2);
+        TraceInfo traceInfo2 = this.dataSource2.getCorrespondTraceInfo(dataSource1);
+
+        Date LastModifyTime1 = traceInfo1.getLastModifyTime();
+        Date LastModifyTime2 = traceInfo2.getLastModifyTime();
+
+        if (DateUtils.isSameInstant(LastModifyTime2, new Date(0)) && !DateUtils.isSameInstant(LastModifyTime1, new Date(0))) {
+            dataSource1.setLatestTraceInfo(TraceInfo.ZERO);
+            dataSource1.setCorrespondTraceInfo(TraceInfo.ZERO, dataSource2);
+            List<T> modified1 = dataSource1.getModifiedData(traceInfo1);
+            return syncByOneSide(dataSource2, modified1);
         }
 
-        if (remote.tryLock(60000L)) {
+        if (DateUtils.isSameInstant(LastModifyTime1, new Date(0)) && !DateUtils.isSameInstant(LastModifyTime2, new Date(0))) {
+            dataSource2.setLatestTraceInfo(TraceInfo.ZERO);
+            dataSource2.setCorrespondTraceInfo(TraceInfo.ZERO, dataSource1);
+            List<T> modified2 = dataSource2.getModifiedData(traceInfo2);
+            return syncByOneSide(dataSource1, modified2);
+        }
 
-            Date lastModifyTime = localSharedTraceInfo.get().getLastModifyTime();
-            List<SyncLogInfo> localAdded = localSqlLogModel.getLocalAdded(lastModifyTime);
-            List<SyncLogInfo> localUpdated = localSqlLogModel.getLocalUpdated(lastModifyTime);
-            // 如果有相同的documentId（比如先添加后更新），则只增加
-            Iterator<SyncLogInfo> localIterator = localUpdated.listIterator();
-            while (localIterator.hasNext()) {
-                SyncLogInfo next = localIterator.next();
-                for (SyncLogInfo syncLogInfo : localAdded) {
-                    if (StringUtils.equals(syncLogInfo.getDocumentId(), next.getDocumentId())) {
-                        localIterator.remove();
-                    }
-                }
-            }
-            List<T> localAddedData = getLocalData(localAdded);
-            List<T> localUpdatedData = getLocalData(localUpdated);
+        boolean isDataSource1Changed = dataSource1.isChanged(dataSource2);
+        boolean isDataSource2Changed = dataSource2.isChanged(dataSource1);
 
+        if (isDataSource1Changed && !isDataSource2Changed) {
+            List<T> modified1 = dataSource1.getModifiedData(traceInfo1);
+            return syncByOneSide(dataSource2, modified1);
+        }
 
-            List<String> remoteModifiedIds = new ArrayList<>();
-            List<T> remoteModified = remote.selectByModifiedDate(localSharedTraceInfo.get().getLastSyncTimeEnd());
-            if (remoteModified != null) {
-                for (T t : remoteModified) {
-                    remoteModifiedIds.add(t.getId());
-                }
-            }
-            List<String> localAllIds = new ArrayList<>();
-            if (localList != null) {
-                for (T t : localList) {
-                    localAllIds.add(t.getId());
-                }
-            }
-            List<T> remoteAddedData = getRemoteAddedData(remoteModifiedIds, localAllIds);
-            List<T> remoteUpdatedData = getRemoteUpdatedData(remoteModifiedIds, localAllIds);
+        if (!isDataSource1Changed && isDataSource2Changed) {
+            List<T> modified2 = dataSource2.getModifiedData(traceInfo2);
+            return syncByOneSide(dataSource1, modified2);
+        }
 
+        if (!isDataSource1Changed && !isDataSource2Changed) {
+            return true;
+        }
 
-            if (localData.isEmpty()) {
-                List<T> remoteList = remote.selectAll();
-                List<T> remoteData = remoteList == null ? new ArrayList<>() : remoteList;
-                for (T remoteDatum : remoteData) {
-                    local.add(remoteDatum);
-                }
+        if (dataSource2.tryLock(60000L)) {
+            List<T> modified1 = dataSource1.getModifiedData(traceInfo1);
+            List<T> modified2 = dataSource2.getModifiedData(traceInfo2);
 
-                saveLastSyncTime(getLatestLastModifyTime(localData, remoteData));
-                resetFailCount();
-                remote.release();
-                return true;
-            }
+            dataSource1.saveAll(modified2);
+            dataSource2.saveAll(modified1);
 
-            if (!localAddedData.isEmpty()) {
-                for (T datum : localAddedData) {
-                    remote.add(datum);
-                }
-            }
-            if (!localUpdatedData.isEmpty()) {
-                for (T datum : localUpdatedData) {
-                    remote.update(datum);
-                }
-            }
-
-            if (!remoteAddedData.isEmpty()) {
-                for (T datum : remoteAddedData) {
-                    local.add(datum);
-                }
-            }
-            if (!remoteUpdatedData.isEmpty()) {
-                for (T datum : remoteUpdatedData) {
-                    local.update(datum);
-                }
-            }
-
-            saveLastSyncTime(getLatestLastModifyTime(new ArrayList<T>() {
-                {
-                    addAll(localAddedData);
-                    addAll(localUpdatedData);
-                }
-            }, remoteModified));
+            saveLastSyncTime(getLatestLastModifyTime(modified1, modified2));
             resetFailCount();
-            remote.release();
+            dataSource2.release();
             return true;
         }
 
@@ -153,6 +110,78 @@ public class DavSynchronizer3<T extends Tracable> implements Synchronizer<T> {
         return true;
     }
 
+    private boolean syncByOneSide(DataSource<T> changingDataSource, List<T> modified) throws IOException {
+        if (modified.isEmpty()) {
+            return false;
+        }
+        if (changingDataSource.tryLock(60000L)) {
+
+            changingDataSource.saveAll(modified);
+
+            saveLastSyncTime(getLatestLastModifyTime(modified));
+            resetFailCount();
+            changingDataSource.release();
+            return true;
+        }
+
+        checkFailCount();
+
+        try {
+            Thread.sleep(1000);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+
+        return syncByOneSide(changingDataSource, modified);
+    }
+
+    private boolean syncBaseOnLocal(List<T> localAddedData, List<T> localUpdatedData) throws IOException {
+
+        if (localAddedData.isEmpty() && localUpdatedData.isEmpty()) {
+            return false;
+        }
+        if (dataSource2.tryLock(60000L)) {
+
+            if (!localAddedData.isEmpty()) {
+                for (T datum : localAddedData) {
+                    dataSource2.add(datum);
+                }
+            }
+            if (!localUpdatedData.isEmpty()) {
+                for (T datum : localUpdatedData) {
+                    dataSource2.update(datum);
+                }
+            }
+
+            saveLastSyncTime(getLatestLastModifyTime(localAddedData, localUpdatedData));
+            resetFailCount();
+            dataSource2.release();
+            return true;
+        }
+
+        checkFailCount();
+
+        try {
+            Thread.sleep(1000);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+
+        return syncBaseOnLocal(localAddedData, localUpdatedData);
+    }
+
+    private void subtract(List<SyncLogInfo> localUpdated, List<SyncLogInfo> localAdded) {
+        Iterator<SyncLogInfo> localIterator = localUpdated.listIterator();
+        while (localIterator.hasNext()) {
+            SyncLogInfo next = localIterator.next();
+            for (SyncLogInfo syncLogInfo : localAdded) {
+                if (StringUtils.equals(syncLogInfo.getDocumentId(), next.getDocumentId())) {
+                    localIterator.remove();
+                }
+            }
+        }
+    }
+
     private List<T> getRemoteAddedData(List<String> remoteModifiedIds, List<String> localAllIds) throws IOException {
         List<T> result = new ArrayList<>();
         List<String> remoteAddedIds = new ArrayList<>();
@@ -162,7 +191,7 @@ public class DavSynchronizer3<T extends Tracable> implements Synchronizer<T> {
             }
         }
         for (String remoteAddedId : remoteAddedIds) {
-            result.add(remote.selectById(remoteAddedId));
+            result.add(dataSource2.selectById(remoteAddedId));
         }
         return result;
     }
@@ -176,7 +205,11 @@ public class DavSynchronizer3<T extends Tracable> implements Synchronizer<T> {
             }
         }
         for (String remoteAddedId : remoteAddedIds) {
-            result.add(remote.selectById(remoteAddedId));
+            T t = dataSource2.selectById(remoteAddedId);
+            if ((t.getLastModifyTime() == null ? new Date(0) : t.getLastModifyTime())
+                    .after(dataSource1.selectById(remoteAddedId).getLastModifyTime())) {
+                result.add(t);
+            }
         }
         return result;
     }
@@ -210,50 +243,11 @@ public class DavSynchronizer3<T extends Tracable> implements Synchronizer<T> {
     }
 
     private List<T> getLocalData(List<SyncLogInfo> logs) throws IOException {
-        List<T> result = new ArrayList<>();
-        for (SyncLogInfo syncLogInfo : logs) {
-            T t = local.selectById(syncLogInfo.getDocumentId());
-            result.add(t);
+        List<String> ids = new ArrayList<>(logs.size());
+        for (SyncLogInfo log : logs) {
+            ids.add(log.getDocumentId());
         }
-        return result;
-    }
-
-    private boolean syncBaseOnLocal(List<T> localData) throws Exception {
-        Date lastModifyTime = this.localSharedTraceInfo.get().getLastModifyTime();
-        List<T> localAddedData = getLocalAddedData(localData, lastModifyTime);
-        List<T> localUpdatedData = getLocalUpdatedData(localData, lastModifyTime);
-
-        if (localAddedData.isEmpty() && localUpdatedData.isEmpty()) {
-            return false;
-        }
-        if (remote.tryLock(60000L)) {
-
-            if (!localAddedData.isEmpty()) {
-                for (T datum : localAddedData) {
-                    remote.add(datum);
-                }
-            }
-            if (!localUpdatedData.isEmpty()) {
-                for (T datum : localUpdatedData) {
-                    remote.update(datum);
-                }
-            }
-
-            saveLastSyncTime(getLatestLastModifyTime(localData));
-            resetFailCount();
-            remote.release();
-            return true;
-        }
-
-        checkFailCount();
-
-        try {
-            Thread.sleep(1000);
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        }
-
-        return syncBaseOnLocal(localData);
+        return dataSource1.selectByIds(ids);
     }
 
     private Date getLatestLastModifyTime(List<T> localData) {
@@ -274,6 +268,7 @@ public class DavSynchronizer3<T extends Tracable> implements Synchronizer<T> {
         return latestTime;
     }
 
+    @Deprecated
     private List<T> getLocalAddedData(List<T> localData, Date lastSyncTime) {
 
         List<T> result = new ArrayList<>();
@@ -288,6 +283,7 @@ public class DavSynchronizer3<T extends Tracable> implements Synchronizer<T> {
         return result;
     }
 
+    @Deprecated
     private List<T> getLocalUpdatedData(List<T> localData, Date lastSyncTime) {
 
         List<T> result = new ArrayList<>();
@@ -303,9 +299,12 @@ public class DavSynchronizer3<T extends Tracable> implements Synchronizer<T> {
     }
 
     private void saveLastSyncTime(Date date) throws IOException {
-        TraceInfo traceInfo = TraceInfo.create(date, new Date());
-        local.setCorrespondTraceInfo(traceInfo,remote);
-        remote.setCorrespondTraceInfo(traceInfo,local);
+        TraceInfo traceInfo = TraceInfo.create(date,syncStart, new Date());
+        dataSource1.setCorrespondTraceInfo(traceInfo, dataSource2);
+        dataSource2.setCorrespondTraceInfo(traceInfo, dataSource1);
+        dataSource1.setLatestTraceInfo(traceInfo);
+        dataSource2.setLatestTraceInfo(traceInfo);
+        syncStart = null;
     }
 
     private void checkFailCount() {
@@ -314,6 +313,7 @@ public class DavSynchronizer3<T extends Tracable> implements Synchronizer<T> {
             threadLocal.set(0);
         }
         if (threadLocal.get() > 10) {
+            syncStart = null;
             throw new RuntimeException("同步失败超过3次");
         }
 
@@ -354,14 +354,13 @@ public class DavSynchronizer3<T extends Tracable> implements Synchronizer<T> {
             return this;
         }
 
-        public DavSynchronizer3<T> build() {
-            DavSynchronizer3<T> synchronizer = new DavSynchronizer3<>();
+        public DavSynchronizer4<T> build() {
+            DavSynchronizer4<T> synchronizer = new DavSynchronizer4<>();
             if (local == null || remote == null) {
-                throw new RuntimeException("local and remote can not be null");
+                throw new RuntimeException("dataSource1 and dataSource2 can not be null");
             }
-            synchronizer.local = local;
-            synchronizer.remote = remote;
-            synchronizer.localSharedTraceInfo = new SqlSharedTraceInfo(local, remote, MyApplication.getInstance().getDaoSession().getSyncInfoDao());
+            synchronizer.dataSource1 = local;
+            synchronizer.dataSource2 = remote;
             synchronizer.localSqlLogModel = new SqlLogModelImpl(MyApplication.getInstance().getDaoSession().getSyncLogInfoDao(),
                     local.clazz().getSimpleName().toLowerCase());
             return synchronizer;

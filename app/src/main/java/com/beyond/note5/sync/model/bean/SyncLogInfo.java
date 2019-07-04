@@ -18,24 +18,28 @@ public class SyncLogInfo {
     private String refServer;
     private String operation;
     private Date operationTime;
+    private Date createTime;
     private String source;
     private String type;
 
-    @Generated(hash = 1761960630)
+
+    @Generated(hash = 733871479)
     public SyncLogInfo(String id, String documentId, String refPath, String refServer, String operation,
-            Date operationTime, String source, String type) {
+            Date operationTime, Date createTime, String source, String type) {
         this.id = id;
         this.documentId = documentId;
         this.refPath = refPath;
         this.refServer = refServer;
         this.operation = operation;
         this.operationTime = operationTime;
+        this.createTime = createTime;
         this.source = source;
         this.type = type;
     }
     @Generated(hash = 496388046)
     public SyncLogInfo() {
     }
+
 
     public String getId() {
         return this.id;
@@ -106,5 +110,11 @@ public class SyncLogInfo {
     }
     public void setType(String type) {
         this.type = type;
+    }
+    public Date getCreateTime() {
+        return this.createTime;
+    }
+    public void setCreateTime(Date createTime) {
+        this.createTime = createTime;
     }
 }

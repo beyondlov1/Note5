@@ -14,17 +14,22 @@ public class SyncInfo {
     private String localKey;
     private String remoteKey;
     private Date lastModifyTime;
+    private Date lastSyncTimeStart;
     private Date lastSyncTime;
     private String type;
 
 
-    @Generated(hash = 1559578009)
+
+
+    @Generated(hash = 837216697)
     public SyncInfo(String id, String localKey, String remoteKey,
-            Date lastModifyTime, Date lastSyncTime, String type) {
+            Date lastModifyTime, Date lastSyncTimeStart, Date lastSyncTime,
+            String type) {
         this.id = id;
         this.localKey = localKey;
         this.remoteKey = remoteKey;
         this.lastModifyTime = lastModifyTime;
+        this.lastSyncTimeStart = lastSyncTimeStart;
         this.lastSyncTime = lastSyncTime;
         this.type = type;
     }
@@ -32,6 +37,8 @@ public class SyncInfo {
     @Generated(hash = 57154307)
     public SyncInfo() {
     }
+
+
 
 
     public String getType() {
@@ -82,5 +89,13 @@ public class SyncInfo {
 
     public void setLastModifyTime(Date lastModifyTime) {
         this.lastModifyTime = lastModifyTime;
+    }
+
+    public Date getLastSyncTimeStart() {
+        return this.lastSyncTimeStart;
+    }
+
+    public void setLastSyncTimeStart(Date lastSyncTimeStart) {
+        this.lastSyncTimeStart = lastSyncTimeStart;
     }
 }

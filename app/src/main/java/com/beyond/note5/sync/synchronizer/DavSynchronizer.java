@@ -51,11 +51,11 @@ public class DavSynchronizer<T extends Tracable> implements Synchronizer<T> {
         List<T> localList = local.selectAll();
         List<T> localData = localList == null ? new ArrayList<>() : localList;
 
-        Date remoteLastModifyTime = this.remote.getTraceInfo(local).getLastModifyTime();
-        Date localLastModifyTime = this.remote.getTraceInfo(remote).getLastModifyTime();
+        Date remoteLastModifyTime = this.remote.getCorrespondTraceInfo(local).getLastModifyTime();
+        Date localLastModifyTime = this.remote.getCorrespondTraceInfo(remote).getLastModifyTime();
 
         if (DateUtils.isSameInstant(remoteLastModifyTime,new Date(0))){
-            local.setTraceInfo(TraceInfo.ZERO,remote);
+            local.setCorrespondTraceInfo(TraceInfo.ZERO,remote);
             return syncBaseOnLocal(localData);
         }
 
@@ -67,7 +67,7 @@ public class DavSynchronizer<T extends Tracable> implements Synchronizer<T> {
 
             logSynchronizer.sync();
 
-            Date lastModifyTime = local.getTraceInfo(remote).getLastModifyTime();
+            Date lastModifyTime = local.getCorrespondTraceInfo(remote).getLastModifyTime();
             List<SyncLogInfo> localAdded = localSqlLogModel.getLocalAdded(lastModifyTime);
             List<SyncLogInfo> localUpdated = localSqlLogModel.getLocalUpdated(lastModifyTime);
             List<SyncLogInfo> remoteAdded = localSqlLogModel.getRemoteAdded(lastModifyTime);
@@ -201,7 +201,7 @@ public class DavSynchronizer<T extends Tracable> implements Synchronizer<T> {
     }
 
     private boolean syncBaseOnLocal(List<T> localData) throws Exception {
-        Date lastModifyTime = this.local.getTraceInfo(remote).getLastModifyTime();
+        Date lastModifyTime = this.local.getCorrespondTraceInfo(remote).getLastModifyTime();
         List<T> localAddedData = getLocalAddedData(localData, lastModifyTime);
         List<T> localUpdatedData = getLocalUpdatedData(localData, lastModifyTime);
 
@@ -287,8 +287,8 @@ public class DavSynchronizer<T extends Tracable> implements Synchronizer<T> {
 
     private void saveLastSyncTime(Date date) throws IOException {
         TraceInfo traceInfo = TraceInfo.create(date, new Date());
-        local.setTraceInfo(traceInfo,remote);
-        remote.setTraceInfo(traceInfo,local);
+        local.setCorrespondTraceInfo(traceInfo,remote);
+        remote.setCorrespondTraceInfo(traceInfo,local);
     }
 
     private void checkFailCount() {

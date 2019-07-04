@@ -14,6 +14,7 @@ import com.beyond.note5.view.TodoView;
 import org.apache.commons.lang3.StringUtils;
 import org.greenrobot.eventbus.EventBus;
 
+import java.util.Collection;
 import java.util.Date;
 import java.util.List;
 
@@ -193,7 +194,7 @@ public class TodoPresenterImpl implements TodoPresenter {
     }
 
     @Override
-    public List<Todo> selectByIds(List<String> ids) {
+    public List<Todo> selectByIds(Collection<String> ids) {
         return todoModel.findByIds(ids);
     }
 

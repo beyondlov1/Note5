@@ -43,8 +43,8 @@ public class DavSynchronizer2<T extends Tracable> implements Synchronizer<T> {
         List<T> localList = local.selectAll();
         List<T> localData = localList == null ? new ArrayList<>() : localList;
 
-        TraceInfo remoteTraceInfo = this.remote.getTraceInfo(local);
-        TraceInfo localTraceInfo = this.local.getTraceInfo(remote);
+        TraceInfo remoteTraceInfo = this.remote.getCorrespondTraceInfo(local);
+        TraceInfo localTraceInfo = this.local.getCorrespondTraceInfo(remote);
 
         Date remoteLastModifyTime = remoteTraceInfo.getLastModifyTime();
         Date localLastModifyTime = localTraceInfo.getLastModifyTime();
@@ -59,18 +59,18 @@ public class DavSynchronizer2<T extends Tracable> implements Synchronizer<T> {
         List<T> localUpdatedData = getLocalData(localUpdated);
 
         if (DateUtils.isSameInstant(remoteLastModifyTime, new Date(0))) {
-            local.setTraceInfo(TraceInfo.ZERO,remote);
-            return syncBaseOnLocal(localAddedData,localUpdatedData);
+            local.setCorrespondTraceInfo(TraceInfo.ZERO, remote);
+            return syncBaseOnLocal(localAddedData, localUpdatedData);
         }
 
         if (DateUtils.isSameInstant(localLastModifyTime, remoteLastModifyTime)) {
-            return syncBaseOnLocal(localAddedData,localUpdatedData);
+            return syncBaseOnLocal(localAddedData, localUpdatedData);
         }
 
         if (remote.tryLock(60000L)) {
 
             List<String> remoteModifiedIds = new ArrayList<>();
-            List<T> remoteModified = remote.selectByModifiedDate(remoteTraceInfo.getLastSyncTime());
+            List<T> remoteModified = remote.selectByModifiedDate(remoteTraceInfo.getLastSyncTimeEnd());
             if (remoteModified != null) {
                 for (T t : remoteModified) {
                     remoteModifiedIds.add(t.getId());
@@ -163,7 +163,7 @@ public class DavSynchronizer2<T extends Tracable> implements Synchronizer<T> {
                 }
             }
 
-            saveLastSyncTime(getLatestLastModifyTime(localAddedData,localUpdatedData));
+            saveLastSyncTime(getLatestLastModifyTime(localAddedData, localUpdatedData));
             resetFailCount();
             remote.release();
             return true;
@@ -177,7 +177,7 @@ public class DavSynchronizer2<T extends Tracable> implements Synchronizer<T> {
             e.printStackTrace();
         }
 
-        return syncBaseOnLocal(localAddedData,localUpdatedData);
+        return syncBaseOnLocal(localAddedData, localUpdatedData);
     }
 
     private void subtract(List<SyncLogInfo> localUpdated, List<SyncLogInfo> localAdded) {
@@ -215,7 +215,11 @@ public class DavSynchronizer2<T extends Tracable> implements Synchronizer<T> {
             }
         }
         for (String remoteAddedId : remoteAddedIds) {
-            result.add(remote.selectById(remoteAddedId));
+            T t = remote.selectById(remoteAddedId);
+            if ((t.getLastModifyTime() == null ? new Date(0) : t.getLastModifyTime())
+                    .after(local.selectById(remoteAddedId).getLastModifyTime())) {
+                result.add(t);
+            }
         }
         return result;
     }
@@ -307,8 +311,8 @@ public class DavSynchronizer2<T extends Tracable> implements Synchronizer<T> {
 
     private void saveLastSyncTime(Date date) throws IOException {
         TraceInfo traceInfo = TraceInfo.create(date, new Date());
-        local.setTraceInfo(traceInfo,remote);
-        remote.setTraceInfo(traceInfo,local);
+        local.setCorrespondTraceInfo(traceInfo, remote);
+        remote.setCorrespondTraceInfo(traceInfo, local);
     }
 
     private void checkFailCount() {

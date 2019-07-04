@@ -28,8 +28,9 @@ public class SyncInfoDao extends AbstractDao<SyncInfo, String> {
         public final static Property LocalKey = new Property(1, String.class, "localKey", false, "LOCAL_KEY");
         public final static Property RemoteKey = new Property(2, String.class, "remoteKey", false, "REMOTE_KEY");
         public final static Property LastModifyTime = new Property(3, java.util.Date.class, "lastModifyTime", false, "LAST_MODIFY_TIME");
-        public final static Property LastSyncTime = new Property(4, java.util.Date.class, "lastSyncTime", false, "LAST_SYNC_TIME");
-        public final static Property Type = new Property(5, String.class, "type", false, "TYPE");
+        public final static Property LastSyncTimeStart = new Property(4, java.util.Date.class, "lastSyncTimeStart", false, "LAST_SYNC_TIME_START");
+        public final static Property LastSyncTime = new Property(5, java.util.Date.class, "lastSyncTime", false, "LAST_SYNC_TIME");
+        public final static Property Type = new Property(6, String.class, "type", false, "TYPE");
     }
 
 
@@ -49,8 +50,9 @@ public class SyncInfoDao extends AbstractDao<SyncInfo, String> {
                 "\"LOCAL_KEY\" TEXT," + // 1: localKey
                 "\"REMOTE_KEY\" TEXT," + // 2: remoteKey
                 "\"LAST_MODIFY_TIME\" INTEGER," + // 3: lastModifyTime
-                "\"LAST_SYNC_TIME\" INTEGER," + // 4: lastSyncTime
-                "\"TYPE\" TEXT);"); // 5: type
+                "\"LAST_SYNC_TIME_START\" INTEGER," + // 4: lastSyncTimeStart
+                "\"LAST_SYNC_TIME\" INTEGER," + // 5: lastSyncTime
+                "\"TYPE\" TEXT);"); // 6: type
     }
 
     /** Drops the underlying database table. */
@@ -83,14 +85,19 @@ public class SyncInfoDao extends AbstractDao<SyncInfo, String> {
             stmt.bindLong(4, lastModifyTime.getTime());
         }
  
+        java.util.Date lastSyncTimeStart = entity.getLastSyncTimeStart();
+        if (lastSyncTimeStart != null) {
+            stmt.bindLong(5, lastSyncTimeStart.getTime());
+        }
+ 
         java.util.Date lastSyncTime = entity.getLastSyncTime();
         if (lastSyncTime != null) {
-            stmt.bindLong(5, lastSyncTime.getTime());
+            stmt.bindLong(6, lastSyncTime.getTime());
         }
  
         String type = entity.getType();
         if (type != null) {
-            stmt.bindString(6, type);
+            stmt.bindString(7, type);
         }
     }
 
@@ -118,14 +125,19 @@ public class SyncInfoDao extends AbstractDao<SyncInfo, String> {
             stmt.bindLong(4, lastModifyTime.getTime());
         }
  
+        java.util.Date lastSyncTimeStart = entity.getLastSyncTimeStart();
+        if (lastSyncTimeStart != null) {
+            stmt.bindLong(5, lastSyncTimeStart.getTime());
+        }
+ 
         java.util.Date lastSyncTime = entity.getLastSyncTime();
         if (lastSyncTime != null) {
-            stmt.bindLong(5, lastSyncTime.getTime());
+            stmt.bindLong(6, lastSyncTime.getTime());
         }
  
         String type = entity.getType();
         if (type != null) {
-            stmt.bindString(6, type);
+            stmt.bindString(7, type);
         }
     }
 
@@ -141,8 +153,9 @@ public class SyncInfoDao extends AbstractDao<SyncInfo, String> {
             cursor.isNull(offset + 1) ? null : cursor.getString(offset + 1), // localKey
             cursor.isNull(offset + 2) ? null : cursor.getString(offset + 2), // remoteKey
             cursor.isNull(offset + 3) ? null : new java.util.Date(cursor.getLong(offset + 3)), // lastModifyTime
-            cursor.isNull(offset + 4) ? null : new java.util.Date(cursor.getLong(offset + 4)), // lastSyncTime
-            cursor.isNull(offset + 5) ? null : cursor.getString(offset + 5) // type
+            cursor.isNull(offset + 4) ? null : new java.util.Date(cursor.getLong(offset + 4)), // lastSyncTimeStart
+            cursor.isNull(offset + 5) ? null : new java.util.Date(cursor.getLong(offset + 5)), // lastSyncTime
+            cursor.isNull(offset + 6) ? null : cursor.getString(offset + 6) // type
         );
         return entity;
     }
@@ -153,8 +166,9 @@ public class SyncInfoDao extends AbstractDao<SyncInfo, String> {
         entity.setLocalKey(cursor.isNull(offset + 1) ? null : cursor.getString(offset + 1));
         entity.setRemoteKey(cursor.isNull(offset + 2) ? null : cursor.getString(offset + 2));
         entity.setLastModifyTime(cursor.isNull(offset + 3) ? null : new java.util.Date(cursor.getLong(offset + 3)));
-        entity.setLastSyncTime(cursor.isNull(offset + 4) ? null : new java.util.Date(cursor.getLong(offset + 4)));
-        entity.setType(cursor.isNull(offset + 5) ? null : cursor.getString(offset + 5));
+        entity.setLastSyncTimeStart(cursor.isNull(offset + 4) ? null : new java.util.Date(cursor.getLong(offset + 4)));
+        entity.setLastSyncTime(cursor.isNull(offset + 5) ? null : new java.util.Date(cursor.getLong(offset + 5)));
+        entity.setType(cursor.isNull(offset + 6) ? null : cursor.getString(offset + 6));
      }
     
     @Override

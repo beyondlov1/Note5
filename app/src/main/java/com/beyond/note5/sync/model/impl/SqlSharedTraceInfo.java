@@ -44,12 +44,12 @@ public class SqlSharedTraceInfo implements SharedSource<TraceInfo> {
             info.setLocalKey(localDataSource.getKey());
             info.setRemoteKey(remoteDataSource.getKey());
             info.setLastModifyTime(traceInfo.getLastModifyTime());
-            info.setLastSyncTime(traceInfo.getLastSyncTime());
+            info.setLastSyncTime(traceInfo.getLastSyncTimeEnd());
             info.setType(remoteDataSource.clazz().getSimpleName().toLowerCase());
             syncInfoDao.insert(info);
         }else {
             syncInfo.setLastModifyTime(traceInfo.getLastModifyTime());
-            syncInfo.setLastSyncTime(traceInfo.getLastSyncTime());
+            syncInfo.setLastSyncTime(traceInfo.getLastSyncTimeEnd());
             syncInfoDao.update(syncInfo);
         }
     }

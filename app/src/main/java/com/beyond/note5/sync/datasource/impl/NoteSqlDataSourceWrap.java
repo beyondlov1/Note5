@@ -35,7 +35,7 @@ public class NoteSqlDataSourceWrap implements DataSource<Note> {
         noteSqlDataSource.add(note);
 
         List<Attachment> attachments = note.getAttachments();
-        if (attachments!= null && !attachments.isEmpty()){
+        if (attachments != null && !attachments.isEmpty()) {
             for (Attachment attachment : attachments) {
                 try {
                     davDataSource.getClient().download(
@@ -43,7 +43,7 @@ public class NoteSqlDataSourceWrap implements DataSource<Note> {
                             getLocalPath(attachment)
                     );
                 } catch (IOException e) {
-                    Log.e(this.getClass().getSimpleName(),"下载文件失败",e);
+                    Log.e(this.getClass().getSimpleName(), "下载文件失败", e);
                 }
             }
         }
@@ -55,8 +55,8 @@ public class NoteSqlDataSourceWrap implements DataSource<Note> {
 
     private String getRemoteUrl(Note note, Attachment attachment) {
         return OkWebDavUtil.concat(
-                OkWebDavUtil.concat(davDataSource.getServer(),davDataSource.getPath(note)),
-                getLocalPath(attachment).replaceFirst(MyApplication.getInstance().getFileStorageDir().getAbsolutePath(),"/files")
+                OkWebDavUtil.concat(davDataSource.getServer(), davDataSource.getPath(note)),
+                getLocalPath(attachment).replaceFirst(MyApplication.getInstance().getFileStorageDir().getAbsolutePath(), "/files")
         );
     }
 
@@ -96,13 +96,13 @@ public class NoteSqlDataSourceWrap implements DataSource<Note> {
     }
 
     @Override
-    public TraceInfo getTraceInfo(DataSource<Note> targetDataSource) throws IOException {
-        return noteSqlDataSource.getTraceInfo(targetDataSource);
+    public TraceInfo getLatestTraceInfo() throws IOException {
+        return noteSqlDataSource.getLatestTraceInfo();
     }
 
     @Override
-    public void setTraceInfo(TraceInfo traceInfo, DataSource<Note> targetDataSource) throws IOException {
-        noteSqlDataSource.setTraceInfo(traceInfo,targetDataSource);
+    public void setLatestTraceInfo(TraceInfo traceInfo) throws IOException {
+        noteSqlDataSource.setLatestTraceInfo(traceInfo);
     }
 
     @Override
@@ -113,6 +113,36 @@ public class NoteSqlDataSourceWrap implements DataSource<Note> {
     @Override
     public Class<Note> clazz() {
         return noteSqlDataSource.clazz();
+    }
+
+    @Override
+    public List<Note> getModifiedData(TraceInfo traceInfo) throws IOException {
+        return noteSqlDataSource.getModifiedData(traceInfo);
+    }
+
+    @Override
+    public void save(Note note) throws IOException {
+        noteSqlDataSource.save(note);
+    }
+
+    @Override
+    public void saveAll(List<Note> notes) throws IOException {
+        noteSqlDataSource.saveAll(notes);
+    }
+
+    @Override
+    public boolean isChanged(DataSource<Note> targetDataSource) throws IOException {
+        return noteSqlDataSource.isChanged(targetDataSource);
+    }
+
+    @Override
+    public TraceInfo getCorrespondTraceInfo(DataSource<Note> targetDataSource) throws IOException {
+        return noteSqlDataSource.getCorrespondTraceInfo(targetDataSource);
+    }
+
+    @Override
+    public void setCorrespondTraceInfo(TraceInfo traceInfo, DataSource<Note> targetDataSource) throws IOException {
+        noteSqlDataSource.setCorrespondTraceInfo(traceInfo, targetDataSource);
     }
 
     @Override

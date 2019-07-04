@@ -102,4 +102,12 @@ public class SqlLogModelImpl<T> implements SqlLogModel {
         return log.getOperationTime();
     }
 
+    @Override
+    public List<SyncLogInfo> getAllAfter(Date date) {
+        return logInfoDao.queryBuilder()
+                .where(SyncLogInfoDao.Properties.CreateTime.gt(date))
+                .where(SyncLogInfoDao.Properties.Type.eq(type))
+                .list();
+    }
+
 }

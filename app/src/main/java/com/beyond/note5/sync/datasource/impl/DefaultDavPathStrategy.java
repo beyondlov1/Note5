@@ -13,6 +13,7 @@ public class DefaultDavPathStrategy implements DavPathStrategy {
 
     public DefaultDavPathStrategy(String server,String... paths) {
         this.paths = paths;
+        this.server = server;
     }
 
     @Override

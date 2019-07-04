@@ -1,20 +1,25 @@
 package com.beyond.note5.sync.datasource.impl;
 
+import android.support.annotation.NonNull;
 import android.util.Log;
 
 import com.alibaba.fastjson.JSONException;
 import com.alibaba.fastjson.JSONObject;
+import com.beyond.note5.MyApplication;
 import com.beyond.note5.bean.Document;
 import com.beyond.note5.sync.datasource.DataSource;
 import com.beyond.note5.sync.datasource.DavDataSource;
 import com.beyond.note5.sync.datasource.DavPathStrategy;
 import com.beyond.note5.sync.model.SharedSource;
 import com.beyond.note5.sync.model.bean.TraceInfo;
+import com.beyond.note5.sync.model.impl.DavSharedTraceInfo;
 import com.beyond.note5.sync.webdav.Lock;
 import com.beyond.note5.sync.webdav.client.DavClient;
 import com.beyond.note5.sync.webdav.client.DavFilter;
 import com.beyond.note5.sync.webdav.client.PostLastModifyTimeDavFilter;
 import com.beyond.note5.utils.OkWebDavUtil;
+
+import org.apache.commons.lang3.time.DateUtils;
 
 import java.io.IOException;
 import java.lang.reflect.Type;
@@ -117,6 +122,53 @@ public class DefaultDavDataSource<T extends Document> implements DavDataSource<T
         return clazz;
     }
 
+    @Override
+    public List<T> getModifiedData(TraceInfo traceInfo) throws IOException {
+        return selectByModifiedDate(traceInfo.getLastSyncTimeEnd());
+    }
+
+    @Override
+    public void save(T t) throws IOException {
+        if (client.exists(getDocumentUrl(t))){
+            T remoteT = decode(client.get(getDocumentUrl(t)));
+            if (remoteT.getLastModifyTime().after(t.getLastModifyTime())){
+                update(t);
+            }
+        }else {
+            add(t);
+        }
+    }
+
+    @Override
+    public void saveAll(List<T> ts) throws IOException {
+        for (T t : ts) {
+            save(t);
+        }
+    }
+
+    @Override
+    public boolean isChanged(DataSource<T> targetDataSource) throws IOException {
+        SharedSource<TraceInfo> davSharedTraceInfo = getCorrespondTraceInfoSource(targetDataSource);
+        return !DateUtils.isSameInstant(davSharedTraceInfo.get().getLastModifyTime(),
+                getLatestTraceInfo().getLastModifyTime());
+    }
+
+    @Override
+    public TraceInfo getCorrespondTraceInfo(DataSource<T> targetDataSource) throws IOException {
+        return getCorrespondTraceInfoSource(targetDataSource).get();
+    }
+
+    @Override
+    public void setCorrespondTraceInfo(TraceInfo traceInfo, DataSource<T> targetDataSource) throws IOException {
+        getCorrespondTraceInfoSource(targetDataSource).set(traceInfo);
+    }
+
+    @NonNull
+    private SharedSource<TraceInfo> getCorrespondTraceInfoSource(DataSource<T> targetDataSource) {
+        return new DavSharedTraceInfo(client,
+                    OkWebDavUtil.concat(server, MyApplication.LOCK_DIR, clazz.getSimpleName().toLowerCase()+"_trace_info_" + targetDataSource.getKey().hashCode()));
+    }
+
     private String getDocumentUrl(T t) {
         return getDocumentUrl(t.getId());
     }
@@ -187,12 +239,12 @@ public class DefaultDavDataSource<T extends Document> implements DavDataSource<T
     }
 
     @Override
-    public TraceInfo getTraceInfo(DataSource<T> targetDataSource) throws IOException {
+    public TraceInfo getLatestTraceInfo() throws IOException {
         return trace.get();
     }
 
     @Override
-    public void setTraceInfo(TraceInfo traceInfo, DataSource<T> targetDataSource) throws IOException {
+    public void setLatestTraceInfo(TraceInfo traceInfo) throws IOException {
         trace.set(traceInfo);
     }
 

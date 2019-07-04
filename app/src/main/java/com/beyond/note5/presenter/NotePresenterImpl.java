@@ -17,6 +17,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.greenrobot.eventbus.EventBus;
 
 import java.io.IOException;
+import java.util.Collection;
 import java.util.Date;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
@@ -220,7 +221,7 @@ public class NotePresenterImpl implements NotePresenter {
     }
 
     @Override
-    public List<Note> selectByIds(List<String> ids) {
+    public List<Note> selectByIds(Collection<String> ids) {
         return noteModel.findByIds(ids);
     }
 

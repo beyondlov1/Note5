@@ -21,4 +21,6 @@ public interface SqlLogModel {
     List<SyncLogInfo> getRemoteUpdated(Date lastSyncTime);
 
     Date getLatestLastModifyTime();
+
+    List<SyncLogInfo> getAllAfter(Date lastSyncTime);
 }

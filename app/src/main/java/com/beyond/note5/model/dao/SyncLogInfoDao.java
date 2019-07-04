@@ -30,8 +30,9 @@ public class SyncLogInfoDao extends AbstractDao<SyncLogInfo, String> {
         public final static Property RefServer = new Property(3, String.class, "refServer", false, "REF_SERVER");
         public final static Property Operation = new Property(4, String.class, "operation", false, "OPERATION");
         public final static Property OperationTime = new Property(5, java.util.Date.class, "operationTime", false, "OPERATION_TIME");
-        public final static Property Source = new Property(6, String.class, "source", false, "SOURCE");
-        public final static Property Type = new Property(7, String.class, "type", false, "TYPE");
+        public final static Property CreateTime = new Property(6, java.util.Date.class, "createTime", false, "CREATE_TIME");
+        public final static Property Source = new Property(7, String.class, "source", false, "SOURCE");
+        public final static Property Type = new Property(8, String.class, "type", false, "TYPE");
     }
 
 
@@ -53,8 +54,9 @@ public class SyncLogInfoDao extends AbstractDao<SyncLogInfo, String> {
                 "\"REF_SERVER\" TEXT," + // 3: refServer
                 "\"OPERATION\" TEXT," + // 4: operation
                 "\"OPERATION_TIME\" INTEGER," + // 5: operationTime
-                "\"SOURCE\" TEXT," + // 6: source
-                "\"TYPE\" TEXT);"); // 7: type
+                "\"CREATE_TIME\" INTEGER," + // 6: createTime
+                "\"SOURCE\" TEXT," + // 7: source
+                "\"TYPE\" TEXT);"); // 8: type
     }
 
     /** Drops the underlying database table. */
@@ -97,14 +99,19 @@ public class SyncLogInfoDao extends AbstractDao<SyncLogInfo, String> {
             stmt.bindLong(6, operationTime.getTime());
         }
  
+        java.util.Date createTime = entity.getCreateTime();
+        if (createTime != null) {
+            stmt.bindLong(7, createTime.getTime());
+        }
+ 
         String source = entity.getSource();
         if (source != null) {
-            stmt.bindString(7, source);
+            stmt.bindString(8, source);
         }
  
         String type = entity.getType();
         if (type != null) {
-            stmt.bindString(8, type);
+            stmt.bindString(9, type);
         }
     }
 
@@ -142,14 +149,19 @@ public class SyncLogInfoDao extends AbstractDao<SyncLogInfo, String> {
             stmt.bindLong(6, operationTime.getTime());
         }
  
+        java.util.Date createTime = entity.getCreateTime();
+        if (createTime != null) {
+            stmt.bindLong(7, createTime.getTime());
+        }
+ 
         String source = entity.getSource();
         if (source != null) {
-            stmt.bindString(7, source);
+            stmt.bindString(8, source);
         }
  
         String type = entity.getType();
         if (type != null) {
-            stmt.bindString(8, type);
+            stmt.bindString(9, type);
         }
     }
 
@@ -167,8 +179,9 @@ public class SyncLogInfoDao extends AbstractDao<SyncLogInfo, String> {
             cursor.isNull(offset + 3) ? null : cursor.getString(offset + 3), // refServer
             cursor.isNull(offset + 4) ? null : cursor.getString(offset + 4), // operation
             cursor.isNull(offset + 5) ? null : new java.util.Date(cursor.getLong(offset + 5)), // operationTime
-            cursor.isNull(offset + 6) ? null : cursor.getString(offset + 6), // source
-            cursor.isNull(offset + 7) ? null : cursor.getString(offset + 7) // type
+            cursor.isNull(offset + 6) ? null : new java.util.Date(cursor.getLong(offset + 6)), // createTime
+            cursor.isNull(offset + 7) ? null : cursor.getString(offset + 7), // source
+            cursor.isNull(offset + 8) ? null : cursor.getString(offset + 8) // type
         );
         return entity;
     }
@@ -181,8 +194,9 @@ public class SyncLogInfoDao extends AbstractDao<SyncLogInfo, String> {
         entity.setRefServer(cursor.isNull(offset + 3) ? null : cursor.getString(offset + 3));
         entity.setOperation(cursor.isNull(offset + 4) ? null : cursor.getString(offset + 4));
         entity.setOperationTime(cursor.isNull(offset + 5) ? null : new java.util.Date(cursor.getLong(offset + 5)));
-        entity.setSource(cursor.isNull(offset + 6) ? null : cursor.getString(offset + 6));
-        entity.setType(cursor.isNull(offset + 7) ? null : cursor.getString(offset + 7));
+        entity.setCreateTime(cursor.isNull(offset + 6) ? null : new java.util.Date(cursor.getLong(offset + 6)));
+        entity.setSource(cursor.isNull(offset + 7) ? null : cursor.getString(offset + 7));
+        entity.setType(cursor.isNull(offset + 8) ? null : cursor.getString(offset + 8));
      }
     
     @Override

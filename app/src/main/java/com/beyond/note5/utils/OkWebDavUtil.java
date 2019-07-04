@@ -287,6 +287,17 @@ public class OkWebDavUtil {
         }
     }
 
+    public static String concat(String...strings){
+        String result = null;
+        for (String string : strings) {
+            if (result == null){
+                result = string;
+                continue;
+            }
+            result = concat(result,string);
+        }
+        return result;
+    }
     public static String concat(String root, String path) {
         String url = null;
         if ((!root.endsWith("/") && path.startsWith("/"))

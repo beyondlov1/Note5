@@ -2,6 +2,7 @@ package com.beyond.note5.model;
 
 import com.beyond.note5.bean.Document;
 
+import java.util.Collection;
 import java.util.Date;
 import java.util.List;
 
@@ -28,5 +29,5 @@ public interface DocumentModel<T extends Document> extends Model<T> {
 
     List<T> findByModifiedDate(Date date);
 
-    List<T> findByIds(List<String> ids);
+    List<T> findByIds(Collection<String> ids);
 }

@@ -14,6 +14,7 @@ import com.beyond.note5.sync.model.bean.SyncLogInfo;
 import com.beyond.note5.utils.IDUtil;
 import com.beyond.note5.utils.PreferenceUtil;
 
+import java.util.Collection;
 import java.util.Date;
 import java.util.List;
 
@@ -164,7 +165,7 @@ public class TodoModelImpl implements TodoModel {
     }
 
     @Override
-    public List<Todo> findByIds(List<String> ids) {
+    public List<Todo> findByIds(Collection<String> ids) {
         return todoDao.queryBuilder()
                 .where(TodoDao.Properties.Id.in(ids))
                 .list();
@@ -184,6 +185,7 @@ public class TodoModelImpl implements TodoModel {
         syncLogInfo.setDocumentId(todo.getId());
         syncLogInfo.setOperation(SyncLogInfo.ADD);
         syncLogInfo.setOperationTime(todo.getLastModifyTime());
+        syncLogInfo.setCreateTime(new Date());
         syncLogInfo.setSource(PreferenceUtil.getString(MyApplication.VIRTUAL_USER_ID));
         syncLogInfo.setType(Todo.class.getSimpleName().toLowerCase());
         syncLogInfoDao.insert(syncLogInfo);
@@ -195,6 +197,7 @@ public class TodoModelImpl implements TodoModel {
         syncLogInfo.setDocumentId(todo.getId());
         syncLogInfo.setOperation(SyncLogInfo.UPDATE);
         syncLogInfo.setOperationTime(todo.getLastModifyTime());
+        syncLogInfo.setCreateTime(new Date());
         syncLogInfo.setSource(PreferenceUtil.getString(MyApplication.VIRTUAL_USER_ID));
         syncLogInfo.setType(Todo.class.getSimpleName().toLowerCase());
         syncLogInfoDao.insert(syncLogInfo);

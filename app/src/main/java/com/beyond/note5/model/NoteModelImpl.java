@@ -20,6 +20,7 @@ import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.io.FileUtils;
 
 import java.io.File;
+import java.util.Collection;
 import java.util.Date;
 import java.util.List;
 
@@ -164,7 +165,7 @@ public class NoteModelImpl implements NoteModel {
     }
 
     @Override
-    public List<Note> findByIds(List<String> ids) {
+    public List<Note> findByIds(Collection<String> ids) {
         return noteDao.queryBuilder()
                 .where(NoteDao.Properties.Id.in(ids))
                 .list();
@@ -177,6 +178,7 @@ public class NoteModelImpl implements NoteModel {
         syncLogInfo.setDocumentId(note.getId());
         syncLogInfo.setOperation(SyncLogInfo.ADD);
         syncLogInfo.setOperationTime(note.getLastModifyTime());
+        syncLogInfo.setCreateTime(new Date());
         syncLogInfo.setSource(PreferenceUtil.getString(MyApplication.VIRTUAL_USER_ID));
         syncLogInfo.setType(Note.class.getSimpleName().toLowerCase());
         syncLogInfoDao.insert(syncLogInfo);
@@ -188,6 +190,7 @@ public class NoteModelImpl implements NoteModel {
         syncLogInfo.setDocumentId(note.getId());
         syncLogInfo.setOperation(SyncLogInfo.UPDATE);
         syncLogInfo.setOperationTime(note.getLastModifyTime());
+        syncLogInfo.setCreateTime(new Date());
         syncLogInfo.setSource(PreferenceUtil.getString(MyApplication.VIRTUAL_USER_ID));
         syncLogInfo.setType(Note.class.getSimpleName().toLowerCase());
         syncLogInfoDao.insert(syncLogInfo);
