@@ -21,7 +21,6 @@ public class NoteDavDataSourceWrap implements DavDataSource<Note> {
 
     private DefaultDavDataSource<Note> defaultDavDataSource;
 
-
     public NoteDavDataSourceWrap(DefaultDavDataSource<Note> defaultDavDataSource) {
         this.defaultDavDataSource = defaultDavDataSource;
     }
@@ -113,11 +112,32 @@ public class NoteDavDataSourceWrap implements DavDataSource<Note> {
     @Override
     public void save(Note note) throws IOException {
         defaultDavDataSource.save(note);
+
+        String server = defaultDavDataSource.getServer();
+        List<Attachment> attachments = note.getAttachments();
+        if (attachments!= null && !attachments.isEmpty()){
+            for (Attachment attachment : attachments) {
+                // 如果上传过就不再上传
+                if (getClient().exists(getRemoteUrl(note, server, attachment))){
+                    continue;
+                }
+                if (new File(attachment.getPath()).exists()){
+                    getClient().upload(
+                            getLocalPath(attachment),
+                            getRemoteUrl(note, server, attachment)
+                    );
+                }else {
+                    Log.i(getClass().getSimpleName(),"附件不存在");
+                }
+            }
+        }
     }
 
     @Override
     public void saveAll(List<Note> notes) throws IOException {
-        defaultDavDataSource.saveAll(notes);
+        for (Note t : notes) {
+            save(t);
+        }
     }
 
     @Override

@@ -20,9 +20,9 @@ public class NoteSyncPresenterImpl implements SyncPresenter {
 
     private final Handler handler;
 
-    public NoteSyncPresenterImpl(SyncView syncView) {
+    public NoteSyncPresenterImpl(SyncView syncView, Handler handler) {
         this.syncView = syncView;
-        handler = new Handler();
+        this.handler = handler;
     }
 
     @Override
@@ -34,14 +34,16 @@ public class NoteSyncPresenterImpl implements SyncPresenter {
         MyApplication.getInstance().getExecutorService().execute(new Runnable() {
             @Override
             public void run() {
-                try {
-                    for (Synchronizer<Note> synchronizer : synchronizers) {
-                        try {
-                            synchronizer.sync();
-                        }catch (Exception e){
-                            Log.e(getClass().getSimpleName(),"同步失败",e);
-                        }
+                boolean success = true;
+                for (Synchronizer<Note> synchronizer : synchronizers) {
+                    try {
+                        synchronizer.sync();
+                    }catch (Exception e){
+                        Log.e(getClass().getSimpleName(),"同步失败",e);
+                        success = false;
                     }
+                }
+                if (success){
                     handler.post(new Runnable() {
                         @Override
                         public void run() {
@@ -49,8 +51,7 @@ public class NoteSyncPresenterImpl implements SyncPresenter {
 
                         }
                     });
-                } catch (Exception e) {
-                    e.printStackTrace();
+                }else {
                     handler.post(new Runnable() {
                         @Override
                         public void run() {

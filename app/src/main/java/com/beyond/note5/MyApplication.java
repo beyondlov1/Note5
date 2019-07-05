@@ -164,38 +164,47 @@ public class MyApplication extends Application {
                     .clazz(Note.class)
                     .davClient(davClient)
                     .executorService(null) // 防止坚果云503
-                    .server(OkWebDavUtil.concat(server, "remote1"))
+                    .server(OkWebDavUtil.concat(server, "remote6"))
                     .paths(notePaths)
-                    .lock(new DavLock(davClient, OkWebDavUtil.concat(OkWebDavUtil.concat(server, "remote1"), NOTE_LOCK_PATH)))
-                    .sharedSource(new DavSharedTraceInfo(davClient, OkWebDavUtil.concat(server, NOTE_LST_PATH)))
+                    .lock(new DavLock(davClient, OkWebDavUtil.concat(OkWebDavUtil.concat(server, "remote6"), NOTE_LOCK_PATH)))
+                    .sharedSource(new DavSharedTraceInfo(davClient, OkWebDavUtil.concat(OkWebDavUtil.concat(server, "remote6"), NOTE_LST_PATH)))
                     .build();
 
             DefaultDavDataSource<Note> noteDavDataSource2 = new DefaultDavDataSource.Builder<Note>()
                     .clazz(Note.class)
                     .davClient(davClient)
                     .executorService(null) // 防止坚果云503
-                    .server(OkWebDavUtil.concat(server, "remote5"))
+                    .server(OkWebDavUtil.concat(server, "remote7"))
                     .paths(notePaths)
-                    .lock(new DavLock(davClient, OkWebDavUtil.concat(OkWebDavUtil.concat(server, "remote5"), NOTE_LOCK_PATH)))
-                    .sharedSource(new DavSharedTraceInfo(davClient, OkWebDavUtil.concat(OkWebDavUtil.concat(server, "remote5"), NOTE_LST_PATH)))
+                    .lock(new DavLock(davClient, OkWebDavUtil.concat(OkWebDavUtil.concat(server, "remote7"), NOTE_LOCK_PATH)))
+                    .sharedSource(new DavSharedTraceInfo(davClient, OkWebDavUtil.concat(OkWebDavUtil.concat(server, "remote7"), NOTE_LST_PATH)))
                     .build();
 
             DefaultDavDataSource<Note> noteDavDataSource3 = new DefaultDavDataSource.Builder<Note>()
                     .clazz(Note.class)
                     .davClient(davClient)
                     .executorService(null) // 防止坚果云503
-                    .server(OkWebDavUtil.concat(server, "remote4"))
+                    .server(OkWebDavUtil.concat(server, "remote8"))
                     .paths(notePaths)
-                    .lock(new DavLock(davClient, OkWebDavUtil.concat(OkWebDavUtil.concat(server, "remote4"), NOTE_LOCK_PATH)))
-                    .sharedSource(new DavSharedTraceInfo(davClient, OkWebDavUtil.concat(OkWebDavUtil.concat(server, "remote4"), NOTE_LST_PATH)))
+                    .lock(new DavLock(davClient, OkWebDavUtil.concat(OkWebDavUtil.concat(server, "remote8"), NOTE_LOCK_PATH)))
+                    .sharedSource(new DavSharedTraceInfo(davClient, OkWebDavUtil.concat(OkWebDavUtil.concat(server, "remote8"), NOTE_LST_PATH)))
                     .build();
 
             NoteDavDataSourceWrap noteDavDataSourceWrap = new NoteDavDataSourceWrap(noteDavDataSource);
             NoteDavDataSourceWrap noteDavDataSourceWrap2 = new NoteDavDataSourceWrap(noteDavDataSource2);
             NoteDavDataSourceWrap noteDavDataSourceWrap3 = new NoteDavDataSourceWrap(noteDavDataSource3);
             noteSynchronizers.add(new DavSynchronizer4.Builder<Note>()
+                    .localDataSource(new NoteSqlDataSourceWrap(noteLocalDataSource, noteDavDataSourceWrap))
+                    .remoteDataSource(noteDavDataSourceWrap)
+                    .logPath(NOTE_LOG_PATH)
+                    .build());
+            noteSynchronizers.add(new DavSynchronizer4.Builder<Note>()
+                    .localDataSource(new NoteSqlDataSourceWrap(noteLocalDataSource, noteDavDataSourceWrap2))
+                    .remoteDataSource(noteDavDataSourceWrap2)
+                    .logPath(NOTE_LOG_PATH)
+                    .build());
+            noteSynchronizers.add(new DavSynchronizer4.Builder<Note>()
                     .localDataSource(new NoteSqlDataSourceWrap(noteLocalDataSource, noteDavDataSourceWrap3))
-//                    .localDataSource(noteDavDataSourceWrap3)
                     .remoteDataSource(noteDavDataSourceWrap3)
                     .logPath(NOTE_LOG_PATH)
                     .build());
@@ -297,32 +306,29 @@ public class MyApplication extends Application {
         getExecutorService().execute(new Runnable() {
             @Override
             public void run() {
-                try {
-                    for (Synchronizer<Note> synchronizer : noteSynchronizers) {
-                        try {
-                            synchronizer.sync();
-                        }catch (Exception e){
-                            e.printStackTrace();
-                            if (fail != null) {
-                                handler.post(fail);
-                            }
-                        }
+                boolean isSuccess = true;
+                for (Synchronizer<Note> synchronizer : noteSynchronizers) {
+                    try {
+                        synchronizer.sync();
+                    }catch (Exception e){
+                        e.printStackTrace();
+                        isSuccess = false;
                     }
-                    for (Synchronizer<Todo> synchronizer : todoSynchronizers) {
-                        try {
-                            synchronizer.sync();
-                        }catch (Exception e){
-                            e.printStackTrace();
-                            if (fail != null) {
-                                handler.post(fail);
-                            }
-                        }
+                }
+                for (Synchronizer<Todo> synchronizer : todoSynchronizers) {
+                    try {
+                        synchronizer.sync();
+                    }catch (Exception e){
+                        e.printStackTrace();
+                        isSuccess = false;
                     }
+                }
+
+                if (isSuccess){
                     if (success != null) {
                         handler.post(success);
                     }
-                } catch (Exception e) {
-                    e.printStackTrace();
+                }else {
                     if (fail != null) {
                         handler.post(fail);
                     }

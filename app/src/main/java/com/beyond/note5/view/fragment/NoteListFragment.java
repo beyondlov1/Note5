@@ -88,7 +88,7 @@ public class NoteListFragment extends Fragment {
         noteView = new MyNoteView();
         syncView = new MySyncView();
         notePresenter = new NotePresenterImpl(noteView);
-        syncPresenter = new NoteSyncPresenterImpl(syncView);
+        syncPresenter = new NoteSyncPresenterImpl(syncView,MyApplication.getInstance().handler);
     }
 
     @Nullable

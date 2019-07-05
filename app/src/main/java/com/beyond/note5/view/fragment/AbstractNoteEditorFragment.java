@@ -123,7 +123,7 @@ public abstract class AbstractNoteEditorFragment extends AbstractDocumentEditorF
 
     }
 
-    @SuppressLint("SetJavaScriptEnabled")
+    @SuppressLint({"SetJavaScriptEnabled"})
     @Override
     protected void initCommonEvent() {
         displayWebView.getSettings().setJavaScriptEnabled(true);

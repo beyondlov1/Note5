@@ -102,7 +102,7 @@ public class TodoListFragment extends Fragment {
                 .predictPresenter(new PredictPresenterImpl(predictView))
                 .build();
 
-        syncPresenter = new TodoSyncPresenterImpl(syncView);
+        syncPresenter = new TodoSyncPresenterImpl(syncView,MyApplication.getInstance().handler);
     }
 
     @Nullable

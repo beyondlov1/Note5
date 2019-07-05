@@ -1,14 +1,13 @@
 package com.beyond.note5.sync.synchronizer;
 
-import com.beyond.note5.MyApplication;
+import android.util.Log;
+
 import com.beyond.note5.bean.Tracable;
 import com.beyond.note5.sync.Synchronizer;
 import com.beyond.note5.sync.datasource.DataSource;
 import com.beyond.note5.sync.datasource.DavDataSource;
-import com.beyond.note5.sync.model.SqlLogModel;
 import com.beyond.note5.sync.model.bean.SyncLogInfo;
 import com.beyond.note5.sync.model.bean.TraceInfo;
-import com.beyond.note5.sync.model.impl.SqlLogModelImpl;
 
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.time.DateUtils;
@@ -32,8 +31,6 @@ public class DavSynchronizer4<T extends Tracable> implements Synchronizer<T> {
 
     private DataSource<T> dataSource2;
 
-    private SqlLogModel localSqlLogModel;
-
     private Date syncStart;
 
     private DavSynchronizer4() {
@@ -42,6 +39,8 @@ public class DavSynchronizer4<T extends Tracable> implements Synchronizer<T> {
 
     @Override
     public synchronized boolean sync() throws Exception {
+
+        Log.d(getClass().getSimpleName(),dataSource2.getKey()+" sync start");
 
         if (syncStart == null){
             syncStart = new Date();
@@ -361,8 +360,6 @@ public class DavSynchronizer4<T extends Tracable> implements Synchronizer<T> {
             }
             synchronizer.dataSource1 = local;
             synchronizer.dataSource2 = remote;
-            synchronizer.localSqlLogModel = new SqlLogModelImpl(MyApplication.getInstance().getDaoSession().getSyncLogInfoDao(),
-                    local.clazz().getSimpleName().toLowerCase());
             return synchronizer;
         }
     }
