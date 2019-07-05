@@ -147,6 +147,12 @@ public class TodoEditFragment extends AbstractTodoEditorFragment {
     private class MyTodoView extends TodoViewAdapter {
 
         @Override
+        public void onAddSuccess(Todo document) {
+            super.onAddSuccess(document);
+            ToastUtil.toast(getContext(), "添加成功");
+        }
+
+        @Override
         public void onAddFail(Todo document) {
             ToastUtil.toast(getContext(), "添加失败");
         }
