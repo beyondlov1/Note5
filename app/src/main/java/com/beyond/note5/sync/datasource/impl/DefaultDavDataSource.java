@@ -10,6 +10,7 @@ import com.beyond.note5.bean.Document;
 import com.beyond.note5.sync.datasource.DataSource;
 import com.beyond.note5.sync.datasource.DavDataSource;
 import com.beyond.note5.sync.datasource.DavPathStrategy;
+import com.beyond.note5.sync.exception.SyncException;
 import com.beyond.note5.sync.model.SharedSource;
 import com.beyond.note5.sync.model.bean.TraceInfo;
 import com.beyond.note5.sync.model.impl.DavSharedTraceInfo;
@@ -140,9 +141,16 @@ public class DefaultDavDataSource<T extends Document> implements DavDataSource<T
     }
 
     @Override
-    public void saveAll(List<T> ts) throws IOException {
+    public void saveAll(List<T> ts) throws IOException, SyncException {
+        int index = 0;
         for (T t : ts) {
-            save(t);
+            try {
+                save(t);
+            }catch (Exception e){
+                Log.e(getClass().getSimpleName(),"save失败",e);
+                throw new SyncException(e,index);
+            }
+            index++;
         }
     }
 

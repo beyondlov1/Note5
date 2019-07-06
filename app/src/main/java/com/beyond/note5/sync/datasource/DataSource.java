@@ -1,5 +1,6 @@
 package com.beyond.note5.sync.datasource;
 
+import com.beyond.note5.sync.exception.SyncException;
 import com.beyond.note5.sync.model.bean.TraceInfo;
 import com.beyond.note5.sync.webdav.Lock;
 
@@ -31,7 +32,7 @@ public interface DataSource<T> extends Lock{
 
     List<T> getModifiedData(TraceInfo traceInfo) throws IOException;
     void save(T t) throws IOException;
-    void saveAll(List<T> tList) throws IOException;
+    void saveAll(List<T> tList) throws IOException, SyncException;
     boolean isChanged(DataSource<T> targetDataSource) throws IOException;
     TraceInfo getCorrespondTraceInfo(DataSource<T> targetDataSource) throws IOException;
     void setCorrespondTraceInfo(TraceInfo traceInfo, DataSource<T> targetDataSource) throws IOException;

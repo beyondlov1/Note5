@@ -8,6 +8,7 @@ import com.beyond.note5.bean.Note;
 import com.beyond.note5.sync.datasource.DataSource;
 import com.beyond.note5.sync.datasource.DavDataSource;
 import com.beyond.note5.sync.datasource.DavPathStrategy;
+import com.beyond.note5.sync.exception.SyncException;
 import com.beyond.note5.sync.model.bean.TraceInfo;
 import com.beyond.note5.sync.webdav.client.DavClient;
 import com.beyond.note5.utils.OkWebDavUtil;
@@ -134,9 +135,16 @@ public class NoteDavDataSourceWrap implements DavDataSource<Note> {
     }
 
     @Override
-    public void saveAll(List<Note> notes) throws IOException {
+    public void saveAll(List<Note> notes) throws IOException, SyncException {
+        int index = 0;
         for (Note t : notes) {
-            save(t);
+            try {
+                save(t);
+            }catch (Exception e){
+                Log.e(getClass().getSimpleName(),"save失败",e);
+                throw new SyncException(e,index);
+            }
+            index++;
         }
     }
 

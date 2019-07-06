@@ -20,10 +20,13 @@ import com.beyond.note5.predict.bean.TagGraph;
 import com.beyond.note5.predict.train.filter.TimeExpressionTrainTagFilter;
 import com.beyond.note5.predict.train.filter.UrlTrainTagFilter;
 import com.beyond.note5.sync.Synchronizer;
+import com.beyond.note5.sync.datasource.DataSource;
+import com.beyond.note5.sync.datasource.DavDataSource;
 import com.beyond.note5.sync.datasource.impl.DefaultDavDataSource;
 import com.beyond.note5.sync.datasource.impl.NoteDavDataSourceWrap;
 import com.beyond.note5.sync.datasource.impl.NoteSqlDataSource;
 import com.beyond.note5.sync.datasource.impl.NoteSqlDataSourceWrap;
+import com.beyond.note5.sync.datasource.impl.TodoSqlDataSource;
 import com.beyond.note5.sync.model.impl.DavSharedTraceInfo;
 import com.beyond.note5.sync.synchronizer.DavSynchronizer4;
 import com.beyond.note5.sync.webdav.DavLock;
@@ -160,73 +163,43 @@ public class MyApplication extends Application {
 
             NoteSqlDataSource noteLocalDataSource = new NoteSqlDataSource();
             String[] notePaths = StringUtils.split(PreferenceUtil.getString(NOTE_SYNC_REMOTE_ROOT_PATHS), "|");
-            DefaultDavDataSource<Note> noteDavDataSource = new DefaultDavDataSource.Builder<Note>()
+
+            String server1 = OkWebDavUtil.concat(server, "test/version1");
+            DefaultDavDataSource<Note> noteDavDataSource1 = new DefaultDavDataSource.Builder<Note>()
                     .clazz(Note.class)
                     .davClient(davClient)
                     .executorService(null) // 防止坚果云503
-                    .server(OkWebDavUtil.concat(server, "remote6"))
+                    .server(server1)
                     .paths(notePaths)
-                    .lock(new DavLock(davClient, OkWebDavUtil.concat(OkWebDavUtil.concat(server, "remote6"), NOTE_LOCK_PATH)))
-                    .sharedSource(new DavSharedTraceInfo(davClient, OkWebDavUtil.concat(OkWebDavUtil.concat(server, "remote6"), NOTE_LST_PATH)))
+                    .lock(new DavLock(davClient, OkWebDavUtil.concat(server1, NOTE_LOCK_PATH)))
+                    .sharedSource(new DavSharedTraceInfo(davClient, OkWebDavUtil.concat(server1, NOTE_LST_PATH)))
                     .build();
 
-            DefaultDavDataSource<Note> noteDavDataSource2 = new DefaultDavDataSource.Builder<Note>()
-                    .clazz(Note.class)
-                    .davClient(davClient)
-                    .executorService(null) // 防止坚果云503
-                    .server(OkWebDavUtil.concat(server, "remote7"))
-                    .paths(notePaths)
-                    .lock(new DavLock(davClient, OkWebDavUtil.concat(OkWebDavUtil.concat(server, "remote7"), NOTE_LOCK_PATH)))
-                    .sharedSource(new DavSharedTraceInfo(davClient, OkWebDavUtil.concat(OkWebDavUtil.concat(server, "remote7"), NOTE_LST_PATH)))
-                    .build();
 
-            DefaultDavDataSource<Note> noteDavDataSource3 = new DefaultDavDataSource.Builder<Note>()
-                    .clazz(Note.class)
-                    .davClient(davClient)
-                    .executorService(null) // 防止坚果云503
-                    .server(OkWebDavUtil.concat(server, "remote8"))
-                    .paths(notePaths)
-                    .lock(new DavLock(davClient, OkWebDavUtil.concat(OkWebDavUtil.concat(server, "remote8"), NOTE_LOCK_PATH)))
-                    .sharedSource(new DavSharedTraceInfo(davClient, OkWebDavUtil.concat(OkWebDavUtil.concat(server, "remote8"), NOTE_LST_PATH)))
-                    .build();
-
-            NoteDavDataSourceWrap noteDavDataSourceWrap = new NoteDavDataSourceWrap(noteDavDataSource);
-            NoteDavDataSourceWrap noteDavDataSourceWrap2 = new NoteDavDataSourceWrap(noteDavDataSource2);
-            NoteDavDataSourceWrap noteDavDataSourceWrap3 = new NoteDavDataSourceWrap(noteDavDataSource3);
+            NoteDavDataSourceWrap noteDavDataSourceWrap = new NoteDavDataSourceWrap(noteDavDataSource1);
             noteSynchronizers.add(new DavSynchronizer4.Builder<Note>()
                     .localDataSource(new NoteSqlDataSourceWrap(noteLocalDataSource, noteDavDataSourceWrap))
                     .remoteDataSource(noteDavDataSourceWrap)
                     .logPath(NOTE_LOG_PATH)
                     .build());
-            noteSynchronizers.add(new DavSynchronizer4.Builder<Note>()
-                    .localDataSource(new NoteSqlDataSourceWrap(noteLocalDataSource, noteDavDataSourceWrap2))
-                    .remoteDataSource(noteDavDataSourceWrap2)
-                    .logPath(NOTE_LOG_PATH)
-                    .build());
-            noteSynchronizers.add(new DavSynchronizer4.Builder<Note>()
-                    .localDataSource(new NoteSqlDataSourceWrap(noteLocalDataSource, noteDavDataSourceWrap3))
-                    .remoteDataSource(noteDavDataSourceWrap3)
-                    .logPath(NOTE_LOG_PATH)
-                    .build());
 
-//
-//            DataSource<Todo> todoLocalDataSource = new TodoSqlDataSource();
-//            String[] todoPaths = StringUtils.split(PreferenceUtil.getString(TODO_SYNC_REMOTE_ROOT_PATHS), "|");
-//            DavDataSource<Todo> todoDavDataSource = new DefaultDavDataSource.Builder<Todo>()
-//                    .clazz(Todo.class)
-//                    .davClient(davClient)
-//                    .executorService(null) // 防止坚果云503
-//                    .server(OkWebDavUtil.concat(server, ""))
-//                    .paths(todoPaths)
-//                    .lock(new DavLock(davClient, OkWebDavUtil.concat(server, TODO_LOCK_PATH)))
-//                    .sharedSource(new DavSharedTraceInfo(davClient, OkWebDavUtil.concat(server, TODO_LST_PATH)))
-//                    .build();
-//
-//            todoSynchronizers.add(new DavSynchronizer2.Builder<Todo>()
-//                    .localDataSource(todoLocalDataSource)
-//                    .remoteDataSource(todoDavDataSource)
-//                    .logPath(TODO_LOG_PATH)
-//                    .build());
+            DataSource<Todo> todoLocalDataSource = new TodoSqlDataSource();
+            String[] todoPaths = StringUtils.split(PreferenceUtil.getString(TODO_SYNC_REMOTE_ROOT_PATHS), "|");
+            DavDataSource<Todo> todoDavDataSource1 = new DefaultDavDataSource.Builder<Todo>()
+                    .clazz(Todo.class)
+                    .davClient(davClient)
+                    .executorService(null) // 防止坚果云503
+                    .server(server1)
+                    .paths(todoPaths)
+                    .lock(new DavLock(davClient, OkWebDavUtil.concat(server1, TODO_LOCK_PATH)))
+                    .sharedSource(new DavSharedTraceInfo(davClient, OkWebDavUtil.concat(server1, TODO_LST_PATH)))
+                    .build();
+
+            todoSynchronizers.add(new DavSynchronizer4.Builder<Todo>()
+                    .localDataSource(todoLocalDataSource)
+                    .remoteDataSource(todoDavDataSource1)
+                    .logPath(TODO_LOG_PATH)
+                    .build());
         }
 
     }
