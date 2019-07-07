@@ -205,7 +205,6 @@ public class NoteDetailSuperFragment extends AbstractDocumentDialogFragment impl
         multiDetailStage.setEnterIndex(multiDetailStage.getCurrentIndex());
 
         operationContainer.setVisibility(View.GONE);
-        pageCountTextView.setVisibility(View.GONE);
 
         FrameLayout.LayoutParams layoutParams = (FrameLayout.LayoutParams) stageAndPageCountContainer.getLayoutParams();
         layoutParams.topMargin = 0;
@@ -448,17 +447,15 @@ public class NoteDetailSuperFragment extends AbstractDocumentDialogFragment impl
 
                 @Override
                 protected void onSlideDown() {
-                    if (operationContainer.getVisibility() == View.GONE && pageCountTextView.getVisibility() == View.GONE) {
+                    if (operationContainer.getVisibility() == View.GONE) {
                         pageCountTextView.setTextColor(ContextCompat.getColor(getContext(),R.color.dark_gray));
                         operationContainer.setVisibility(View.VISIBLE);
-                        pageCountTextView.setVisibility(View.VISIBLE);
                     }
                 }
 
                 @Override
                 protected void onSlideUp() {
                     operationContainer.setVisibility(View.GONE);
-                    pageCountTextView.setVisibility(View.GONE);
                 }
 
                 @Override
