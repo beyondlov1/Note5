@@ -161,8 +161,16 @@ public class NoteRecyclerViewAdapter extends DocumentRecyclerViewAdapter<Note, N
             viewHolder.image.setVisibility(View.VISIBLE);
             String newContent = StringUtils.replace(viewHolder.content.getText().toString(), "!file://" + attachment.getPath(), "");
             if (StringUtils.trim(newContent).isEmpty()){
+                viewHolder.image.setCornerTopLeftRadius(5);
+                viewHolder.image.setCornerTopRightRadius(5);
+                viewHolder.image.setCornerBottomLeftRadius(5);
+                viewHolder.image.setCornerBottomRightRadius(5);
                 viewHolder.nonImageContainer.setVisibility(View.GONE);
             }else {
+                viewHolder.image.setCornerTopLeftRadius(5);
+                viewHolder.image.setCornerTopRightRadius(5);
+                viewHolder.image.setCornerBottomLeftRadius(0);
+                viewHolder.image.setCornerBottomRightRadius(0);
                 viewHolder.nonImageContainer.setVisibility(View.VISIBLE);
                 viewHolder.content.setText(StringUtils.trim(newContent));
             }

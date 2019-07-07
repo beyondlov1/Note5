@@ -41,7 +41,19 @@ margin-left:30px;
 margin-right:30px;
 }
 
-.detail_container:nth-child(1){
+.detail_container p:nth-child(1){
+margin-top:50px;
+}
+
+.detail_container h3:nth-child(1){
+margin-top:50px;
+}
+
+.detail_container ul:nth-child(1){
+margin-top:50px;
+}
+
+.detail_container ol:nth-child(1){
 margin-top:50px;
 }
 

@@ -152,7 +152,7 @@ public class MainActivity extends FragmentActivity implements
         initNoteDetailFragmentContainer();
         initTodoEditFragmentContainer();
 
-        initColorPicker();
+//        initColorPicker();
     }
 
     private void initColorPicker() {

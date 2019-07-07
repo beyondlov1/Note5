@@ -3,11 +3,9 @@ package com.beyond.note5.view.fragment;
 import android.annotation.SuppressLint;
 import android.app.Dialog;
 import android.content.Intent;
-import android.graphics.Color;
 import android.net.Uri;
 import android.os.Bundle;
 import android.support.v4.content.ContextCompat;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.MotionEvent;
 import android.view.View;
@@ -35,7 +33,6 @@ import com.beyond.note5.presenter.PredictPresenterImpl;
 import com.beyond.note5.presenter.TodoCompositePresenter;
 import com.beyond.note5.presenter.TodoCompositePresenterImpl;
 import com.beyond.note5.presenter.TodoPresenterImpl;
-import com.beyond.note5.utils.GBData;
 import com.beyond.note5.utils.ToastUtil;
 import com.beyond.note5.utils.ViewUtil;
 import com.beyond.note5.utils.WebViewUtil;
@@ -56,7 +53,7 @@ import org.greenrobot.eventbus.ThreadMode;
 import java.util.Date;
 import java.util.List;
 
-public class NoteDetailSuperFragment extends AbstractDocumentDialogFragment implements OnBackPressListener, SmoothScalable,FragmentContainerAware {
+public class NoteDetailSuperFragment extends AbstractDocumentDialogFragment implements OnBackPressListener, SmoothScalable, FragmentContainerAware {
     private static final String TAG = NoteDetailSuperFragment.class.getSimpleName();
 
     protected MultiDetailStage<Note> multiDetailStage;
@@ -137,7 +134,7 @@ public class NoteDetailSuperFragment extends AbstractDocumentDialogFragment impl
                     return;
                 }
                 if (multiDetailStage.getCurrentIndex() == multiDetailStage.getData().size()) {
-                    multiDetailStage.setCurrentIndex(multiDetailStage.getCurrentIndex()-1);
+                    multiDetailStage.setCurrentIndex(multiDetailStage.getCurrentIndex() - 1);
                 }
                 refresh();
             }
@@ -233,7 +230,7 @@ public class NoteDetailSuperFragment extends AbstractDocumentDialogFragment impl
         scrollRecyclerViewTo(multiDetailStage.getCurrentData());
     }
 
-    private void processFrameView(){
+    private void processFrameView() {
         processVariableTools();
         processPageCount();
     }
@@ -296,7 +293,7 @@ public class NoteDetailSuperFragment extends AbstractDocumentDialogFragment impl
                     currentNote.setReadFlag(DocumentConst.READ_FLAG_DONE);
                     int oldIndex = multiDetailStage.getCurrentIndex();
                     notePresenter.update(note);
-                    multiDetailStage.setCurrentIndex(oldIndex) ;
+                    multiDetailStage.setCurrentIndex(oldIndex);
                     refresh();
                     ToastUtil.toast(getActivity(), "已读", Toast.LENGTH_SHORT);
                 }
@@ -336,7 +333,7 @@ public class NoteDetailSuperFragment extends AbstractDocumentDialogFragment impl
     @Override
     public boolean onBackPressed() {
         boolean consumed = multiDetailStage.onBackPressed();
-        if (!consumed){
+        if (!consumed) {
             closeWithAnimation();
         }
         return true;
@@ -347,7 +344,7 @@ public class NoteDetailSuperFragment extends AbstractDocumentDialogFragment impl
             multiDetailStage.setCurrentIndex(-1);
         }
         HideNoteDetailEvent event = new HideNoteDetailEvent(multiDetailStage.getCurrentIndex());
-        event.setFirstIndex( multiDetailStage.getEnterIndex());
+        event.setFirstIndex(multiDetailStage.getEnterIndex());
         EventBus.getDefault().post(event);
     }
 
@@ -379,7 +376,7 @@ public class NoteDetailSuperFragment extends AbstractDocumentDialogFragment impl
             @Override
             public void run() {
                 getActivity().getWindow().getDecorView().setSystemUiVisibility(View.SYSTEM_UI_FLAG_LIGHT_STATUS_BAR);
-                getActivity().getWindow().setStatusBarColor(ContextCompat.getColor(getActivity(),R.color.white));
+                getActivity().getWindow().setStatusBarColor(ContextCompat.getColor(getActivity(), R.color.white));
             }
         });
     }
@@ -403,28 +400,28 @@ public class NoteDetailSuperFragment extends AbstractDocumentDialogFragment impl
     private class MyCalendarView extends CalendarViewAdapter {
         @Override
         public void onEventAddFail(Todo todo) {
-            ToastUtil.toast(getContext(),"添加到日历事件失败");
+            ToastUtil.toast(getContext(), "添加到日历事件失败");
         }
 
         @Override
         public void onEventFindAllSuccess(List<Todo> allTodo) {
-            ToastUtil.toast(getContext(),"成功查询日历事件");
+            ToastUtil.toast(getContext(), "成功查询日历事件");
         }
     }
 
     private class MyNoteView extends NoteViewAdapter {
         @Override
         public void onUpdateSuccess(Note note) {
-            if (multiDetailStage.getData() == null){
+            if (multiDetailStage.getData() == null) {
                 return;
             }
             int index = multiDetailStage.getData().indexOf(note);
-            multiDetailStage.setCurrentIndex(index == -1 ? 0 : index) ;
+            multiDetailStage.setCurrentIndex(index == -1 ? 0 : index);
             refresh();
         }
     }
 
-    private class MyViewFactory implements MultiDetailStage.ViewFactory{
+    private class MyViewFactory implements MultiDetailStage.ViewFactory {
 
         @SuppressLint("ClickableViewAccessibility")
         @Override
@@ -451,17 +448,8 @@ public class NoteDetailSuperFragment extends AbstractDocumentDialogFragment impl
 
                 @Override
                 protected void onSlideDown() {
-                    if (operationContainer.getVisibility() == View.GONE && pageCountTextView.getVisibility() == View.GONE){
-                        int color = GBData.getColor(ViewUtil.getScreenSize().x/2, ViewUtil.getScreenSize().y-30);
-                        Log.d(getClass().getSimpleName(),color+"");
-                        boolean lightColor = GBData.isLightColor(color);
-                        Log.d(getClass().getSimpleName(),lightColor+"");
-                        if (lightColor){
-                            pageCountTextView.setTextColor(Color.BLACK);
-                        }else {
-                            pageCountTextView.setTextColor(Color.WHITE);
-                        }
-
+                    if (operationContainer.getVisibility() == View.GONE && pageCountTextView.getVisibility() == View.GONE) {
+                        pageCountTextView.setTextColor(ContextCompat.getColor(getContext(),R.color.dark_gray));
                         operationContainer.setVisibility(View.VISIBLE);
                         pageCountTextView.setVisibility(View.VISIBLE);
                     }
