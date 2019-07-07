@@ -211,5 +211,6 @@ public class WebViewUtil {
             super.onPageFinished(view, url);
             removeWebViewAllViews(view);
         }
+
     }
 }

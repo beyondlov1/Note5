@@ -1,21 +1,19 @@
 <?xml version="1.0" encoding="utf-8"?>
-<FrameLayout
-    xmlns:android="http://schemas.android.com/apk/res/android"
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@color/white"
-    >
+    android:background="@color/white">
 
-   <include layout="@layout/fragment_note_detail_tool"/>
 
     <LinearLayout
+        android:id="@+id/fragment_note_detail_stage_and_page_count"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:orientation="vertical"
         android:layout_marginTop="30dp"
-        >
+        android:orientation="vertical">
+
 
         <com.beyond.note5.view.fragment.NoteMultiDetailStage
             android:id="@+id/fragment_note_detail_view_switcher"
@@ -25,14 +23,21 @@
 
         </com.beyond.note5.view.fragment.NoteMultiDetailStage>
 
-        <TextView
-            android:id="@+id/fragment_note_detail_page_count"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:gravity="center"
-            android:text="@string/page_count"
-            android:textAlignment="gravity" />
-
     </LinearLayout>
+
+    <include
+        layout="@layout/fragment_note_detail_tool"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_gravity="top" />
+
+    <TextView
+        android:id="@+id/fragment_note_detail_page_count"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_gravity="bottom"
+        android:gravity="center"
+        android:text="@string/page_count"
+        android:textAlignment="gravity" />
 
 </FrameLayout>

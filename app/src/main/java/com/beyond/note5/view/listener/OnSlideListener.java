@@ -72,6 +72,10 @@ public abstract class OnSlideListener implements View.OnTouchListener {
         return false;
     }
 
+    protected void onClick(View v) {
+
+    }
+
     protected void onSlideLeft(){}
 
     protected void onSlideRight(){}

@@ -35,7 +35,6 @@ import com.beyond.note5.sync.webdav.client.SardineDavClient;
 import com.beyond.note5.utils.IDUtil;
 import com.beyond.note5.utils.OkWebDavUtil;
 import com.beyond.note5.utils.PreferenceUtil;
-import com.beyond.note5.utils.ToastUtil;
 
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
@@ -106,21 +105,21 @@ public class MyApplication extends Application {
         initPreference();
         initDaoSession();
         initSynchronizer();
-
-        if (CollectionUtils.isNotEmpty(noteSynchronizers) && CollectionUtils.isNotEmpty(todoSynchronizers)) {
-            ToastUtil.toast(getApplicationContext(), "开始同步");
-            sync(new Runnable() {
-                @Override
-                public void run() {
-                    ToastUtil.toast(getApplicationContext(), "同步成功");
-                }
-            }, new Runnable() {
-                @Override
-                public void run() {
-                    ToastUtil.toast(getApplicationContext(), "同步失败");
-                }
-            });
-        }
+//
+//        if (CollectionUtils.isNotEmpty(noteSynchronizers) && CollectionUtils.isNotEmpty(todoSynchronizers)) {
+//            ToastUtil.toast(getApplicationContext(), "开始同步");
+//            sync(new Runnable() {
+//                @Override
+//                public void run() {
+//                    ToastUtil.toast(getApplicationContext(), "同步成功");
+//                }
+//            }, new Runnable() {
+//                @Override
+//                public void run() {
+//                    ToastUtil.toast(getApplicationContext(), "同步失败");
+//                }
+//            });
+//        }
 
     }
 

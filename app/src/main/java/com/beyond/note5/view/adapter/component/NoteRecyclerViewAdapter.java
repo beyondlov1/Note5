@@ -1,6 +1,7 @@
 package com.beyond.note5.view.adapter.component;
 
 import android.content.Context;
+import android.graphics.Bitmap;
 import android.graphics.Color;
 import android.graphics.drawable.Animatable2;
 import android.graphics.drawable.Drawable;
@@ -13,13 +14,16 @@ import android.view.View;
 import android.view.ViewGroup;
 
 import com.beyond.note5.R;
+import com.beyond.note5.bean.Attachment;
 import com.beyond.note5.bean.Note;
 import com.beyond.note5.constant.DocumentConst;
 import com.beyond.note5.constant.LoadType;
 import com.beyond.note5.event.ShowNoteDetailEvent;
 import com.beyond.note5.event.note.UpdateNotePriorityEvent;
+import com.beyond.note5.utils.BitmapUtil;
 import com.beyond.note5.utils.HtmlUtil;
 import com.beyond.note5.utils.PreferenceUtil;
+import com.beyond.note5.utils.ViewUtil;
 import com.beyond.note5.utils.WebViewUtil;
 import com.beyond.note5.view.adapter.component.header.Header;
 import com.beyond.note5.view.adapter.component.header.ItemDataGenerator;
@@ -30,6 +34,7 @@ import com.beyond.note5.view.animator.svg.VectorAnimationImpl;
 import org.apache.commons.lang3.StringUtils;
 import org.greenrobot.eventbus.EventBus;
 
+import java.io.File;
 import java.util.List;
 
 /**
@@ -129,11 +134,38 @@ public class NoteRecyclerViewAdapter extends DocumentRecyclerViewAdapter<Note, N
             viewHolder.link.setVisibility(View.GONE);
         }
 
+        if (note.getAttachments().isEmpty()){
+            viewHolder.image.setVisibility(View.GONE);
+        }else {
+            showImage(viewHolder, note);
+        }
+
         StaggeredGridLayoutManager.LayoutParams layoutParams = (StaggeredGridLayoutManager.LayoutParams) viewHolder.itemView.getLayoutParams();
         if (itemDataGenerator.getSingleContentPositions().contains(position)) {
             layoutParams.setFullSpan(true);
         } else {
             layoutParams.setFullSpan(false);
+        }
+    }
+
+    private void showImage(NoteViewHolder viewHolder, Note note) {
+        Attachment attachment = note.getAttachments().get(0);
+        if (new File(attachment.getPath()).exists()) {
+            double factor = (double) BitmapUtil.getOptions(attachment.getPath()).outHeight / (double) BitmapUtil.getOptions(attachment.getPath()).outWidth;
+            int targetWidth = ViewUtil.getScreenSize().x / 2;
+            Bitmap bm = BitmapUtil.decodeSampledBitmapFromFile(attachment.getPath(), targetWidth,
+                    (int) (targetWidth * factor));
+            double scale = (double) targetWidth / (double) bm.getWidth();
+            viewHolder.image.setImageBitmap(BitmapUtil.scale(bm, scale));
+            viewHolder.image.setAdjustViewBounds(true);
+            viewHolder.image.setVisibility(View.VISIBLE);
+            String newContent = StringUtils.replace(viewHolder.content.getText().toString(), "!file://" + attachment.getPath(), "");
+            if (StringUtils.trim(newContent).isEmpty()){
+                viewHolder.nonImageContainer.setVisibility(View.GONE);
+            }else {
+                viewHolder.nonImageContainer.setVisibility(View.VISIBLE);
+                viewHolder.content.setText(StringUtils.trim(newContent));
+            }
         }
     }
 

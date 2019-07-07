@@ -6,8 +6,15 @@ import android.animation.AnimatorListenerAdapter;
 import android.animation.AnimatorSet;
 import android.annotation.TargetApi;
 import android.app.Activity;
+import android.content.Context;
 import android.content.Intent;
+import android.graphics.PixelFormat;
 import android.graphics.Point;
+import android.hardware.display.DisplayManager;
+import android.hardware.display.VirtualDisplay;
+import android.media.ImageReader;
+import android.media.projection.MediaProjection;
+import android.media.projection.MediaProjectionManager;
 import android.os.Build;
 import android.os.Bundle;
 import android.provider.Settings;
@@ -23,6 +30,7 @@ import android.support.v4.app.FragmentTransaction;
 import android.support.v4.content.ContextCompat;
 import android.support.v4.view.PagerTabStrip;
 import android.support.v4.view.ViewPager;
+import android.util.DisplayMetrics;
 import android.util.Log;
 import android.view.MotionEvent;
 import android.view.View;
@@ -48,6 +56,7 @@ import com.beyond.note5.event.ShowTodoEditorEvent;
 import com.beyond.note5.presenter.NotePresenter;
 import com.beyond.note5.presenter.NotePresenterImpl;
 import com.beyond.note5.service.FloatEditorService;
+import com.beyond.note5.utils.GBData;
 import com.beyond.note5.utils.IDUtil;
 import com.beyond.note5.utils.PhotoUtil;
 import com.beyond.note5.utils.PreferenceUtil;
@@ -123,6 +132,11 @@ public class MainActivity extends FragmentActivity implements
 
     protected NotePresenter notePresenter;
 
+    private final static int REQUEST_MEDIA_PROJECTION = 2;
+    private MediaProjectionManager mediaProjectionManager;
+    private MediaProjection mediaProjection;
+    private VirtualDisplay virtualDisplay;
+
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -138,6 +152,13 @@ public class MainActivity extends FragmentActivity implements
         initNoteDetailFragmentContainer();
         initTodoEditFragmentContainer();
 
+        initColorPicker();
+    }
+
+    private void initColorPicker() {
+        mediaProjectionManager = (MediaProjectionManager)getSystemService(Context.MEDIA_PROJECTION_SERVICE);
+        assert mediaProjectionManager != null;
+        startActivityForResult(mediaProjectionManager.createScreenCaptureIntent(),REQUEST_MEDIA_PROJECTION);
     }
 
     private void initInjection() {
@@ -512,6 +533,15 @@ public class MainActivity extends FragmentActivity implements
 
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        if (requestCode == REQUEST_MEDIA_PROJECTION){
+            if (resultCode != RESULT_OK ){
+                Log.d(getClass().getSimpleName(),"canceled");
+                return;
+            }
+            mediaProjection = mediaProjectionManager.getMediaProjection(resultCode,data);
+            setUpVirtualDisplay();
+        }
+
         if (resultCode == RESULT_OK && requestCode == TAKE_PHOTO_REQUEST_CODE) {
             addPhotoNote();
         } else if (resultCode == RESULT_CANCELED && requestCode == TAKE_PHOTO_REQUEST_CODE) {
@@ -535,6 +565,19 @@ public class MainActivity extends FragmentActivity implements
         } else {
             super.onActivityResult(requestCode, resultCode, data);
         }
+
+    }
+
+    private void setUpVirtualDisplay() {
+        DisplayMetrics displayMetrics = new DisplayMetrics();
+        getWindowManager().getDefaultDisplay().getRealMetrics(displayMetrics);
+        ImageReader imageReader = ImageReader.newInstance(displayMetrics.widthPixels,displayMetrics.heightPixels,
+                PixelFormat.RGBA_8888,1);
+        mediaProjection.createVirtualDisplay("ScreenCapture",
+                displayMetrics.widthPixels,displayMetrics.heightPixels, displayMetrics.densityDpi,
+                DisplayManager.VIRTUAL_DISPLAY_FLAG_AUTO_MIRROR,
+                imageReader.getSurface(),null,null);
+        GBData.reader = imageReader;
     }
 
     private void addQRCodeNote(String content) {

@@ -1,5 +1,6 @@
 package com.beyond.note5.utils.converter;
 
+import org.apache.commons.lang3.StringUtils;
 import org.markdownj.MarkdownProcessor;
 
 import java.util.regex.Matcher;
@@ -17,7 +18,13 @@ public class Markdown2HtmlConverter implements Converter<String,String> {
     @Override
     public String convert(String markdown) {
         markdown = replaceUrlsToMarkDownStyle(markdown);
-        return markdownProcessor.markdown(markdown);
+        String html = markdownProcessor.markdown(markdown);
+        return processImage(html);
+    }
+
+    private String processImage(String html) {
+        String tmp =  StringUtils.replace(html,"<p><img","<img");
+        return StringUtils.replace(tmp,"</img></p>","</img>");
     }
 
     private String replaceUrlsToMarkDownStyle(String source) {

@@ -3,13 +3,17 @@ package com.beyond.note5.view.fragment;
 import android.annotation.SuppressLint;
 import android.app.Dialog;
 import android.content.Intent;
+import android.graphics.Color;
 import android.net.Uri;
 import android.os.Bundle;
 import android.support.v4.content.ContextCompat;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.MotionEvent;
 import android.view.View;
+import android.view.ViewGroup;
 import android.webkit.WebView;
+import android.widget.FrameLayout;
 import android.widget.ImageButton;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -31,6 +35,7 @@ import com.beyond.note5.presenter.PredictPresenterImpl;
 import com.beyond.note5.presenter.TodoCompositePresenter;
 import com.beyond.note5.presenter.TodoCompositePresenterImpl;
 import com.beyond.note5.presenter.TodoPresenterImpl;
+import com.beyond.note5.utils.GBData;
 import com.beyond.note5.utils.ToastUtil;
 import com.beyond.note5.utils.ViewUtil;
 import com.beyond.note5.utils.WebViewUtil;
@@ -53,11 +58,12 @@ import java.util.List;
 
 public class NoteDetailSuperFragment extends AbstractDocumentDialogFragment implements OnBackPressListener, SmoothScalable,FragmentContainerAware {
     private static final String TAG = NoteDetailSuperFragment.class.getSimpleName();
-    
+
     protected MultiDetailStage<Note> multiDetailStage;
 
     protected TextView pageCountTextView;
     protected View operationContainer;
+    protected View stageAndPageCountContainer;
     protected View operationItemsContainer;
     protected View deleteButton;
     protected View searchButton;
@@ -98,6 +104,7 @@ public class NoteDetailSuperFragment extends AbstractDocumentDialogFragment impl
 
         pageCountTextView = root.findViewById(R.id.fragment_note_detail_page_count);
         operationContainer = root.findViewById(R.id.fragment_note_detail_operation_container);
+        stageAndPageCountContainer = root.findViewById(R.id.fragment_note_detail_stage_and_page_count);
         operationItemsContainer = root.findViewById(R.id.fragment_note_detail_operation_items);
         deleteButton = root.findViewById(R.id.fragment_note_detail_operation_delete);
         searchButton = root.findViewById(R.id.fragment_note_detail_operation_search);
@@ -107,6 +114,7 @@ public class NoteDetailSuperFragment extends AbstractDocumentDialogFragment impl
         doneButton = root.findViewById(R.id.fragment_note_detail_operation_done);
         pageCountTextView.getLayoutParams().height = 100;
         pageCountTextView.setLayoutParams(pageCountTextView.getLayoutParams());
+
     }
 
     @Override
@@ -177,6 +185,7 @@ public class NoteDetailSuperFragment extends AbstractDocumentDialogFragment impl
                 closeWithAnimation();
             }
         });
+
     }
 
     @Override
@@ -197,9 +206,18 @@ public class NoteDetailSuperFragment extends AbstractDocumentDialogFragment impl
         multiDetailStage.setData(fillNoteDetailEvent.get());
         multiDetailStage.setCurrentIndex(fillNoteDetailEvent.getIndex());
         multiDetailStage.setEnterIndex(multiDetailStage.getCurrentIndex());
+
+        operationContainer.setVisibility(View.GONE);
+        pageCountTextView.setVisibility(View.GONE);
+
+        FrameLayout.LayoutParams layoutParams = (FrameLayout.LayoutParams) stageAndPageCountContainer.getLayoutParams();
+        layoutParams.topMargin = 0;
+        stageAndPageCountContainer.setLayoutParams(layoutParams);
+
         loadType = fillNoteDetailEvent.getLoadType();
         refresh();
         fillNoteDetailEvent.setConsumed(true);
+
     }
 
     @Subscribe(threadMode = ThreadMode.MAIN)
@@ -338,8 +356,9 @@ public class NoteDetailSuperFragment extends AbstractDocumentDialogFragment impl
         smoothScaleAnimation.setAfterShowHook(new Runnable() {
             @Override
             public void run() {
-                getActivity().getWindow().getDecorView().setSystemUiVisibility(View.SYSTEM_UI_FLAG_VISIBLE);
-                getActivity().getWindow().setStatusBarColor(ContextCompat.getColor(getActivity(), R.color.white));
+                ViewGroup.LayoutParams layoutParams = fragmentContainer.getLayoutParams();
+                layoutParams.height = ViewUtil.getScreenSize().y;
+                fragmentContainer.setLayoutParams(layoutParams);
             }
         });
         smoothScaleAnimation.setAfterHideHook(new Runnable() {
@@ -351,6 +370,9 @@ public class NoteDetailSuperFragment extends AbstractDocumentDialogFragment impl
         smoothScaleAnimation.setBeforeShowHook(new Runnable() {
             @Override
             public void run() {
+                getActivity().getWindow().getDecorView().setSystemUiVisibility(View.SYSTEM_UI_FLAG_FULLSCREEN);
+//                getActivity().getWindow().setStatusBarColor(ContextCompat.getColor(getActivity(), R.color.white));
+
             }
         });
         smoothScaleAnimation.setBeforeHideHook(new Runnable() {
@@ -409,13 +431,14 @@ public class NoteDetailSuperFragment extends AbstractDocumentDialogFragment impl
         public View getView() {
 
             @SuppressLint("InflateParams") View view = LayoutInflater.from(getContext()).inflate(R.layout.fragment_note_detail_content, null);
-            view.setMinimumHeight(2000);
+            view.setMinimumHeight(ViewUtil.getScreenSize().y);
 
             WebView displayWebView = view.findViewById(R.id.fragment_document_display_web);
 
             WebViewUtil.configWebView(displayWebView);
             WebViewUtil.clearHistory();
             displayWebView.setOnTouchListener(new OnSlideListener(getContext()) {
+
                 @Override
                 protected void onSlideLeft() {
                     next();
@@ -424,6 +447,30 @@ public class NoteDetailSuperFragment extends AbstractDocumentDialogFragment impl
                 @Override
                 protected void onSlideRight() {
                     prev();
+                }
+
+                @Override
+                protected void onSlideDown() {
+                    if (operationContainer.getVisibility() == View.GONE && pageCountTextView.getVisibility() == View.GONE){
+                        int color = GBData.getColor(ViewUtil.getScreenSize().x/2, ViewUtil.getScreenSize().y-30);
+                        Log.d(getClass().getSimpleName(),color+"");
+                        boolean lightColor = GBData.isLightColor(color);
+                        Log.d(getClass().getSimpleName(),lightColor+"");
+                        if (lightColor){
+                            pageCountTextView.setTextColor(Color.BLACK);
+                        }else {
+                            pageCountTextView.setTextColor(Color.WHITE);
+                        }
+
+                        operationContainer.setVisibility(View.VISIBLE);
+                        pageCountTextView.setVisibility(View.VISIBLE);
+                    }
+                }
+
+                @Override
+                protected void onSlideUp() {
+                    operationContainer.setVisibility(View.GONE);
+                    pageCountTextView.setVisibility(View.GONE);
                 }
 
                 @Override
@@ -438,7 +485,7 @@ public class NoteDetailSuperFragment extends AbstractDocumentDialogFragment impl
 
                 @Override
                 protected int getSlideYSensitivity() {
-                    return (int) (ViewUtil.getScreenSize().y * 0.33);
+                    return (int) (ViewUtil.getScreenSize().y * 0.22);
                 }
             });
             return view;

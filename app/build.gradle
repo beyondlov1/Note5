@@ -69,6 +69,7 @@ greendao {
 dependencies {
     configurations.all {
         resolutionStrategy.force 'com.android.support:support-annotations:26.1.0'
+        resolutionStrategy.force 'com.android.support:appcompat-v7:26.1.0'
     }
     implementation fileTree(include: ['*.jar'], dir: 'libs')
     implementation 'com.android.support:appcompat-v7:26.1.0'
@@ -134,5 +135,8 @@ dependencies {
 
 //    implementation 'com.github.lookfirst:sardine:5.8'
 
+    //webdav
     implementation 'com.thegrizzlylabs.sardine-android:sardine-android:0.4'
+
+    implementation 'com.github.SheHuan:NiceImageView:1.0.5'
 }
