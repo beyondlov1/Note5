@@ -1,6 +1,8 @@
 package com.beyond.note5.view.fragment;
 
+import android.content.DialogInterface;
 import android.os.Bundle;
+import android.view.View;
 
 import com.beyond.note5.bean.Note;
 import com.beyond.note5.event.FillNoteModifyEvent;
@@ -51,6 +53,12 @@ public class NoteModifyFragment extends AbstractNoteEditorFragment {
         creatingDocument.setLastModifyTime(new Date());
         creatingDocument.setVersion(creatingDocument.getVersion() == null?0: creatingDocument.getVersion()+1);
         notePresenter.update(creatingDocument);
+    }
+
+    @Override
+    public void onDismiss(DialogInterface dialog) {
+        super.onDismiss(dialog);
+        getActivity().getWindow().getDecorView().setSystemUiVisibility(View.SYSTEM_UI_FLAG_FULLSCREEN);
     }
 
     private class MyNoteView extends NoteViewAdapter {

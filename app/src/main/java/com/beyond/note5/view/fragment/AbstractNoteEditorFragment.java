@@ -274,12 +274,6 @@ public abstract class AbstractNoteEditorFragment extends AbstractDocumentEditorF
         dismiss();
     }
 
-    @Override
-    public void onDismiss(DialogInterface dialog) {
-        super.onDismiss(dialog);
-        getActivity().getWindow().getDecorView().setSystemUiVisibility(View.SYSTEM_UI_FLAG_FULLSCREEN);
-    }
-
     class OnMarkdownToolItemClickListener implements View.OnClickListener {
 
         private EditText editText;
