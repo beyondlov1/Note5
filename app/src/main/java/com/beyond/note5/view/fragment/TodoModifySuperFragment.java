@@ -2,6 +2,7 @@ package com.beyond.note5.view.fragment;
 
 import android.annotation.SuppressLint;
 import android.content.Intent;
+import android.graphics.Color;
 import android.net.Uri;
 import android.os.Bundle;
 import android.support.v4.content.ContextCompat;
@@ -371,8 +372,10 @@ public class TodoModifySuperFragment extends AbstractTodoEditorFragment implemen
         smoothScaleAnimation.setBeforeHideHook(new Runnable() {
             @Override
             public void run() {
-                getActivity().getWindow().getDecorView().setSystemUiVisibility(View.SYSTEM_UI_FLAG_LIGHT_STATUS_BAR);
-                getActivity().getWindow().setStatusBarColor(ContextCompat.getColor(getActivity(),R.color.white));
+                getActivity().getWindow().getDecorView().setSystemUiVisibility(View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN
+                        |View.SYSTEM_UI_FLAG_LAYOUT_STABLE
+                        |View.SYSTEM_UI_FLAG_LIGHT_STATUS_BAR);
+                getActivity().getWindow().setStatusBarColor(Color.TRANSPARENT);
             }
         });
     }

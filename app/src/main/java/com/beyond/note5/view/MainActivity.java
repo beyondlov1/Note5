@@ -8,6 +8,7 @@ import android.annotation.TargetApi;
 import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
+import android.graphics.Color;
 import android.graphics.PixelFormat;
 import android.graphics.Point;
 import android.hardware.display.DisplayManager;
@@ -34,6 +35,7 @@ import android.util.DisplayMetrics;
 import android.util.Log;
 import android.view.MotionEvent;
 import android.view.View;
+import android.view.WindowManager;
 import android.widget.FrameLayout;
 import android.widget.Toast;
 
@@ -407,6 +409,15 @@ public class MainActivity extends FragmentActivity implements
     }
 
 
+    @Override
+    protected void onResume() {
+        super.onResume();
+        int systemUiVisibility = getWindow().getDecorView().getSystemUiVisibility();
+        getWindow().getDecorView().setSystemUiVisibility(systemUiVisibility|View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN|View.SYSTEM_UI_FLAG_LAYOUT_STABLE);
+        WindowManager.LayoutParams layoutParams = getWindow().getAttributes();
+//        layoutParams.flags = WindowManager.LayoutParams.FLAG_TRANSLUCENT_STATUS;
+        getWindow().setStatusBarColor(Color.TRANSPARENT);
+    }
 
     @Override
     protected void onStart() {
