@@ -222,7 +222,7 @@ public class TodoModifySuperFragment extends AbstractTodoEditorFragment implemen
                 }
 
                 onKeyboardChangeListener.setExecuteHideCallback(false);
-                fragmentContainer.getLayoutParams().height = ViewUtil.getScreenSizeWithoutNotification().y;
+                fragmentContainer.getLayoutParams().height = ViewUtil.getScreenSize().y;
                 fragmentContainer.setLayoutParams(fragmentContainer.getLayoutParams());
             }
         });

@@ -1,8 +1,11 @@
 package com.beyond.note5.utils;
 
+import android.support.annotation.NonNull;
+
 import org.apache.commons.lang3.time.DateUtils;
 
 import java.text.ParseException;
+import java.util.Calendar;
 import java.util.Date;
 
 /**
@@ -26,5 +29,18 @@ public class DateUtil {
 
     public static boolean isToday(String string){
         return DateUtils.isSameDay(parseDate(string),new Date());
+    }
+
+    public static long between(@NonNull Date date1,@NonNull Date date2) {
+        return date1.getTime() - date2.getTime();
+    }
+
+    public static boolean in(Date date, int startHour, int periodHour) {
+        int hour = DateUtils.toCalendar(date).get(Calendar.HOUR_OF_DAY);
+        if (startHour+periodHour>24){
+            return hour >= startHour || hour < startHour + periodHour - 24;
+        }else {
+            return hour >= startHour && hour < startHour + periodHour;
+        }
     }
 }

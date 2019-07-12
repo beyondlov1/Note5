@@ -131,6 +131,15 @@ public class NoteModelImpl implements NoteModel {
     }
 
     @Override
+    public List<Note> findByPriority(int priority) {
+        return noteDao.queryBuilder()
+                .where(NoteDao.Properties.Type.eq(Document.NOTE))
+                .where(NoteDao.Properties.Priority.eq(priority))
+                .where(NoteDao.Properties.Valid.eq(true))
+                .list();
+    }
+
+    @Override
     public List<Note> findAll() {
         return noteDao.queryBuilder()
                 .where(NoteDao.Properties.Type.eq(Document.NOTE))

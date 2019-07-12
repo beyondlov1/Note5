@@ -1,6 +1,7 @@
 package com.beyond.note5;
 
 import android.app.Application;
+import android.content.Intent;
 import android.database.sqlite.SQLiteDatabase;
 import android.os.Environment;
 import android.os.Handler;
@@ -19,6 +20,7 @@ import com.beyond.note5.predict.TagPredictorImpl;
 import com.beyond.note5.predict.bean.TagGraph;
 import com.beyond.note5.predict.train.filter.TimeExpressionTrainTagFilter;
 import com.beyond.note5.predict.train.filter.UrlTrainTagFilter;
+import com.beyond.note5.service.NotificationScanningService;
 import com.beyond.note5.sync.Synchronizer;
 import com.beyond.note5.sync.datasource.DataSource;
 import com.beyond.note5.sync.datasource.DavDataSource;
@@ -105,6 +107,7 @@ public class MyApplication extends Application {
         initPreference();
         initDaoSession();
         initSynchronizer();
+        startNotificationScanner();
 //
 //        if (CollectionUtils.isNotEmpty(noteSynchronizers) && CollectionUtils.isNotEmpty(todoSynchronizers)) {
 //            ToastUtil.toast(getApplicationContext(), "开始同步");
@@ -121,6 +124,11 @@ public class MyApplication extends Application {
 //            });
 //        }
 
+    }
+
+    private void startNotificationScanner() {
+        Intent intent = new Intent(getApplicationContext(),NotificationScanningService.class);
+        startService(intent);
     }
 
     public void initPreference() {

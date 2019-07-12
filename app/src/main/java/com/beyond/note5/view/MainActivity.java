@@ -103,6 +103,7 @@ public class MainActivity extends FragmentActivity implements
         View.OnScrollChangeListener {
 
     private static final int TAKE_PHOTO_REQUEST_CODE = 1;
+    public static final int NOTIFICATION_REDIRECT_REQUEST_CODE = 2;
 
     @BindView(R.id.pager_tab_strip)
     PagerTabStrip pagerTabStrip;
@@ -155,6 +156,7 @@ public class MainActivity extends FragmentActivity implements
         initTodoEditFragmentContainer();
 
 //        initColorPicker();
+
     }
 
     private void initColorPicker() {
@@ -576,7 +578,6 @@ public class MainActivity extends FragmentActivity implements
         } else {
             super.onActivityResult(requestCode, resultCode, data);
         }
-
     }
 
     private void setUpVirtualDisplay() {
@@ -675,4 +676,5 @@ public class MainActivity extends FragmentActivity implements
             ToastUtil.toast(MainActivity.this, "添加失敗");
         }
     }
+
 }

@@ -90,5 +90,12 @@
             android:name=".service.FloatEditorService"
             android:launchMode="singleInstance"
             />
+        <service android:name=".service.NotificationScanningService" />
+
+        <receiver android:name=".service.NotificationClickReceiver">
+            <intent-filter>
+                <action android:name="com.beyond.note5.intent.action.NOTIFICATION_CLICK"/>
+            </intent-filter>
+        </receiver>
     </application>
 </manifest>
