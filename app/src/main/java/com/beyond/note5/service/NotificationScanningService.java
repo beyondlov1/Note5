@@ -32,7 +32,7 @@ public class NotificationScanningService extends Service {
     private static final int SCAN_PERIOD = 1;// minute
 
     private static final int[] NOTIFICATION_POINTS = new int[]{
-            19, 63, 525, 24 * 60, 24 * 60 * 2, 24 * 60 * 6, 24 * 60 * 31
+            1,19, 63, 525, 24 * 60, 24 * 60 * 2, 24 * 60 * 6, 24 * 60 * 31
     }; // minute
 
     private static final int SILENCE_HOUR_START = 23;
@@ -49,12 +49,14 @@ public class NotificationScanningService extends Service {
         super.onCreate();
         noteModel = new NoteModelImpl();
         handler = new Handler();
-        timer = new Timer(true);
     }
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
-        timer.schedule(new Scanner(), 0, SCAN_PERIOD * 60 * 1000);
+        if (timer == null){
+            timer = new Timer(true);
+            timer.scheduleAtFixedRate(new Scanner(), 0, SCAN_PERIOD * 60 * 1000);
+        }
         return super.onStartCommand(intent, flags, startId);
     }
 
@@ -66,8 +68,10 @@ public class NotificationScanningService extends Service {
         NotificationCompat.Builder builder = new NotificationCompat.Builder(getApplicationContext(), "noteChannel");
         builder.setContentTitle(note.getTitle())
                 .setContentText(note.getContent())
+                .setStyle(new NotificationCompat.BigTextStyle())
                 .setSmallIcon(R.drawable.ic_done_blue_24dp)
                 .setPriority(NotificationCompat.PRIORITY_MAX)
+                .setAutoCancel(true)
                 .setContentIntent(pendingIntent);
 
         if (!DateUtil.in(new Date(), SILENCE_HOUR_START, SILENCE_HOUR_PERIOD)) {

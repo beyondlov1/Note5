@@ -19,6 +19,7 @@ import com.beyond.note5.bean.Account;
 import com.beyond.note5.bean.Note;
 import com.beyond.note5.event.HideFABEvent;
 import com.beyond.note5.event.RefreshNoteListEvent;
+import com.beyond.note5.event.ScrollNoteToTopEvent;
 import com.beyond.note5.event.ScrollToNoteEvent;
 import com.beyond.note5.event.ShowFABEvent;
 import com.beyond.note5.event.SyncNoteListEvent;
@@ -32,6 +33,7 @@ import com.beyond.note5.presenter.NotePresenter;
 import com.beyond.note5.presenter.NotePresenterImpl;
 import com.beyond.note5.presenter.NoteSyncPresenterImpl;
 import com.beyond.note5.presenter.SyncPresenter;
+import com.beyond.note5.utils.RecyclerViewUtil;
 import com.beyond.note5.utils.ToastUtil;
 import com.beyond.note5.view.DavLoginActivity;
 import com.beyond.note5.view.MainActivity;
@@ -221,6 +223,13 @@ public class NoteListFragment extends Fragment {
         Note note = event.get();
         int position = recyclerViewAdapter.getItemDataGenerator().getPosition(note);
         recyclerView.scrollToPosition(position);
+    }
+
+    @Subscribe(threadMode = ThreadMode.MAIN)
+    public void onReceived(ScrollNoteToTopEvent event) {
+        Note note = event.get();
+        int position = recyclerViewAdapter.getItemDataGenerator().getPosition(note);
+        RecyclerViewUtil.tryScrollItemToTop(recyclerView,position);
     }
 
     public void scrollTo(Integer index) {

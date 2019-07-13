@@ -134,9 +134,9 @@ public class NoteRecyclerViewAdapter extends DocumentRecyclerViewAdapter<Note, N
             viewHolder.link.setVisibility(View.GONE);
         }
 
-        if (note.getAttachments().isEmpty()) {
-            viewHolder.image.setVisibility(View.GONE);
-        } else {
+        viewHolder.image.setVisibility(View.GONE);
+        viewHolder.nonImageContainer.setVisibility(View.VISIBLE);
+        if (!note.getAttachments().isEmpty()) {
             showImage(viewHolder, note);
         }
 
@@ -155,7 +155,6 @@ public class NoteRecyclerViewAdapter extends DocumentRecyclerViewAdapter<Note, N
            double factor =  BitmapUtil.getHeightWidthFactor(attachment.getPath());
             Bitmap placeHolderBitmap = BitmapUtil.getPlaceHolderBitmap(200,(int)(factor*200));
             BitmapUtil.asyncBitmap(context.getResources(),viewHolder.image,placeHolderBitmap,attachment.getPath());
-
             viewHolder.image.setAdjustViewBounds(true);
             viewHolder.image.setVisibility(View.VISIBLE);
             String newContent = StringUtils.replace(viewHolder.content.getText().toString(), "!file://" + attachment.getPath(), "");

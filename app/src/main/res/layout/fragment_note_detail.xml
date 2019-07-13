@@ -29,7 +29,9 @@
         layout="@layout/fragment_note_detail_tool"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_gravity="top" />
+        android:layout_gravity="top"
+        android:layout_marginTop="10dp"
+        />
 
     <TextView
         android:id="@+id/fragment_note_detail_page_count"
