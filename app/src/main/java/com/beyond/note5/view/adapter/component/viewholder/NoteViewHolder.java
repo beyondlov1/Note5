@@ -16,6 +16,7 @@ public class NoteViewHolder extends DocumentViewHolder {
     public TextView content;
     public ImageButton link;
     public NiceImageView image;
+    public View textContainer;
 
     public NoteViewHolder(View itemView) {
         super(itemView);
@@ -27,6 +28,7 @@ public class NoteViewHolder extends DocumentViewHolder {
         link = itemView.findViewById(R.id.item_note_link);
         image = itemView.findViewById(R.id.item_note_image);
         nonImageContainer = itemView.findViewById(R.id.item_note_non_image_container);
+        textContainer = itemView.findViewById(R.id.item_note_text_container);
     }
 
 }

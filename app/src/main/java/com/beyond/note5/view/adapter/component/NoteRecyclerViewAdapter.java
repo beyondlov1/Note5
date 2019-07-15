@@ -12,6 +12,7 @@ import android.support.v7.widget.StaggeredGridLayoutManager;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.TextView;
 
 import com.beyond.note5.R;
 import com.beyond.note5.bean.Attachment;
@@ -115,29 +116,27 @@ public class NoteRecyclerViewAdapter extends DocumentRecyclerViewAdapter<Note, N
         viewHolder.dataContainer.setBackground(gradientDrawable);
         viewHolder.title.setTextColor(Color.DKGRAY);
         viewHolder.content.setVisibility(View.VISIBLE);
-        viewHolder.content.setTextSize(12);
+        String content;
         if (StringUtils.isNotBlank(note.getTitle())) {
-            viewHolder.content.setText(StringUtils.trim(note.getTitle()));
+            content= StringUtils.trim(note.getTitle());
         } else {
-            String content = StringUtils.trim(note.getContent());
+            content = StringUtils.trim(note.getContent());
             String url = HtmlUtil.getUrl2(content);
             if (url != null) {
                 String contentWithoutUrl = content.replace(url, "");
-                if (StringUtils.isBlank(contentWithoutUrl)) {
-                    viewHolder.content.setText(content);
-                } else {
-                    viewHolder.content.setText(contentWithoutUrl);
+                if (StringUtils.isNotBlank(contentWithoutUrl)) {
+                    content = contentWithoutUrl;
                 }
-            } else {
-                viewHolder.content.setText(content);
             }
         }
+        setText(viewHolder.content, content);
+
         if (shouldLinkShow && WebViewUtil.getUrlOrSearchUrl(note) != null) {
             viewHolder.link.setVisibility(View.VISIBLE);
         }
 
         if (!note.getAttachments().isEmpty()) {
-            showImage(viewHolder, note);
+            showImage(viewHolder, note, content);
         }
 
         StaggeredGridLayoutManager.LayoutParams layoutParams = (StaggeredGridLayoutManager.LayoutParams) viewHolder.itemView.getLayoutParams();
@@ -148,7 +147,7 @@ public class NoteRecyclerViewAdapter extends DocumentRecyclerViewAdapter<Note, N
         }
     }
 
-    private void showImage(NoteViewHolder viewHolder, Note note) {
+    private void showImage(NoteViewHolder viewHolder, Note note,String content) {
         Attachment attachment = note.getAttachments().get(0);
         if (new File(attachment.getPath()).exists()) {
 
@@ -157,7 +156,10 @@ public class NoteRecyclerViewAdapter extends DocumentRecyclerViewAdapter<Note, N
             BitmapUtil.asyncBitmap(context.getResources(),viewHolder.image,placeHolderBitmap,attachment.getPath());
             viewHolder.image.setAdjustViewBounds(true);
             viewHolder.image.setVisibility(View.VISIBLE);
-            String newContent = StringUtils.replace(viewHolder.content.getText().toString(), "!file://" + attachment.getPath(), "");
+            String newContent = StringUtils.replace(content, "!file://" + attachment.getPath(), "");
+            while (newContent.startsWith("\n")){
+                newContent = newContent.replaceFirst("\n","");
+            }
             if (StringUtils.trim(newContent).isEmpty()) {
                 viewHolder.image.setCornerTopLeftRadius(5);
                 viewHolder.image.setCornerTopRightRadius(5);
@@ -170,21 +172,28 @@ public class NoteRecyclerViewAdapter extends DocumentRecyclerViewAdapter<Note, N
                 viewHolder.image.setCornerBottomLeftRadius(0);
                 viewHolder.image.setCornerBottomRightRadius(0);
                 viewHolder.nonImageContainer.setVisibility(View.VISIBLE);
-                viewHolder.content.setText(StringUtils.trim(newContent));
+
+                setText(viewHolder.content,newContent);
             }
         }
+    }
+
+    private void setText(TextView textView, String content) {
+        textView.setTextSize(12);
+        textView.setText(content);
     }
 
     @Override
     protected void initContentEvent(final NoteViewHolder viewHolder, final Note note, final int position) {
         final int index = itemDataGenerator.getIndex(note);
-        viewHolder.itemView.setOnClickListener(new View.OnClickListener() {
+        View.OnClickListener onClickListener = new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 showContentDetail(v, itemDataGenerator.getContentData(), note, index);
             }
-        });
-        viewHolder.itemView.setOnLongClickListener(new View.OnLongClickListener() {
+        };
+        viewHolder.itemView.setOnClickListener(onClickListener);
+        View.OnLongClickListener onLongClickListener = new View.OnLongClickListener() {
             @Override
             public boolean onLongClick(View v) {
 
@@ -221,13 +230,16 @@ public class NoteRecyclerViewAdapter extends DocumentRecyclerViewAdapter<Note, N
                 longClickAnimation.start();
                 return true;
             }
-        });
+        };
+        viewHolder.itemView.setOnLongClickListener(onLongClickListener);
         viewHolder.link.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 showWebDetail(v, index);
             }
         });
+        viewHolder.content.setOnClickListener(onClickListener);
+        viewHolder.content.setOnLongClickListener(onLongClickListener);
     }
 
     private void showContentDetail(View v, List<Note> data, Note note, int index) {
