@@ -68,6 +68,7 @@ import com.beyond.note5.view.adapter.view.NoteViewAdapter;
 import com.beyond.note5.view.animator.DefaultSmoothScaleAnimation;
 import com.beyond.note5.view.animator.SmoothScalable;
 import com.beyond.note5.view.animator.SmoothScaleAnimation;
+import com.beyond.note5.view.fragment.ConfigFragment;
 import com.beyond.note5.view.fragment.FragmentContainerAware;
 import com.beyond.note5.view.fragment.NoteDetailSuperFragment;
 import com.beyond.note5.view.fragment.NoteEditFragment;
@@ -223,11 +224,14 @@ public class MainActivity extends FragmentActivity implements
     private void initViewPager() {
         Fragment noteFragment = new NoteListFragment();
         Fragment todoFragment = new TodoListFragment();
+        Fragment configFragment = new ConfigFragment();
         fragments.add(noteFragment);
         fragments.add(todoFragment);
+        fragments.add(configFragment);
         final List<String> fragmentTitles = new ArrayList<>();
         fragmentTitles.add("Note");
         fragmentTitles.add("Todo");
+        fragmentTitles.add("Config");
         documentTypes[0] = Document.NOTE;
         documentTypes[1] = Document.TODO;
         mainViewPager.setAdapter(new FragmentPagerAdapter(getSupportFragmentManager()) {
@@ -248,7 +252,9 @@ public class MainActivity extends FragmentActivity implements
 
         });
         mainViewPager.setCurrentItem(PreferenceUtil.getInt(MyApplication.DEFAULT_PAGE));
-        currentType = documentTypes[mainViewPager.getCurrentItem()];
+        if (mainViewPager.getCurrentItem() < 2){
+            currentType = documentTypes[mainViewPager.getCurrentItem()];
+        }
     }
 
     private void initEvent() {

@@ -24,5 +24,7 @@
     <string name="rememberPassword">记住密码</string>
     <string name="rememberUsername">记住用户名</string>
     <string name="server">server</string>
+    <string name="open_account_config">添加同步账号</string>
+    <string name="close">close</string>
     <integer name="config_shortAnimTime">100</integer>
 </resources>

@@ -23,6 +23,17 @@ public class AccountPresenterImpl implements AccountPresenter {
     }
 
     @Override
+    public void update(Account account) {
+        try {
+            accountModel.update(account);
+            accountView.onUpdateSuccess(account);
+        }catch (Exception e){
+            e.printStackTrace();
+            accountView.onUpdateFail(e);
+        }
+    }
+
+    @Override
     public void login(Account account) {
         MyApplication.getInstance().getExecutorService().execute(new Runnable() {
             @Override
@@ -61,6 +72,17 @@ public class AccountPresenterImpl implements AccountPresenter {
         }catch (Exception e){
             e.printStackTrace();
             accountView.onFindAllFail(e);
+        }
+    }
+
+    @Override
+    public void delete(Account account) {
+        try {
+            accountModel.delete(account);
+            accountView.onDeleteSuccess(account);
+        }catch (Exception e){
+            e.printStackTrace();
+            accountView.onDeleteFail(account);
         }
     }
 }

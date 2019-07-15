@@ -12,4 +12,12 @@ public interface AccountView  {
     void onFindAllSuccess(List<Account> all);
 
     void onFindAllFail(Exception e);
+
+    void onUpdateSuccess(Account account);
+
+    void onUpdateFail(Exception e);
+
+    void onDeleteSuccess(Account account);
+
+    void onDeleteFail(Account account);
 }

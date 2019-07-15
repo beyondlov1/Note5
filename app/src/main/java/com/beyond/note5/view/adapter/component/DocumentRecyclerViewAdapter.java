@@ -53,6 +53,7 @@ public abstract class DocumentRecyclerViewAdapter<T extends Document, S extends 
             return;
         }
         S viewHolder = (S) holder;
+        initVisibility(viewHolder);
         if (itemData.get(position) instanceof Header) {
             Header header = (Header) itemData.get(position);
             initHeader(position, header, viewHolder);
@@ -66,6 +67,8 @@ public abstract class DocumentRecyclerViewAdapter<T extends Document, S extends 
         initHeaderView(position, header, viewHolder);
         initHeadEvent(position, header, viewHolder);
     }
+
+    protected abstract void initVisibility(S viewHolder);
 
     protected abstract void initHeaderView(int position, Header header, S viewHolder);
 

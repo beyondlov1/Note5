@@ -8,22 +8,22 @@ import org.greenrobot.greendao.database.Database;
 import org.greenrobot.greendao.identityscope.IdentityScopeType;
 import org.greenrobot.greendao.internal.DaoConfig;
 
+import com.beyond.note5.bean.Account;
 import com.beyond.note5.bean.Attachment;
+import com.beyond.note5.bean.Document;
 import com.beyond.note5.bean.Note;
 import com.beyond.note5.bean.Reminder;
 import com.beyond.note5.bean.Todo;
-import com.beyond.note5.bean.Account;
-import com.beyond.note5.bean.Document;
 import com.beyond.note5.sync.model.bean.SyncInfo;
 import com.beyond.note5.sync.model.bean.SyncLogInfo;
 import com.beyond.note5.sync.model.bean.SyncStateInfo;
 
+import com.beyond.note5.model.dao.AccountDao;
 import com.beyond.note5.model.dao.AttachmentDao;
+import com.beyond.note5.model.dao.DocumentDao;
 import com.beyond.note5.model.dao.NoteDao;
 import com.beyond.note5.model.dao.ReminderDao;
 import com.beyond.note5.model.dao.TodoDao;
-import com.beyond.note5.model.dao.AccountDao;
-import com.beyond.note5.model.dao.DocumentDao;
 import com.beyond.note5.model.dao.SyncInfoDao;
 import com.beyond.note5.model.dao.SyncLogInfoDao;
 import com.beyond.note5.model.dao.SyncStateInfoDao;
@@ -37,22 +37,22 @@ import com.beyond.note5.model.dao.SyncStateInfoDao;
  */
 public class DaoSession extends AbstractDaoSession {
 
+    private final DaoConfig accountDaoConfig;
     private final DaoConfig attachmentDaoConfig;
+    private final DaoConfig documentDaoConfig;
     private final DaoConfig noteDaoConfig;
     private final DaoConfig reminderDaoConfig;
     private final DaoConfig todoDaoConfig;
-    private final DaoConfig accountDaoConfig;
-    private final DaoConfig documentDaoConfig;
     private final DaoConfig syncInfoDaoConfig;
     private final DaoConfig syncLogInfoDaoConfig;
     private final DaoConfig syncStateInfoDaoConfig;
 
+    private final AccountDao accountDao;
     private final AttachmentDao attachmentDao;
+    private final DocumentDao documentDao;
     private final NoteDao noteDao;
     private final ReminderDao reminderDao;
     private final TodoDao todoDao;
-    private final AccountDao accountDao;
-    private final DocumentDao documentDao;
     private final SyncInfoDao syncInfoDao;
     private final SyncLogInfoDao syncLogInfoDao;
     private final SyncStateInfoDao syncStateInfoDao;
@@ -61,8 +61,14 @@ public class DaoSession extends AbstractDaoSession {
             daoConfigMap) {
         super(db);
 
+        accountDaoConfig = daoConfigMap.get(AccountDao.class).clone();
+        accountDaoConfig.initIdentityScope(type);
+
         attachmentDaoConfig = daoConfigMap.get(AttachmentDao.class).clone();
         attachmentDaoConfig.initIdentityScope(type);
+
+        documentDaoConfig = daoConfigMap.get(DocumentDao.class).clone();
+        documentDaoConfig.initIdentityScope(type);
 
         noteDaoConfig = daoConfigMap.get(NoteDao.class).clone();
         noteDaoConfig.initIdentityScope(type);
@@ -73,12 +79,6 @@ public class DaoSession extends AbstractDaoSession {
         todoDaoConfig = daoConfigMap.get(TodoDao.class).clone();
         todoDaoConfig.initIdentityScope(type);
 
-        accountDaoConfig = daoConfigMap.get(AccountDao.class).clone();
-        accountDaoConfig.initIdentityScope(type);
-
-        documentDaoConfig = daoConfigMap.get(DocumentDao.class).clone();
-        documentDaoConfig.initIdentityScope(type);
-
         syncInfoDaoConfig = daoConfigMap.get(SyncInfoDao.class).clone();
         syncInfoDaoConfig.initIdentityScope(type);
 
@@ -88,41 +88,49 @@ public class DaoSession extends AbstractDaoSession {
         syncStateInfoDaoConfig = daoConfigMap.get(SyncStateInfoDao.class).clone();
         syncStateInfoDaoConfig.initIdentityScope(type);
 
+        accountDao = new AccountDao(accountDaoConfig, this);
         attachmentDao = new AttachmentDao(attachmentDaoConfig, this);
+        documentDao = new DocumentDao(documentDaoConfig, this);
         noteDao = new NoteDao(noteDaoConfig, this);
         reminderDao = new ReminderDao(reminderDaoConfig, this);
         todoDao = new TodoDao(todoDaoConfig, this);
-        accountDao = new AccountDao(accountDaoConfig, this);
-        documentDao = new DocumentDao(documentDaoConfig, this);
         syncInfoDao = new SyncInfoDao(syncInfoDaoConfig, this);
         syncLogInfoDao = new SyncLogInfoDao(syncLogInfoDaoConfig, this);
         syncStateInfoDao = new SyncStateInfoDao(syncStateInfoDaoConfig, this);
 
+        registerDao(Account.class, accountDao);
         registerDao(Attachment.class, attachmentDao);
+        registerDao(Document.class, documentDao);
         registerDao(Note.class, noteDao);
         registerDao(Reminder.class, reminderDao);
         registerDao(Todo.class, todoDao);
-        registerDao(Account.class, accountDao);
-        registerDao(Document.class, documentDao);
         registerDao(SyncInfo.class, syncInfoDao);
         registerDao(SyncLogInfo.class, syncLogInfoDao);
         registerDao(SyncStateInfo.class, syncStateInfoDao);
     }
     
     public void clear() {
+        accountDaoConfig.clearIdentityScope();
         attachmentDaoConfig.clearIdentityScope();
+        documentDaoConfig.clearIdentityScope();
         noteDaoConfig.clearIdentityScope();
         reminderDaoConfig.clearIdentityScope();
         todoDaoConfig.clearIdentityScope();
-        accountDaoConfig.clearIdentityScope();
-        documentDaoConfig.clearIdentityScope();
         syncInfoDaoConfig.clearIdentityScope();
         syncLogInfoDaoConfig.clearIdentityScope();
         syncStateInfoDaoConfig.clearIdentityScope();
     }
 
+    public AccountDao getAccountDao() {
+        return accountDao;
+    }
+
     public AttachmentDao getAttachmentDao() {
         return attachmentDao;
+    }
+
+    public DocumentDao getDocumentDao() {
+        return documentDao;
     }
 
     public NoteDao getNoteDao() {
@@ -135,14 +143,6 @@ public class DaoSession extends AbstractDaoSession {
 
     public TodoDao getTodoDao() {
         return todoDao;
-    }
-
-    public AccountDao getAccountDao() {
-        return accountDao;
-    }
-
-    public DocumentDao getDocumentDao() {
-        return documentDao;
     }
 
     public SyncInfoDao getSyncInfoDao() {

@@ -171,7 +171,7 @@ public class MyApplication extends Application {
             NoteSqlDataSource noteLocalDataSource = new NoteSqlDataSource();
             String[] notePaths = StringUtils.split(PreferenceUtil.getString(NOTE_SYNC_REMOTE_ROOT_PATHS), "|");
 
-            String server1 = OkWebDavUtil.concat(server, "test/version1");
+            String server1 = OkWebDavUtil.concat(server, "test/version2");
             DefaultDavDataSource<Note> noteDavDataSource1 = new DefaultDavDataSource.Builder<Note>()
                     .clazz(Note.class)
                     .davClient(davClient)
@@ -315,6 +315,10 @@ public class MyApplication extends Application {
                 }
             }
         });
+    }
+
+    public void refreshSynchronizers(){
+        initSynchronizer();
     }
 
     public Synchronizer<Note> getNoteSynchronizer() {

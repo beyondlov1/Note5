@@ -7,6 +7,7 @@ import android.graphics.Color;
 import android.graphics.drawable.Drawable;
 import android.os.AsyncTask;
 import android.support.annotation.IdRes;
+import android.util.Log;
 import android.util.SparseArray;
 import android.widget.ImageView;
 
@@ -93,12 +94,14 @@ public class BitmapUtil {
             // 如果为空说明未设置过， 直接开始异步任务就可以
             imageView.setImageDrawable(asyncBitmapDrawable);
             asyncBitmapDrawable.execute(bitmapInfo);
+            Log.d("BitmapUtil","异步显示图片: 直接显示");
         }else if (drawable instanceof AsyncBitmapDrawable) {
             AsyncTask<Object, Void, Bitmap> asyncTask = ((AsyncBitmapDrawable) drawable).getAsyncTask();
             if (asyncTask == null){
                 // 如果异步任务为空， 也直接开始
                 imageView.setImageDrawable(asyncBitmapDrawable);
                 asyncBitmapDrawable.execute(bitmapInfo);
+                Log.d("BitmapUtil","异步显示图片: 原来无 asynTask , 直接显示");
             }else if (asyncTask instanceof BitmapAsyncTask) {
                 // 如果不为空， 要判断加载的是不是同一个资源， 如果是就什么都不做。 如果不是就停止上一个任务， 开始正确的任务
                 // 判断是不是同一个资源是根据key是否相同来判断的
@@ -108,11 +111,13 @@ public class BitmapUtil {
                     asyncTask.cancel(true);
                     imageView.setImageDrawable(asyncBitmapDrawable);
                     asyncBitmapDrawable.execute(bitmapInfo);
+                    Log.d("BitmapUtil","异步显示图片: 复用之前的 viewholder");
                 }
             }
         }else {
             imageView.setImageDrawable(asyncBitmapDrawable);
             asyncBitmapDrawable.execute(bitmapInfo);
+            Log.d("BitmapUtil","异步显示图片: 不是异步显示bitmap类型, 直接显示");
         }
     }
 

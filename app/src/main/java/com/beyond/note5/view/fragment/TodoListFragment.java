@@ -2,7 +2,6 @@ package com.beyond.note5.view.fragment;
 
 import android.annotation.SuppressLint;
 import android.content.Context;
-import android.content.Intent;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
@@ -36,9 +35,7 @@ import com.beyond.note5.presenter.TodoCompositePresenter;
 import com.beyond.note5.presenter.TodoCompositePresenterImpl;
 import com.beyond.note5.presenter.TodoPresenterImpl;
 import com.beyond.note5.presenter.TodoSyncPresenterImpl;
-import com.beyond.note5.utils.PreferenceUtil;
 import com.beyond.note5.utils.ToastUtil;
-import com.beyond.note5.view.DavLoginActivity;
 import com.beyond.note5.view.SyncView;
 import com.beyond.note5.view.TodoView;
 import com.beyond.note5.view.adapter.component.DocumentRecyclerViewAdapter;
@@ -64,7 +61,6 @@ import java.util.Iterator;
 import java.util.List;
 
 import static com.beyond.note5.model.TodoModelImpl.IS_SHOW_READ_FLAG_DONE;
-import static com.beyond.note5.view.LoginActivity.DAV_LOGIN_REMEMBER_PASSWORD;
 
 /**
  * @author: beyond
@@ -131,12 +127,6 @@ public class TodoListFragment extends Fragment {
             @Override
             public void onRefresh(@NonNull RefreshLayout refreshLayout) {
                 ToastUtil.toast(getContext(), "开始同步");
-                if (!PreferenceUtil.getBoolean(DAV_LOGIN_REMEMBER_PASSWORD)) {
-                    refreshLayout.finishRefresh();
-                    Intent intent = new Intent(getContext(), DavLoginActivity.class);
-                    startActivity(intent);
-                    return;
-                }
                 syncPresenter.sync();
             }
         });

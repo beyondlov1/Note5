@@ -98,6 +98,7 @@ dependencies {
     implementation 'org.greenrobot:eventbus:3.1.1'
     //markdown
     implementation 'org.markdownj:markdownj-core:0.4'
+    implementation 'com.zzhoujay.richtext:richtext:latest-version'
     //compress
     implementation 'id.zelory:compressor:2.1.0'
     implementation 'com.zxy.android:tiny:0.0.6'
@@ -138,5 +139,6 @@ dependencies {
     //webdav
     implementation 'com.thegrizzlylabs.sardine-android:sardine-android:0.4'
 
+    //image
     implementation 'com.github.SheHuan:NiceImageView:1.0.5'
 }

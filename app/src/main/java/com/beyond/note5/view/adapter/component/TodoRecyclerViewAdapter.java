@@ -59,18 +59,23 @@ public class TodoRecyclerViewAdapter extends DocumentRecyclerViewAdapter<Todo, T
     }
 
     @Override
-    protected void initHeaderView(int position, Header header, TodoViewHolder viewHolder) {
+    protected void initVisibility( TodoViewHolder viewHolder) {
         viewHolder.checkbox.setVisibility(View.GONE);
+        viewHolder.title.setVisibility(View.GONE);
+        viewHolder.content.setVisibility(View.GONE);
+        viewHolder.time.setVisibility(View.GONE);
+        viewHolder.timeContainer.setVisibility(View.GONE);
+    }
+
+    @Override
+    protected void initHeaderView(int position, Header header, TodoViewHolder viewHolder) {
         viewHolder.checkbox.setChecked(false);
         viewHolder.title.setVisibility(View.VISIBLE);
         viewHolder.title.setTextColor(ContextCompat.getColor(context, R.color.dark_yellow));
         viewHolder.title.setText(getHeaderText(header));
-        viewHolder.content.setVisibility(View.GONE);
         viewHolder.content.setPaintFlags(viewHolder.title.getPaintFlags() & (~Paint.STRIKE_THRU_TEXT_FLAG));
         viewHolder.container.setOnClickListener(null);
         viewHolder.dataContainer.setBackground(null);
-        viewHolder.time.setVisibility(View.GONE);
-        viewHolder.timeContainer.setVisibility(View.GONE);
         StaggeredGridLayoutManager.LayoutParams layoutParams = (StaggeredGridLayoutManager.LayoutParams) viewHolder.itemView.getLayoutParams();
         layoutParams.setFullSpan(true);
     }
@@ -132,7 +137,6 @@ public class TodoRecyclerViewAdapter extends DocumentRecyclerViewAdapter<Todo, T
         }
         viewHolder.dataContainer.setBackground(gradientDrawable);
         viewHolder.checkbox.setVisibility(View.VISIBLE);
-        viewHolder.title.setVisibility(View.GONE);
         if (todo.getReadFlag().equals(DocumentConst.READ_FLAG_DONE)) {
             viewHolder.checkbox.setChecked(true);
             viewHolder.content.setPaintFlags(viewHolder.title.getPaintFlags() | Paint.STRIKE_THRU_TEXT_FLAG);
@@ -167,9 +171,6 @@ public class TodoRecyclerViewAdapter extends DocumentRecyclerViewAdapter<Todo, T
             } else {
                 viewHolder.time.setTextColor(ContextCompat.getColor(context, R.color.darker_gray));
             }
-
-        } else {
-            viewHolder.timeContainer.setVisibility(View.GONE);
         }
     }
 

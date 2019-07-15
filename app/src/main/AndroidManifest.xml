@@ -27,6 +27,7 @@
             android:configChanges="orientation|keyboardHidden|screenSize"
             android:label="@string/app_name"
             android:launchMode="singleTask"
+            android:screenOrientation="portrait"
             android:theme="@style/StartLoadBackgroundFullScreenTheme">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
@@ -39,6 +40,7 @@
             android:configChanges="orientation|keyboardHidden|screenSize"
             android:label="@string/app_name"
             android:launchMode="singleTask"
+            android:screenOrientation="portrait"
             android:theme="@style/StartLoadBackgroundFullScreenTheme">
             <!--<intent-filter>-->
             <!--<action android:name="android.intent.action.MAIN" />-->
@@ -72,10 +74,13 @@
         <activity
             android:name=".view.FloatEditorActivity"
             android:launchMode="singleInstance"
+            android:screenOrientation="portrait"
             android:theme="@style/TranslucentTheme" />
 
 
-        <activity android:name=".view.DavLoginActivity" />
+        <activity
+            android:name=".view.DavLoginActivity"
+            android:theme="@style/StartLoadBackgroundFullScreenTheme" />
 
         <provider
             android:name="android.support.v4.content.FileProvider"
@@ -86,15 +91,15 @@
                 android:name="android.support.FILE_PROVIDER_PATHS"
                 android:resource="@xml/file_paths" />
         </provider>
+
         <service
             android:name=".service.FloatEditorService"
-            android:launchMode="singleInstance"
-            />
+            android:launchMode="singleInstance" />
         <service android:name=".service.NotificationScanningService" />
 
         <receiver android:name=".service.NotificationClickReceiver">
             <intent-filter>
-                <action android:name="com.beyond.note5.intent.action.NOTIFICATION_CLICK"/>
+                <action android:name="com.beyond.note5.intent.action.NOTIFICATION_CLICK" />
             </intent-filter>
         </receiver>
     </application>

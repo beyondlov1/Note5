@@ -61,16 +61,22 @@ public class NoteRecyclerViewAdapter extends DocumentRecyclerViewAdapter<Note, N
     }
 
     @Override
+    protected void initVisibility(NoteViewHolder viewHolder) {
+        viewHolder.title.setVisibility(View.GONE);
+        viewHolder.content.setVisibility(View.GONE);
+        viewHolder.link.setVisibility(View.GONE);
+        viewHolder.image.setVisibility(View.GONE);
+        viewHolder.nonImageContainer.setVisibility(View.VISIBLE);
+    }
+
+    @Override
     protected void initHeaderView(int position, Header header, NoteViewHolder viewHolder) {
         viewHolder.title.setVisibility(View.VISIBLE);
         viewHolder.title.setText(header.getContent());
         viewHolder.title.setTextColor(ContextCompat.getColor(context, R.color.dark_yellow));
-        viewHolder.content.setVisibility(View.GONE);
         viewHolder.content.setText(header.getContent());
         viewHolder.container.setOnClickListener(null);
         viewHolder.dataContainer.setBackground(null);
-        viewHolder.link.setVisibility(View.GONE);
-        viewHolder.image.setVisibility(View.GONE);
         StaggeredGridLayoutManager.LayoutParams layoutParams = (StaggeredGridLayoutManager.LayoutParams) viewHolder.itemView.getLayoutParams();
         layoutParams.setFullSpan(true);
     }
@@ -107,7 +113,6 @@ public class NoteRecyclerViewAdapter extends DocumentRecyclerViewAdapter<Note, N
         }
 
         viewHolder.dataContainer.setBackground(gradientDrawable);
-        viewHolder.title.setVisibility(View.GONE);
         viewHolder.title.setTextColor(Color.DKGRAY);
         viewHolder.content.setVisibility(View.VISIBLE);
         viewHolder.content.setTextSize(12);
@@ -127,15 +132,10 @@ public class NoteRecyclerViewAdapter extends DocumentRecyclerViewAdapter<Note, N
                 viewHolder.content.setText(content);
             }
         }
-
         if (shouldLinkShow && WebViewUtil.getUrlOrSearchUrl(note) != null) {
             viewHolder.link.setVisibility(View.VISIBLE);
-        } else {
-            viewHolder.link.setVisibility(View.GONE);
         }
 
-        viewHolder.image.setVisibility(View.GONE);
-        viewHolder.nonImageContainer.setVisibility(View.VISIBLE);
         if (!note.getAttachments().isEmpty()) {
             showImage(viewHolder, note);
         }

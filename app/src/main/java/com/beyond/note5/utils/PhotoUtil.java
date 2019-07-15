@@ -20,7 +20,10 @@ import com.zxy.tiny.callback.FileCallback;
 import java.io.File;
 import java.io.IOException;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Date;
+import java.util.List;
 
 public class PhotoUtil {
 
@@ -103,18 +106,28 @@ public class PhotoUtil {
 //        this.sendBroadcast(mediaScanIntent);
 //    }
 
+    private static List<String> compressingFilePaths = Collections.synchronizedList(new ArrayList<>());
     public static void compressImage(String path){
+        compressingFilePaths.add(path);
         compressImage(path, new FileCallback() {
             @Override
             public void callback(boolean isSuccess, String outfile) {
-
+                compressingFilePaths.remove(path);
             }
         });
+    }
+
+    public static boolean isCompressed(String path){
+        return !compressingFilePaths.contains(path);
     }
 
     public static void compressImage(String path,FileCallback callback){
         Tiny.FileCompressOptions options = new Tiny.FileCompressOptions();
         options.overrideSource = true;
-        Tiny.getInstance().source(path).asFile().withOptions(options).compress(callback);
+        Tiny.getInstance()
+                .source(path)
+                .asFile()
+                .withOptions(options)
+                .compress(callback);
     }
 }

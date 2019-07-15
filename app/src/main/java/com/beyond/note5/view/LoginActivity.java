@@ -1,5 +1,6 @@
 package com.beyond.note5.view;
 
+import android.annotation.SuppressLint;
 import android.os.Bundle;
 import android.os.Handler;
 import android.support.annotation.Nullable;
@@ -11,9 +12,12 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.CheckBox;
+import android.widget.CompoundButton;
 import android.widget.EditText;
+import android.widget.ImageButton;
 import android.widget.TextView;
 
+import com.beyond.note5.MyApplication;
 import com.beyond.note5.R;
 import com.beyond.note5.bean.Account;
 import com.beyond.note5.model.AccountModelImpl;
@@ -21,6 +25,7 @@ import com.beyond.note5.presenter.AccountPresenter;
 import com.beyond.note5.presenter.AccountPresenterImpl;
 import com.beyond.note5.utils.OkWebDavUtil;
 import com.beyond.note5.utils.ToastUtil;
+import com.beyond.note5.view.adapter.view.AccountViewAdapter;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -67,15 +72,22 @@ public abstract class LoginActivity extends AppCompatActivity {
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_login);
-        ButterKnife.bind(this);
+
         accountPresenter = new AccountPresenterImpl(new AccountModelImpl(),new MyAccountView());
+
+        initView();
+
+
+    }
+
+    protected void initView(){
+        ButterKnife.bind(this);
 
         adapter = new MyRecyclerAdapter();
         accountRecyclerView.setAdapter(adapter);
         //设置显示格式
         final StaggeredGridLayoutManager staggeredGridLayoutManager = new StaggeredGridLayoutManager(1, StaggeredGridLayoutManager.VERTICAL);
         accountRecyclerView.setLayoutManager(staggeredGridLayoutManager);
-
         accountPresenter.findAll();
     }
 
@@ -105,17 +117,14 @@ public abstract class LoginActivity extends AppCompatActivity {
         accountPresenter.login(account);
     }
 
-    private class MyAccountView implements AccountView {
+    private class MyAccountView extends AccountViewAdapter {
         @Override
         public void onLoginSuccess(Account account) {
             handler.post(new Runnable() {
                 @Override
                 public void run() {
                     accountPresenter.findAll();
-//                    EventBus.getDefault().post(new SyncNoteListEvent(null));
-//                    Intent intent = new Intent(LoginActivity.this, MainActivity.class);
-//                    startActivity(intent);
-//                    finish();
+                    refreshSynchronizers();
                 }
             });
 
@@ -137,9 +146,13 @@ public abstract class LoginActivity extends AppCompatActivity {
         }
 
         @Override
-        public void onFindAllFail(Exception e) {
-
+        public void onDeleteSuccess(Account account) {
+            accountPresenter.findAll();
         }
+    }
+
+    private void refreshSynchronizers() {
+        MyApplication.getInstance().refreshSynchronizers();
     }
 
     private class MyRecyclerAdapter extends RecyclerView.Adapter {
@@ -153,9 +166,36 @@ public abstract class LoginActivity extends AppCompatActivity {
         }
 
         @Override
-        public void onBindViewHolder(RecyclerView.ViewHolder holder, int position) {
+        public void onBindViewHolder(RecyclerView.ViewHolder holder, @SuppressLint("RecyclerView") int position) {
             MyViewHolder myViewHolder = (MyViewHolder) holder;
+            myViewHolder.server.setText(data.get(position).getServer());
             myViewHolder.username.setText(data.get(position).getUsername());
+            if (data.get(position).getValid()){
+                myViewHolder.enable.setChecked(true);
+            }else {
+                myViewHolder.enable.setChecked(false);
+            }
+            myViewHolder.enable.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+                @Override
+                public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
+                    if (isChecked){
+                        Account account = data.get(position);
+                        account.setValid(true);
+                        accountPresenter.update(account);
+                    }else {
+                        Account account = data.get(position);
+                        account.setValid(false);
+                        accountPresenter.update(account);
+                    }
+                    refreshSynchronizers();
+                }
+            });
+            myViewHolder.delete.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    accountPresenter.delete(data.get(position));
+                }
+            });
         }
 
         @Override
@@ -165,11 +205,17 @@ public abstract class LoginActivity extends AppCompatActivity {
 
         private class MyViewHolder extends RecyclerView.ViewHolder{
 
+            CheckBox enable;
+            TextView server;
             TextView username;
+            ImageButton delete;
 
-            public MyViewHolder(View itemView) {
+            MyViewHolder(View itemView) {
                 super(itemView);
+                server = itemView.findViewById(R.id.item_account_server);
                 username = itemView.findViewById(R.id.item_account_username);
+                enable = itemView.findViewById(R.id.item_account_enable);
+                delete = itemView.findViewById(R.id.item_account_delete);
             }
         }
 
