@@ -7,7 +7,7 @@
  *     https://www.apache.org/licenses/LICENSE-2.0
  *
 #########################################################*/
-package com.beyond.note5.view.markdown;
+package com.beyond.note5.view.markdown.editor;
 
 import java.util.regex.Pattern;
 

@@ -2,12 +2,23 @@ package com.beyond.note5.view;
 
 import android.app.Activity;
 import android.content.Intent;
+import android.content.res.ColorStateList;
 import android.graphics.Bitmap;
+import android.graphics.Color;
 import android.os.Bundle;
 import android.os.Handler;
 import android.support.annotation.Nullable;
+import android.text.Spannable;
+import android.text.SpannableString;
+import android.text.SpannableStringBuilder;
+import android.text.Spanned;
+import android.text.style.ForegroundColorSpan;
+import android.text.style.SuggestionSpan;
+import android.text.style.TextAppearanceSpan;
 import android.util.Log;
+import android.widget.EditText;
 import android.widget.ImageView;
+import android.widget.TextView;
 
 import com.beyond.note5.MyApplication;
 import com.beyond.note5.R;
@@ -17,9 +28,13 @@ import com.beyond.note5.model.dao.NoteDao;
 import com.beyond.note5.utils.BitmapUtil;
 import com.beyond.note5.utils.PhotoUtil;
 import com.beyond.note5.utils.ViewUtil;
+import com.beyond.note5.view.markdown.span.MarkdownRender;
+import com.beyond.note5.view.markdown.span.DefaultMarkdownRender;
 
 import java.io.File;
 import java.util.List;
+
+import static android.graphics.Typeface.BOLD_ITALIC;
 
 public class TestActivity extends Activity {
 
@@ -75,6 +90,44 @@ public class TestActivity extends Activity {
             imageView.setImageBitmap(BitmapUtil.scale(bm,(double) ViewUtil.getScreenSize().x/(double) bm.getWidth()));
         }
 
+
+        testSpanned();
+    }
+
+    private void testSpanned() {
+
+        EditText editText = findViewById(R.id.test_editText);
+        TextView textView = findViewById(R.id.test_textView);
+        Spannable text = new SpannableString("Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.");
+        Object span = new SuggestionSpan(
+                this,
+                new String[] {"one", "two", "three", "four"},
+                SuggestionSpan.FLAG_EASY_CORRECT
+        );
+        text.setSpan(span, 0, 23 + 4, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
+        editText.setText(text);
+
+        Spannable redText = new SpannableString("Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.");
+        redText.setSpan(new ForegroundColorSpan(Color.RED), 12, 15, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);  //设置前景色为洋红色
+        textView.setText(redText);
+
+        String source = "dfaeognjoad\n# Lorem ipsum dolor sit amet, \n- consectetur adipiscing elit, sed do eiusmod \n- tempor incididunt ut \n1. labore et dolore \n1. magna aliqua.";
+        String hash3Key = "# ";
+        int start = source.indexOf(hash3Key);
+        String lineEndStr = "\n";
+        int end = source.indexOf(lineEndStr) - hash3Key.length();
+        if (end<start){
+            end = source.substring(start+hash3Key.length()).indexOf(lineEndStr)+start;
+        }
+
+        Spannable h3Text = new SpannableString(source.replaceFirst(hash3Key,""));
+        h3Text.setSpan(new TextAppearanceSpan("monospace",BOLD_ITALIC, 60,  ColorStateList.valueOf(Color.GREEN), ColorStateList.valueOf(Color.RED)), start, end, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);  //设置前景色为洋红色
+        textView.setText(h3Text);
+
+        MarkdownRender markdownRender = new DefaultMarkdownRender();
+        markdownRender.init();
+        SpannableStringBuilder renderedText = markdownRender.render(source);
+        textView.setText(renderedText);
     }
 
     private void takePhoto() {

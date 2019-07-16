@@ -14,7 +14,7 @@
         android:orientation="vertical"
         android:padding="5dp">
 
-        <com.beyond.note5.view.markdown.HighlightingEditor
+        <com.beyond.note5.view.markdown.editor.HighlightingEditor
             android:id="@+id/float_editor_fragment_edit_text"
             android:layout_width="match_parent"
             android:layout_height="0dp"

@@ -17,8 +17,10 @@ public class AutoSizeTextView extends android.support.v7.widget.AppCompatTextVie
 
     private float mScaleFactor;
 
+    private Float baseTextSize;
+
     public AutoSizeTextView(Context context) {
-        this(context,null);
+        this(context, null);
     }
 
     public AutoSizeTextView(Context context, @Nullable AttributeSet attrs) {
@@ -34,11 +36,19 @@ public class AutoSizeTextView extends android.support.v7.widget.AppCompatTextVie
 
     @Override
     public void setText(CharSequence text, BufferType type) {
-        if (text == null){
+        if (text == null) {
             return;
         }
-        setTextSize(TypedValue.COMPLEX_UNIT_PX, (float) (getTextSize()*(1+ mScaleFactor *Math.pow(1.618, - text.length() / 10))));
+        computeAndSetTextSize(text);
         super.setText(text, type);
+    }
+
+    public void computeAndSetTextSize(CharSequence text) {
+        if (baseTextSize == null){
+            baseTextSize = getTextSize();
+        }
+        float targetSize = (float) (baseTextSize * (1 + mScaleFactor * Math.pow(1.618, -text.length() / 10)));
+        setTextSize(TypedValue.COMPLEX_UNIT_PX, targetSize);
     }
 
 }

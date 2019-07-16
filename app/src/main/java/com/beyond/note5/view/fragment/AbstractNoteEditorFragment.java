@@ -32,7 +32,7 @@ import com.beyond.note5.event.ShowKeyBoardEvent;
 import com.beyond.note5.utils.InputMethodUtil;
 import com.beyond.note5.utils.WebViewUtil;
 import com.beyond.note5.view.listener.OnClickToInsertBeforeLineListener;
-import com.beyond.note5.view.markdown.HighlightingEditor;
+import com.beyond.note5.view.markdown.editor.HighlightingEditor;
 
 import org.apache.commons.lang3.StringUtils;
 

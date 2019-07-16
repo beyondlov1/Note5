@@ -23,6 +23,7 @@ import com.beyond.note5.event.ShowNoteDetailEvent;
 import com.beyond.note5.event.note.UpdateNotePriorityEvent;
 import com.beyond.note5.utils.BitmapUtil;
 import com.beyond.note5.utils.HtmlUtil;
+import com.beyond.note5.view.markdown.span.MarkdownRenders;
 import com.beyond.note5.utils.PreferenceUtil;
 import com.beyond.note5.utils.WebViewUtil;
 import com.beyond.note5.view.adapter.component.header.Header;
@@ -118,14 +119,14 @@ public class NoteRecyclerViewAdapter extends DocumentRecyclerViewAdapter<Note, N
         viewHolder.content.setVisibility(View.VISIBLE);
         String content;
         if (StringUtils.isNotBlank(note.getTitle())) {
-            content= StringUtils.trim(note.getTitle());
+            content= prefixWithH3(StringUtils.trim(note.getTitle()));
         } else {
             content = StringUtils.trim(note.getContent());
             String url = HtmlUtil.getUrl2(content);
             if (url != null) {
                 String contentWithoutUrl = content.replace(url, "");
                 if (StringUtils.isNotBlank(contentWithoutUrl)) {
-                    content = contentWithoutUrl;
+                    content = prefixWithH3(contentWithoutUrl);
                 }
             }
         }
@@ -145,6 +146,10 @@ public class NoteRecyclerViewAdapter extends DocumentRecyclerViewAdapter<Note, N
         } else {
             layoutParams.setFullSpan(false);
         }
+    }
+
+    private String prefixWithH3(String contentWithoutUrl) {
+        return "### "+contentWithoutUrl;
     }
 
     private void showImage(NoteViewHolder viewHolder, Note note,String content) {
@@ -180,7 +185,7 @@ public class NoteRecyclerViewAdapter extends DocumentRecyclerViewAdapter<Note, N
 
     private void setText(TextView textView, String content) {
         textView.setTextSize(12);
-        textView.setText(content);
+        MarkdownRenders.render(textView,content);
     }
 
     @Override
