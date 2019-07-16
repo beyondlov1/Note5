@@ -9,6 +9,7 @@ import com.beyond.note5.bean.Todo;
 import com.beyond.note5.model.dao.DaoSession;
 import com.beyond.note5.model.dao.ReminderDao;
 import com.beyond.note5.model.dao.SyncLogInfoDao;
+import com.beyond.note5.model.dao.SyncStateInfoDao;
 import com.beyond.note5.model.dao.TodoDao;
 import com.beyond.note5.sync.model.bean.SyncLogInfo;
 import com.beyond.note5.utils.IDUtil;
@@ -25,6 +26,7 @@ public class TodoModelImpl implements TodoModel {
     private TodoDao todoDao;
     private ReminderDao reminderDao;
     private SyncLogInfoDao syncLogInfoDao;
+    private SyncStateInfoDao syncStateInfoDao;
 
     public static TodoModel getSingletonInstance(){
         return TodoModelHolder.TODO_MODEL;
@@ -39,6 +41,7 @@ public class TodoModelImpl implements TodoModel {
         todoDao = daoSession.getTodoDao();
         reminderDao = daoSession.getReminderDao();
         syncLogInfoDao = daoSession.getSyncLogInfoDao();
+        syncStateInfoDao = daoSession.getSyncStateInfoDao();
     }
 
     @Override
@@ -47,8 +50,7 @@ public class TodoModelImpl implements TodoModel {
         if (todo.getReminder() != null) {
             reminderDao.insert(todo.getReminder());
         }
-
-        addInsertLog(todo);
+        onInserted(todo);
     }
 
     @Override
@@ -68,9 +70,7 @@ public class TodoModelImpl implements TodoModel {
             }
         }
 
-
-        addUpdateLog(todo);
-
+        onUpdated(todo);
     }
 
     @Override
@@ -79,9 +79,10 @@ public class TodoModelImpl implements TodoModel {
         todo.setValid(false);
         todoDao.update(todo);
 
-        addUpdateLog(todo);
-
+        onUpdated(todo);
     }
+
+
 
     @Override
     public void delete(Todo todo) {
@@ -179,6 +180,15 @@ public class TodoModelImpl implements TodoModel {
         }
     }
 
+    private void onInserted(Todo todo) {
+        addInsertLog(todo);
+    }
+
+    private void onUpdated(Todo todo){
+        addUpdateLog(todo);
+        removeSyncSuccessStateInfo(todo);
+    }
+
     private void addInsertLog(Todo todo){
         SyncLogInfo syncLogInfo = new SyncLogInfo();
         syncLogInfo.setId(IDUtil.uuid());
@@ -203,4 +213,10 @@ public class TodoModelImpl implements TodoModel {
         syncLogInfoDao.insert(syncLogInfo);
     }
 
+    private void removeSyncSuccessStateInfo(Todo todo){
+        syncStateInfoDao.queryBuilder()
+                .where(SyncStateInfoDao.Properties.DocumentId.eq(todo.getId()))
+                .buildDelete()
+                .executeDeleteWithoutDetachingEntities();
+    }
 }

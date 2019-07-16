@@ -11,6 +11,7 @@ import com.beyond.note5.model.dao.AttachmentDao;
 import com.beyond.note5.model.dao.DaoSession;
 import com.beyond.note5.model.dao.NoteDao;
 import com.beyond.note5.model.dao.SyncLogInfoDao;
+import com.beyond.note5.model.dao.SyncStateInfoDao;
 import com.beyond.note5.sync.model.bean.SyncLogInfo;
 import com.beyond.note5.utils.IDUtil;
 import com.beyond.note5.utils.PhotoUtil;
@@ -37,6 +38,8 @@ public class NoteModelImpl implements NoteModel {
 
     private SyncLogInfoDao syncLogInfoDao;
 
+    private SyncStateInfoDao syncStateInfoDao;
+
     public static NoteModel getSingletonInstance(){
         return NoteModelHolder.noteModel;
     }
@@ -50,6 +53,7 @@ public class NoteModelImpl implements NoteModel {
         noteDao = daoSession.getNoteDao();
         attachmentDao = daoSession.getAttachmentDao();
         syncLogInfoDao = daoSession.getSyncLogInfoDao();
+        syncStateInfoDao = daoSession.getSyncStateInfoDao();
     }
 
     @Override
@@ -69,7 +73,7 @@ public class NoteModelImpl implements NoteModel {
             }
         }
 
-        addInsertLog(note);
+        onInserted(note);
     }
 
     @Override
@@ -80,7 +84,7 @@ public class NoteModelImpl implements NoteModel {
             attachmentDao.updateInTx(attachments);
         }
 
-        addUpdateLog(note);
+        onUpdated(note);
     }
 
     @Override
@@ -89,7 +93,7 @@ public class NoteModelImpl implements NoteModel {
         note.setValid(false);
         noteDao.update(note);
 
-        addUpdateLog(note);
+        onUpdated(note);
     }
 
     @Override
@@ -127,7 +131,7 @@ public class NoteModelImpl implements NoteModel {
             attachmentDao.deleteInTx(attachments);
         }
 
-        addUpdateLog(note);
+        onUpdated(note);
     }
 
     @Override
@@ -181,7 +185,16 @@ public class NoteModelImpl implements NoteModel {
     }
 
 
-    private void addInsertLog(Note note){
+    private void onInserted(Note note){
+        addInsertLog(note);
+    }
+
+    private void onUpdated(Note note){
+        addUpdateLog(note);
+        removeSyncSuccessStateInfo(note);
+    }
+
+    private void addInsertLog(Note note) {
         SyncLogInfo syncLogInfo = new SyncLogInfo();
         syncLogInfo.setId(IDUtil.uuid());
         syncLogInfo.setDocumentId(note.getId());
@@ -193,7 +206,7 @@ public class NoteModelImpl implements NoteModel {
         syncLogInfoDao.insert(syncLogInfo);
     }
 
-    private void addUpdateLog(Note note){
+    private void addUpdateLog(Note note) {
         SyncLogInfo syncLogInfo = new SyncLogInfo();
         syncLogInfo.setId(IDUtil.uuid());
         syncLogInfo.setDocumentId(note.getId());
@@ -203,5 +216,13 @@ public class NoteModelImpl implements NoteModel {
         syncLogInfo.setSource(PreferenceUtil.getString(MyApplication.VIRTUAL_USER_ID));
         syncLogInfo.setType(Note.class.getSimpleName().toLowerCase());
         syncLogInfoDao.insert(syncLogInfo);
+    }
+
+
+    private void removeSyncSuccessStateInfo(Note note){
+        syncStateInfoDao.queryBuilder()
+                .where(SyncStateInfoDao.Properties.DocumentId.eq(note.getId()))
+                .buildDelete()
+                .executeDeleteWithoutDetachingEntities();
     }
 }
