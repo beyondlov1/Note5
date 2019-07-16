@@ -98,7 +98,7 @@ public class DavSynchronizer4<T extends Tracable> implements Synchronizer<T> {
 
             try {
                 dataSource1.saveAll(modified2);
-                clearSyncState();
+                recordSyncState(modified2);
             } catch (SyncException e) {
                 List<T> successList = modified2.subList(0, e.getFailIndex());
                 recordSyncState(successList);
@@ -107,12 +107,14 @@ public class DavSynchronizer4<T extends Tracable> implements Synchronizer<T> {
 
             try {
                 dataSource2.saveAll(modified1);
-                clearSyncState();
+                recordSyncState(modified1);
             } catch (SyncException e) {
                 List<T> successList = modified1.subList(0, e.getFailIndex());
                 recordSyncState(successList);
                 throw (Exception) e.getCause();
             }
+
+            clearSyncState();
 
             saveLastSyncTime(getLatestLastModifyTime(modified1, modified2));
             resetFailCount();
@@ -142,12 +144,14 @@ public class DavSynchronizer4<T extends Tracable> implements Synchronizer<T> {
             try {
                 excludeSuccess(modified);
                 changingDataSource.saveAll(modified);
-                clearSyncState();
+                recordSyncState(modified);
             } catch (SyncException e) {
                 List<T> successList = modified.subList(0, e.getFailIndex());
                 recordSyncState(successList);
                 throw (Exception) e.getCause();
             }
+
+            clearSyncState();
 
             saveLastSyncTime(getLatestLastModifyTime(modified));
             resetFailCount();
