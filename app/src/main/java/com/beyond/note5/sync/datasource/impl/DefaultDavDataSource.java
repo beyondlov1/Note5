@@ -281,7 +281,7 @@ public class DefaultDavDataSource<T extends Document> implements DavDataSource<T
                 List<String> ids = client.listAllFileName(OkWebDavUtil.concat(server, path), davFilter);
                 for (String id : ids) {
                     if (id.contains(".")) {
-                        return null;
+                        continue;
                     }
                     try {
                         T t = clazz.newInstance();
