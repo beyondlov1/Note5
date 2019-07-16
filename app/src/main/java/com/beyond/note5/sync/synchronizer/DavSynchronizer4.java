@@ -89,7 +89,7 @@ public class DavSynchronizer4<T extends Tracable> implements Synchronizer<T> {
             return true;
         }
 
-        if (dataSource2.tryLock(60000L)) {
+        if (dataSource1.tryLock(60000L) && dataSource2.tryLock(60000L)) {
             List<T> modified1 = dataSource1.getModifiedData(traceInfo1);
             List<T> modified2 = dataSource2.getModifiedData(traceInfo2);
 
@@ -102,7 +102,7 @@ public class DavSynchronizer4<T extends Tracable> implements Synchronizer<T> {
             } catch (SyncException e) {
                 List<T> successList = modified2.subList(0, e.getFailIndex());
                 recordSyncState(successList);
-                throw (Exception)e.getCause();
+                throw (Exception) e.getCause();
             }
 
             try {
@@ -111,7 +111,7 @@ public class DavSynchronizer4<T extends Tracable> implements Synchronizer<T> {
             } catch (SyncException e) {
                 List<T> successList = modified1.subList(0, e.getFailIndex());
                 recordSyncState(successList);
-                throw (Exception)e.getCause();
+                throw (Exception) e.getCause();
             }
 
             saveLastSyncTime(getLatestLastModifyTime(modified1, modified2));
@@ -146,7 +146,7 @@ public class DavSynchronizer4<T extends Tracable> implements Synchronizer<T> {
             } catch (SyncException e) {
                 List<T> successList = modified.subList(0, e.getFailIndex());
                 recordSyncState(successList);
-                throw (Exception)e.getCause();
+                throw (Exception) e.getCause();
             }
 
             saveLastSyncTime(getLatestLastModifyTime(modified));
@@ -187,7 +187,7 @@ public class DavSynchronizer4<T extends Tracable> implements Synchronizer<T> {
         syncStateModel.saveAll(successSyncStates);
     }
 
-    private void excludeSuccess(List<T> modified){
+    private void excludeSuccess(List<T> modified) {
         SyncStateInfo queryState = new SyncStateInfo();
         queryState.setLocal(dataSource1.getKey());
         queryState.setServer(dataSource2.getKey());
@@ -201,7 +201,7 @@ public class DavSynchronizer4<T extends Tracable> implements Synchronizer<T> {
         Iterator<T> iterator = modified.iterator();
         while (iterator.hasNext()) {
             T next = iterator.next();
-            if (successSyncedIds.contains(next.getId())){
+            if (successSyncedIds.contains(next.getId())) {
                 iterator.remove();
             }
         }
