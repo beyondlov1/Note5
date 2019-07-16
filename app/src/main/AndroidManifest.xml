@@ -95,7 +95,9 @@
         <service
             android:name=".service.FloatEditorService"
             android:launchMode="singleInstance" />
-        <service android:name=".service.NotificationScanningService" />
+        <service
+            android:name=".service.NotificationScanningService"
+            android:launchMode="singleInstance" />
         <service android:name=".service.SyncRetryService" />
 
         <receiver android:name=".service.NotificationClickReceiver">
