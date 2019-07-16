@@ -96,10 +96,16 @@
             android:name=".service.FloatEditorService"
             android:launchMode="singleInstance" />
         <service android:name=".service.NotificationScanningService" />
+        <service android:name=".service.SyncRetryService" />
 
         <receiver android:name=".service.NotificationClickReceiver">
             <intent-filter>
                 <action android:name="com.beyond.note5.intent.action.NOTIFICATION_CLICK" />
+            </intent-filter>
+        </receiver>
+        <receiver android:name=".service.SyncRetryReceiver">
+            <intent-filter>
+                <action android:name="com.beyond.note5.intent.action.SYNC_RETRY" />
             </intent-filter>
         </receiver>
     </application>

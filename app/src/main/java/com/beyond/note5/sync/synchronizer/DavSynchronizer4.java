@@ -2,7 +2,9 @@ package com.beyond.note5.sync.synchronizer;
 
 import android.util.Log;
 
+import com.beyond.note5.MyApplication;
 import com.beyond.note5.bean.Tracable;
+import com.beyond.note5.service.SyncRetryService;
 import com.beyond.note5.sync.Synchronizer;
 import com.beyond.note5.sync.datasource.DataSource;
 import com.beyond.note5.sync.datasource.DavDataSource;
@@ -102,6 +104,7 @@ public class DavSynchronizer4<T extends Tracable> implements Synchronizer<T> {
             } catch (SyncException e) {
                 List<T> successList = modified2.subList(0, e.getFailIndex());
                 recordSyncState(successList);
+                onFail();
                 throw (Exception) e.getCause();
             }
 
@@ -111,6 +114,7 @@ public class DavSynchronizer4<T extends Tracable> implements Synchronizer<T> {
             } catch (SyncException e) {
                 List<T> successList = modified1.subList(0, e.getFailIndex());
                 recordSyncState(successList);
+                onFail();
                 throw (Exception) e.getCause();
             }
 
@@ -133,6 +137,15 @@ public class DavSynchronizer4<T extends Tracable> implements Synchronizer<T> {
         sync();
 
         return true;
+    }
+
+    private void onFail() {
+        MyApplication.getInstance().handler.post(new Runnable() {
+            @Override
+            public void run() {
+                SyncRetryService.retry(MyApplication.getInstance());
+            }
+        });
     }
 
     private boolean syncByOneSide(DataSource<T> changingDataSource, List<T> modified) throws Exception {
