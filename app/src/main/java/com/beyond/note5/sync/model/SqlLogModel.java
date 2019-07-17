@@ -22,5 +22,5 @@ public interface SqlLogModel {
 
     Date getLatestLastModifyTime();
 
-    List<SyncLogInfo> getAllAfter(Date lastSyncTime);
+    List<SyncLogInfo> getAllWhereOperationTimeAfter(Date lastSyncTime);
 }

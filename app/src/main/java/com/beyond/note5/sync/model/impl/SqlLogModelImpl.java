@@ -103,9 +103,9 @@ public class SqlLogModelImpl<T> implements SqlLogModel {
     }
 
     @Override
-    public List<SyncLogInfo> getAllAfter(Date date) {
+    public List<SyncLogInfo> getAllWhereOperationTimeAfter(Date date) {
         return logInfoDao.queryBuilder()
-                .where(SyncLogInfoDao.Properties.CreateTime.gt(date))
+                .where(SyncLogInfoDao.Properties.OperationTime.gt(date))
                 .where(SyncLogInfoDao.Properties.Type.eq(type))
                 .list();
     }

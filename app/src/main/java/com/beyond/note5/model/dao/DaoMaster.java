@@ -21,12 +21,12 @@ public class DaoMaster extends AbstractDaoMaster {
 
     /** Creates underlying database table using DAOs. */
     public static void createAllTables(Database db, boolean ifNotExists) {
+        AccountDao.createTable(db, ifNotExists);
         AttachmentDao.createTable(db, ifNotExists);
+        DocumentDao.createTable(db, ifNotExists);
         NoteDao.createTable(db, ifNotExists);
         ReminderDao.createTable(db, ifNotExists);
         TodoDao.createTable(db, ifNotExists);
-        AccountDao.createTable(db, ifNotExists);
-        DocumentDao.createTable(db, ifNotExists);
         SyncInfoDao.createTable(db, ifNotExists);
         SyncLogInfoDao.createTable(db, ifNotExists);
         SyncStateInfoDao.createTable(db, ifNotExists);
@@ -34,12 +34,12 @@ public class DaoMaster extends AbstractDaoMaster {
 
     /** Drops underlying database table using DAOs. */
     public static void dropAllTables(Database db, boolean ifExists) {
+        AccountDao.dropTable(db, ifExists);
         AttachmentDao.dropTable(db, ifExists);
+        DocumentDao.dropTable(db, ifExists);
         NoteDao.dropTable(db, ifExists);
         ReminderDao.dropTable(db, ifExists);
         TodoDao.dropTable(db, ifExists);
-        AccountDao.dropTable(db, ifExists);
-        DocumentDao.dropTable(db, ifExists);
         SyncInfoDao.dropTable(db, ifExists);
         SyncLogInfoDao.dropTable(db, ifExists);
         SyncStateInfoDao.dropTable(db, ifExists);
@@ -61,12 +61,12 @@ public class DaoMaster extends AbstractDaoMaster {
 
     public DaoMaster(Database db) {
         super(db, SCHEMA_VERSION);
+        registerDaoClass(AccountDao.class);
         registerDaoClass(AttachmentDao.class);
+        registerDaoClass(DocumentDao.class);
         registerDaoClass(NoteDao.class);
         registerDaoClass(ReminderDao.class);
         registerDaoClass(TodoDao.class);
-        registerDaoClass(AccountDao.class);
-        registerDaoClass(DocumentDao.class);
         registerDaoClass(SyncInfoDao.class);
         registerDaoClass(SyncLogInfoDao.class);
         registerDaoClass(SyncStateInfoDao.class);

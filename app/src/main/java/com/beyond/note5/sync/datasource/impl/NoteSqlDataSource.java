@@ -132,7 +132,8 @@ public class NoteSqlDataSource implements DataSource<Note> {
     @Override
     public List<Note> getModifiedData(TraceInfo traceInfo) throws IOException {
 
-        List<SyncLogInfo> modifiedLogs = sqlLogModel.getAllAfter(
+        // 日志的添加时间大于上次同步成功的开始的时间
+        List<SyncLogInfo> modifiedLogs = sqlLogModel.getAllWhereOperationTimeAfter(
                 traceInfo.getLastSyncTimeStart() == null?new Date(0):traceInfo.getLastSyncTimeStart());
         if (modifiedLogs.isEmpty()){
             return new ArrayList<>();

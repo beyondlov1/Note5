@@ -12,11 +12,8 @@ import com.beyond.note5.utils.OkWebDavUtil;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.Date;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 public class NoteSqlDataSourceWrap implements DataSource<Note> {
 
@@ -42,6 +39,9 @@ public class NoteSqlDataSourceWrap implements DataSource<Note> {
         if (attachments != null && !attachments.isEmpty()) {
             for (Attachment attachment : attachments) {
                 try {
+                    if (new File(attachment.getPath()).exists()){
+                        continue;
+                    }
                     davDataSource.getClient().download(
                             getRemoteUrl(note, attachment),
                             getLocalPath(attachment)
@@ -131,10 +131,10 @@ public class NoteSqlDataSourceWrap implements DataSource<Note> {
         List<Attachment> attachments = note.getAttachments();
         if (attachments != null && !attachments.isEmpty()) {
             for (Attachment attachment : attachments) {
-                if (new File(getLocalPath(attachment)).exists()){
-                    continue;
-                }
                 try {
+                    if (new File(attachment.getPath()).exists()){
+                        continue;
+                    }
                     davDataSource.getClient().download(
                             getRemoteUrl(note, attachment),
                             getLocalPath(attachment)
@@ -148,27 +148,26 @@ public class NoteSqlDataSourceWrap implements DataSource<Note> {
 
     @Override
     public void saveAll(List<Note> notes) throws IOException {
-        Map<String, Note> map = new HashMap<>(notes.size());
+       noteSqlDataSource.saveAll(notes);
+
         for (Note note : notes) {
-            map.put(note.getId(), note);
-        }
-        List<Note> noteList = selectByIds(new ArrayList<>(map.keySet()));
-        Map<String, Note> localMap = new HashMap<>(noteList.size());
-
-        for (Note localNote : noteList) {
-            localMap.put(localNote.getId(), localNote);
-        }
-
-        for (String id : map.keySet()) {
-            if (localMap.containsKey(id)) {
-                if (map.get(id).getLastModifyTime().after(localMap.get(id).getLastModifyTime())) {
-                    update(map.get(id));
+            List<Attachment> attachments = note.getAttachments();
+            if (attachments != null && !attachments.isEmpty()) {
+                for (Attachment attachment : attachments) {
+                    try {
+                        if (new File(attachment.getPath()).exists()){
+                            continue;
+                        }
+                        davDataSource.getClient().download(
+                                getRemoteUrl(note, attachment),
+                                getLocalPath(attachment)
+                        );
+                    } catch (IOException e) {
+                        Log.e(this.getClass().getSimpleName(), "下载文件失败", e);
+                    }
                 }
-            }else {
-                add(map.get(id));
             }
         }
-
     }
 
     @Override

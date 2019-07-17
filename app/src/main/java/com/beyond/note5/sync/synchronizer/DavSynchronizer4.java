@@ -61,6 +61,7 @@ public class DavSynchronizer4<T extends Tracable> implements Synchronizer<T> {
         Date LastModifyTime2 = traceInfo2.getLastModifyTime();
 
         if (DateUtils.isSameInstant(LastModifyTime2, new Date(0)) && !DateUtils.isSameInstant(LastModifyTime1, new Date(0))) {
+            Log.d(getClass().getSimpleName(),dataSource2.getKey()+"为空, 根据"+dataSource1.getKey()+"进行同步");
             dataSource1.setLatestTraceInfo(TraceInfo.ZERO);
             dataSource1.setCorrespondTraceInfo(TraceInfo.ZERO, dataSource2);
             List<T> modified1 = dataSource1.getModifiedData(traceInfo1);
@@ -68,6 +69,7 @@ public class DavSynchronizer4<T extends Tracable> implements Synchronizer<T> {
         }
 
         if (DateUtils.isSameInstant(LastModifyTime1, new Date(0)) && !DateUtils.isSameInstant(LastModifyTime2, new Date(0))) {
+            Log.d(getClass().getSimpleName(),dataSource1.getKey()+"为空, 根据"+dataSource2.getKey()+"进行同步");
             dataSource2.setLatestTraceInfo(TraceInfo.ZERO);
             dataSource2.setCorrespondTraceInfo(TraceInfo.ZERO, dataSource1);
             List<T> modified2 = dataSource2.getModifiedData(traceInfo2);
@@ -76,6 +78,8 @@ public class DavSynchronizer4<T extends Tracable> implements Synchronizer<T> {
 
         boolean isDataSource1Changed = dataSource1.isChanged(dataSource2);
         boolean isDataSource2Changed = dataSource2.isChanged(dataSource1);
+
+        Log.d(getClass().getSimpleName(),dataSource1.getKey()+"是否修改:"+isDataSource1Changed+"; "+dataSource2.getKey()+"是否修改:"+isDataSource2Changed);
 
         if (isDataSource1Changed && !isDataSource2Changed) {
             List<T> modified1 = dataSource1.getModifiedData(traceInfo1);
@@ -88,6 +92,7 @@ public class DavSynchronizer4<T extends Tracable> implements Synchronizer<T> {
         }
 
         if (!isDataSource1Changed && !isDataSource2Changed) {
+            Log.d(getClass().getSimpleName(),"都未修改, 无需同步");
             return true;
         }
 
@@ -119,6 +124,7 @@ public class DavSynchronizer4<T extends Tracable> implements Synchronizer<T> {
             saveLastSyncTime(getLatestLastModifyTime(modified1, modified2));
             resetFailCount();
             dataSource2.release();
+            Log.d(getClass().getSimpleName(),"同步成功");
             return true;
         }
 
@@ -136,6 +142,7 @@ public class DavSynchronizer4<T extends Tracable> implements Synchronizer<T> {
     }
 
     private void onSaveFail(List<T> savingList, SyncException e) {
+        Log.d(getClass().getSimpleName(),"同步失败",e);
         List<T> successList = savingList.subList(0, e.getFailIndex());
         recordSyncState(successList);
         MyApplication.getInstance().handler.post(new Runnable() {
@@ -166,6 +173,7 @@ public class DavSynchronizer4<T extends Tracable> implements Synchronizer<T> {
             saveLastSyncTime(getLatestLastModifyTime(modified));
             resetFailCount();
             changingDataSource.release();
+            Log.d(getClass().getSimpleName(),"同步成功");
             return true;
         }
 

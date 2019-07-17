@@ -201,9 +201,6 @@ public class NoteModelImpl implements NoteModel {
                 attachmentDao.insertInTx(allAttachments);
                 //压缩图片
                 for (Attachment attachment : allAttachments) {
-                    if (!new File(attachment.getPath()).exists()) {
-                        continue;
-                    }
                     PhotoUtil.compressImage(attachment.getPath());
                 }
             } catch (SQLiteConstraintException e) {
