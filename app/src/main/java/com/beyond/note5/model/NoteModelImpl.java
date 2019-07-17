@@ -1,6 +1,7 @@
 package com.beyond.note5.model;
 
 import android.database.sqlite.SQLiteConstraintException;
+import android.support.annotation.NonNull;
 import android.util.Log;
 
 import com.beyond.note5.MyApplication;
@@ -21,6 +22,7 @@ import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.io.FileUtils;
 
 import java.io.File;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Date;
 import java.util.List;
@@ -40,7 +42,7 @@ public class NoteModelImpl implements NoteModel {
 
     private SyncStateInfoDao syncStateInfoDao;
 
-    public static NoteModel getSingletonInstance(){
+    public static NoteModel getSingletonInstance() {
         return NoteModelHolder.noteModel;
     }
 
@@ -67,9 +69,9 @@ public class NoteModelImpl implements NoteModel {
                 for (Attachment attachment : attachments) {
                     PhotoUtil.compressImage(attachment.getPath());
                 }
-            }catch (SQLiteConstraintException e){
+            } catch (SQLiteConstraintException e) {
                 e.printStackTrace();
-                Log.i("NoteModelImpl","attachment主键重复");
+                Log.i("NoteModelImpl", "attachment主键重复");
             }
         }
 
@@ -184,17 +186,89 @@ public class NoteModelImpl implements NoteModel {
                 .list();
     }
 
+    @Override
+    public void addAll(List<Note> addList) {
+        noteDao.insertInTx(addList);
+        List<Attachment> allAttachments = new ArrayList<>();
+        for (Note note : addList) {
+            if (note.getAttachments() != null) {
+                allAttachments.addAll(note.getAttachments());
+            }
+        }
 
-    private void onInserted(Note note){
+        if (CollectionUtils.isNotEmpty(allAttachments)) {
+            try {
+                attachmentDao.insertInTx(allAttachments);
+                //压缩图片
+                for (Attachment attachment : allAttachments) {
+                    if (!new File(attachment.getPath()).exists()) {
+                        continue;
+                    }
+                    PhotoUtil.compressImage(attachment.getPath());
+                }
+            } catch (SQLiteConstraintException e) {
+                e.printStackTrace();
+                Log.i("NoteModelImpl", "attachment主键重复");
+            }
+        }
+
+        onInsertedAll(addList);
+    }
+
+
+    @Override
+    public void updateAll(List<Note> updateList) {
+        noteDao.updateInTx(updateList);
+
+        List<Attachment> allAttachments = new ArrayList<>();
+        for (Note note : updateList) {
+            if (note.getAttachments() != null) {
+                allAttachments.addAll(note.getAttachments());
+            }
+        }
+        if (CollectionUtils.isNotEmpty(allAttachments)) {
+            attachmentDao.updateInTx(allAttachments);
+        }
+
+        onUpdatedAll(updateList);
+    }
+
+    private void onInsertedAll(List<Note> addList) {
+        addAllInsertLog(addList);
+    }
+
+    private void addAllInsertLog(List<Note> addList) {
+        addAllLog(addList);
+    }
+
+    private void onUpdatedAll(List<Note> updateList) {
+        addAllLog(updateList);
+    }
+
+    private void addAllLog(List<Note> updateList) {
+        List<SyncLogInfo> syncLogInfos = new ArrayList<>(updateList.size());
+        for (Note note : updateList) {
+            syncLogInfos.add(createAddSyncLogInfo(note));
+        }
+        syncLogInfoDao.insertInTx(syncLogInfos);
+    }
+
+    private void onInserted(Note note) {
         addInsertLog(note);
     }
 
-    private void onUpdated(Note note){
+    private void onUpdated(Note note) {
         addUpdateLog(note);
         removeSyncSuccessStateInfo(note);
     }
 
     private void addInsertLog(Note note) {
+        SyncLogInfo syncLogInfo = createAddSyncLogInfo(note);
+        syncLogInfoDao.insert(syncLogInfo);
+    }
+
+    @NonNull
+    private SyncLogInfo createAddSyncLogInfo(Note note) {
         SyncLogInfo syncLogInfo = new SyncLogInfo();
         syncLogInfo.setId(IDUtil.uuid());
         syncLogInfo.setDocumentId(note.getId());
@@ -203,10 +277,16 @@ public class NoteModelImpl implements NoteModel {
         syncLogInfo.setCreateTime(new Date());
         syncLogInfo.setSource(PreferenceUtil.getString(MyApplication.VIRTUAL_USER_ID));
         syncLogInfo.setType(Note.class.getSimpleName().toLowerCase());
-        syncLogInfoDao.insert(syncLogInfo);
+        return syncLogInfo;
     }
 
     private void addUpdateLog(Note note) {
+        SyncLogInfo syncLogInfo = createUpdateSyncLogInfo(note);
+        syncLogInfoDao.insert(syncLogInfo);
+    }
+
+    @NonNull
+    private SyncLogInfo createUpdateSyncLogInfo(Note note) {
         SyncLogInfo syncLogInfo = new SyncLogInfo();
         syncLogInfo.setId(IDUtil.uuid());
         syncLogInfo.setDocumentId(note.getId());
@@ -215,11 +295,11 @@ public class NoteModelImpl implements NoteModel {
         syncLogInfo.setCreateTime(new Date());
         syncLogInfo.setSource(PreferenceUtil.getString(MyApplication.VIRTUAL_USER_ID));
         syncLogInfo.setType(Note.class.getSimpleName().toLowerCase());
-        syncLogInfoDao.insert(syncLogInfo);
+        return syncLogInfo;
     }
 
 
-    private void removeSyncSuccessStateInfo(Note note){
+    private void removeSyncSuccessStateInfo(Note note) {
         syncStateInfoDao.queryBuilder()
                 .where(SyncStateInfoDao.Properties.DocumentId.eq(note.getId()))
                 .buildDelete()

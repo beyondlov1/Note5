@@ -17,12 +17,14 @@ import com.beyond.note5.MyApplication;
 import com.beyond.note5.R;
 import com.beyond.note5.bean.Account;
 import com.beyond.note5.bean.Note;
+import com.beyond.note5.event.AddNoteAllSuccessEvent;
 import com.beyond.note5.event.HideFABEvent;
 import com.beyond.note5.event.RefreshNoteListEvent;
 import com.beyond.note5.event.ScrollNoteToTopEvent;
 import com.beyond.note5.event.ScrollToNoteEvent;
 import com.beyond.note5.event.ShowFABEvent;
 import com.beyond.note5.event.SyncNoteListEvent;
+import com.beyond.note5.event.UpdateNoteAllSuccessEvent;
 import com.beyond.note5.event.note.AddNoteSuccessEvent;
 import com.beyond.note5.event.note.DeleteNoteSuccessEvent;
 import com.beyond.note5.event.note.UpdateNotePriorityEvent;
@@ -196,6 +198,16 @@ public class NoteListFragment extends Fragment {
     @Subscribe(threadMode = ThreadMode.MAIN, priority = 1)
     public void onReceived(UpdateNoteSuccessEvent event) {
         noteView.onUpdateSuccess(event.get());
+    }
+
+    @Subscribe(threadMode = ThreadMode.MAIN)
+    public void onReceived(AddNoteAllSuccessEvent event) {
+        notePresenter.findAll();
+    }
+
+    @Subscribe(threadMode = ThreadMode.MAIN, priority = 1)
+    public void onReceived(UpdateNoteAllSuccessEvent event) {
+        notePresenter.findAll();
     }
 
     @Subscribe(threadMode = ThreadMode.MAIN)

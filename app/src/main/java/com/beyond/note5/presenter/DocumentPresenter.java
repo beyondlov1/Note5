@@ -26,4 +26,8 @@ public interface DocumentPresenter<T>  extends CRUDPresenter<T>{
     List<T> selectByModifiedDate(Date date);
 
     List<T> selectByIds(Collection<String> ids);
+
+    void addAll(List<T> addList);
+
+    void updateAll(List<T> updateList);
 }

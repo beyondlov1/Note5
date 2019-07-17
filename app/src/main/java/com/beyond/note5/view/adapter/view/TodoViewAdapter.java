@@ -64,4 +64,23 @@ public class TodoViewAdapter implements TodoView {
 
     }
 
+    @Override
+    public void onAddAllSuccess(List<Todo> addList) {
+
+    }
+
+    @Override
+    public void onAddAllFail(Exception e) {
+
+    }
+
+    @Override
+    public void onUpdateAllSuccess(List<Todo> updateList) {
+
+    }
+
+    @Override
+    public void onUpdateAllFail(Exception e) {
+
+    }
 }

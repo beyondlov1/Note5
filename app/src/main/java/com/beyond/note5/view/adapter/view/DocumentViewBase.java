@@ -94,6 +94,23 @@ public abstract class DocumentViewBase<T extends Document> implements DocumentVi
 
     }
 
+    @Override
+    public void onAddAllSuccess(List<T> addList) {
+    }
+
+    @Override
+    public void onAddAllFail(Exception e) {
+        getRecyclerViewAdapter().notifyDataSetChanged();
+    }
+
+    @Override
+    public void onUpdateAllSuccess(List<T> updateList) {
+    }
+
+    @Override
+    public void onUpdateAllFail(Exception e) {
+        getRecyclerViewAdapter().notifyDataSetChanged();
+    }
 
     public abstract DocumentRecyclerViewAdapter getRecyclerViewAdapter();
 

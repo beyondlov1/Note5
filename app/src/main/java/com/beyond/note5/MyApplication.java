@@ -70,6 +70,8 @@ public class MyApplication extends Application {
     private static final String TODO_SYNC_REMOTE_DAV_SERVERS = "todo.sync.remote.dav.servers";
     public static final String TODO_SYNC_REMOTE_ROOT_PATHS = "todo.sync.remote.root.paths";
 
+    public static final String DAV_ROOT_DIR = "test/version2";
+
     public static final String LOG_PATH = "LOCK/sync.log";
     public static final String NOTE_LOCK_PATH = "/LOCK/note_lock.lock";
     public static final String LOGIN_PATH = "/LOCK/";
@@ -159,7 +161,7 @@ public class MyApplication extends Application {
             NoteSqlDataSource noteLocalDataSource = new NoteSqlDataSource();
             String[] notePaths = StringUtils.split(PreferenceUtil.getString(NOTE_SYNC_REMOTE_ROOT_PATHS), "|");
 
-            String server1 = OkWebDavUtil.concat(server, "test/version2");
+            String server1 = OkWebDavUtil.concat(server, DAV_ROOT_DIR);
             DefaultDavDataSource<Note> noteDavDataSource1 = new DefaultDavDataSource.Builder<Note>()
                     .clazz(Note.class)
                     .davClient(davClient)

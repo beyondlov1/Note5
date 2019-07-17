@@ -30,4 +30,8 @@ public interface DocumentModel<T extends Document> extends Model<T> {
     List<T> findByModifiedDate(Date date);
 
     List<T> findByIds(Collection<String> ids);
+
+    void addAll(List<T> addList);
+
+    void updateAll(List<T> updateList);
 }

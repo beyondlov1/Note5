@@ -8,6 +8,9 @@ import android.content.Intent;
 import android.os.IBinder;
 import android.os.SystemClock;
 import android.support.annotation.Nullable;
+import android.util.Log;
+
+import org.apache.commons.lang3.time.DateFormatUtils;
 
 /**
  * @author: beyond
@@ -20,7 +23,7 @@ public class SyncRetryService extends Service {
 
     public static void retry(Context context){
         Intent intent = new Intent(context,SyncRetryService.class);
-        context.startActivity(intent);
+        context.startService(intent);
     }
 
     @Nullable
@@ -38,6 +41,7 @@ public class SyncRetryService extends Service {
             it.setAction(SYNC_RETRY_ACTION);
             PendingIntent pendingIntent = PendingIntent.getBroadcast(this,0,it,0);
             alarmManager.set(AlarmManager.ELAPSED_REALTIME, triggerTime,pendingIntent);
+            Log.d(getClass().getSimpleName(),"重试任务已设定, 当前时间:"+ DateFormatUtils.format(System.currentTimeMillis(),"yyyy-MM-dd HH:mm:ss"));
         }
         return super.onStartCommand(intent, flags, startId);
     }

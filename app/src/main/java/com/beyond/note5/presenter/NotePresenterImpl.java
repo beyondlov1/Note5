@@ -5,6 +5,8 @@ import android.support.annotation.Nullable;
 
 import com.beyond.note5.MyApplication;
 import com.beyond.note5.bean.Note;
+import com.beyond.note5.event.AddNoteAllSuccessEvent;
+import com.beyond.note5.event.UpdateNoteAllSuccessEvent;
 import com.beyond.note5.event.note.AddNoteSuccessEvent;
 import com.beyond.note5.event.note.DeleteNoteSuccessEvent;
 import com.beyond.note5.event.note.UpdateNoteSuccessEvent;
@@ -223,6 +225,58 @@ public class NotePresenterImpl implements NotePresenter {
     @Override
     public List<Note> selectByIds(Collection<String> ids) {
         return noteModel.findByIds(ids);
+    }
+
+    @Override
+    public void addAll(List<Note> addList) {
+        try {
+            noteModel.addAll(addList);
+            addAllSuccess(addList);
+        }catch (Exception e){
+            e.printStackTrace();
+            addAllFail(e);
+        }
+    }
+
+    private void addAllSuccess(List<Note> addList) {
+        if (noteView == null) {
+            return;
+        }
+        EventBus.getDefault().post(new AddNoteAllSuccessEvent(addList));
+        noteView.onAddAllSuccess(addList);
+    }
+
+    private void addAllFail(Exception e) {
+        if (noteView == null) {
+            return;
+        }
+        noteView.onAddAllFail(e);
+    }
+
+    @Override
+    public void updateAll(List<Note> updateList) {
+        try {
+            noteModel.updateAll(updateList);
+            updateAllSuccess(updateList);
+        }catch (Exception e){
+            e.printStackTrace();
+            updateAllFail(e);
+        }
+    }
+
+    private void updateAllSuccess(List<Note> updateList) {
+        if (noteView == null) {
+            return;
+        }
+        EventBus.getDefault().post(new UpdateNoteAllSuccessEvent(updateList));
+        noteView.onUpdateAllSuccess(updateList);
+    }
+
+    private void updateAllFail(Exception e) {
+        if (noteView == null) {
+            return;
+        }
+        noteView.onUpdateAllFail(e);
     }
 
     @Override

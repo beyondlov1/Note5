@@ -171,15 +171,19 @@ public class NoteSqlDataSource implements DataSource<Note> {
             localMap.put(localNote.getId(), localNote);
         }
 
+        List<Note> addList = new ArrayList<>();
+        List<Note> updateList = new ArrayList<>();
         for (String id : map.keySet()) {
             if (localMap.containsKey(id)) {
                 if (map.get(id).getLastModifyTime().after(localMap.get(id).getLastModifyTime())) {
-                    update(map.get(id));
+                    updateList.add(map.get(id));
                 }
             }else {
-                add(map.get(id));
+                addList.add(map.get(id));
             }
         }
+        notePresenter.addAll(addList);
+        notePresenter.updateAll(updateList);
 
     }
 

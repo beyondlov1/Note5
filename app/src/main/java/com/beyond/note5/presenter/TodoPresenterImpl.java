@@ -3,6 +3,8 @@ package com.beyond.note5.presenter;
 import android.support.annotation.Nullable;
 
 import com.beyond.note5.bean.Todo;
+import com.beyond.note5.event.AddTodoAllSuccessEvent;
+import com.beyond.note5.event.UpdateTodoAllSuccessEvent;
 import com.beyond.note5.event.todo.AddTodoSuccessEvent;
 import com.beyond.note5.event.todo.DeleteTodoSuccessEvent;
 import com.beyond.note5.event.todo.UpdateTodoSuccessEvent;
@@ -83,6 +85,58 @@ public class TodoPresenterImpl implements TodoPresenter {
             return;
         }
         todoView.onUpdateFail(todo);
+    }
+
+    @Override
+    public void addAll(List<Todo> addList) {
+        try {
+            todoModel.addAll(addList);
+            addAllSuccess(addList);
+        }catch (Exception e){
+            e.printStackTrace();
+            addAllFail(e);
+        }
+    }
+
+    private void addAllSuccess(List<Todo> addList) {
+        if (todoView == null) {
+            return;
+        }
+        EventBus.getDefault().post(new AddTodoAllSuccessEvent(addList));
+        todoView.onAddAllSuccess(addList);
+    }
+
+    private void addAllFail(Exception e) {
+        if (todoView == null) {
+            return;
+        }
+        todoView.onAddAllFail(e);
+    }
+
+    @Override
+    public void updateAll(List<Todo> updateList) {
+        try {
+            todoModel.updateAll(updateList);
+            updateAllSuccess(updateList);
+        }catch (Exception e){
+            e.printStackTrace();
+            updateAllFail(e);
+        }
+    }
+
+    private void updateAllSuccess(List<Todo> updateList) {
+        if (todoView == null) {
+            return;
+        }
+        EventBus.getDefault().post(new UpdateTodoAllSuccessEvent(updateList));
+        todoView.onUpdateAllSuccess(updateList);
+    }
+
+    private void updateAllFail(Exception e) {
+        if (todoView == null) {
+            return;
+        }
+        todoView.onUpdateAllFail(e);
     }
 
     @Override

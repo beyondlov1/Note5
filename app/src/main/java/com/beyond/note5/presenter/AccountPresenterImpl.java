@@ -11,6 +11,9 @@ import com.thegrizzlylabs.sardineandroid.impl.handler.OkHttpSardine2;
 
 import java.util.List;
 
+import static com.beyond.note5.MyApplication.DAV_ROOT_DIR;
+import static com.beyond.note5.MyApplication.LOGIN_PATH;
+
 public class AccountPresenterImpl implements AccountPresenter {
     
     private AccountModel accountModel;
@@ -46,7 +49,7 @@ public class AccountPresenterImpl implements AccountPresenter {
                     }
                     boolean available = OkWebDavUtil.isAvailable(
                             account.getServer(),
-                            OkWebDavUtil.concat(account.getServer(), MyApplication.LOGIN_PATH),
+                            OkWebDavUtil.concat(account.getServer(),DAV_ROOT_DIR, LOGIN_PATH),
                             account.getUsername(),
                             account.getPassword());
                     if (available){

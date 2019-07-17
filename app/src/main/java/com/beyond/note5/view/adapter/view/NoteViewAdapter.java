@@ -56,4 +56,24 @@ public class NoteViewAdapter implements NoteView {
 
     }
 
+    @Override
+    public void onAddAllSuccess(List<Note> addList) {
+
+    }
+
+    @Override
+    public void onAddAllFail(Exception e) {
+
+    }
+
+    @Override
+    public void onUpdateAllSuccess(List<Note> updateList) {
+
+    }
+
+    @Override
+    public void onUpdateAllFail(Exception e) {
+
+    }
+
 }
