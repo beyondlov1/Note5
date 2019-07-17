@@ -17,12 +17,14 @@ import android.view.ViewGroup;
 import com.beyond.note5.MyApplication;
 import com.beyond.note5.R;
 import com.beyond.note5.bean.Todo;
+import com.beyond.note5.event.AddTodoAllSuccessEvent;
 import com.beyond.note5.event.HideFABEvent;
 import com.beyond.note5.event.InCompleteTodoEvent;
 import com.beyond.note5.event.RefreshTodoListEvent;
 import com.beyond.note5.event.ScrollToTodoByDateEvent;
 import com.beyond.note5.event.ScrollToTodoEvent;
 import com.beyond.note5.event.ShowFABEvent;
+import com.beyond.note5.event.UpdateTodoAllSuccessEvent;
 import com.beyond.note5.event.todo.AddTodoSuccessEvent;
 import com.beyond.note5.event.todo.CompleteTodoEvent;
 import com.beyond.note5.event.todo.DeleteTodoSuccessEvent;
@@ -232,6 +234,15 @@ public class TodoListFragment extends Fragment {
         todoView.onUpdateSuccess(todo);
     }
 
+    @Subscribe(threadMode = ThreadMode.MAIN)
+    public void onReceived(AddTodoAllSuccessEvent event) {
+        todoCompositePresenter.findAll();
+    }
+
+    @Subscribe(threadMode = ThreadMode.MAIN, priority = 1)
+    public void onReceived(UpdateTodoAllSuccessEvent event) {
+        todoCompositePresenter.findAll();
+    }
 
     @Subscribe(threadMode = ThreadMode.MAIN)
     public void onReceived(DeleteTodoSuccessEvent event) {
