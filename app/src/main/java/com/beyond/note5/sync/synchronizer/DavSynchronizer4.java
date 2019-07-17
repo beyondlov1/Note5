@@ -64,6 +64,7 @@ public class DavSynchronizer4<T extends Tracable> implements Synchronizer<T> {
             Log.d(getClass().getSimpleName(),dataSource2.getKey()+"为空, 根据"+dataSource1.getKey()+"进行同步");
             dataSource1.setLatestTraceInfo(TraceInfo.ZERO);
             dataSource1.setCorrespondTraceInfo(TraceInfo.ZERO, dataSource2);
+            traceInfo1 = this.dataSource1.getCorrespondTraceInfo(dataSource2);
             List<T> modified1 = dataSource1.getModifiedData(traceInfo1);
             return syncByOneSide(dataSource2, modified1);
         }
@@ -72,6 +73,7 @@ public class DavSynchronizer4<T extends Tracable> implements Synchronizer<T> {
             Log.d(getClass().getSimpleName(),dataSource1.getKey()+"为空, 根据"+dataSource2.getKey()+"进行同步");
             dataSource2.setLatestTraceInfo(TraceInfo.ZERO);
             dataSource2.setCorrespondTraceInfo(TraceInfo.ZERO, dataSource1);
+            traceInfo2 = this.dataSource2.getCorrespondTraceInfo(dataSource1);
             List<T> modified2 = dataSource2.getModifiedData(traceInfo2);
             return syncByOneSide(dataSource1, modified2);
         }
