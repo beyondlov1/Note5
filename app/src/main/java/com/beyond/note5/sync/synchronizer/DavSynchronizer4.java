@@ -102,9 +102,7 @@ public class DavSynchronizer4<T extends Tracable> implements Synchronizer<T> {
                 dataSource1.saveAll(modified2);
                 recordSyncState(modified2);
             } catch (SyncException e) {
-                List<T> successList = modified2.subList(0, e.getFailIndex());
-                recordSyncState(successList);
-                onFail();
+                onSaveFail(modified2, e);
                 throw (Exception) e.getCause();
             }
 
@@ -112,9 +110,7 @@ public class DavSynchronizer4<T extends Tracable> implements Synchronizer<T> {
                 dataSource2.saveAll(modified1);
                 recordSyncState(modified1);
             } catch (SyncException e) {
-                List<T> successList = modified1.subList(0, e.getFailIndex());
-                recordSyncState(successList);
-                onFail();
+                onSaveFail(modified1, e);
                 throw (Exception) e.getCause();
             }
 
@@ -139,7 +135,9 @@ public class DavSynchronizer4<T extends Tracable> implements Synchronizer<T> {
         return true;
     }
 
-    private void onFail() {
+    private void onSaveFail(List<T> savingList, SyncException e) {
+        List<T> successList = savingList.subList(0, e.getFailIndex());
+        recordSyncState(successList);
         MyApplication.getInstance().handler.post(new Runnable() {
             @Override
             public void run() {
@@ -159,8 +157,7 @@ public class DavSynchronizer4<T extends Tracable> implements Synchronizer<T> {
                 changingDataSource.saveAll(modified);
                 recordSyncState(modified);
             } catch (SyncException e) {
-                List<T> successList = modified.subList(0, e.getFailIndex());
-                recordSyncState(successList);
+                onSaveFail(modified,e);
                 throw (Exception) e.getCause();
             }
 
