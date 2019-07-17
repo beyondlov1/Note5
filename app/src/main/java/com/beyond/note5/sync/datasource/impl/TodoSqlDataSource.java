@@ -16,6 +16,7 @@ import com.beyond.note5.view.adapter.view.TodoViewAdapter;
 import org.apache.commons.lang3.time.DateUtils;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.Date;
@@ -144,15 +145,20 @@ public class TodoSqlDataSource implements DataSource<Todo> {
             localMap.put(localTodo.getId(), localTodo);
         }
 
+        List<Todo> addList = new ArrayList<>();
+        List<Todo> updateList = new ArrayList<>();
         for (String id : map.keySet()) {
             if (localMap.containsKey(id)) {
                 if (map.get(id).getLastModifyTime().after(localMap.get(id).getLastModifyTime())) {
-                    update(map.get(id));
+                    updateList.add(map.get(id));
                 }
             } else {
-                add(map.get(id));
+                addList.add(map.get(id));
             }
         }
+
+        todoPresenter.addAll(addList);
+        todoPresenter.updateAll(updateList);
     }
 
     @Override
@@ -184,6 +190,7 @@ public class TodoSqlDataSource implements DataSource<Todo> {
             info.setLocalKey(getKey());
             info.setRemoteKey(targetDataSource.getKey());
             info.setLastModifyTime(traceInfo.getLastModifyTime());
+            info.setLastSyncTimeStart(traceInfo.getLastSyncTimeStart());
             info.setLastSyncTime(traceInfo.getLastSyncTimeEnd());
             info.setType(targetDataSource.clazz().getSimpleName().toLowerCase());
             syncInfoDao.insert(info);
