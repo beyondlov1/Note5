@@ -157,8 +157,10 @@ public class DefaultDavDataSource<T extends Document> implements DavDataSource<T
     @Override
     public boolean isChanged(DataSource<T> targetDataSource) throws IOException {
         SharedSource<TraceInfo> davSharedTraceInfo = getCorrespondTraceInfoSource(targetDataSource);
-        return !DateUtils.isSameInstant(davSharedTraceInfo.get().getLastModifyTime(),
-                getLatestTraceInfo().getLastModifyTime());
+        Date correspondLastModifyTime = davSharedTraceInfo.get().getLastModifyTime();
+        Date latestLastModifyTime = getLatestTraceInfo().getLastModifyTime();
+        return !DateUtils.isSameInstant(correspondLastModifyTime, latestLastModifyTime)
+                && correspondLastModifyTime.before(latestLastModifyTime);
     }
 
     @Override
