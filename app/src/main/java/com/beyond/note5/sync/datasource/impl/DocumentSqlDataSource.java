@@ -130,9 +130,9 @@ public abstract class DocumentSqlDataSource<T extends Document> implements DataS
     @Override
     public List<T> getModifiedData(TraceInfo traceInfo) throws IOException {
 
-        // 日志的添加时间大于上次同步成功的开始的时间
+        // 日志的操作时间大于上次同步成功的最后修改时间
         List<SyncLogInfo> modifiedLogs = sqlLogModel.getAllWhereOperationTimeAfter(
-                traceInfo.getLastSyncTimeStart() == null?new Date(0):traceInfo.getLastSyncTimeStart());
+                traceInfo.getLastModifyTime() == null?new Date(0):traceInfo.getLastModifyTime());
         if (modifiedLogs.isEmpty()){
             return new ArrayList<>();
         }
