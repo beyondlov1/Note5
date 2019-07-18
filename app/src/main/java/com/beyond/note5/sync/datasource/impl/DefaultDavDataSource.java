@@ -155,6 +155,11 @@ public class DefaultDavDataSource<T extends Document> implements DavDataSource<T
     }
 
     @Override
+    public void saveAll(List<T> ts, String source) throws IOException, SyncException {
+        saveAll(ts);
+    }
+
+    @Override
     public boolean isChanged(DataSource<T> targetDataSource) throws IOException {
         SharedSource<TraceInfo> davSharedTraceInfo = getCorrespondTraceInfoSource(targetDataSource);
         Date correspondLastModifyTime = davSharedTraceInfo.get().getLastModifyTime();

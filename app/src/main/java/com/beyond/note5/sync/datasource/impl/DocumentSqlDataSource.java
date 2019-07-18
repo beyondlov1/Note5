@@ -33,8 +33,6 @@ public abstract class DocumentSqlDataSource<T extends Document> implements DataS
 
     private SqlLogModel sqlLogModel;
 
-    private String targetDataSourceKey;
-
     public DocumentSqlDataSource() {
         this.documentPresenter = getDocumentPresenter();
         this.sqlLogModel = new SqlLogModelImpl(MyApplication.getInstance().getDaoSession().getSyncLogInfoDao(),
@@ -173,6 +171,11 @@ public abstract class DocumentSqlDataSource<T extends Document> implements DataS
 
     @Override
     public void saveAll(List<T> ts) throws IOException {
+        saveAll(ts,getKey());
+    }
+
+    @Override
+    public void saveAll(List<T> ts, String source) throws IOException {
         Map<String, T> map = new HashMap<>(ts.size());
         for (T t : ts) {
             map.put(t.getId(), t);
@@ -195,9 +198,8 @@ public abstract class DocumentSqlDataSource<T extends Document> implements DataS
                 addList.add(map.get(id));
             }
         }
-        documentPresenter.addAll(addList,targetDataSourceKey);
-        documentPresenter.updateAll(updateList,targetDataSourceKey);
-
+        documentPresenter.addAll(addList,source);
+        documentPresenter.updateAll(updateList,source);
     }
 
     @Override
@@ -237,11 +239,6 @@ public abstract class DocumentSqlDataSource<T extends Document> implements DataS
             syncInfo.setLastSyncTimeStart(traceInfo.getLastSyncTimeStart());
             syncInfoDao.update(syncInfo);
         }
-    }
-
-    @Override
-    public void setTargetDataSourceKey(String targetDataSourceKey) {
-        this.targetDataSourceKey = targetDataSourceKey;
     }
 
     @Override

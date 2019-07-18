@@ -33,10 +33,10 @@ public interface DataSource<T> extends Lock{
     List<T> getModifiedData(TraceInfo traceInfo) throws IOException;
     void save(T t) throws IOException;
     void saveAll(List<T> tList) throws IOException, SyncException;
+    void saveAll(List<T> tList, String source) throws IOException, SyncException;
     boolean isChanged(DataSource<T> targetDataSource) throws IOException;
     TraceInfo getCorrespondTraceInfo(DataSource<T> targetDataSource) throws IOException;
     void setCorrespondTraceInfo(TraceInfo traceInfo, DataSource<T> targetDataSource) throws IOException;
-    void setTargetDataSourceKey(String targetDataSourceKey);
 
     /*new end*/
 }

@@ -149,6 +149,11 @@ public class NoteDavDataSourceWrap implements DavDataSource<Note> {
     }
 
     @Override
+    public void saveAll(List<Note> notes, String source) throws IOException, SyncException {
+        saveAll(notes);
+    }
+
+    @Override
     public boolean isChanged(DataSource<Note> targetDataSource) throws IOException {
         return defaultDavDataSource.isChanged(targetDataSource);
     }

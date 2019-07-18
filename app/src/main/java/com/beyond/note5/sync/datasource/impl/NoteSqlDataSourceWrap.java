@@ -7,6 +7,7 @@ import com.beyond.note5.bean.Attachment;
 import com.beyond.note5.bean.Note;
 import com.beyond.note5.sync.datasource.DataSource;
 import com.beyond.note5.sync.datasource.DavDataSource;
+import com.beyond.note5.sync.exception.SyncException;
 import com.beyond.note5.sync.model.bean.TraceInfo;
 import com.beyond.note5.utils.OkWebDavUtil;
 
@@ -24,7 +25,6 @@ public class NoteSqlDataSourceWrap implements DataSource<Note> {
     public NoteSqlDataSourceWrap(NoteSqlDataSource noteSqlDataSource, DavDataSource<Note> davDataSource) {
         this.noteSqlDataSource = noteSqlDataSource;
         this.davDataSource = davDataSource;
-        setTargetDataSourceKey(davDataSource.getKey());
     }
 
     @Override
@@ -148,8 +148,13 @@ public class NoteSqlDataSourceWrap implements DataSource<Note> {
     }
 
     @Override
-    public void saveAll(List<Note> notes) throws IOException {
-       noteSqlDataSource.saveAll(notes);
+    public void saveAll(List<Note> notes) throws IOException, SyncException {
+        saveAll(notes,davDataSource.getKey());
+    }
+
+    @Override
+    public void saveAll(List<Note> notes, String source) throws IOException, SyncException {
+        noteSqlDataSource.saveAll(notes,source);
 
         for (Note note : notes) {
             List<Attachment> attachments = note.getAttachments();
@@ -184,11 +189,6 @@ public class NoteSqlDataSourceWrap implements DataSource<Note> {
     @Override
     public void setCorrespondTraceInfo(TraceInfo traceInfo, DataSource<Note> targetDataSource) throws IOException {
         noteSqlDataSource.setCorrespondTraceInfo(traceInfo, targetDataSource);
-    }
-
-    @Override
-    public void setTargetDataSourceKey(String targetDataSourceKey) {
-        noteSqlDataSource.setTargetDataSourceKey(targetDataSourceKey);
     }
 
     @Override

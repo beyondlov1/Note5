@@ -4,6 +4,7 @@ package com.beyond.note5.sync.datasource.impl;
 import com.beyond.note5.bean.Todo;
 import com.beyond.note5.sync.datasource.DataSource;
 import com.beyond.note5.sync.datasource.DavDataSource;
+import com.beyond.note5.sync.exception.SyncException;
 import com.beyond.note5.sync.model.bean.TraceInfo;
 
 import java.io.IOException;
@@ -19,7 +20,6 @@ public class TodoSqlDataSourceWrap implements DataSource<Todo> {
     public TodoSqlDataSourceWrap(TodoSqlDataSource todoSqlDataSource, DavDataSource<Todo> davDataSource) {
         this.todoSqlDataSource = todoSqlDataSource;
         this.davDataSource = davDataSource;
-        setTargetDataSourceKey(davDataSource.getKey());
     }
 
     @Override
@@ -99,7 +99,12 @@ public class TodoSqlDataSourceWrap implements DataSource<Todo> {
 
     @Override
     public void saveAll(List<Todo> todos) throws IOException {
-        todoSqlDataSource.saveAll(todos);
+        todoSqlDataSource.saveAll(todos,davDataSource.getKey());
+    }
+
+    @Override
+    public void saveAll(List<Todo> todos, String source) throws IOException, SyncException {
+        todoSqlDataSource.saveAll(todos,source);
     }
 
     @Override
@@ -115,11 +120,6 @@ public class TodoSqlDataSourceWrap implements DataSource<Todo> {
     @Override
     public void setCorrespondTraceInfo(TraceInfo traceInfo, DataSource<Todo> targetDataSource) throws IOException {
         todoSqlDataSource.setCorrespondTraceInfo(traceInfo, targetDataSource);
-    }
-
-    @Override
-    public void setTargetDataSourceKey(String targetDataSourceKey) {
-        todoSqlDataSource.setTargetDataSourceKey(targetDataSourceKey);
     }
 
     @Override
