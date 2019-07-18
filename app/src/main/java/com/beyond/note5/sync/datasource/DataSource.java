@@ -36,6 +36,7 @@ public interface DataSource<T> extends Lock{
     boolean isChanged(DataSource<T> targetDataSource) throws IOException;
     TraceInfo getCorrespondTraceInfo(DataSource<T> targetDataSource) throws IOException;
     void setCorrespondTraceInfo(TraceInfo traceInfo, DataSource<T> targetDataSource) throws IOException;
+    void setTargetDataSourceKey(String targetDataSourceKey);
 
     /*new end*/
 }

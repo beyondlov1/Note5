@@ -98,6 +98,17 @@ public class TodoPresenterImpl implements TodoPresenter {
         }
     }
 
+    @Override
+    public void addAll(List<Todo> addList, String source) {
+        try {
+            todoModel.addAll(addList,source);
+            addAllSuccess(addList);
+        }catch (Exception e){
+            e.printStackTrace();
+            addAllFail(e);
+        }
+    }
+
     private void addAllSuccess(List<Todo> addList) {
         if (todoView == null) {
             return;
@@ -117,6 +128,17 @@ public class TodoPresenterImpl implements TodoPresenter {
     public void updateAll(List<Todo> updateList) {
         try {
             todoModel.updateAll(updateList);
+            updateAllSuccess(updateList);
+        }catch (Exception e){
+            e.printStackTrace();
+            updateAllFail(e);
+        }
+    }
+
+    @Override
+    public void updateAll(List<Todo> updateList, String source) {
+        try {
+            todoModel.updateAll(updateList,source);
             updateAllSuccess(updateList);
         }catch (Exception e){
             e.printStackTrace();

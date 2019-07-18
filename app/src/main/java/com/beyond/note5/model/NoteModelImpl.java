@@ -75,7 +75,7 @@ public class NoteModelImpl implements NoteModel {
             }
         }
 
-        onInserted(note);
+        onInserted(note,PreferenceUtil.getString(MyApplication.VIRTUAL_USER_ID));
     }
 
     @Override
@@ -86,7 +86,7 @@ public class NoteModelImpl implements NoteModel {
             attachmentDao.updateInTx(attachments);
         }
 
-        onUpdated(note);
+        onUpdated(note,PreferenceUtil.getString(MyApplication.VIRTUAL_USER_ID));
     }
 
     @Override
@@ -95,7 +95,7 @@ public class NoteModelImpl implements NoteModel {
         note.setValid(false);
         noteDao.update(note);
 
-        onUpdated(note);
+        onUpdated(note,PreferenceUtil.getString(MyApplication.VIRTUAL_USER_ID));
     }
 
     @Override
@@ -133,7 +133,7 @@ public class NoteModelImpl implements NoteModel {
             attachmentDao.deleteInTx(attachments);
         }
 
-        onUpdated(note);
+        onUpdated(note,PreferenceUtil.getString(MyApplication.VIRTUAL_USER_ID));
     }
 
     @Override
@@ -188,6 +188,11 @@ public class NoteModelImpl implements NoteModel {
 
     @Override
     public void addAll(List<Note> addList) {
+        addAll(addList,PreferenceUtil.getString(MyApplication.VIRTUAL_USER_ID));
+    }
+
+    @Override
+    public void addAll(List<Note> addList, String source) {
         noteDao.insertInTx(addList);
         List<Attachment> allAttachments = new ArrayList<>();
         for (Note note : addList) {
@@ -209,12 +214,17 @@ public class NoteModelImpl implements NoteModel {
             }
         }
 
-        onInsertedAll(addList);
+        onInsertedAll(source,addList.toArray(new Note[0]));
     }
 
 
     @Override
     public void updateAll(List<Note> updateList) {
+        updateAll(updateList,PreferenceUtil.getString(MyApplication.VIRTUAL_USER_ID));
+    }
+
+    @Override
+    public void updateAll(List<Note> updateList, String source) {
         noteDao.updateInTx(updateList);
 
         List<Attachment> allAttachments = new ArrayList<>();
@@ -227,70 +237,80 @@ public class NoteModelImpl implements NoteModel {
             attachmentDao.updateInTx(allAttachments);
         }
 
-        onUpdatedAll(updateList);
+        onUpdatedAll(source,updateList.toArray(new Note[0]));
     }
 
-    private void onInsertedAll(List<Note> addList) {
-        addAllInsertLog(addList);
+
+
+    private void onInserted(Note note, String source) {
+        addInsertLog(note,source);
     }
 
-    private void addAllInsertLog(List<Note> addList) {
-        addAllLog(addList);
+    private void onUpdated(Note note, String source) {
+        addUpdateLog(note,source);
+        removeSyncSuccessStateInfo(note);
     }
 
-    private void onUpdatedAll(List<Note> updateList) {
-        addAllLog(updateList);
+    private void onInsertedAll(String source,Note... addList) {
+        addAllInsertLog(source,addList);
     }
 
-    private void addAllLog(List<Note> updateList) {
-        List<SyncLogInfo> syncLogInfos = new ArrayList<>(updateList.size());
-        for (Note note : updateList) {
-            syncLogInfos.add(createAddSyncLogInfo(note));
+    private void onUpdatedAll(String source,Note... updateList) {
+        addAllUpdateLog( source,updateList);
+    }
+
+
+
+    private void addAllInsertLog(String source, Note... notes) {
+        List<SyncLogInfo> syncLogInfos = new ArrayList<>(notes.length);
+        for (Note note : notes) {
+            syncLogInfos.add(createAddSyncLogInfo(note,source));
         }
         syncLogInfoDao.insertInTx(syncLogInfos);
     }
 
-    private void onInserted(Note note) {
-        addInsertLog(note);
+    private void addAllUpdateLog( String source,Note... notes) {
+        List<SyncLogInfo> syncLogInfos = new ArrayList<>(notes.length);
+        for (Note note : notes) {
+            syncLogInfos.add(createUpdateSyncLogInfo(note,source));
+        }
+        syncLogInfoDao.insertInTx(syncLogInfos);
     }
 
-    private void onUpdated(Note note) {
-        addUpdateLog(note);
-        removeSyncSuccessStateInfo(note);
-    }
-
-    private void addInsertLog(Note note) {
-        SyncLogInfo syncLogInfo = createAddSyncLogInfo(note);
+    private void addInsertLog(Note note, String source) {
+        SyncLogInfo syncLogInfo = createAddSyncLogInfo(note,source);
         syncLogInfoDao.insert(syncLogInfo);
     }
 
+    private void addUpdateLog(Note note,String source) {
+        SyncLogInfo syncLogInfo = createUpdateSyncLogInfo(note,source);
+        syncLogInfoDao.insert(syncLogInfo);
+    }
+
+
+
     @NonNull
-    private SyncLogInfo createAddSyncLogInfo(Note note) {
+    private SyncLogInfo createAddSyncLogInfo(Note note,String source) {
         SyncLogInfo syncLogInfo = new SyncLogInfo();
         syncLogInfo.setId(IDUtil.uuid());
         syncLogInfo.setDocumentId(note.getId());
         syncLogInfo.setOperation(SyncLogInfo.ADD);
         syncLogInfo.setOperationTime(note.getLastModifyTime());
         syncLogInfo.setCreateTime(new Date());
-        syncLogInfo.setSource(PreferenceUtil.getString(MyApplication.VIRTUAL_USER_ID));
+        syncLogInfo.setSource(source);
         syncLogInfo.setType(Note.class.getSimpleName().toLowerCase());
         return syncLogInfo;
     }
 
-    private void addUpdateLog(Note note) {
-        SyncLogInfo syncLogInfo = createUpdateSyncLogInfo(note);
-        syncLogInfoDao.insert(syncLogInfo);
-    }
-
     @NonNull
-    private SyncLogInfo createUpdateSyncLogInfo(Note note) {
+    private SyncLogInfo createUpdateSyncLogInfo(Note note,String source) {
         SyncLogInfo syncLogInfo = new SyncLogInfo();
         syncLogInfo.setId(IDUtil.uuid());
         syncLogInfo.setDocumentId(note.getId());
         syncLogInfo.setOperation(SyncLogInfo.UPDATE);
         syncLogInfo.setOperationTime(note.getLastModifyTime());
         syncLogInfo.setCreateTime(new Date());
-        syncLogInfo.setSource(PreferenceUtil.getString(MyApplication.VIRTUAL_USER_ID));
+        syncLogInfo.setSource(source);
         syncLogInfo.setType(Note.class.getSimpleName().toLowerCase());
         return syncLogInfo;
     }

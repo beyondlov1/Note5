@@ -1,8 +1,8 @@
 package com.beyond.note5.sync.model.impl;
 
-import com.beyond.note5.sync.model.bean.SyncLogInfo;
 import com.beyond.note5.model.dao.SyncLogInfoDao;
 import com.beyond.note5.sync.model.SqlLogModel;
+import com.beyond.note5.sync.model.bean.SyncLogInfo;
 import com.beyond.note5.utils.PreferenceUtil;
 
 import org.apache.commons.collections4.ListUtils;
@@ -106,6 +106,32 @@ public class SqlLogModelImpl<T> implements SqlLogModel {
     public List<SyncLogInfo> getAllWhereOperationTimeAfter(Date date) {
         return logInfoDao.queryBuilder()
                 .where(SyncLogInfoDao.Properties.OperationTime.gt(date))
+                .where(SyncLogInfoDao.Properties.Type.eq(type))
+                .list();
+    }
+
+    @Override
+    public List<SyncLogInfo> getAllWhereCreateTimeAfter(Date date) {
+        return logInfoDao.queryBuilder()
+                .where(SyncLogInfoDao.Properties.CreateTime.gt(date))
+                .where(SyncLogInfoDao.Properties.Type.eq(type))
+                .list();
+    }
+
+    @Override
+    public List<SyncLogInfo> getAllBySourceWhereCreateTimeAfter(Date date,String source) {
+        return logInfoDao.queryBuilder()
+                .where(SyncLogInfoDao.Properties.CreateTime.gt(date))
+                .where(SyncLogInfoDao.Properties.Source.eq(source))
+                .where(SyncLogInfoDao.Properties.Type.eq(type))
+                .list();
+    }
+
+    @Override
+    public List<SyncLogInfo> getAllBySourceWhereOperationTimeAfter(Date date, String source) {
+        return logInfoDao.queryBuilder()
+                .where(SyncLogInfoDao.Properties.OperationTime.gt(date))
+                .where(SyncLogInfoDao.Properties.Source.eq(source))
                 .where(SyncLogInfoDao.Properties.Type.eq(type))
                 .list();
     }

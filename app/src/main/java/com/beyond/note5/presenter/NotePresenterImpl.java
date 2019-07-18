@@ -238,6 +238,17 @@ public class NotePresenterImpl implements NotePresenter {
         }
     }
 
+    @Override
+    public void addAll(List<Note> addList, String source) {
+        try {
+            noteModel.addAll(addList,source);
+            addAllSuccess(addList);
+        }catch (Exception e){
+            e.printStackTrace();
+            addAllFail(e);
+        }
+    }
+
     private void addAllSuccess(List<Note> addList) {
         if (noteView == null) {
             return;
@@ -257,6 +268,17 @@ public class NotePresenterImpl implements NotePresenter {
     public void updateAll(List<Note> updateList) {
         try {
             noteModel.updateAll(updateList);
+            updateAllSuccess(updateList);
+        }catch (Exception e){
+            e.printStackTrace();
+            updateAllFail(e);
+        }
+    }
+
+    @Override
+    public void updateAll(List<Note> updateList, String source) {
+        try {
+            noteModel.updateAll(updateList,source);
             updateAllSuccess(updateList);
         }catch (Exception e){
             e.printStackTrace();

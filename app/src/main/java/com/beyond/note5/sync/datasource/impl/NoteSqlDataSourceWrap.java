@@ -24,6 +24,7 @@ public class NoteSqlDataSourceWrap implements DataSource<Note> {
     public NoteSqlDataSourceWrap(NoteSqlDataSource noteSqlDataSource, DavDataSource<Note> davDataSource) {
         this.noteSqlDataSource = noteSqlDataSource;
         this.davDataSource = davDataSource;
+        setTargetDataSourceKey(davDataSource.getKey());
     }
 
     @Override
@@ -183,6 +184,11 @@ public class NoteSqlDataSourceWrap implements DataSource<Note> {
     @Override
     public void setCorrespondTraceInfo(TraceInfo traceInfo, DataSource<Note> targetDataSource) throws IOException {
         noteSqlDataSource.setCorrespondTraceInfo(traceInfo, targetDataSource);
+    }
+
+    @Override
+    public void setTargetDataSourceKey(String targetDataSourceKey) {
+        noteSqlDataSource.setTargetDataSourceKey(targetDataSourceKey);
     }
 
     @Override

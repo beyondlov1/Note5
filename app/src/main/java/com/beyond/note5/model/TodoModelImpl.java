@@ -54,7 +54,7 @@ public class TodoModelImpl implements TodoModel {
         if (todo.getReminder() != null) {
             reminderDao.insert(todo.getReminder());
         }
-        onInserted(todo);
+        onInserted(todo,PreferenceUtil.getString(MyApplication.VIRTUAL_USER_ID));
     }
 
     @Override
@@ -74,7 +74,7 @@ public class TodoModelImpl implements TodoModel {
             }
         }
 
-        onUpdated(todo);
+        onUpdated(todo,PreferenceUtil.getString(MyApplication.VIRTUAL_USER_ID));
     }
 
     @Override
@@ -83,7 +83,7 @@ public class TodoModelImpl implements TodoModel {
         todo.setValid(false);
         todoDao.update(todo);
 
-        onUpdated(todo);
+        onUpdated(todo,PreferenceUtil.getString(MyApplication.VIRTUAL_USER_ID));
     }
 
 
@@ -185,6 +185,11 @@ public class TodoModelImpl implements TodoModel {
 
     @Override
     public void addAll(List<Todo> addList) {
+       addAll(addList,PreferenceUtil.getString(MyApplication.VIRTUAL_USER_ID));
+    }
+
+    @Override
+    public void addAll(List<Todo> addList, String source) {
         todoDao.insertInTx(addList);
 
         // 只是插入记录, 不会添加提醒
@@ -199,12 +204,16 @@ public class TodoModelImpl implements TodoModel {
             reminderDao.insertInTx(allReminders);
         }
 
-        onInsertedAll(addList);
+        onInsertedAll(source,addList.toArray(new Todo[0]));
     }
-
 
     @Override
     public void updateAll(List<Todo> updateList) {
+        updateAll(updateList, PreferenceUtil.getString(MyApplication.VIRTUAL_USER_ID));
+    }
+
+    @Override
+    public void updateAll(List<Todo> updateList, String source) {
         todoDao.updateInTx(updateList);
 
         // 只是插入记录, 不会添加提醒
@@ -219,74 +228,82 @@ public class TodoModelImpl implements TodoModel {
             reminderDao.updateInTx(allReminders);
         }
 
-        onUpdatedAll(updateList);
+        onUpdatedAll(source,updateList.toArray(new Todo[0]));
     }
 
-    private void onInsertedAll(List<Todo> addList) {
-        addAllInsertLog(addList);
+
+
+
+    private void onInserted(Todo todo, String source) {
+        addInsertLog(todo,source);
     }
 
-    private void addAllInsertLog(List<Todo> addList) {
-        addAllLog(addList);
+    private void onUpdated(Todo todo, String source) {
+        addUpdateLog(todo,source);
+        removeSyncSuccessStateInfo(todo);
     }
 
-    private void onUpdatedAll(List<Todo> updateList) {
-        addAllLog(updateList);
+    private void onInsertedAll(String source,Todo... addList) {
+        addAllInsertLog(source,addList);
     }
 
-    private void addAllLog(List<Todo> updateList) {
-        List<SyncLogInfo> syncLogInfos = new ArrayList<>(updateList.size());
-        for (Todo todo : updateList) {
-            syncLogInfos.add(createAddSyncLogInfo(todo));
+    private void onUpdatedAll(String source,Todo... updateList) {
+        addAllUpdateLog( source,updateList);
+    }
+
+
+
+    private void addAllInsertLog(String source, Todo... todos) {
+        List<SyncLogInfo> syncLogInfos = new ArrayList<>(todos.length);
+        for (Todo todo : todos) {
+            syncLogInfos.add(createAddSyncLogInfo(todo,source));
         }
         syncLogInfoDao.insertInTx(syncLogInfos);
     }
 
-    private void onInserted(Todo todo) {
-        addInsertLog(todo);
+    private void addAllUpdateLog( String source,Todo... todos) {
+        List<SyncLogInfo> syncLogInfos = new ArrayList<>(todos.length);
+        for (Todo todo : todos) {
+            syncLogInfos.add(createUpdateSyncLogInfo(todo,source));
+        }
+        syncLogInfoDao.insertInTx(syncLogInfos);
     }
 
-    private void onUpdated(Todo todo) {
-        addUpdateLog(todo);
-        removeSyncSuccessStateInfo(todo);
+    private void addInsertLog(Todo todo, String source) {
+        SyncLogInfo syncLogInfo = createAddSyncLogInfo(todo,source);
+        syncLogInfoDao.insert(syncLogInfo);
     }
 
-    private void addInsertLog(Todo todo) {
-        SyncLogInfo syncLogInfo = createAddSyncLogInfo(todo);
+    private void addUpdateLog(Todo todo,String source) {
+        SyncLogInfo syncLogInfo = createUpdateSyncLogInfo(todo,source);
         syncLogInfoDao.insert(syncLogInfo);
     }
 
     @NonNull
-    private SyncLogInfo createAddSyncLogInfo(Todo todo) {
+    private SyncLogInfo createAddSyncLogInfo(Todo todo,String source) {
         SyncLogInfo syncLogInfo = new SyncLogInfo();
         syncLogInfo.setId(IDUtil.uuid());
         syncLogInfo.setDocumentId(todo.getId());
         syncLogInfo.setOperation(SyncLogInfo.ADD);
         syncLogInfo.setOperationTime(todo.getLastModifyTime());
         syncLogInfo.setCreateTime(new Date());
-        syncLogInfo.setSource(PreferenceUtil.getString(MyApplication.VIRTUAL_USER_ID));
+        syncLogInfo.setSource(source);
         syncLogInfo.setType(Todo.class.getSimpleName().toLowerCase());
         return syncLogInfo;
     }
 
-    private void addUpdateLog(Todo todo) {
-        SyncLogInfo syncLogInfo = createUpdateSyncLogInfo(todo);
-        syncLogInfoDao.insert(syncLogInfo);
-    }
-
     @NonNull
-    private SyncLogInfo createUpdateSyncLogInfo(Todo todo) {
+    private SyncLogInfo createUpdateSyncLogInfo(Todo todo,String source) {
         SyncLogInfo syncLogInfo = new SyncLogInfo();
         syncLogInfo.setId(IDUtil.uuid());
         syncLogInfo.setDocumentId(todo.getId());
         syncLogInfo.setOperation(SyncLogInfo.UPDATE);
         syncLogInfo.setOperationTime(todo.getLastModifyTime());
         syncLogInfo.setCreateTime(new Date());
-        syncLogInfo.setSource(PreferenceUtil.getString(MyApplication.VIRTUAL_USER_ID));
+        syncLogInfo.setSource(source);
         syncLogInfo.setType(Todo.class.getSimpleName().toLowerCase());
         return syncLogInfo;
     }
-
 
     private void removeSyncSuccessStateInfo(Todo todo) {
         syncStateInfoDao.queryBuilder()

@@ -22,14 +22,18 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 public abstract class DocumentSqlDataSource<T extends Document> implements DataSource<T> {
 
     private DocumentPresenter<T> documentPresenter;
 
     private SqlLogModel sqlLogModel;
+
+    private String targetDataSourceKey;
 
     public DocumentSqlDataSource() {
         this.documentPresenter = getDocumentPresenter();
@@ -131,18 +135,28 @@ public abstract class DocumentSqlDataSource<T extends Document> implements DataS
     public List<T> getModifiedData(TraceInfo traceInfo) throws IOException {
 
         // 日志的操作时间大于上次同步成功的最后修改时间
-        List<SyncLogInfo> modifiedLogs = sqlLogModel.getAllWhereOperationTimeAfter(
-                traceInfo.getLastModifyTime() == null?new Date(0):traceInfo.getLastModifyTime());
+        // 会改变lastModifyTime类型的, 如 add, update
+        List<SyncLogInfo> lastModifyTimeChangeableLogs = sqlLogModel.getAllBySourceWhereOperationTimeAfter(
+                traceInfo.getLastModifyTime() == null?new Date(0):traceInfo.getLastModifyTime(),
+                getKey());
+
+        // 日志的操作时间大于上次同步成功的同步开始时间 , 并且source是本机的
+        // 改变priority这种不更改lastModifyTime的, 如 改变priority
+        List<SyncLogInfo> lastModifyTimeUnchangeableLogs = sqlLogModel.getAllBySourceWhereCreateTimeAfter(
+                traceInfo.getLastSyncTimeStart() == null?new Date(0):traceInfo.getLastSyncTimeStart(),
+                getKey());
+        List<SyncLogInfo> modifiedLogs = new ArrayList<>();
+        modifiedLogs.addAll(lastModifyTimeChangeableLogs);
+        modifiedLogs.addAll(lastModifyTimeUnchangeableLogs);
         if (modifiedLogs.isEmpty()){
             return new ArrayList<>();
         }
-
-        List<String> ids = new ArrayList<>(modifiedLogs.size());
+        Set<String> ids = new HashSet<>(modifiedLogs.size());
         for (SyncLogInfo modifiedLog : modifiedLogs) {
             ids.add(modifiedLog.getDocumentId());
         }
 
-        return selectByIds(ids);
+        return selectByIds(new ArrayList<>(ids));
     }
 
     @Override
@@ -181,8 +195,8 @@ public abstract class DocumentSqlDataSource<T extends Document> implements DataS
                 addList.add(map.get(id));
             }
         }
-        documentPresenter.addAll(addList);
-        documentPresenter.updateAll(updateList);
+        documentPresenter.addAll(addList,targetDataSourceKey);
+        documentPresenter.updateAll(updateList,targetDataSourceKey);
 
     }
 
@@ -223,6 +237,11 @@ public abstract class DocumentSqlDataSource<T extends Document> implements DataS
             syncInfo.setLastSyncTimeStart(traceInfo.getLastSyncTimeStart());
             syncInfoDao.update(syncInfo);
         }
+    }
+
+    @Override
+    public void setTargetDataSourceKey(String targetDataSourceKey) {
+        this.targetDataSourceKey = targetDataSourceKey;
     }
 
     @Override

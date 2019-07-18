@@ -33,5 +33,9 @@ public interface DocumentModel<T extends Document> extends Model<T> {
 
     void addAll(List<T> addList);
 
+    void addAll(List<T> addList, String source);
+
     void updateAll(List<T> updateList);
+
+    void updateAll(List<T> updateList, String source);
 }

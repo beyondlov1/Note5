@@ -22,13 +22,13 @@ import com.beyond.note5.predict.train.filter.TimeExpressionTrainTagFilter;
 import com.beyond.note5.predict.train.filter.UrlTrainTagFilter;
 import com.beyond.note5.service.NotificationScanningService;
 import com.beyond.note5.sync.Synchronizer;
-import com.beyond.note5.sync.datasource.DataSource;
 import com.beyond.note5.sync.datasource.DavDataSource;
 import com.beyond.note5.sync.datasource.impl.DefaultDavDataSource;
 import com.beyond.note5.sync.datasource.impl.NoteDavDataSourceWrap;
 import com.beyond.note5.sync.datasource.impl.NoteSqlDataSource;
 import com.beyond.note5.sync.datasource.impl.NoteSqlDataSourceWrap;
 import com.beyond.note5.sync.datasource.impl.TodoSqlDataSource;
+import com.beyond.note5.sync.datasource.impl.TodoSqlDataSourceWrap;
 import com.beyond.note5.sync.model.impl.DavSharedTraceInfo;
 import com.beyond.note5.sync.synchronizer.DavSynchronizer4;
 import com.beyond.note5.sync.webdav.DavLock;
@@ -180,7 +180,7 @@ public class MyApplication extends Application {
                     .logPath(NOTE_LOG_PATH)
                     .build());
 
-            DataSource<Todo> todoLocalDataSource = new TodoSqlDataSource();
+            TodoSqlDataSource todoLocalDataSource = new TodoSqlDataSource();
             String[] todoPaths = StringUtils.split(PreferenceUtil.getString(TODO_SYNC_REMOTE_ROOT_PATHS), "|");
             DavDataSource<Todo> todoDavDataSource1 = new DefaultDavDataSource.Builder<Todo>()
                     .clazz(Todo.class)
@@ -193,7 +193,7 @@ public class MyApplication extends Application {
                     .build();
 
             todoSynchronizers.add(new DavSynchronizer4.Builder<Todo>()
-                    .localDataSource(todoLocalDataSource)
+                    .localDataSource(new TodoSqlDataSourceWrap(todoLocalDataSource,todoDavDataSource1))
                     .remoteDataSource(todoDavDataSource1)
                     .logPath(TODO_LOG_PATH)
                     .build());
