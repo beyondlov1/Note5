@@ -1,9 +1,7 @@
 package com.beyond.note5.view.fragment;
 
 import android.app.Dialog;
-import android.content.Context;
 import android.content.DialogInterface;
-import android.content.SharedPreferences;
 import android.graphics.Color;
 import android.graphics.drawable.ColorDrawable;
 import android.os.Bundle;
@@ -21,7 +19,6 @@ import android.widget.ImageButton;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 
-import com.beyond.note5.MyApplication;
 import com.beyond.note5.R;
 import com.beyond.note5.bean.Todo;
 import com.beyond.note5.event.ShowKeyBoardEvent;
@@ -69,20 +66,6 @@ public abstract class AbstractTodoEditorFragment extends AbstractDocumentEditorF
     protected List<String> tagData = new ArrayList<>();
 
     protected Handler handler = new Handler();
-
-    private static int dialogHeightWithSoftInputMethod;
-    private static final String DIALOG_HEIGHT_WITH_SOFT_INPUT_METHOD = "dialogHeightWithSoftInputMethod";
-
-    @Override
-    protected void init(Bundle savedInstanceState) {
-        //初始化弹出框的位置
-        if (dialogHeightWithSoftInputMethod == 0) {
-            dialogHeightWithSoftInputMethod =
-                    getActivity().getSharedPreferences(MyApplication.SHARED_PREFERENCES_NAME, Context.MODE_PRIVATE)
-                            .getInt(DIALOG_HEIGHT_WITH_SOFT_INPUT_METHOD, 0);
-        }
-
-    }
 
     @Override
     protected Dialog createDialogInternal(Bundle savedInstanceState) {
@@ -168,7 +151,7 @@ public abstract class AbstractTodoEditorFragment extends AbstractDocumentEditorF
         WindowManager.LayoutParams params = win.getAttributes();
         params.gravity = Gravity.TOP;
         params.width = ViewGroup.LayoutParams.MATCH_PARENT;
-        params.height = dialogHeightWithSoftInputMethod;
+        params.height = InputMethodUtil.getDialogHeightWithSoftInputMethod();;
         win.setAttributes(params);
         editorContent.setMinimumHeight(dm.heightPixels);
         InputMethodUtil.showKeyboard(editorContent);
@@ -192,13 +175,12 @@ public abstract class AbstractTodoEditorFragment extends AbstractDocumentEditorF
         params.gravity = Gravity.TOP;
         params.width = dm.widthPixels;
         //设置初始的dialogHeightWithSoftInputMethod, 为了不让开始的时候动画跳一下
+        int dialogHeightWithSoftInputMethod = InputMethodUtil.getDialogHeightWithSoftInputMethod();
         if (dialogHeightWithSoftInputMethod == 0) {
             dialogHeightWithSoftInputMethod = dm.heightPixels - y - 50;
-            SharedPreferences.Editor editor = getActivity().getSharedPreferences(MyApplication.SHARED_PREFERENCES_NAME, Context.MODE_PRIVATE).edit();
-            editor.putInt(DIALOG_HEIGHT_WITH_SOFT_INPUT_METHOD, dm.heightPixels - y - 50);
-            editor.apply();
+            InputMethodUtil.rememberDialogHeightWithSoftInputMethod(dm.heightPixels - y - 50);
         }
-        params.height = dialogHeightWithSoftInputMethod + 75;//因为改写了edit的通知栏，所以要加上通知栏的高度 //FIXME: Pixel模拟会不包括这个75,不知道为什么
+        params.height = dialogHeightWithSoftInputMethod + 75;//因为改写了edit的通知栏，所以要加上通知栏的高度
         win.setAttributes(params);
 
         editorContent.setMinimumHeight(dm.heightPixels);

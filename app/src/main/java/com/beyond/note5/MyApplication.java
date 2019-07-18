@@ -117,7 +117,7 @@ public class MyApplication extends Application {
     }
 
     private void startNotificationScanner() {
-        Intent intent = new Intent(getApplicationContext(),NotificationScanningService.class);
+        Intent intent = new Intent(getApplicationContext(), NotificationScanningService.class);
         startService(intent);
     }
 
@@ -270,7 +270,7 @@ public class MyApplication extends Application {
     }
 
     public void sync(Runnable success, Runnable fail) {
-        if (CollectionUtils.isEmpty(noteSynchronizers)||CollectionUtils.isEmpty(todoSynchronizers)) {
+        if (CollectionUtils.isEmpty(noteSynchronizers) || CollectionUtils.isEmpty(todoSynchronizers)) {
             initSynchronizer();
         }
         getExecutorService().execute(new Runnable() {
@@ -280,7 +280,7 @@ public class MyApplication extends Application {
                 for (Synchronizer<Note> synchronizer : noteSynchronizers) {
                     try {
                         synchronizer.sync();
-                    }catch (Exception e){
+                    } catch (Exception e) {
                         e.printStackTrace();
                         isSuccess = false;
                     }
@@ -288,17 +288,17 @@ public class MyApplication extends Application {
                 for (Synchronizer<Todo> synchronizer : todoSynchronizers) {
                     try {
                         synchronizer.sync();
-                    }catch (Exception e){
+                    } catch (Exception e) {
                         e.printStackTrace();
                         isSuccess = false;
                     }
                 }
 
-                if (isSuccess){
+                if (isSuccess) {
                     if (success != null) {
                         handler.post(success);
                     }
-                }else {
+                } else {
                     if (fail != null) {
                         handler.post(fail);
                     }
@@ -324,7 +324,7 @@ public class MyApplication extends Application {
         }
     }
 
-    public void refreshSynchronizers(){
+    public void refreshSynchronizers() {
         initSynchronizer();
     }
 
@@ -334,6 +334,7 @@ public class MyApplication extends Application {
         }
         return noteSynchronizer;
     }
+
     public List<Synchronizer<Note>> getNoteSynchronizers() {
         if (CollectionUtils.isEmpty(noteSynchronizers)) {
             initSynchronizer();
@@ -347,6 +348,7 @@ public class MyApplication extends Application {
         }
         return todoSynchronizer;
     }
+
     public List<Synchronizer<Todo>> getTodoSynchronizers() {
         if (CollectionUtils.isEmpty(todoSynchronizers)) {
             initSynchronizer();

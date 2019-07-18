@@ -8,6 +8,7 @@ import android.os.Bundle;
 import android.support.v4.content.ContextCompat;
 import android.text.Editable;
 import android.text.TextWatcher;
+import android.util.DisplayMetrics;
 import android.util.Log;
 import android.view.MotionEvent;
 import android.view.View;
@@ -321,9 +322,22 @@ public class TodoModifySuperFragment extends AbstractTodoEditorFragment implemen
         super.onFragmentShowKeyboard(event);
         String type = event.getType();
         if (StringUtils.equals(Document.TODO, type) && fragmentContainer != null) {
-            fragmentContainer.getLayoutParams().height = InputMethodUtil.getDialogHeightWithSoftInputMethod();
+            int y = event.get();
+            fragmentContainer.getLayoutParams().height = retrieveAndUpdateHeightWithSoftInputMethodIfNecessary(y);
             fragmentContainer.setLayoutParams(fragmentContainer.getLayoutParams());
         }
+    }
+
+    private int retrieveAndUpdateHeightWithSoftInputMethodIfNecessary(int y) {
+        //设置初始的dialogHeightWithSoftInputMethod, 为了不让开始的时候动画跳一下
+        int dialogHeightWithSoftInputMethod = InputMethodUtil.getDialogHeightWithSoftInputMethod();
+        if (dialogHeightWithSoftInputMethod == 0) {
+            DisplayMetrics dm = new DisplayMetrics();
+            getActivity().getWindowManager().getDefaultDisplay().getMetrics(dm);
+            dialogHeightWithSoftInputMethod = dm.heightPixels - y - 50;
+            InputMethodUtil.rememberDialogHeightWithSoftInputMethod(dm.heightPixels - y - 50);
+        }
+        return dialogHeightWithSoftInputMethod;
     }
 
     @Override

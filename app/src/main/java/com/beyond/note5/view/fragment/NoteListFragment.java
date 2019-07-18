@@ -119,12 +119,7 @@ public class NoteListFragment extends Fragment {
         refreshLayout.setOnRefreshListener(new OnRefreshListener() {
             @Override
             public void onRefresh(@NonNull RefreshLayout refreshLayout) {
-                ToastUtil.toast(getContext(), "开始同步");
-                List<Account> all = MyApplication.getInstance().getAccountModel().findAllValid();
-                if (all == null || all.isEmpty()) {
-                    refreshLayout.finishRefresh();
-                    Intent intent = new Intent(getContext(), DavLoginActivity.class);
-                    startActivity(intent);
+                if (!checkAccount(refreshLayout)){
                     return;
                 }
                 syncPresenter.sync();
@@ -161,6 +156,17 @@ public class NoteListFragment extends Fragment {
             }
 
         });
+    }
+
+    private boolean checkAccount(@NonNull RefreshLayout refreshLayout) {
+        List<Account> all = MyApplication.getInstance().getAccountModel().findAllValid();
+        if (all == null || all.isEmpty()) {
+            refreshLayout.finishRefresh();
+            Intent intent = new Intent(getContext(), DavLoginActivity.class);
+            startActivity(intent);
+            return false;
+        }
+        return true;
     }
 
     @SuppressWarnings("ResultOfMethodCallIgnored")

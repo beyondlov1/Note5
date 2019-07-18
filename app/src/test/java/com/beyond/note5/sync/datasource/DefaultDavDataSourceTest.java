@@ -1,11 +1,15 @@
 package com.beyond.note5.sync.datasource;
 
+import com.alibaba.fastjson.JSONException;
+import com.alibaba.fastjson.JSONObject;
 import com.beyond.note5.bean.Note;
+import com.beyond.note5.bean.Todo;
 import com.beyond.note5.sync.webdav.CommonTest;
 
 import org.junit.Test;
 
 import java.io.IOException;
+import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.Callable;
@@ -89,6 +93,20 @@ public class DefaultDavDataSourceTest {
 
     @Test
     public void cover() {
+    }
+
+
+    @Test
+    public void decode(){
+        String target = "{\"content\":\"今天下午三点地铁卡\",\"contentWithoutTime\":\"地铁卡\",\"createTime\":1552716455753,\"id\":\"00c1676040a2437785b3161574b706ca\",\"lastModifyTime\":1552718024946,\"readFlag\":1,\"reminder\":{\"calendarEventId\":1281,\"id\":\"5bba17266d414710a28f3ca68a439f54\",\"start\":1552719600000},\"reminderId\":\"5bba17266d414710a28f3ca68a439f54\",\"title\":\"今天下午三点地铁卡\",\"type\":\"todo\",\"valid\":true,\"version\":1}";
+        target = "{\"content\":\"spring注解怎么管理的\",\"contentWithoutTime\":\"spring注解怎么管理的\",\"createTime\":1552822700305,\"id\":\"5818d9dcaacf4001a9a34caae4c175e1\",\"lastModifyTime\":1552822700305,\"readFlag\":1,\"title\":\"spring注解怎么\",\"type\":\"todo\",\"valid\":true,\"version\":0}";
+        try {
+            Todo todo = JSONObject.parseObject(target, (Type) Todo.class);
+            System.out.println(todo.getId());
+            System.out.println(todo.getReminder());
+        } catch (JSONException e) {
+            e.printStackTrace();
+        }
     }
 
 }

@@ -11,6 +11,7 @@ import org.greenrobot.greendao.DaoException;
 import org.greenrobot.greendao.annotation.Entity;
 import org.greenrobot.greendao.annotation.Generated;
 import org.greenrobot.greendao.annotation.Id;
+import org.greenrobot.greendao.annotation.Keep;
 import org.greenrobot.greendao.annotation.ToOne;
 
 import java.util.Date;
@@ -173,8 +174,15 @@ public class Todo extends Document {
 
     /** To-one relationship, resolved on first access. */
     @Generated(hash = 496639938)
+    @Keep
     public Reminder getReminder() {
         String __key = this.reminderId;
+        if (reminderId != null && reminder!=null){
+            return reminder;
+        }
+        if (reminderId == null){
+            return null;
+        }
         if (reminder__resolvedKey == null || reminder__resolvedKey != __key) {
             final DaoSession daoSession = this.daoSession;
             if (daoSession == null) {

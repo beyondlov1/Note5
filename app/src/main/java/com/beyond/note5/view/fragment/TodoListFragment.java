@@ -2,6 +2,7 @@ package com.beyond.note5.view.fragment;
 
 import android.annotation.SuppressLint;
 import android.content.Context;
+import android.content.Intent;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
@@ -16,6 +17,7 @@ import android.view.ViewGroup;
 
 import com.beyond.note5.MyApplication;
 import com.beyond.note5.R;
+import com.beyond.note5.bean.Account;
 import com.beyond.note5.bean.Todo;
 import com.beyond.note5.event.AddTodoAllSuccessEvent;
 import com.beyond.note5.event.HideFABEvent;
@@ -38,6 +40,7 @@ import com.beyond.note5.presenter.TodoCompositePresenterImpl;
 import com.beyond.note5.presenter.TodoPresenterImpl;
 import com.beyond.note5.presenter.TodoSyncPresenterImpl;
 import com.beyond.note5.utils.ToastUtil;
+import com.beyond.note5.view.DavLoginActivity;
 import com.beyond.note5.view.SyncView;
 import com.beyond.note5.view.TodoView;
 import com.beyond.note5.view.adapter.component.DocumentRecyclerViewAdapter;
@@ -128,7 +131,9 @@ public class TodoListFragment extends Fragment {
         refreshLayout.setOnRefreshListener(new OnRefreshListener() {
             @Override
             public void onRefresh(@NonNull RefreshLayout refreshLayout) {
-                ToastUtil.toast(getContext(), "开始同步");
+                if (!checkAccount(refreshLayout)){
+                    return;
+                }
                 syncPresenter.sync();
             }
         });
@@ -214,6 +219,17 @@ public class TodoListFragment extends Fragment {
             }
 
         });
+    }
+
+    private boolean checkAccount(@NonNull RefreshLayout refreshLayout) {
+        List<Account> all = MyApplication.getInstance().getAccountModel().findAllValid();
+        if (all == null || all.isEmpty()) {
+            refreshLayout.finishRefresh();
+            Intent intent = new Intent(getContext(), DavLoginActivity.class);
+            startActivity(intent);
+            return false;
+        }
+        return true;
     }
 
     @Override
