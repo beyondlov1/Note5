@@ -125,21 +125,22 @@ public class MyApplication extends Application {
     }
 
     private void scheduleSyncService() {
-        PreferenceUtil.put(SYNC_SHOULD_SCHEDULE,true);
+        PreferenceUtil.put(SYNC_SHOULD_SCHEDULE, true);
         boolean shouldSchedule = PreferenceUtil.getBoolean(SYNC_SHOULD_SCHEDULE, false);
         boolean scheduled = PreferenceUtil.getBoolean(SYNC_SCHEDULED, false);
 
         if (shouldSchedule) {
-            if (!scheduled){
-                Calendar calendar = Calendar.getInstance();
-                calendar.set(1992,Calendar.SEPTEMBER,25,0,0,0);
-                SyncScheduleReceiver.schedule(this,calendar.getTimeInMillis(),DEFAULT_SCHEDULE_PERIOD );
-                PreferenceUtil.put(SYNC_SCHEDULED,true);
-            }
-        }else {
+            Calendar calendar = Calendar.getInstance();
+            calendar.set(1992, Calendar.SEPTEMBER, 25, 0, 0, 0);
             SyncScheduleReceiver.cancel(this);
-            PreferenceUtil.put(SYNC_SCHEDULED,false);
+            SyncScheduleReceiver.schedule(this, calendar.getTimeInMillis(), DEFAULT_SCHEDULE_PERIOD);
+            PreferenceUtil.put(SYNC_SCHEDULED, true);
+        } else {
+            SyncScheduleReceiver.cancel(this);
+            PreferenceUtil.put(SYNC_SCHEDULED, false);
         }
+
+        ToastUtil.toast(this,"是否已设定同步时间:"+PreferenceUtil.getBoolean(SYNC_SCHEDULED, false));
     }
 
     private void startNotificationScanner() {
@@ -219,7 +220,7 @@ public class MyApplication extends Application {
                     .build();
 
             todoSynchronizers.add(new DavSynchronizer4.Builder<Todo>()
-                    .localDataSource(new TodoSqlDataSourceWrap(todoLocalDataSource,todoDavDataSource1))
+                    .localDataSource(new TodoSqlDataSourceWrap(todoLocalDataSource, todoDavDataSource1))
                     .remoteDataSource(todoDavDataSource1)
                     .logPath(TODO_LOG_PATH)
                     .build());
