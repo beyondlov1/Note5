@@ -22,9 +22,6 @@ public class SyncRetryService extends Service {
     public static final String SYNC_RETRY_ACTION = "com.beyond.note5.intent.action.SYNC_RETRY";
 
     public static void retry(Context context){
-//        Intent intent = new Intent(context,SyncRetryService.class);
-//        context.startService(intent);
-
         AlarmManager alarmManager = (AlarmManager) context.getSystemService(ALARM_SERVICE);
         if (alarmManager!=null){
             long triggerTime = SystemClock.elapsedRealtime() + 1000 * 60 * 40;

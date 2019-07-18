@@ -110,5 +110,10 @@
                 <action android:name="com.beyond.note5.intent.action.SYNC_RETRY" />
             </intent-filter>
         </receiver>
+        <receiver android:name=".service.SyncScheduleReceiver">
+            <intent-filter>
+                <action android:name="com.beyond.note5.intent.action.SYNC_SCHEDULE" />
+            </intent-filter>
+        </receiver>
     </application>
 </manifest>

@@ -21,6 +21,7 @@ import com.beyond.note5.predict.bean.TagGraph;
 import com.beyond.note5.predict.train.filter.TimeExpressionTrainTagFilter;
 import com.beyond.note5.predict.train.filter.UrlTrainTagFilter;
 import com.beyond.note5.service.NotificationScanningService;
+import com.beyond.note5.service.SyncScheduleReceiver;
 import com.beyond.note5.sync.Synchronizer;
 import com.beyond.note5.sync.datasource.DavDataSource;
 import com.beyond.note5.sync.datasource.impl.DefaultDavDataSource;
@@ -48,9 +49,12 @@ import org.sqldroid.DroidDataSource;
 
 import java.io.File;
 import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+
+import static com.beyond.note5.service.SyncScheduleReceiver.DEFAULT_SCHEDULE_PERIOD;
 
 /**
  * @author: beyond
@@ -80,6 +84,9 @@ public class MyApplication extends Application {
     public static final String TODO_LOCK_PATH = "/LOCK/todo_lock.lock";
     public static final String TODO_LST_PATH = "/LOCK/todo_last_sync_time.mark";
     public static final String TODO_LOG_PATH = "/LOCK/todo_sync.log";
+
+    public static final String SYNC_SCHEDULED = "sync.scheduled";
+    public static final String SYNC_SHOULD_SCHEDULE = "sync.should.schedule";
 
     private static MyApplication instance;
 
@@ -111,9 +118,28 @@ public class MyApplication extends Application {
         initDaoSession();
         initSynchronizer();
         startNotificationScanner();
+        scheduleSyncService();
 
 //        syncWithToast();
 
+    }
+
+    private void scheduleSyncService() {
+        PreferenceUtil.put(SYNC_SHOULD_SCHEDULE,true);
+        boolean shouldSchedule = PreferenceUtil.getBoolean(SYNC_SHOULD_SCHEDULE, false);
+        boolean scheduled = PreferenceUtil.getBoolean(SYNC_SCHEDULED, false);
+
+        if (shouldSchedule) {
+            if (!scheduled){
+                Calendar calendar = Calendar.getInstance();
+                calendar.set(1992,Calendar.SEPTEMBER,25,0,0,0);
+                SyncScheduleReceiver.schedule(this,calendar.getTimeInMillis(),DEFAULT_SCHEDULE_PERIOD );
+                PreferenceUtil.put(SYNC_SCHEDULED,true);
+            }
+        }else {
+            SyncScheduleReceiver.cancel(this);
+            PreferenceUtil.put(SYNC_SCHEDULED,false);
+        }
     }
 
     private void startNotificationScanner() {
