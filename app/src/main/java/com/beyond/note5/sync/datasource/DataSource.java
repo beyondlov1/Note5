@@ -31,6 +31,7 @@ public interface DataSource<T> extends Lock{
     /*new start*/
 
     List<T> getModifiedData(TraceInfo traceInfo) throws IOException;
+    @Deprecated
     void save(T t) throws IOException;
     void saveAll(List<T> tList) throws IOException, SyncException;
     void saveAll(List<T> tList, String source) throws IOException, SyncException;

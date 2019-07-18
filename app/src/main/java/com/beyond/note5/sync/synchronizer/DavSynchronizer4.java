@@ -41,6 +41,8 @@ public class DavSynchronizer4<T extends Tracable> implements Synchronizer<T> {
 
     private SyncStateModel syncStateModel;
 
+    private long lockTimeOutMills = 5*60000L; // 5min
+
     private DavSynchronizer4() {
 
     }
@@ -98,7 +100,7 @@ public class DavSynchronizer4<T extends Tracable> implements Synchronizer<T> {
             return true;
         }
 
-        if (dataSource1.tryLock(60000L) && dataSource2.tryLock(60000L)) {
+        if (dataSource1.tryLock(lockTimeOutMills) && dataSource2.tryLock(lockTimeOutMills)) {
             List<T> modified1 = dataSource1.getModifiedData(traceInfo1);
             List<T> modified2 = dataSource2.getModifiedData(traceInfo2);
 
@@ -159,7 +161,7 @@ public class DavSynchronizer4<T extends Tracable> implements Synchronizer<T> {
         if (modified.isEmpty()) {
             return false;
         }
-        if (changingDataSource.tryLock(60000L)) {
+        if (changingDataSource.tryLock(lockTimeOutMills)) {
 
             try {
                 excludeSuccess(modified);
@@ -236,7 +238,7 @@ public class DavSynchronizer4<T extends Tracable> implements Synchronizer<T> {
         if (localAddedData.isEmpty() && localUpdatedData.isEmpty()) {
             return false;
         }
-        if (dataSource2.tryLock(60000L)) {
+        if (dataSource2.tryLock(lockTimeOutMills)) {
 
             if (!localAddedData.isEmpty()) {
                 for (T datum : localAddedData) {

@@ -17,6 +17,11 @@ public class TodoSqlDataSourceWrap implements DataSource<Todo> {
 
     private final DavDataSource<Todo> davDataSource;
 
+    public TodoSqlDataSourceWrap( DavDataSource<Todo> davDataSource) {
+        this.todoSqlDataSource = new TodoSqlDataSource();
+        this.davDataSource = davDataSource;
+    }
+
     public TodoSqlDataSourceWrap(TodoSqlDataSource todoSqlDataSource, DavDataSource<Todo> davDataSource) {
         this.todoSqlDataSource = todoSqlDataSource;
         this.davDataSource = davDataSource;

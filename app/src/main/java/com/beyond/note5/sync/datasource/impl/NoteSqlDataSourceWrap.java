@@ -22,6 +22,10 @@ public class NoteSqlDataSourceWrap implements DataSource<Note> {
 
     private DavDataSource<Note> davDataSource;
 
+    public NoteSqlDataSourceWrap(DavDataSource<Note> davDataSource) {
+        this.noteSqlDataSource = new NoteSqlDataSource();
+        this.davDataSource = davDataSource;
+    }
     public NoteSqlDataSourceWrap(NoteSqlDataSource noteSqlDataSource, DavDataSource<Note> davDataSource) {
         this.noteSqlDataSource = noteSqlDataSource;
         this.davDataSource = davDataSource;
