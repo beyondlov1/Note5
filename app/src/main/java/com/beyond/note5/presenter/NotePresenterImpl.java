@@ -378,6 +378,7 @@ public class NotePresenterImpl implements NotePresenter {
         final Request request = new Request.Builder()
                 .url(url)
                 .addHeader("Content-Type", "application/x-www-form-urlencoded; charset=UTF-8")
+                .addHeader("User-Agent", "PostmanRuntime/7.15.0")
                 .build();
         Call call = okHttpClient.newCall(request);
         Response response = call.execute();

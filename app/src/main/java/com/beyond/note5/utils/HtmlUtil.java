@@ -34,10 +34,11 @@ public class HtmlUtil {
         Document document = Jsoup.parse(html);
 
         String title = document.title();
+        title = StringUtils.trim(title);
         String hText;
         Log.d("HtmlUtil", title);
         if (StringUtils.isNotBlank(title)) {
-            for (int i = 0; i < 6; i++) {
+            for (int i = 1; i < 7; i++) {
                 Elements h = document.body().getElementsByTag("h" + i);
                 if (!h.isEmpty()){
                     hText = h.first().text();
@@ -48,6 +49,14 @@ public class HtmlUtil {
                 }
             }
             return title;
+        }else {
+            for (int i = 1; i < 7; i++) {
+                Elements h = document.body().getElementsByTag("h" + i);
+                if (!h.isEmpty()){
+                    hText = h.first().text();
+                    return hText;
+                }
+            }
         }
         return null;
     }

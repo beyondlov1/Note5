@@ -38,7 +38,9 @@ android {
         exclude 'META-INF/notice.txt'
         exclude 'META-INF/ASL2.0'
     }
-
+    testOptions {
+        unitTests.returnDefaultValues = true
+    }
 }
 
 buildscript{
