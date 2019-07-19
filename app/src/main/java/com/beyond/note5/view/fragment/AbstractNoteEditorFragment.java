@@ -6,6 +6,7 @@ import android.content.DialogInterface;
 import android.graphics.Color;
 import android.graphics.drawable.ColorDrawable;
 import android.os.Bundle;
+import android.support.annotation.NonNull;
 import android.support.v7.app.AlertDialog;
 import android.text.Editable;
 import android.text.TextWatcher;
@@ -31,8 +32,8 @@ import com.beyond.note5.event.HideKeyBoardEvent2;
 import com.beyond.note5.event.ShowKeyBoardEvent;
 import com.beyond.note5.utils.InputMethodUtil;
 import com.beyond.note5.utils.WebViewUtil;
+import com.beyond.note5.view.custom.MarkdownAutoRenderEditText;
 import com.beyond.note5.view.listener.OnClickToInsertBeforeLineListener;
-import com.beyond.note5.view.markdown.editor.HighlightingEditor;
 
 import org.apache.commons.lang3.StringUtils;
 
@@ -53,7 +54,7 @@ public abstract class AbstractNoteEditorFragment extends AbstractDocumentEditorF
     @BindView(R.id.fragment_edit_note_web)
     protected WebView displayWebView;
     @BindView(R.id.fragment_edit_note_content)
-    protected HighlightingEditor editorContent;
+    protected EditText editorContent;
     @BindView(R.id.fragment_edit_note_container)
     protected LinearLayout editorContainer;
 
@@ -68,7 +69,7 @@ public abstract class AbstractNoteEditorFragment extends AbstractDocumentEditorF
                         new DialogInterface.OnClickListener() {
                             @Override
                             public void onClick(DialogInterface dialog, int id) {
-                                String content = editorContent.getText().toString();
+                                String content = getEditorContent();
                                 if (content.length() > 0) {
                                     creatingDocument.setContent(content);
                                     onOKClick();
@@ -79,6 +80,14 @@ public abstract class AbstractNoteEditorFragment extends AbstractDocumentEditorF
         AlertDialog alertDialog = builder.create();
         processStatusBarColor(alertDialog);
         return alertDialog;
+    }
+
+    @NonNull
+    private String getEditorContent() {
+        if (editorContent instanceof MarkdownAutoRenderEditText){
+            return ((MarkdownAutoRenderEditText) editorContent).getRealContent();
+        }
+        return editorContent.getText().toString();
     }
 
     private void processStatusBarColor(AlertDialog dialog) {
@@ -195,7 +204,7 @@ public abstract class AbstractNoteEditorFragment extends AbstractDocumentEditorF
         saveButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                String content = editorContent.getText().toString();
+                String content = getEditorContent();
                 if (StringUtils.isNotBlank(content)) {
                     creatingDocument.setContent(content);
                     onOKClick();

@@ -13,13 +13,13 @@ import com.beyond.note5.view.markdown.span.bean.Line;
 
 public interface LineResolver extends MarkdownLifecycle,TextSizeAware {
 
-    public static final String H1 = "# ";
-    public static final String H2 = "## ";
-    public static final String H3= "### ";
-    public static final String H4 = "#### ";
-    public static final String H5 = "##### ";
-    public static final String H6= "###### ";
-    public static final String UL= "- ";
+    String H1 = "# ";
+    String H2 = "## ";
+    String H3= "### ";
+    String H4 = "#### ";
+    String H5 = "##### ";
+    String H6= "###### ";
+    String UL= "- ";
     
     boolean support(Line line);
     Spannable resolveLine(Line line);

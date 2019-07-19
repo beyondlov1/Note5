@@ -14,7 +14,8 @@
             android:id="@+id/fragment_edit_note_web"
             android:layout_width="match_parent"
             android:layout_height="0dp"
-            android:layout_weight="1" />
+            android:layout_weight="1"
+            android:visibility="gone"/>
 
 
         <include layout="@layout/tool_markdown"/>
@@ -24,7 +25,7 @@
             android:layout_height="1dp"
             android:background="@color/google_yellow" />
 
-        <com.beyond.note5.view.markdown.editor.HighlightingEditor
+        <com.beyond.note5.view.custom.MarkdownAutoRenderEditText
             android:id="@+id/fragment_edit_note_content"
             android:layout_width="match_parent"
             android:layout_height="0dp"
