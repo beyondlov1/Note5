@@ -28,8 +28,8 @@ import com.beyond.note5.model.dao.NoteDao;
 import com.beyond.note5.utils.BitmapUtil;
 import com.beyond.note5.utils.PhotoUtil;
 import com.beyond.note5.utils.ViewUtil;
-import com.beyond.note5.view.markdown.span.MarkdownRender;
-import com.beyond.note5.view.markdown.span.DefaultMarkdownRender;
+import com.beyond.note5.view.markdown.render.MarkdownRender;
+import com.beyond.note5.view.markdown.render.DefaultMarkdownRender;
 
 import java.io.File;
 import java.util.List;

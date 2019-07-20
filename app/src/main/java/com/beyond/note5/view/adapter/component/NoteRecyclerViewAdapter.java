@@ -23,7 +23,7 @@ import com.beyond.note5.event.ShowNoteDetailEvent;
 import com.beyond.note5.event.note.UpdateNotePriorityEvent;
 import com.beyond.note5.utils.BitmapUtil;
 import com.beyond.note5.utils.HtmlUtil;
-import com.beyond.note5.view.markdown.span.MarkdownRenders;
+import com.beyond.note5.view.markdown.render.MarkdownRenders;
 import com.beyond.note5.utils.PreferenceUtil;
 import com.beyond.note5.utils.WebViewUtil;
 import com.beyond.note5.view.adapter.component.header.Header;

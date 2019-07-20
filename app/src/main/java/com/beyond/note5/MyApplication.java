@@ -127,11 +127,13 @@ public class MyApplication extends Application {
     private void scheduleSyncService() {
         PreferenceUtil.put(SYNC_SHOULD_SCHEDULE, true);
         boolean shouldSchedule = PreferenceUtil.getBoolean(SYNC_SHOULD_SCHEDULE, false);
-        boolean scheduled = PreferenceUtil.getBoolean(SYNC_SCHEDULED, false);
 
+        String userId = PreferenceUtil.getString(VIRTUAL_USER_ID);
+        int syncTimeOffset = Math.abs(userId.hashCode()) % 60; // 防止多个设备同时同步冲突
         if (shouldSchedule) {
             Calendar calendar = Calendar.getInstance();
             calendar.set(1992, Calendar.SEPTEMBER, 25, 0, 0, 0);
+            calendar.add(Calendar.MINUTE,syncTimeOffset);
             SyncScheduleReceiver.cancel(this);
             SyncScheduleReceiver.schedule(this, calendar.getTimeInMillis(), DEFAULT_SCHEDULE_PERIOD);
             PreferenceUtil.put(SYNC_SCHEDULED, true);
@@ -139,8 +141,8 @@ public class MyApplication extends Application {
             SyncScheduleReceiver.cancel(this);
             PreferenceUtil.put(SYNC_SCHEDULED, false);
         }
-
-        ToastUtil.toast(this,"是否已设定同步时间:"+PreferenceUtil.getBoolean(SYNC_SCHEDULED, false));
+        boolean scheduled = PreferenceUtil.getBoolean(SYNC_SCHEDULED, false);
+        ToastUtil.toast(this,"是否已设定同步时间:"+scheduled);
     }
 
     private void startNotificationScanner() {

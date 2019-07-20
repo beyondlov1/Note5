@@ -9,20 +9,8 @@ import android.text.TextWatcher;
 import android.util.AttributeSet;
 
 import com.beyond.note5.R;
-import com.beyond.note5.view.markdown.decorate.DefaultRichLineSplitter;
-import com.beyond.note5.view.markdown.decorate.RichLine;
-import com.beyond.note5.view.markdown.decorate.RichLineResolver;
-import com.beyond.note5.view.markdown.decorate.RichLineSplitter;
-import com.beyond.note5.view.markdown.decorate.RichListLine;
-import com.beyond.note5.view.markdown.decorate.resolver.H1RichLineResolver;
-import com.beyond.note5.view.markdown.decorate.resolver.H2RichLineResolver;
-import com.beyond.note5.view.markdown.decorate.resolver.H3RichLineResolver;
-import com.beyond.note5.view.markdown.decorate.resolver.OlRichLineResolver;
-import com.beyond.note5.view.markdown.decorate.resolver.UlRichLineResolver;
-
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
+import com.beyond.note5.view.markdown.decorate.DefaultMarkdownDecorator;
+import com.beyond.note5.view.markdown.decorate.MarkdownDecorator;
 
 /**
  * @author: beyond
@@ -31,10 +19,7 @@ import java.util.List;
 
 public class MarkdownAutoRenderEditText extends AppCompatEditText {
 
-
-    private RichLineSplitter splitter;
-
-    private List<RichLineResolver> resolvers;
+    private MarkdownDecorator markdownDecorator;
 
     public MarkdownAutoRenderEditText(Context context) {
         this(context, null);
@@ -46,44 +31,15 @@ public class MarkdownAutoRenderEditText extends AppCompatEditText {
 
     public MarkdownAutoRenderEditText(Context context, AttributeSet attrs, int defStyleAttr) {
         super(context, attrs, defStyleAttr);
-        TextWatcher textChangeListener = new MyOnTextChangeListener();
-        this.addTextChangedListener(textChangeListener);
-        splitter = new DefaultRichLineSplitter();
-        resolvers = new ArrayList<>();
-        resolvers.add(new H1RichLineResolver());
-        resolvers.add(new H2RichLineResolver());
-        resolvers.add(new H3RichLineResolver());
-        resolvers.add(new UlRichLineResolver());
-        resolvers.add(new OlRichLineResolver());
+        this.addTextChangedListener(new MyOnTextChangeListener());
+        markdownDecorator = DefaultMarkdownDecorator.createDefault(this);
     }
 
-    public String getRealContent(){
-        if (splitter == null){
+    public String getRealContent() {
+        if (markdownDecorator == null) {
             return super.getText().toString();
         }
-        StringBuilder raw = new StringBuilder();
-        List<RichLine> lines = splitter.split(super.getText());
-        int listIndex = 0;
-        for (RichLine line : lines) {
-            boolean found = false;
-            for (RichLineResolver resolver : resolvers) {
-                if (resolver.supportPlain(line)){
-                    if (OlRichLineResolver.isListLine(line)){
-                        RichListLine richListLine = new RichListLine(line);
-                        richListLine.setListIndex(listIndex);
-                        raw.append(resolver.plain(richListLine));
-                        listIndex++;
-                    }else {
-                        raw.append(resolver.plain(line));
-                    }
-                    found = true;
-                }
-            }
-            if (!found){
-                raw.append(line.getContent());
-            }
-        }
-        return raw.toString();
+        return markdownDecorator.plain(super.getText());
     }
 
     @Override
@@ -91,6 +47,10 @@ public class MarkdownAutoRenderEditText extends AppCompatEditText {
         MyEditable myEditable = new MyEditable();
         myEditable.append(text);
         super.setText(myEditable, type);
+    }
+
+    public MarkdownDecorator getMarkdownDecorator() {
+        return markdownDecorator;
     }
 
     private class MyOnTextChangeListener implements TextWatcher {
@@ -109,15 +69,7 @@ public class MarkdownAutoRenderEditText extends AppCompatEditText {
             if (s.toString().endsWith("\n")) {
                 removeTextChangedListener(this);
 
-                List<RichLine> lines = splitter.split(s);
-                Collections.reverse(lines);
-                for (RichLine line : lines) {
-                    for (RichLineResolver resolver : resolvers) {
-                        if (resolver.supportResolve(line)) {
-                            resolver.resolve(line);
-                        }
-                    }
-                }
+                markdownDecorator.decorate(s);
 
                 addTextChangedListener(this);
             }

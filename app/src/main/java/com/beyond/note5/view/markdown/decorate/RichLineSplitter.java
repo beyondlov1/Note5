@@ -2,6 +2,8 @@ package com.beyond.note5.view.markdown.decorate;
 
 import android.text.Editable;
 
+import com.beyond.note5.view.markdown.decorate.bean.RichLine;
+
 import java.util.List;
 
 /**

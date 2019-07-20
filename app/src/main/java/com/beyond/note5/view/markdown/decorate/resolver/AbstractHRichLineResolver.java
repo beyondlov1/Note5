@@ -6,5 +6,5 @@ package com.beyond.note5.view.markdown.decorate.resolver;
  */
 
 public abstract class AbstractHRichLineResolver extends AbstractRichLineResolver {
-    protected abstract int getTextSize() ;
+
 }

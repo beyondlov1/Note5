@@ -4,6 +4,9 @@ import android.view.View;
 import android.widget.EditText;
 import android.widget.TextView;
 
+import com.beyond.note5.view.custom.MarkdownAutoRenderEditText;
+import com.beyond.note5.view.markdown.decorate.DefaultMarkdownDecorator;
+
 public class OnClickToInsertBeforeLineListener implements View.OnClickListener {
 
     private EditText editText;
@@ -28,16 +31,21 @@ public class OnClickToInsertBeforeLineListener implements View.OnClickListener {
     private void insertLinePrefix(EditText editText, CharSequence text) {
         int caretPosition = editText.getSelectionEnd();
         int lineStart = getLineStart(caretPosition, (editText.getText() + "\n").toCharArray());
-        String newText = editText.getText().insert(lineStart, text + " ").toString();
-        editText.setText(newText);
+        if (editText instanceof MarkdownAutoRenderEditText){
+            DefaultMarkdownDecorator markdownDecorator = (DefaultMarkdownDecorator)((MarkdownAutoRenderEditText) editText).getMarkdownDecorator();
+            boolean decorated = markdownDecorator.isDecorated(editText.getText(), lineStart, getLineEnd(caretPosition, (editText.getText() + "\n").toCharArray()));
+            if (decorated){
+                return;
+            }
+        }
+        editText.getText().insert(lineStart, text + " ");
         editText.setSelection(caretPosition + (text.length() == 0 ? -1 : text.length()) + 1);
     }
 
     private void deleteLinePrefix(EditText editText, CharSequence text) {
         int caretPosition = editText.getSelectionEnd();
         int lineStart = getLineStart(caretPosition, (editText.getText() + "\n").toCharArray());
-        String newText = editText.getText().delete(lineStart, lineStart+text.length()+1).toString();
-        editText.setText(newText);
+        editText.getText().delete(lineStart, lineStart+text.length()+1);
         editText.setSelection(caretPosition - (text.length() == 0 ? -1 : text.length()) - 1);
     }
 
@@ -66,6 +74,13 @@ public class OnClickToInsertBeforeLineListener implements View.OnClickListener {
             start--;
         }
         return start;
+    }
+    private int getLineEnd(int caretPosition, char[] chars) {
+        int end = caretPosition;
+        while (end < chars.length && chars[end] != '\n') {
+            end++;
+        }
+        return end;
     }
 
 }

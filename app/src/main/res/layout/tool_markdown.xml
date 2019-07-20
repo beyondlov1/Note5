@@ -107,7 +107,9 @@
             android:layout_weight="1"
             android:text="x"
             android:textColor="#ff000000"
-            android:textSize="14sp" />
+            android:textSize="14sp"
+            android:visibility="gone"
+            />
     </LinearLayout>
 
 </FrameLayout>
