@@ -1,6 +1,7 @@
 package com.beyond.note5.view.markdown.decorate.bean;
 
 import android.text.Editable;
+import android.util.Log;
 
 /**
  * @author: beyond
@@ -78,9 +79,11 @@ public class RichLine {
         if (!startsWith(tag)){
             return;
         }
+        Log.d(getClass().getSimpleName(),"deleteTag-start-"+System.currentTimeMillis());
         int start = this.start;
         int end = start + tag.length();
         fullSource.delete(start,end);
+        Log.d(getClass().getSimpleName(),"deleteTag-end-"+System.currentTimeMillis());
     }
 
     public boolean startsWith(String tag){

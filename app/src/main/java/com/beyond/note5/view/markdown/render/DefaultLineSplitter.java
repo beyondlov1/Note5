@@ -20,12 +20,6 @@ public class DefaultLineSplitter implements LineSplitter {
     private boolean isEndWithSeparator = false;
     private int count;
 
-
-    @Override
-    public void init() {
-
-    }
-
     @Override
     public List<Line> split(String source) {
         String[] lineSources = StringUtils.split(source,separator);

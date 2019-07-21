@@ -1,6 +1,7 @@
 package com.beyond.note5.view.markdown.decorate;
 
 import android.text.Editable;
+import android.util.Log;
 import android.widget.TextView;
 
 import com.beyond.note5.view.markdown.decorate.bean.RichLine;
@@ -34,35 +35,26 @@ import java.util.List;
 
 public class DefaultMarkdownDecorator implements MarkdownDecorator {
 
-
-    public static final String H1 = "# ";
-    public static final String H2 = "## ";
-    public static final String H3= "### ";
-    public static final String H4 = "#### ";
-    public static final String H5 = "##### ";
-    public static final  String H6= "###### ";
-    public static final String UL= "- ";
-    private static final String OL = "1.";
-
     private List<RichLineContext> contexts;
 
     private RichLineSplitter splitter;
 
-    private DefaultMarkdownDecorator(){
+    private DefaultMarkdownDecorator() {
         contexts = new ArrayList<>();
         splitter = new DefaultRichLineSplitter();
     }
 
-    public static DefaultMarkdownDecorator createDefault(){
+    public static DefaultMarkdownDecorator createDefault() {
         DefaultMarkdownDecorator defaultMarkdownDecorator = new DefaultMarkdownDecorator();
-        defaultMarkdownDecorator.register(H1, H1TextAppearanceSpan.class,new H1RichLineResolver(),new H1RichLinePlainer());
-        defaultMarkdownDecorator.register(H2, H2TextAppearanceSpan.class,new H2RichLineResolver(),new H2RichLinePlainer());
-        defaultMarkdownDecorator.register(H3, H3TextAppearanceSpan.class,new H3RichLineResolver(),new H3RichLinePlainer());
-        defaultMarkdownDecorator.register(UL, UlMarkdownBulletSpan2.class,new UlRichLineResolver(),new UlRichLinePlainer());
-        defaultMarkdownDecorator.register(OL, OlMarkdownBulletSpan2.class,new OlRichLineResolver(),new OlRichLinePlainer());
+        defaultMarkdownDecorator.register(UL, UlMarkdownBulletSpan2.class, new UlRichLineResolver(), new UlRichLinePlainer());
+        defaultMarkdownDecorator.register(H3, H3TextAppearanceSpan.class, new H3RichLineResolver(), new H3RichLinePlainer());
+        defaultMarkdownDecorator.register(H1, H1TextAppearanceSpan.class, new H1RichLineResolver(), new H1RichLinePlainer());
+        defaultMarkdownDecorator.register(OL, OlMarkdownBulletSpan2.class, new OlRichLineResolver(), new OlRichLinePlainer());
+        defaultMarkdownDecorator.register(H2, H2TextAppearanceSpan.class, new H2RichLineResolver(), new H2RichLinePlainer());
         return defaultMarkdownDecorator;
     }
-    public static DefaultMarkdownDecorator createDefault(TextView textView){
+
+    public static DefaultMarkdownDecorator createDefault(TextView textView) {
         DefaultMarkdownDecorator defaultMarkdownDecorator = createDefault();
         List<RichLineContext> contexts = defaultMarkdownDecorator.getContexts();
         for (RichLineContext context : contexts) {
@@ -74,47 +66,69 @@ public class DefaultMarkdownDecorator implements MarkdownDecorator {
 
     @Override
     public void decorate(Editable editable) {
-        decorate(editable,false);
+        decorate(editable, false);
     }
 
     @Override
     public void decorate(Editable editable, boolean delete) {
+        Log.d(getClass().getSimpleName(), "split-start-" + System.currentTimeMillis());
         List<RichLine> lines = splitter.split(editable);
-        Collections.reverse(lines);
-        if (lines.isEmpty()){
+        Log.d(getClass().getSimpleName(), "split-end-" + System.currentTimeMillis());
+
+        if (lines.isEmpty()) {
             return;
         }
-        RichLine endLine = lines.get(0);
-        if (endLine.getLength()==0 && !delete){
+
+        Collections.reverse(lines);
+
+        processEndLine(editable, delete, lines);
+        Log.d(getClass().getSimpleName(), "endline-end-" + System.currentTimeMillis());
+
+        for (RichLine line : lines) {
             for (RichLineContext context : contexts) {
-                if (context.supportResolve(endLine.getPrev())){
-                    if (context.getResolver() instanceof UlRichLineResolver){
-                        editable.append(context.getTag());
-                    }
-                    if (context.getResolver() instanceof OlRichLineResolver){
-                        if (endLine.getPrev() instanceof RichListLine){
-                            int prevListIndex = ((RichListLine) endLine.getPrev()).getListIndex();
-                            editable.append(String.valueOf(prevListIndex+2)).append(". ");
-                        }
-                    }
+                Log.d(getClass().getSimpleName(), "resolve-" + context.getTag() + "-" + "line:" + line.getIndex() + "-" + System.currentTimeMillis());
+                if (context.supportResolve(line)) {
+                    context.resolve(line);
                     break;
-                }else {
-                    if (context.getResolver() instanceof OlRichLineResolver){
-                        if (OlRichLineResolver.isListLine(endLine.getPrev())){
-                            if (endLine.getPrev() instanceof RichListLine){
-                                int prevListIndex = ((RichListLine) endLine.getPrev()).getListIndex();
-                                editable.append(String.valueOf(prevListIndex+2)).append(". ");
-                            }
-                        }
-                    }
                 }
             }
         }
-        for (RichLine line : lines) {
+        Log.d(getClass().getSimpleName(), "resolve-end-" + System.currentTimeMillis());
+    }
+
+    private void processEndLine(Editable editable, boolean delete, List<RichLine> lines) {
+        RichLine endLine = lines.get(0);
+        if (endLine.getLength() == 0 && !delete) {
             for (RichLineContext context : contexts) {
-                if (context.supportResolve(line)){
-                    context.resolve(line);
+                if (context.supportResolve(endLine.getPrev())) {
+                    if (context.getResolver() instanceof UlRichLineResolver) {
+                        editable.append(context.getTag());
+                        break;
+                    }
+                    if (context.getResolver() instanceof OlRichLineResolver) {
+                        if (endLine.getPrev() instanceof RichListLine) {
+                            int prevListIndex = ((RichListLine) endLine.getPrev()).getListIndex();
+                            editable.append(String.valueOf(prevListIndex + 2)).append(". ");
+                            break;
+                        }
+                    }
                     break;
+                } else {
+                    if (context.getResolver() instanceof UlRichLineResolver) {
+                        if (UlRichLineResolver.isListLine(endLine.getPrev())) {
+                            editable.append(context.getTag());
+                            break;
+                        }
+                    }
+                    if (context.getResolver() instanceof OlRichLineResolver) {
+                        if (OlRichLineResolver.isListLine(endLine.getPrev())) {
+                            if (endLine.getPrev() instanceof RichListLine) {
+                                int prevListIndex = ((RichListLine) endLine.getPrev()).getListIndex();
+                                editable.append(String.valueOf(prevListIndex + 2)).append(". ");
+                                break;
+                            }
+                        }
+                    }
                 }
             }
         }
@@ -128,20 +142,20 @@ public class DefaultMarkdownDecorator implements MarkdownDecorator {
         for (RichLine line : lines) {
             boolean found = false;
             for (RichLineContext context : contexts) {
-                if (context.supportPlain(line)){
-                    if (OlRichLinePlainer.isListLine(line)){
+                if (context.supportPlain(line)) {
+                    if (OlRichLinePlainer.isListLine(line)) {
                         RichListLine richListLine = new RichListLine(line);
                         richListLine.setListIndex(listIndex);
                         raw.append(context.plain(richListLine));
                         listIndex++;
-                    }else {
+                    } else {
                         raw.append(context.plain(line));
                     }
                     found = true;
                     break;
                 }
             }
-            if (!found){
+            if (!found) {
                 raw.append(line.getContent());
             }
         }
@@ -149,27 +163,27 @@ public class DefaultMarkdownDecorator implements MarkdownDecorator {
     }
 
     @Override
-    public void register(String tag, Class span,RichLineResolver resolver,RichLinePlainer plainer ){
-        contexts.add(new RichLineContext(tag,span,resolver,plainer));
+    public void register(String tag, Class span, RichLineResolver resolver, RichLinePlainer plainer) {
+        contexts.add(new RichLineContext(tag, span, resolver, plainer));
     }
 
-    public Class<?> getSpanClassByTag(String tag){
+    public Class<?> getSpanClassByTag(String tag) {
         for (RichLineContext context : contexts) {
-            if (context.getTag().trim().equals(tag.trim())){
+            if (context.getTag().trim().equals(tag.trim())) {
                 return context.getSpanClass();
             }
         }
         return null;
     }
 
-    public boolean isDecorated(Editable editable,int start, int end){
-        if (start>=end){
+    public boolean isDecorated(Editable editable, int start, int end) {
+        if (start >= end) {
             return false;
         }
         Object[] spans = editable.getSpans(start, end, Object.class);
         for (Object span : spans) {
             for (RichLineContext context : contexts) {
-                if (context.getSpanClass().equals(span.getClass())){
+                if (context.getSpanClass().equals(span.getClass())) {
                     return true;
                 }
             }

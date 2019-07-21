@@ -3,6 +3,7 @@ package com.beyond.note5.view.markdown.render;
 import android.text.SpannableStringBuilder;
 
 import com.beyond.note5.view.markdown.render.bean.Line;
+import com.beyond.note5.view.markdown.render.resolver.LineResolver;
 
 import java.util.List;
 
@@ -17,12 +18,9 @@ public class DefaultMarkdownRender implements MarkdownRender {
 
     private LineSplitter lineSplitter;
 
-    @Override
-    public void init() {
+    public DefaultMarkdownRender() {
         lineProcessor = new DefaultLineProcessor();
         lineSplitter = new DefaultLineSplitter();
-        lineProcessor.init();
-        lineSplitter.init();
     }
 
     @Override
@@ -44,6 +42,11 @@ public class DefaultMarkdownRender implements MarkdownRender {
             }
         }
         return ssb;
+    }
+
+    @Override
+    public void addResolver(LineResolver resolver) {
+        lineProcessor.addResolver(resolver);
     }
 
 }

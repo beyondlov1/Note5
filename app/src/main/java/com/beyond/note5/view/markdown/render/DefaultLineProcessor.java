@@ -27,6 +27,9 @@ public class DefaultLineProcessor implements LineProcessor {
 
     @Override
     public void addResolver(LineResolver lineResolver) {
+        if (lineResolvers == null) {
+            lineResolvers = new ArrayList<>();
+        }
         lineResolvers.add(lineResolver);
     }
 
@@ -37,35 +40,28 @@ public class DefaultLineProcessor implements LineProcessor {
 
     @Override
     public Spannable process(Line line) {
+        if (lineResolvers == null || lineResolvers.isEmpty()) {
+            loadDefaultLineResolvers();
+        }
         Spannable resolvedSpannable = null;
         for (LineResolver lineResolver : lineResolvers) {
-            if (lineResolver.support(line)){
+            if (lineResolver.support(line)) {
                 lineResolver.setBaseTextSize(baseTextSize);
                 resolvedSpannable = lineResolver.resolveLine(line);
                 break;
             }
         }
-        if (resolvedSpannable == null){
+        if (resolvedSpannable == null) {
             resolvedSpannable = new SpannableString(line.getSource());
         }
         return resolvedSpannable;
     }
 
-    @Override
-    public void init() {
-        lineResolvers = getDefaultLineResolvers();
-        for (LineResolver lineResolver : lineResolvers) {
-            lineResolver.init();
-        }
-    }
-
-    public List<LineResolver> getDefaultLineResolvers() {
-        List<LineResolver> defaultLineResolvers = new ArrayList<>();
-        defaultLineResolvers.add(new H1LineResolver());
-        defaultLineResolvers.add(new H2LineResolver());
-        defaultLineResolvers.add(new H3LineResolver());
-        defaultLineResolvers.add(new UlLineResolver());
-        defaultLineResolvers.add(new OlLineResolver());
-        return defaultLineResolvers;
+    private void loadDefaultLineResolvers() {
+        addResolver(new H1LineResolver());
+        addResolver(new H2LineResolver());
+        addResolver(new H3LineResolver());
+        addResolver(new UlLineResolver());
+        addResolver(new OlLineResolver());
     }
 }

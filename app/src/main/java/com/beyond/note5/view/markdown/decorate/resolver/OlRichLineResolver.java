@@ -19,8 +19,8 @@ public class OlRichLineResolver extends AbstractRichLineResolver {
     private Pattern pattern = Pattern.compile("(\\d+\\. )");
     @Override
     public boolean supportResolve(RichLine line) {
-        return  (RichListLine.isListLine(line.getContent()) && !OlRichLineResolver.isListLine(line));
-//        return RichListLine.isListLine(line.getContent());
+        boolean resolved = OlRichLineResolver.isListLine(line);
+        return  RichListLine.isOlListLine(line.getContent()) && !resolved;
     }
 
     @Override
@@ -47,6 +47,7 @@ public class OlRichLineResolver extends AbstractRichLineResolver {
         for (ParcelableSpan parcelableSpan : spans) {
             if (parcelableSpan.getClass().equals(OlMarkdownBulletSpan2.class)) {
                 found = true;
+                break;
             }
         }
         return found;

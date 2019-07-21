@@ -16,11 +16,6 @@ public abstract class AbstractLineResolver implements LineResolver {
     protected int baseTextSize;
 
     @Override
-    public void init() {
-
-    }
-
-    @Override
     public void setBaseTextSize(int baseTextSize) {
         this.baseTextSize = baseTextSize;
     }

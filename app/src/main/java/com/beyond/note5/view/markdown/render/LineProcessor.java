@@ -10,7 +10,7 @@ import com.beyond.note5.view.markdown.render.resolver.LineResolver;
  * @date: 2019/7/16
  */
 
-public interface LineProcessor extends MarkdownLifecycle,TextSizeAware {
+public interface LineProcessor extends TextSizeAware {
     void addResolver(LineResolver lineResolver);
     Spannable process(Line line);
 }

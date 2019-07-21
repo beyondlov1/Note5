@@ -9,10 +9,11 @@ import java.util.List;
  * @date: 2019/7/16
  */
 
-public interface LineSplitter extends MarkdownLifecycle{
+public interface LineSplitter {
     List<Line> split(String source);
 
     boolean shouldInsertSeparator(Line line);
+
     boolean shouldAppendSeparator(Line line);
 
     String getSeparator();

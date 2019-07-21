@@ -11,6 +11,13 @@ import android.util.AttributeSet;
 import com.beyond.note5.R;
 import com.beyond.note5.view.markdown.decorate.DefaultMarkdownDecorator;
 import com.beyond.note5.view.markdown.decorate.MarkdownDecorator;
+import com.beyond.note5.view.markdown.decorate.resolver.init.H2LineResolver;
+import com.beyond.note5.view.markdown.decorate.resolver.init.H3LineResolver;
+import com.beyond.note5.view.markdown.decorate.resolver.init.OlLineResolver;
+import com.beyond.note5.view.markdown.decorate.resolver.init.UlLineResolver;
+import com.beyond.note5.view.markdown.render.DefaultMarkdownRender;
+import com.beyond.note5.view.markdown.render.MarkdownRender;
+import com.beyond.note5.view.markdown.render.resolver.H1LineResolver;
 
 /**
  * @author: beyond
@@ -20,6 +27,8 @@ import com.beyond.note5.view.markdown.decorate.MarkdownDecorator;
 public class MarkdownAutoRenderEditText extends AppCompatEditText {
 
     private MarkdownDecorator markdownDecorator;
+
+    private MarkdownRender markdownRender;
 
     public MarkdownAutoRenderEditText(Context context) {
         this(context, null);
@@ -33,6 +42,17 @@ public class MarkdownAutoRenderEditText extends AppCompatEditText {
         super(context, attrs, defStyleAttr);
         this.addTextChangedListener(new MyOnTextChangeListener());
         markdownDecorator = DefaultMarkdownDecorator.createDefault(this);
+        markdownRender = createMarkdownRender();
+    }
+
+    private MarkdownRender createMarkdownRender() {
+        MarkdownRender markdownRender = new DefaultMarkdownRender();
+        markdownRender.addResolver(new H1LineResolver());
+        markdownRender.addResolver(new H2LineResolver());
+        markdownRender.addResolver(new H3LineResolver());
+        markdownRender.addResolver(new UlLineResolver());
+        markdownRender.addResolver(new OlLineResolver());
+        return markdownRender;
     }
 
     public String getRealContent() {
@@ -44,9 +64,13 @@ public class MarkdownAutoRenderEditText extends AppCompatEditText {
 
     @Override
     public void setText(CharSequence text, BufferType type) {
-        MyEditable myEditable = new MyEditable();
-        myEditable.append(text);
-        super.setText(myEditable, type);
+        if (markdownRender == null){
+            super.setText(text,type);
+            return;
+        }
+        markdownRender.setBaseTextSize((int)this.getTextSize());
+        SpannableStringBuilder renderedText = markdownRender.render(text.toString());
+        super.setText(renderedText, type);
     }
 
     public MarkdownDecorator getMarkdownDecorator() {

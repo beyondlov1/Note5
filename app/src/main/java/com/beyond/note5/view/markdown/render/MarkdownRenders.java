@@ -14,9 +14,9 @@ public abstract class MarkdownRenders {
     private static  MarkdownRender markdownRender = MarkdownRenderHolder.INSTANCE;
     private static class MarkdownRenderHolder{
         static final MarkdownRender INSTANCE =  new DefaultMarkdownRender();
-        static {
-            INSTANCE.init();
-        }
+    }
+    public static MarkdownRender getDefaultRender(){
+        return markdownRender;
     }
     public static void render(TextView textView, String source){
         if (textView instanceof AutoSizeTextView){

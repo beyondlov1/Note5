@@ -125,7 +125,6 @@ public class TestActivity extends Activity {
         textView.setText(h3Text);
 
         MarkdownRender markdownRender = new DefaultMarkdownRender();
-        markdownRender.init();
         SpannableStringBuilder renderedText = markdownRender.render(source);
         textView.setText(renderedText);
     }

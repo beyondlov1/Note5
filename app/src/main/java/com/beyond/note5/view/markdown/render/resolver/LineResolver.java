@@ -3,7 +3,6 @@ package com.beyond.note5.view.markdown.render.resolver;
 import android.text.Spannable;
 
 import com.beyond.note5.view.markdown.render.TextSizeAware;
-import com.beyond.note5.view.markdown.render.MarkdownLifecycle;
 import com.beyond.note5.view.markdown.render.bean.Line;
 
 /**
@@ -11,7 +10,7 @@ import com.beyond.note5.view.markdown.render.bean.Line;
  * @date: 2019/7/16
  */
 
-public interface LineResolver extends MarkdownLifecycle,TextSizeAware {
+public interface LineResolver extends TextSizeAware {
 
     String H1 = "# ";
     String H2 = "## ";
