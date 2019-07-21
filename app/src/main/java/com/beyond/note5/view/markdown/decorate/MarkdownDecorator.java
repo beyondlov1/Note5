@@ -12,6 +12,7 @@ import com.beyond.note5.view.markdown.decorate.resolver.RichLineResolver;
 
 public interface MarkdownDecorator {
     void decorate(Editable editable);
+    void decorate(Editable editable,boolean delete);
     String plain(Editable editable);
     void register(String tag, Class span, RichLineResolver resolver, RichLinePlainer plainer);
 }

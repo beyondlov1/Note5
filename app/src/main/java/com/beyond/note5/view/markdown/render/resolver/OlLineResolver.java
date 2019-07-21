@@ -39,6 +39,9 @@ public class OlLineResolver implements LineResolver {
                 start,
                 end,
                 Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
+        if (text.length() == 0){
+            text = new SpannableStringBuilder(line.getSource());
+        }
         return text;
     }
 

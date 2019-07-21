@@ -24,10 +24,7 @@ public class DefaultRichLineSplitter implements RichLineSplitter {
             char aChar = chars[i];
             if (aChar == '\n') {
                 RichLine richLine = new RichLine(s, lastIndex, i + 1);
-                if (OlRichLineResolver.isListLine(richLine)) {
-                    listIndex++;
-                }
-                if (RichListLine.isListLine(richLine.getContent())) {
+                if (RichListLine.isListLine(richLine.getContent()) || OlRichLineResolver.isListLine(richLine)) {
                     RichListLine listLine = new RichListLine(richLine);
                     listLine.setListIndex(listIndex);
                     richLine = listLine;
@@ -36,7 +33,7 @@ public class DefaultRichLineSplitter implements RichLineSplitter {
 
                 richLine.setIndex(lineIndex);
                 richLine.setPrev(lastRichLine);
-                if (lastRichLine !=null){
+                if (lastRichLine != null) {
                     lastRichLine.setNext(richLine);
                 }
                 lines.add(richLine);
@@ -47,7 +44,7 @@ public class DefaultRichLineSplitter implements RichLineSplitter {
             }
         }
         RichLine richLine = new RichLine(s, lastIndex, chars.length);
-        if (RichListLine.isListLine(richLine.getContent())) {
+        if (RichListLine.isListLine(richLine.getContent()) || OlRichLineResolver.isListLine(richLine)) {
             RichListLine listLine = new RichListLine(richLine);
             listLine.setListIndex(listIndex);
             richLine = listLine;
@@ -55,7 +52,7 @@ public class DefaultRichLineSplitter implements RichLineSplitter {
 
         richLine.setIndex(lineIndex);
         richLine.setPrev(lastRichLine);
-        if (lastRichLine !=null){
+        if (lastRichLine != null) {
             lastRichLine.setNext(richLine);
         }
         lines.add(richLine);

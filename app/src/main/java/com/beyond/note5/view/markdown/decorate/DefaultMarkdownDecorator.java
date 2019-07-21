@@ -74,13 +74,18 @@ public class DefaultMarkdownDecorator implements MarkdownDecorator {
 
     @Override
     public void decorate(Editable editable) {
+        decorate(editable,false);
+    }
+
+    @Override
+    public void decorate(Editable editable, boolean delete) {
         List<RichLine> lines = splitter.split(editable);
         Collections.reverse(lines);
         if (lines.isEmpty()){
             return;
         }
         RichLine endLine = lines.get(0);
-        if (endLine.getLength()==0){
+        if (endLine.getLength()==0 && !delete){
             for (RichLineContext context : contexts) {
                 if (context.supportResolve(endLine.getPrev())){
                     if (context.getResolver() instanceof UlRichLineResolver){
@@ -89,10 +94,19 @@ public class DefaultMarkdownDecorator implements MarkdownDecorator {
                     if (context.getResolver() instanceof OlRichLineResolver){
                         if (endLine.getPrev() instanceof RichListLine){
                             int prevListIndex = ((RichListLine) endLine.getPrev()).getListIndex();
-                            editable.append(String.valueOf(prevListIndex+2)).append(".");
+                            editable.append(String.valueOf(prevListIndex+2)).append(". ");
                         }
                     }
                     break;
+                }else {
+                    if (context.getResolver() instanceof OlRichLineResolver){
+                        if (OlRichLineResolver.isListLine(endLine.getPrev())){
+                            if (endLine.getPrev() instanceof RichListLine){
+                                int prevListIndex = ((RichListLine) endLine.getPrev()).getListIndex();
+                                editable.append(String.valueOf(prevListIndex+2)).append(". ");
+                            }
+                        }
+                    }
                 }
             }
         }

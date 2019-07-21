@@ -55,13 +55,18 @@ public class MarkdownAutoRenderEditText extends AppCompatEditText {
 
     private class MyOnTextChangeListener implements TextWatcher {
 
+        private boolean delete = false;
+
+        private int lastLength;
+
         @Override
         public void beforeTextChanged(CharSequence s, int start, int count, int after) {
-
+            lastLength = s.length();
         }
 
         @Override
         public void onTextChanged(CharSequence s, int start, int before, int count) {
+            delete = before > 0;
         }
 
         @Override
@@ -69,7 +74,8 @@ public class MarkdownAutoRenderEditText extends AppCompatEditText {
             if (s.toString().endsWith("\n")) {
                 removeTextChangedListener(this);
 
-                markdownDecorator.decorate(s);
+                delete = s.length() < lastLength;
+                markdownDecorator.decorate(s, delete);
 
                 addTextChangedListener(this);
             }

@@ -16,10 +16,11 @@ import java.util.regex.Pattern;
 
 public class OlRichLineResolver extends AbstractRichLineResolver {
 
-    private Pattern pattern = Pattern.compile("(\\d+\\.)");
+    private Pattern pattern = Pattern.compile("(\\d+\\. )");
     @Override
     public boolean supportResolve(RichLine line) {
-        return line instanceof RichListLine;
+        return  (RichListLine.isListLine(line.getContent()) && !OlRichLineResolver.isListLine(line));
+//        return RichListLine.isListLine(line.getContent());
     }
 
     @Override
