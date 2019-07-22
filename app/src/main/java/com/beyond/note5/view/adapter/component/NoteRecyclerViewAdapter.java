@@ -14,6 +14,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
 
+import com.beyond.note5.MyApplication;
 import com.beyond.note5.R;
 import com.beyond.note5.bean.Attachment;
 import com.beyond.note5.bean.Note;
@@ -23,7 +24,6 @@ import com.beyond.note5.event.ShowNoteDetailEvent;
 import com.beyond.note5.event.note.UpdateNotePriorityEvent;
 import com.beyond.note5.utils.BitmapUtil;
 import com.beyond.note5.utils.HtmlUtil;
-import com.beyond.note5.view.markdown.render.MarkdownRenders;
 import com.beyond.note5.utils.PreferenceUtil;
 import com.beyond.note5.utils.WebViewUtil;
 import com.beyond.note5.view.adapter.component.header.Header;
@@ -31,6 +31,8 @@ import com.beyond.note5.view.adapter.component.header.ItemDataGenerator;
 import com.beyond.note5.view.adapter.component.viewholder.NoteViewHolder;
 import com.beyond.note5.view.animator.svg.VectorAnimation;
 import com.beyond.note5.view.animator.svg.VectorAnimationImpl;
+import com.beyond.note5.view.custom.MarkdownRenderAsyncTask;
+import com.beyond.note5.view.markdown.render.MarkdownRenders;
 
 import org.apache.commons.lang3.StringUtils;
 import org.greenrobot.eventbus.EventBus;
@@ -119,7 +121,7 @@ public class NoteRecyclerViewAdapter extends DocumentRecyclerViewAdapter<Note, N
         viewHolder.content.setVisibility(View.VISIBLE);
         String content;
         if (StringUtils.isNotBlank(note.getTitle())) {
-            content= prefixWithH3(StringUtils.trim(note.getTitle()));
+            content = prefixWithH3(StringUtils.trim(note.getTitle()));
         } else {
             content = StringUtils.trim(note.getContent());
             String url = HtmlUtil.getUrl2(content);
@@ -146,24 +148,32 @@ public class NoteRecyclerViewAdapter extends DocumentRecyclerViewAdapter<Note, N
         } else {
             layoutParams.setFullSpan(false);
         }
+
+    }
+
+    private void asyncRenderText(NoteViewHolder viewHolder) {
+        MarkdownRenderAsyncTask asyncTask = new MarkdownRenderAsyncTask(viewHolder.content);
+        asyncTask.setKey((viewHolder.content).getText().toString().hashCode());
+        asyncTask.executeOnExecutor(MyApplication.getInstance().getExecutorService(),
+                viewHolder.content.getText().toString(), (int) viewHolder.content.getTextSize());
     }
 
     private String prefixWithH3(String contentWithoutUrl) {
-        return "### "+contentWithoutUrl;
+        return "### " + contentWithoutUrl;
     }
 
-    private void showImage(NoteViewHolder viewHolder, Note note,String content) {
+    private void showImage(NoteViewHolder viewHolder, Note note, String content) {
         Attachment attachment = note.getAttachments().get(0);
         if (new File(attachment.getPath()).exists()) {
 
-           double factor =  BitmapUtil.getHeightWidthFactor(attachment.getPath());
-            Bitmap placeHolderBitmap = BitmapUtil.getPlaceHolderBitmap(200,(int)(factor*200));
-            BitmapUtil.asyncBitmap(context.getResources(),viewHolder.image,placeHolderBitmap,attachment.getPath());
+            double factor = BitmapUtil.getHeightWidthFactor(attachment.getPath());
+            Bitmap placeHolderBitmap = BitmapUtil.getPlaceHolderBitmap(200, (int) (factor * 200));
+            BitmapUtil.asyncBitmap(context.getResources(), viewHolder.image, placeHolderBitmap, attachment.getPath());
             viewHolder.image.setAdjustViewBounds(true);
             viewHolder.image.setVisibility(View.VISIBLE);
             String newContent = StringUtils.replace(content, "!file://" + attachment.getPath(), "");
-            while (newContent.startsWith("\n")){
-                newContent = newContent.replaceFirst("\n","");
+            while (newContent.startsWith("\n")) {
+                newContent = newContent.replaceFirst("\n", "");
             }
             if (StringUtils.trim(newContent).isEmpty()) {
                 viewHolder.image.setCornerTopLeftRadius(5);
@@ -178,7 +188,7 @@ public class NoteRecyclerViewAdapter extends DocumentRecyclerViewAdapter<Note, N
                 viewHolder.image.setCornerBottomRightRadius(0);
                 viewHolder.nonImageContainer.setVisibility(View.VISIBLE);
 
-                setText(viewHolder.content,newContent);
+                setText(viewHolder.content, newContent);
             }
         }
     }
