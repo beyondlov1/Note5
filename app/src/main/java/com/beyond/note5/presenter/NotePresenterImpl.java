@@ -86,6 +86,7 @@ public class NotePresenterImpl implements NotePresenter {
     @Override
     public void update(final Note note) {
         try {
+            note.setVersion((note.getVersion() == null?0:note.getVersion())+1);
             noteModel.update(note);
             updateSuccess(note);
             updateTitleAsync(note);
@@ -127,6 +128,7 @@ public class NotePresenterImpl implements NotePresenter {
     @Override
     public void deleteLogic(Note note) {
         try {
+            note.setVersion((note.getVersion() == null?0:note.getVersion())+1);
             noteModel.deleteLogic(note);
             this.deleteSuccess(note);
         } catch (Exception e) {
@@ -149,6 +151,7 @@ public class NotePresenterImpl implements NotePresenter {
     @Override
     public void deleteDeepLogic(Note note) {
         try {
+            note.setVersion((note.getVersion() == null?0:note.getVersion())+1);
             noteModel.deleteDeepLogic(note);
             this.deleteSuccess(note);
         } catch (Exception e) {
@@ -160,6 +163,7 @@ public class NotePresenterImpl implements NotePresenter {
     @Override
     public void updatePriority(Note note) {
         try {
+            note.setVersion((note.getVersion() == null?0:note.getVersion())+1);
             noteModel.update(note);
             updatePrioritySuccess(note);
         } catch (Exception e) {
@@ -228,7 +232,7 @@ public class NotePresenterImpl implements NotePresenter {
     }
 
     @Override
-    public void addAll(List<Note> addList) {
+    public void addAllForSync(List<Note> addList) {
         try {
             noteModel.addAll(addList);
             addAllSuccess(addList);
@@ -239,7 +243,7 @@ public class NotePresenterImpl implements NotePresenter {
     }
 
     @Override
-    public void addAll(List<Note> addList, String source) {
+    public void addAllForSync(List<Note> addList, String source) {
         try {
             noteModel.addAll(addList,source);
             addAllSuccess(addList);
@@ -265,7 +269,7 @@ public class NotePresenterImpl implements NotePresenter {
     }
 
     @Override
-    public void updateAll(List<Note> updateList) {
+    public void updateAllForSync(List<Note> updateList) {
         try {
             noteModel.updateAll(updateList);
             updateAllSuccess(updateList);
@@ -276,7 +280,7 @@ public class NotePresenterImpl implements NotePresenter {
     }
 
     @Override
-    public void updateAll(List<Note> updateList, String source) {
+    public void updateAllForSync(List<Note> updateList, String source) {
         try {
             noteModel.updateAll(updateList,source);
             updateAllSuccess(updateList);

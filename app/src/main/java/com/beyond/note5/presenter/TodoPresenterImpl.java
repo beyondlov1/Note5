@@ -61,6 +61,7 @@ public class TodoPresenterImpl implements TodoPresenter {
     @Override
     public void update(Todo todo) {
         try {
+            todo.setVersion((todo.getVersion() == null?0:todo.getVersion())+1);
             fillContentWithoutTime(todo);
             todoModel.update(todo);
             this.updateSuccess(todo);
@@ -88,7 +89,7 @@ public class TodoPresenterImpl implements TodoPresenter {
     }
 
     @Override
-    public void addAll(List<Todo> addList) {
+    public void addAllForSync(List<Todo> addList) {
         try {
             todoModel.addAll(addList);
             addAllSuccess(addList);
@@ -99,7 +100,7 @@ public class TodoPresenterImpl implements TodoPresenter {
     }
 
     @Override
-    public void addAll(List<Todo> addList, String source) {
+    public void addAllForSync(List<Todo> addList, String source) {
         try {
             todoModel.addAll(addList,source);
             addAllSuccess(addList);
@@ -125,7 +126,7 @@ public class TodoPresenterImpl implements TodoPresenter {
     }
 
     @Override
-    public void updateAll(List<Todo> updateList) {
+    public void updateAllForSync(List<Todo> updateList) {
         try {
             todoModel.updateAll(updateList);
             updateAllSuccess(updateList);
@@ -136,7 +137,7 @@ public class TodoPresenterImpl implements TodoPresenter {
     }
 
     @Override
-    public void updateAll(List<Todo> updateList, String source) {
+    public void updateAllForSync(List<Todo> updateList, String source) {
         try {
             todoModel.updateAll(updateList,source);
             updateAllSuccess(updateList);
@@ -164,6 +165,7 @@ public class TodoPresenterImpl implements TodoPresenter {
     @Override
     public void deleteLogic(Todo todo) {
         try {
+            todo.setVersion((todo.getVersion() == null?0:todo.getVersion())+1);
             todoModel.deleteLogic(todo);
             this.deleteSuccess(todo);
         } catch (Exception e) {
@@ -173,13 +175,14 @@ public class TodoPresenterImpl implements TodoPresenter {
     }
 
     @Override
-    public void updatePriority(Todo document) {
+    public void updatePriority(Todo todo) {
         try {
-            todoModel.update(document);
-            this.updatePrioritySuccess(document);
+            todo.setVersion((todo.getVersion() == null?0:todo.getVersion())+1);
+            todoModel.update(todo);
+            this.updatePrioritySuccess(todo);
         } catch (Exception e) {
             e.printStackTrace();
-            this.updatePriorityFail(document);
+            this.updatePriorityFail(todo);
         }
     }
 

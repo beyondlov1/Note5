@@ -132,7 +132,8 @@ public class DefaultDavDataSource<T extends Document> implements DavDataSource<T
     public void save(T t) throws IOException {
         if (client.exists(getDocumentUrl(t))){
             T remoteT = decode(client.get(getDocumentUrl(t)));
-            if (t.getLastModifyTime().after(remoteT.getLastModifyTime())){
+            if (t.getLastModifyTime().after(remoteT.getLastModifyTime())
+                    || t.getVersion() > remoteT.getVersion()){
                 update(t);
             }
         }else {

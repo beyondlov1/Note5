@@ -161,7 +161,8 @@ public abstract class DocumentSqlDataSource<T extends Document> implements DataS
     public void save(T t) throws IOException {
         T localNote = documentPresenter.selectById(t.getId());
         if (localNote != null) {
-            if (t.getLastModifyTime().after(localNote.getLastModifyTime())) {
+            if (t.getLastModifyTime().after(localNote.getLastModifyTime())
+                    || t.getVersion()>localNote.getVersion()) {
                 update(t);
             }
         } else {
@@ -198,8 +199,8 @@ public abstract class DocumentSqlDataSource<T extends Document> implements DataS
                 addList.add(map.get(id));
             }
         }
-        documentPresenter.addAll(addList,source);
-        documentPresenter.updateAll(updateList,source);
+        documentPresenter.addAllForSync(addList,source);
+        documentPresenter.updateAllForSync(updateList,source);
     }
 
     @Override

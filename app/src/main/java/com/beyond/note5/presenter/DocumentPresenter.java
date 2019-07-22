@@ -27,11 +27,11 @@ public interface DocumentPresenter<T>  extends CRUDPresenter<T>{
 
     List<T> selectByIds(Collection<String> ids);
 
-    void addAll(List<T> addList);
+    void addAllForSync(List<T> addList);
 
-    void addAll(List<T> addList, String source);
+    void addAllForSync(List<T> addList, String source);
 
-    void updateAll(List<T> updateList);
+    void updateAllForSync(List<T> updateList);
 
-    void updateAll(List<T> updateList, String source);
+    void updateAllForSync(List<T> updateList, String source);
 }
