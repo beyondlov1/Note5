@@ -192,7 +192,8 @@ public abstract class DocumentSqlDataSource<T extends Document> implements DataS
         List<T> updateList = new ArrayList<>();
         for (String id : map.keySet()) {
             if (localMap.containsKey(id)) {
-                if (map.get(id).getLastModifyTime().after(localMap.get(id).getLastModifyTime())) {
+                if (map.get(id).getLastModifyTime().after(localMap.get(id).getLastModifyTime())
+                        || map.get(id).getVersion()>localMap.get(id).getVersion()) {
                     updateList.add(map.get(id));
                 }
             }else {

@@ -98,9 +98,9 @@ public class DefaultDavDataSource<T extends Document> implements DavDataSource<T
     public List<T> selectAllValid() throws IOException {
         List<T> result = new ArrayList<>();
         List<T> all = selectAll();
-        if (all!=null){
+        if (all != null) {
             for (T t : all) {
-                if (t.getValid()){
+                if (t.getValid()) {
                     result.add(t);
                 }
             }
@@ -130,13 +130,13 @@ public class DefaultDavDataSource<T extends Document> implements DavDataSource<T
 
     @Override
     public void save(T t) throws IOException {
-        if (client.exists(getDocumentUrl(t))){
+        if (client.exists(getDocumentUrl(t))) {
             T remoteT = decode(client.get(getDocumentUrl(t)));
             if (t.getLastModifyTime().after(remoteT.getLastModifyTime())
-                    || t.getVersion() > remoteT.getVersion()){
+                    || t.getVersion() > remoteT.getVersion()) {
                 update(t);
             }
-        }else {
+        } else {
             add(t);
         }
     }
@@ -147,9 +147,9 @@ public class DefaultDavDataSource<T extends Document> implements DavDataSource<T
         for (T t : ts) {
             try {
                 save(t);
-            }catch (Exception e){
-                Log.e(getClass().getSimpleName(),"save失败",e);
-                throw new SyncException(e,index);
+            } catch (Exception e) {
+                Log.e(getClass().getSimpleName(), "save失败", e);
+                throw new SyncException(e, index);
             }
             index++;
         }
@@ -162,11 +162,16 @@ public class DefaultDavDataSource<T extends Document> implements DavDataSource<T
 
     @Override
     public boolean isChanged(DataSource<T> targetDataSource) throws IOException {
-        SharedSource<TraceInfo> davSharedTraceInfo = getCorrespondTraceInfoSource(targetDataSource);
-        Date correspondLastModifyTime = davSharedTraceInfo.get().getLastModifyTime();
-        Date latestLastModifyTime = getLatestTraceInfo().getLastModifyTime();
-        return !DateUtils.isSameInstant(correspondLastModifyTime, latestLastModifyTime)
-                && correspondLastModifyTime.before(latestLastModifyTime);
+        TraceInfo correspondTraceInfo = getCorrespondTraceInfoSource(targetDataSource).get();
+        TraceInfo latestTraceInfo = getLatestTraceInfo();
+
+        Date correspondLastModifyTime = correspondTraceInfo.getLastModifyTime();
+        Date latestLastModifyTime = latestTraceInfo.getLastModifyTime();
+        Date correspondLastSyncTimeEnd = correspondTraceInfo.getLastSyncTimeEnd();
+        Date latestLastSyncTimeEnd = latestTraceInfo.getLastSyncTimeEnd();
+
+        return !(DateUtils.isSameInstant(correspondLastModifyTime, latestLastModifyTime)
+                && DateUtils.isSameInstant(correspondLastSyncTimeEnd, latestLastSyncTimeEnd));
     }
 
     @Override
@@ -182,7 +187,7 @@ public class DefaultDavDataSource<T extends Document> implements DavDataSource<T
     @NonNull
     private SharedSource<TraceInfo> getCorrespondTraceInfoSource(DataSource<T> targetDataSource) {
         return new DavSharedTraceInfo(client,
-                    OkWebDavUtil.concat(server, MyApplication.LOCK_DIR, clazz.getSimpleName().toLowerCase()+"_trace_info_" + targetDataSource.getKey().hashCode()));
+                OkWebDavUtil.concat(server, MyApplication.LOCK_DIR, clazz.getSimpleName().toLowerCase() + "_trace_info_" + targetDataSource.getKey().hashCode()));
     }
 
     private String getDocumentUrl(T t) {
@@ -393,7 +398,7 @@ public class DefaultDavDataSource<T extends Document> implements DavDataSource<T
             return this;
         }
 
-        public Builder<T> davPathStrategy(DavPathStrategy davPathStrategy){
+        public Builder<T> davPathStrategy(DavPathStrategy davPathStrategy) {
             this.davPathStrategy = davPathStrategy;
             return this;
         }
@@ -411,8 +416,8 @@ public class DefaultDavDataSource<T extends Document> implements DavDataSource<T
             davDataSource.executorService = executorService;
             davDataSource.clazz = clazz;
             davDataSource.trace = trace;
-            if (davPathStrategy == null){
-                davDataSource.davPathStrategy = new DefaultDavPathStrategy(server,paths);
+            if (davPathStrategy == null) {
+                davDataSource.davPathStrategy = new DefaultDavPathStrategy(server, paths);
             }
             return davDataSource;
         }
