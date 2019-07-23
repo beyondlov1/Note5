@@ -44,7 +44,7 @@ public class DefaultMarkdownDecorator implements MarkdownDecorator {
         splitter = new DefaultRichLineSplitter();
     }
 
-    public static DefaultMarkdownDecorator createDefault() {
+    private static DefaultMarkdownDecorator createDefault() {
         DefaultMarkdownDecorator defaultMarkdownDecorator = new DefaultMarkdownDecorator();
         defaultMarkdownDecorator.register(UL, UlMarkdownBulletSpan2.class, new UlRichLineResolver(), new UlRichLinePlainer());
         defaultMarkdownDecorator.register(H3, H3TextAppearanceSpan.class, new H3RichLineResolver(), new H3RichLinePlainer());

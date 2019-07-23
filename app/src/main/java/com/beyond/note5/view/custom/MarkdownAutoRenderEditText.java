@@ -11,13 +11,13 @@ import android.util.AttributeSet;
 import com.beyond.note5.R;
 import com.beyond.note5.view.markdown.decorate.DefaultMarkdownDecorator;
 import com.beyond.note5.view.markdown.decorate.MarkdownDecorator;
+import com.beyond.note5.view.markdown.decorate.resolver.init.H1LineResolver;
 import com.beyond.note5.view.markdown.decorate.resolver.init.H2LineResolver;
 import com.beyond.note5.view.markdown.decorate.resolver.init.H3LineResolver;
 import com.beyond.note5.view.markdown.decorate.resolver.init.OlLineResolver;
 import com.beyond.note5.view.markdown.decorate.resolver.init.UlLineResolver;
 import com.beyond.note5.view.markdown.render.DefaultMarkdownRender;
 import com.beyond.note5.view.markdown.render.MarkdownRender;
-import com.beyond.note5.view.markdown.render.resolver.H1LineResolver;
 
 /**
  * @author: beyond

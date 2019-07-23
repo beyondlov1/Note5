@@ -115,5 +115,6 @@
                 <action android:name="com.beyond.note5.intent.action.SYNC_SCHEDULE" />
             </intent-filter>
         </receiver>
+        <receiver android:name=".service.schedule.ScheduleReceiver"/>
     </application>
 </manifest>

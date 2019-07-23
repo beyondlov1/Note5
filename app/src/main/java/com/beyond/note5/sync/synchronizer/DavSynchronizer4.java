@@ -23,6 +23,7 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Random;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 
@@ -429,6 +430,9 @@ public class DavSynchronizer4<T extends Tracable> implements Synchronizer<T> {
         }
         if (threadLocal.get() > 10) {
             syncStart = null;
+            long delay = (new Random().nextInt(70) + 10)*60*1000;
+            SyncRetryService.retry(MyApplication.getInstance(), delay);
+            Log.i(getClass().getSimpleName(),"同步失败超过3次, "+delay/60/1000+"分钟后重试");
             throw new RuntimeException("同步失败超过3次");
         }
 

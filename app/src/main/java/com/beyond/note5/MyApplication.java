@@ -1,7 +1,6 @@
 package com.beyond.note5;
 
 import android.app.Application;
-import android.content.Intent;
 import android.database.sqlite.SQLiteDatabase;
 import android.os.Environment;
 import android.os.Handler;
@@ -20,8 +19,9 @@ import com.beyond.note5.predict.TagPredictorImpl;
 import com.beyond.note5.predict.bean.TagGraph;
 import com.beyond.note5.predict.train.filter.TimeExpressionTrainTagFilter;
 import com.beyond.note5.predict.train.filter.UrlTrainTagFilter;
-import com.beyond.note5.service.NotificationScanningService;
-import com.beyond.note5.service.SyncScheduleReceiver;
+import com.beyond.note5.service.schedule.ScheduleReceiver;
+import com.beyond.note5.service.schedule.callback.NoteNotifyScheduleCallback;
+import com.beyond.note5.service.schedule.callback.SyncScheduleCallback;
 import com.beyond.note5.sync.Synchronizer;
 import com.beyond.note5.sync.datasource.DavDataSource;
 import com.beyond.note5.sync.datasource.impl.DefaultDavDataSource;
@@ -54,8 +54,6 @@ import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
-import static com.beyond.note5.service.SyncScheduleReceiver.DEFAULT_SCHEDULE_PERIOD;
-
 /**
  * @author: beyond
  * @date: 2019/1/30
@@ -87,6 +85,7 @@ public class MyApplication extends Application {
 
     public static final String SYNC_SCHEDULED = "sync.scheduled";
     public static final String SYNC_SHOULD_SCHEDULE = "sync.should.schedule";
+    private static final String NOTE_NOTIFICATION_SHOULD_SCHEDULE = "note.notification.should.schedule";
 
     private static MyApplication instance;
 
@@ -134,11 +133,11 @@ public class MyApplication extends Application {
             Calendar calendar = Calendar.getInstance();
             calendar.set(1992, Calendar.SEPTEMBER, 25, 0, 0, 0);
             calendar.add(Calendar.MINUTE,syncTimeOffset);
-            SyncScheduleReceiver.cancel(this);
-            SyncScheduleReceiver.schedule(this, calendar.getTimeInMillis(), DEFAULT_SCHEDULE_PERIOD);
+            ScheduleReceiver.cancel(this,ScheduleReceiver.SYNC_REQUEST_CODE);
+            ScheduleReceiver.schedule(this,ScheduleReceiver.SYNC_REQUEST_CODE,calendar.getTimeInMillis(),24*60*60*1000, SyncScheduleCallback.class);
             PreferenceUtil.put(SYNC_SCHEDULED, true);
         } else {
-            SyncScheduleReceiver.cancel(this);
+            ScheduleReceiver.cancel(this,ScheduleReceiver.SYNC_REQUEST_CODE);
             PreferenceUtil.put(SYNC_SCHEDULED, false);
         }
         boolean scheduled = PreferenceUtil.getBoolean(SYNC_SCHEDULED, false);
@@ -146,8 +145,14 @@ public class MyApplication extends Application {
     }
 
     private void startNotificationScanner() {
-        Intent intent = new Intent(getApplicationContext(), NotificationScanningService.class);
-        startService(intent);
+        PreferenceUtil.put(NOTE_NOTIFICATION_SHOULD_SCHEDULE, true);
+        boolean shouldSchedule = PreferenceUtil.getBoolean(NOTE_NOTIFICATION_SHOULD_SCHEDULE, false);
+        if (shouldSchedule){
+            ScheduleReceiver.cancel(this,ScheduleReceiver.NOTIFICATION_SCAN_REQUEST_CODE);
+            ScheduleReceiver.schedule(this,ScheduleReceiver.NOTIFICATION_SCAN_REQUEST_CODE,60*1000, NoteNotifyScheduleCallback.class);
+        }else {
+            ScheduleReceiver.cancel(this,ScheduleReceiver.NOTIFICATION_SCAN_REQUEST_CODE);
+        }
     }
 
     public void initPreference() {
