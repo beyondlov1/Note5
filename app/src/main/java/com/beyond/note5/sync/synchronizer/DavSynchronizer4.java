@@ -10,12 +10,10 @@ import com.beyond.note5.sync.datasource.DataSource;
 import com.beyond.note5.sync.datasource.DavDataSource;
 import com.beyond.note5.sync.exception.SyncException;
 import com.beyond.note5.sync.model.SyncStateModel;
-import com.beyond.note5.sync.model.bean.SyncLogInfo;
 import com.beyond.note5.sync.model.bean.SyncStateInfo;
 import com.beyond.note5.sync.model.bean.TraceInfo;
 import com.beyond.note5.sync.model.impl.SyncStateModelImpl;
 
-import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.time.DateUtils;
 
 import java.io.IOException;
@@ -77,6 +75,7 @@ public class DavSynchronizer4<T extends Tracable> implements Synchronizer<T> {
 
     private void retryIfNecessary(long delay) {
         SyncRetryService.retryIfNecessary(MyApplication.getInstance(), delay);
+        SyncRetryService.failed();
     }
 
     private boolean doSync() throws Exception {
@@ -213,14 +212,6 @@ public class DavSynchronizer4<T extends Tracable> implements Synchronizer<T> {
         return syncByOneSide(changingDataSource, modified);
     }
 
-    private void clearSyncState() {
-        SyncStateInfo syncStateInfo = new SyncStateInfo();
-        syncStateInfo.setLocal(dataSource1.getKey());
-        syncStateInfo.setServer(dataSource2.getKey());
-        syncStateInfo.setType(dataSource1.clazz().getSimpleName().toLowerCase());
-        syncStateModel.deleteAll(syncStateInfo);
-    }
-
     private void recordSyncState(List<T> successList) {
         ArrayList<SyncStateInfo> successSyncStates = new ArrayList<>();
         for (T t : successList) {
@@ -232,6 +223,14 @@ public class DavSynchronizer4<T extends Tracable> implements Synchronizer<T> {
             successSyncStates.add(syncStateInfo);
         }
         syncStateModel.saveAll(successSyncStates);
+    }
+
+    private void clearSyncState() {
+        SyncStateInfo syncStateInfo = new SyncStateInfo();
+        syncStateInfo.setLocal(dataSource1.getKey());
+        syncStateInfo.setServer(dataSource2.getKey());
+        syncStateInfo.setType(dataSource1.clazz().getSimpleName().toLowerCase());
+        syncStateModel.deleteAll(syncStateInfo);
     }
 
     private void excludeSuccess(List<T> modified) {
@@ -254,83 +253,22 @@ public class DavSynchronizer4<T extends Tracable> implements Synchronizer<T> {
         }
     }
 
-    private boolean syncBaseOnLocal(List<T> localAddedData, List<T> localUpdatedData) throws IOException {
-
-        if (localAddedData.isEmpty() && localUpdatedData.isEmpty()) {
-            return false;
-        }
-        if (dataSource2.tryLock(remoteLockTimeOutMills)) {
-
-            if (!localAddedData.isEmpty()) {
-                for (T datum : localAddedData) {
-                    dataSource2.add(datum);
-                }
+    private Date getLatestLastModifyTime(List<T> localData) {
+        Date latestTime = null;
+        for (T localDatum : localData) {
+            if (latestTime == null) {
+                latestTime = localDatum.getLastModifyTime();
+                continue;
             }
-            if (!localUpdatedData.isEmpty()) {
-                for (T datum : localUpdatedData) {
-                    dataSource2.update(datum);
-                }
-            }
-
-            saveLastSyncTime(getLatestLastModifyTime(localAddedData, localUpdatedData));
-            resetFailCount();
-            dataSource2.release();
-            return true;
-        }
-
-        checkFailCount();
-
-        try {
-            Thread.sleep(1000);
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        }
-
-        return syncBaseOnLocal(localAddedData, localUpdatedData);
-    }
-
-    private void subtract(List<SyncLogInfo> localUpdated, List<SyncLogInfo> localAdded) {
-        Iterator<SyncLogInfo> localIterator = localUpdated.listIterator();
-        while (localIterator.hasNext()) {
-            SyncLogInfo next = localIterator.next();
-            for (SyncLogInfo syncLogInfo : localAdded) {
-                if (StringUtils.equals(syncLogInfo.getDocumentId(), next.getDocumentId())) {
-                    localIterator.remove();
-                }
+            if (localDatum.getLastModifyTime().compareTo(latestTime) > 0) {
+                latestTime = localDatum.getLastModifyTime();
             }
         }
-    }
 
-    private List<T> getRemoteAddedData(List<String> remoteModifiedIds, List<String> localAllIds) throws IOException {
-        List<T> result = new ArrayList<>();
-        List<String> remoteAddedIds = new ArrayList<>();
-        for (String remoteModifiedId : remoteModifiedIds) {
-            if (!localAllIds.contains(remoteModifiedId)) {
-                remoteAddedIds.add(remoteModifiedId);
-            }
+        if (latestTime == null) {
+            latestTime = new Date(0);
         }
-        for (String remoteAddedId : remoteAddedIds) {
-            result.add(dataSource2.selectById(remoteAddedId));
-        }
-        return result;
-    }
-
-    private List<T> getRemoteUpdatedData(List<String> remoteModifiedIds, List<String> localAllIds) throws IOException {
-        List<T> result = new ArrayList<>();
-        List<String> remoteAddedIds = new ArrayList<>();
-        for (String remoteModifiedId : remoteModifiedIds) {
-            if (localAllIds.contains(remoteModifiedId)) {
-                remoteAddedIds.add(remoteModifiedId);
-            }
-        }
-        for (String remoteAddedId : remoteAddedIds) {
-            T t = dataSource2.selectById(remoteAddedId);
-            if ((t.getLastModifyTime() == null ? new Date(0) : t.getLastModifyTime())
-                    .after(dataSource1.selectById(remoteAddedId).getLastModifyTime())) {
-                result.add(t);
-            }
-        }
-        return result;
+        return latestTime;
     }
 
     private Date getLatestLastModifyTime(List<T> localData, List<T> remoteData) {
@@ -361,62 +299,6 @@ public class DavSynchronizer4<T extends Tracable> implements Synchronizer<T> {
         return latestTime;
     }
 
-    private List<T> getLocalData(List<SyncLogInfo> logs) throws IOException {
-        List<String> ids = new ArrayList<>(logs.size());
-        for (SyncLogInfo log : logs) {
-            ids.add(log.getDocumentId());
-        }
-        return dataSource1.selectByIds(ids);
-    }
-
-    private Date getLatestLastModifyTime(List<T> localData) {
-        Date latestTime = null;
-        for (T localDatum : localData) {
-            if (latestTime == null) {
-                latestTime = localDatum.getLastModifyTime();
-                continue;
-            }
-            if (localDatum.getLastModifyTime().compareTo(latestTime) > 0) {
-                latestTime = localDatum.getLastModifyTime();
-            }
-        }
-
-        if (latestTime == null) {
-            latestTime = new Date(0);
-        }
-        return latestTime;
-    }
-
-    @Deprecated
-    private List<T> getLocalAddedData(List<T> localData, Date lastSyncTime) {
-
-        List<T> result = new ArrayList<>();
-
-        for (T localDatum : localData) {
-            if (localDatum.getLastModifyTime().after(lastSyncTime)
-                    && DateUtils.isSameInstant(localDatum.getCreateTime(), localDatum.getLastModifyTime())) {
-                result.add(localDatum);
-            }
-        }
-
-        return result;
-    }
-
-    @Deprecated
-    private List<T> getLocalUpdatedData(List<T> localData, Date lastSyncTime) {
-
-        List<T> result = new ArrayList<>();
-
-        for (T localDatum : localData) {
-            if (localDatum.getLastModifyTime().after(lastSyncTime)
-                    && !DateUtils.isSameInstant(localDatum.getCreateTime(), localDatum.getLastModifyTime())) {
-                result.add(localDatum);
-            }
-        }
-
-        return result;
-    }
-
     private void saveLastSyncTime(Date date) throws IOException {
         TraceInfo traceInfo = TraceInfo.create(date, syncStart, new Date());
         dataSource1.setCorrespondTraceInfo(traceInfo, dataSource2);
@@ -444,6 +326,7 @@ public class DavSynchronizer4<T extends Tracable> implements Synchronizer<T> {
 
     private void resetFailCount() {
         threadLocal.set(0);
+        SyncRetryService.resetRetryFailCount();
     }
 
     public static class Builder<T extends Tracable> {

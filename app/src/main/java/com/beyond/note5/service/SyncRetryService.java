@@ -12,6 +12,8 @@ import android.util.Log;
 
 import org.apache.commons.lang3.time.DateFormatUtils;
 
+import java.util.concurrent.atomic.AtomicLong;
+
 /**
  * @author: beyond
  * @date: 2019/7/17
@@ -23,7 +25,11 @@ public class SyncRetryService extends Service {
 
     public static final int DEFAULT_RETRY_DELAY = 1000 * 60 * 40;
 
-    private static Long nextRetryTimeMillis = null;
+    private static final int MAX_FAIL_COUNT = 7;
+
+    private static int failCount = 0;  // TODO: 1. 线程安全问题 2. 不同的数据源同步失败次数不同的问题
+
+    private static AtomicLong nextRetryTimeMillis = null;
 
     public static void retry(Context context) {
         retry(context, DEFAULT_RETRY_DELAY);
@@ -43,10 +49,18 @@ public class SyncRetryService extends Service {
 
     public static void retryIfNecessary(Context context, long delay) {
         long currentTimeMillis = System.currentTimeMillis();
-        if (nextRetryTimeMillis == null||nextRetryTimeMillis < currentTimeMillis){
+        if (nextRetryTimeMillis == null || nextRetryTimeMillis.get() < currentTimeMillis) {
             SyncRetryService.retry(context, delay);
-            nextRetryTimeMillis = currentTimeMillis +delay;
+            nextRetryTimeMillis.set(currentTimeMillis + delay);
         }
+    }
+
+    public static void failed() {
+        failCount++;
+    }
+
+    public static void resetRetryFailCount() {
+        failCount = 0;
     }
 
     @Nullable
