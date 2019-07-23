@@ -48,7 +48,9 @@ import java.util.List;
 public class NoteRecyclerViewAdapter extends DocumentRecyclerViewAdapter<Note, NoteViewHolder> {
 
     private static final String SHOULD_SHOW_LINK = "shouldShowLink";
+    private static final String SHOULD_FULL_SPAN = "shouldFullSpan";
     private boolean shouldLinkShow = false;
+    private boolean shouldFullSpan = false;
     private VectorAnimation longClickAnimation;
 
 
@@ -56,6 +58,7 @@ public class NoteRecyclerViewAdapter extends DocumentRecyclerViewAdapter<Note, N
         super(context, itemDataGenerator);
         refreshShouldShowLink();
         longClickAnimation = new VectorAnimationImpl(context);
+        refreshShouldFullSpan();
     }
 
     @Override
@@ -67,6 +70,7 @@ public class NoteRecyclerViewAdapter extends DocumentRecyclerViewAdapter<Note, N
     @Override
     protected void initVisibility(NoteViewHolder viewHolder) {
         viewHolder.title.setVisibility(View.GONE);
+        viewHolder.fullSpanSwitch.setVisibility(View.GONE);
         viewHolder.content.setVisibility(View.GONE);
         viewHolder.link.setVisibility(View.GONE);
         viewHolder.image.setVisibility(View.GONE);
@@ -78,11 +82,17 @@ public class NoteRecyclerViewAdapter extends DocumentRecyclerViewAdapter<Note, N
         viewHolder.title.setVisibility(View.VISIBLE);
         viewHolder.title.setText(header.getContent());
         viewHolder.title.setTextColor(ContextCompat.getColor(context, R.color.dark_yellow));
+        viewHolder.fullSpanSwitch.setVisibility(View.VISIBLE);
         viewHolder.content.setText(header.getContent());
         viewHolder.container.setOnClickListener(null);
         viewHolder.dataContainer.setBackground(null);
         StaggeredGridLayoutManager.LayoutParams layoutParams = (StaggeredGridLayoutManager.LayoutParams) viewHolder.itemView.getLayoutParams();
         layoutParams.setFullSpan(true);
+        if (shouldFullSpan) {
+            viewHolder.fullSpanSwitch.setChecked(true);
+        } else {
+            viewHolder.fullSpanSwitch.setChecked(false);
+        }
     }
 
     @Override
@@ -100,10 +110,26 @@ public class NoteRecyclerViewAdapter extends DocumentRecyclerViewAdapter<Note, N
                 notifyFullRangeChanged();
             }
         });
+        viewHolder.fullSpanSwitch.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                if (shouldFullSpan) {
+                    PreferenceUtil.put(SHOULD_FULL_SPAN, false);
+                } else {
+                    PreferenceUtil.put(SHOULD_FULL_SPAN, true);
+                }
+                refreshShouldFullSpan();
+                notifyFullRangeChanged();
+            }
+        });
     }
 
     private void refreshShouldShowLink() {
         shouldLinkShow = PreferenceUtil.getBoolean(SHOULD_SHOW_LINK);
+    }
+
+    private void refreshShouldFullSpan() {
+        shouldFullSpan = PreferenceUtil.getBoolean(SHOULD_FULL_SPAN);
     }
 
     @SuppressWarnings("Duplicates")
@@ -146,7 +172,12 @@ public class NoteRecyclerViewAdapter extends DocumentRecyclerViewAdapter<Note, N
         if (itemDataGenerator.getSingleContentPositions().contains(position)) {
             layoutParams.setFullSpan(true);
         } else {
-            layoutParams.setFullSpan(false);
+            if (shouldFullSpan) {
+                layoutParams.setFullSpan(true);
+                viewHolder.content.setLineSpacing(0, 1.5f);
+            } else {
+                layoutParams.setFullSpan(false);
+            }
         }
 
     }
@@ -195,7 +226,7 @@ public class NoteRecyclerViewAdapter extends DocumentRecyclerViewAdapter<Note, N
 
     private void setText(TextView textView, String content) {
         textView.setTextSize(12);
-        MarkdownRenders.render(textView,content);
+        MarkdownRenders.render(textView, content);
     }
 
     @Override

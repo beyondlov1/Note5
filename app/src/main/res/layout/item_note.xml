@@ -41,10 +41,22 @@
                 android:paddingBottom="5dp"
                 tools:ignore="UselessParent">
 
-                <TextView
-                    android:id="@+id/item_note_title"
+                <FrameLayout
                     android:layout_width="match_parent"
-                    android:layout_height="wrap_content" />
+                    android:layout_height="wrap_content">
+                    <TextView
+                        android:id="@+id/item_note_title"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_gravity="center_vertical"/>
+
+                    <Switch
+                        android:id="@+id/item_note_full_span_switch"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_gravity="center_vertical|end"
+                        android:visibility="gone"/>
+                </FrameLayout>
 
                 <com.beyond.note5.view.custom.AutoSizeTextView
                     android:id="@+id/item_note_content"
