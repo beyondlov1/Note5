@@ -27,6 +27,8 @@ import java.util.Random;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 
+import static com.beyond.note5.service.SyncRetryService.DEFAULT_RETRY_DELAY;
+
 /**
  * 基于DavSynchronizer2进行改进， 性能可能下降， 但是更加普适化
  *
@@ -60,7 +62,9 @@ public class DavSynchronizer4<T extends Tracable> implements Synchronizer<T> {
                 doSync();
                 Log.d(getClass().getSimpleName(), "同步成功");
             } catch (Exception e) {
-                Log.d(getClass().getSimpleName(), "同步失败", e);
+                long delay = (new Random().nextInt(20) + 35) * 60 * 1000;
+                retryIfNecessary(delay);
+                Log.e(getClass().getSimpleName(), "同步失败", e);
                 throw e;
             } finally {
                 lock.unlock();
@@ -69,6 +73,10 @@ public class DavSynchronizer4<T extends Tracable> implements Synchronizer<T> {
             Log.d(getClass().getSimpleName(), "同步正在进行, 本次同步取消");
         }
         return true;
+    }
+
+    private void retryIfNecessary(long delay) {
+        SyncRetryService.retryIfNecessary(MyApplication.getInstance(), delay);
     }
 
     private boolean doSync() throws Exception {
@@ -168,12 +176,7 @@ public class DavSynchronizer4<T extends Tracable> implements Synchronizer<T> {
         Log.d(getClass().getSimpleName(), "同步失败", e);
         List<T> successList = savingList.subList(0, e.getFailIndex());
         recordSyncState(successList);
-        MyApplication.getInstance().handler.post(new Runnable() {
-            @Override
-            public void run() {
-                SyncRetryService.retry(MyApplication.getInstance());
-            }
-        });
+        retryIfNecessary(DEFAULT_RETRY_DELAY);
     }
 
     private boolean syncByOneSide(DataSource<T> changingDataSource, List<T> modified) throws Exception {
@@ -430,9 +433,9 @@ public class DavSynchronizer4<T extends Tracable> implements Synchronizer<T> {
         }
         if (threadLocal.get() > 10) {
             syncStart = null;
-            long delay = (new Random().nextInt(70) + 10)*60*1000;
-            SyncRetryService.retry(MyApplication.getInstance(), delay);
-            Log.i(getClass().getSimpleName(),"同步失败超过3次, "+delay/60/1000+"分钟后重试");
+            long delay = (new Random().nextInt(70) + 10) * 60 * 1000;
+            retryIfNecessary(delay);
+            Log.i(getClass().getSimpleName(), "同步失败超过3次, " + delay / 60 / 1000 + "分钟后重试");
             throw new RuntimeException("同步失败超过3次");
         }
 

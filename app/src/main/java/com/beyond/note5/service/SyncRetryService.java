@@ -21,7 +21,9 @@ public class SyncRetryService extends Service {
 
     public static final String SYNC_RETRY_ACTION = "com.beyond.note5.intent.action.SYNC_RETRY";
 
-    private static final int DEFAULT_RETRY_DELAY = 1000 * 60 * 40;
+    public static final int DEFAULT_RETRY_DELAY = 1000 * 60 * 40;
+
+    private static Long nextRetryTimeMillis = null;
 
     public static void retry(Context context) {
         retry(context, DEFAULT_RETRY_DELAY);
@@ -36,6 +38,14 @@ public class SyncRetryService extends Service {
             PendingIntent pendingIntent = PendingIntent.getBroadcast(context, 0, it, 0);
             alarmManager.set(AlarmManager.ELAPSED_REALTIME, triggerTime, pendingIntent);
             Log.d(SyncRetryService.class.getSimpleName(), "重试任务已设定, 当前时间:" + DateFormatUtils.format(System.currentTimeMillis(), "yyyy-MM-dd HH:mm:ss"));
+        }
+    }
+
+    public static void retryIfNecessary(Context context, long delay) {
+        long currentTimeMillis = System.currentTimeMillis();
+        if (nextRetryTimeMillis == null||nextRetryTimeMillis < currentTimeMillis){
+            SyncRetryService.retry(context, delay);
+            nextRetryTimeMillis = currentTimeMillis +delay;
         }
     }
 
@@ -59,4 +69,6 @@ public class SyncRetryService extends Service {
         }
         return super.onStartCommand(intent, flags, startId);
     }
+
+
 }
