@@ -145,6 +145,7 @@ public class MainActivity extends FragmentActivity implements
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+        EventBus.getDefault().register(this);
         ButterKnife.bind(this);
 
         initInjection();
@@ -430,7 +431,6 @@ public class MainActivity extends FragmentActivity implements
     @Override
     protected void onStart() {
         super.onStart();
-        EventBus.getDefault().register(this);
         showFloatEditor();
     }
 
@@ -452,7 +452,6 @@ public class MainActivity extends FragmentActivity implements
 
     @Override
     protected void onStop() {
-        EventBus.getDefault().unregister(this);
         EventBus.getDefault().post(new ShowFloatButtonEvent(null));
         super.onStop();
     }
@@ -462,6 +461,7 @@ public class MainActivity extends FragmentActivity implements
         int currentItem = mainViewPager.getCurrentItem();
         PreferenceUtil.put(MyApplication.DEFAULT_PAGE, currentItem);
         Log.d("MainActivity", currentItem + "");
+        EventBus.getDefault().unregister(this);
         super.onDestroy();
     }
 

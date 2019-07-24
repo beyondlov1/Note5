@@ -18,4 +18,14 @@ public class ListUtil {
         }
         return list.get(index);
     }
+
+    public static <S extends Element> int getIndexById(List<S> list, String id) {
+        int index = -1;
+        for (int i = 0; i < list.size(); i++) {
+            if (list.get(i).getId().equals(id)) {
+                index = i;
+            }
+        }
+        return index;
+    }
 }

@@ -45,12 +45,18 @@ public class ViewUtil {
     }
 
     public static int getXInScreenWithoutNotification(View view) {
+        if (view == null){
+            return 0;
+        }
         int[] xy = new int[2];
         view.getLocationInWindow(xy);
         return xy[0] == 0 ? getX(view) : xy[0];
     }
 
     public static int getYInScreenWithoutNotification(View view) {
+        if (view == null){
+            return 0;
+        }
         int[] xy = new int[2];
         view.getLocationInWindow(xy);
         return (xy[1] == 0 ? getY(view) : xy[1]) - 75;

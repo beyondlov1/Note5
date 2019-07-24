@@ -2,6 +2,7 @@ package com.beyond.note5.presenter;
 
 import android.os.Handler;
 import android.support.annotation.Nullable;
+import android.util.Log;
 
 import com.beyond.note5.MyApplication;
 import com.beyond.note5.bean.Note;
@@ -12,16 +13,23 @@ import com.beyond.note5.event.note.DeleteNoteSuccessEvent;
 import com.beyond.note5.event.note.UpdateNoteSuccessEvent;
 import com.beyond.note5.model.NoteModel;
 import com.beyond.note5.model.NoteModelImpl;
+import com.beyond.note5.service.schedule.ScheduleReceiver;
+import com.beyond.note5.service.schedule.callback.NoteExactNotifyScheduleCallback;
 import com.beyond.note5.utils.HtmlUtil;
+import com.beyond.note5.utils.PreferenceUtil;
+import com.beyond.note5.utils.ToastUtil;
 import com.beyond.note5.view.NoteView;
 
 import org.apache.commons.lang3.StringUtils;
 import org.greenrobot.eventbus.EventBus;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.TimeUnit;
 
@@ -29,6 +37,10 @@ import okhttp3.Call;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
 import okhttp3.Response;
+
+import static com.beyond.note5.MyApplication.NOTE_NOTIFICATION_SHOULD_SCHEDULE;
+import static com.beyond.note5.service.schedule.ScheduleReceiver.NOTIFICATION_EXACT_REQUEST_CODE;
+import static com.beyond.note5.service.schedule.callback.NoteNotifyScheduleCallback.NOTIFICATION_POINTS;
 
 /**
  * @author: beyond
@@ -86,7 +98,7 @@ public class NotePresenterImpl implements NotePresenter {
     @Override
     public void update(final Note note) {
         try {
-            note.setVersion((note.getVersion() == null?0:note.getVersion())+1);
+            note.setVersion((note.getVersion() == null ? 0 : note.getVersion()) + 1);
             noteModel.update(note);
             updateSuccess(note);
             updateTitleAsync(note);
@@ -119,6 +131,7 @@ public class NotePresenterImpl implements NotePresenter {
         try {
             noteModel.delete(note);
             this.deleteSuccess(note);
+            cancelSchedule(note);
         } catch (Exception e) {
             e.printStackTrace();
             this.deleteFail(note);
@@ -128,9 +141,10 @@ public class NotePresenterImpl implements NotePresenter {
     @Override
     public void deleteLogic(Note note) {
         try {
-            note.setVersion((note.getVersion() == null?0:note.getVersion())+1);
+            note.setVersion((note.getVersion() == null ? 0 : note.getVersion()) + 1);
             noteModel.deleteLogic(note);
             this.deleteSuccess(note);
+            cancelSchedule(note);
         } catch (Exception e) {
             e.printStackTrace();
             this.deleteFail(note);
@@ -151,9 +165,10 @@ public class NotePresenterImpl implements NotePresenter {
     @Override
     public void deleteDeepLogic(Note note) {
         try {
-            note.setVersion((note.getVersion() == null?0:note.getVersion())+1);
+            note.setVersion((note.getVersion() == null ? 0 : note.getVersion()) + 1);
             noteModel.deleteDeepLogic(note);
             this.deleteSuccess(note);
+            cancelSchedule(note);
         } catch (Exception e) {
             e.printStackTrace();
             this.deleteFail(note);
@@ -163,13 +178,89 @@ public class NotePresenterImpl implements NotePresenter {
     @Override
     public void updatePriority(Note note) {
         try {
-            note.setVersion((note.getVersion() == null?0:note.getVersion())+1);
+            note.setVersion((note.getVersion() == null ? 0 : note.getVersion()) + 1);
             noteModel.update(note);
             updatePrioritySuccess(note);
+            scheduleNotificationFromNow(note);
         } catch (Exception e) {
             e.printStackTrace();
             updatePriorityFail(note);
         }
+    }
+
+    private void scheduleNotificationFromNow(Note note) {
+        scheduleNotificationFrom(note, System.currentTimeMillis());
+    }
+
+    private void scheduleNotificationFrom(Note note, long timeMillis) {
+        try {
+            boolean shouldSchedule = PreferenceUtil.getBoolean(NOTE_NOTIFICATION_SHOULD_SCHEDULE, false);
+            if (!shouldSchedule) {
+                return;
+            }
+            if (note.getPriority() == 5) {
+                startScheduleFrom(note, timeMillis);
+            } else {
+                cancelSchedule(note);
+            }
+        }catch (Exception e){
+            Log.e(getClass().getSimpleName(),"定时任务设置失败");
+            handler.post(new Runnable() {
+                @Override
+                public void run() {
+                    ToastUtil.toast(MyApplication.getInstance(),"定时任务设置失败");
+                }
+            });
+        }
+    }
+
+    private void startScheduleFrom(Note note, long timeMillis) {
+        try {
+            Map<String, String> data = new HashMap<>(2);
+            data.put("id", note.getId());
+            data.put("index", String.valueOf(0));
+            List<String> scheduleIds = getScheduleIds(note);
+            for (int i = 0; i < scheduleIds.size(); i++) {
+                ScheduleReceiver.scheduleOnce(MyApplication.getInstance(), NOTIFICATION_EXACT_REQUEST_CODE,
+                        timeMillis + NOTIFICATION_POINTS[i] * 60 * 1000,
+                        NoteExactNotifyScheduleCallback.class,
+                        data, scheduleIds.get(i));
+            }
+        }catch (Exception e){
+            Log.e(getClass().getSimpleName(),"定时任务设置失败");
+            handler.post(new Runnable() {
+                @Override
+                public void run() {
+                    ToastUtil.toast(MyApplication.getInstance(),"定时任务设置失败");
+                }
+            });
+        }
+    }
+
+    private void cancelSchedule(Note note) {
+        try {
+            List<String> scheduleIds = getScheduleIds(note);
+            for (String scheduleId : scheduleIds) {
+                ScheduleReceiver.cancel(MyApplication.getInstance(), NOTIFICATION_EXACT_REQUEST_CODE, scheduleId);
+            }
+        }catch (Exception e){
+            Log.e(getClass().getSimpleName(),"定时任务取消失败");
+            handler.post(new Runnable() {
+                @Override
+                public void run() {
+                    ToastUtil.toast(MyApplication.getInstance(),"定时任务取消失败");
+                }
+            });
+        }
+
+    }
+
+    private List<String> getScheduleIds(Note note) {
+        List<String> scheduleIs = new ArrayList<>(NOTIFICATION_POINTS.length);
+        for (long notificationPoint : NOTIFICATION_POINTS) {
+            scheduleIs.add(note.getId() + "/" + notificationPoint);
+        }
+        return scheduleIs;
     }
 
     @Override
@@ -236,7 +327,7 @@ public class NotePresenterImpl implements NotePresenter {
         try {
             noteModel.addAll(addList);
             addAllSuccess(addList);
-        }catch (Exception e){
+        } catch (Exception e) {
             e.printStackTrace();
             addAllFail(e);
         }
@@ -245,9 +336,15 @@ public class NotePresenterImpl implements NotePresenter {
     @Override
     public void addAllForSync(List<Note> addList, String source) {
         try {
-            noteModel.addAll(addList,source);
+            noteModel.addAll(addList, source);
             addAllSuccess(addList);
-        }catch (Exception e){
+            for (Note note : addList) {
+                if (note.getLastModifyTime() == null){
+                    continue;
+                }
+                scheduleNotificationFrom(note, note.getLastModifyTime().getTime());
+            }
+        } catch (Exception e) {
             e.printStackTrace();
             addAllFail(e);
         }
@@ -273,7 +370,7 @@ public class NotePresenterImpl implements NotePresenter {
         try {
             noteModel.updateAll(updateList);
             updateAllSuccess(updateList);
-        }catch (Exception e){
+        } catch (Exception e) {
             e.printStackTrace();
             updateAllFail(e);
         }
@@ -282,9 +379,15 @@ public class NotePresenterImpl implements NotePresenter {
     @Override
     public void updateAllForSync(List<Note> updateList, String source) {
         try {
-            noteModel.updateAll(updateList,source);
+            noteModel.updateAll(updateList, source);
             updateAllSuccess(updateList);
-        }catch (Exception e){
+            for (Note note : updateList) {
+                if (note.getLastModifyTime() == null){
+                    continue;
+                }
+                scheduleNotificationFrom(note, note.getLastModifyTime().getTime());
+            }
+        } catch (Exception e) {
             e.printStackTrace();
             updateAllFail(e);
         }

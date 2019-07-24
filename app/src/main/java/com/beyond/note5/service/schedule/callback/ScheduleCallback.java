@@ -4,5 +4,5 @@ import android.content.Context;
 import android.content.Intent;
 
 public interface ScheduleCallback {
-    void onCall(Context context, Intent intent);
+    void onCall(Context context, Intent intent) throws ClassNotFoundException;
 }

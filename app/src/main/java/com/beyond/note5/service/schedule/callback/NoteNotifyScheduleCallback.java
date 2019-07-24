@@ -27,16 +27,16 @@ public class NoteNotifyScheduleCallback implements ScheduleCallback {
 
     private static final int DEFAULT_SCAN_PERIOD = 60 * 1000;
 
-    private static final int[] NOTIFICATION_POINTS = new int[]{
+    public static final long[] NOTIFICATION_POINTS = new long[]{
             1, 19, 63, 525, 24 * 60, 24 * 60 * 2, 24 * 60 * 6, 24 * 60 * 31
     }; // minute
 
-    private static final int SILENCE_HOUR_START = 23;
-    private static final int SILENCE_HOUR_PERIOD = 10;
+    protected static final int SILENCE_HOUR_START = 23;
+    protected static final int SILENCE_HOUR_PERIOD = 10;
 
-    private NoteModel noteModel;
+    protected NoteModel noteModel;
 
-    private Handler handler;
+    protected Handler handler;
 
     public NoteNotifyScheduleCallback() {
         noteModel = new NoteModelImpl();
@@ -44,14 +44,14 @@ public class NoteNotifyScheduleCallback implements ScheduleCallback {
     }
 
     @Override
-    public void onCall(Context context, Intent intent) {
+    public void onCall(Context context, Intent intent) throws ClassNotFoundException {
         long scanPeriod = intent.getLongExtra("delay", DEFAULT_SCAN_PERIOD);
         List<Note> notifyNotes = new ArrayList<>();
         List<Note> highlightNotes = noteModel.findByPriority(5);
         long currentTimeMillis = System.currentTimeMillis();
         for (Note highlightNote : highlightNotes) {
-            for (int notificationPoint : NOTIFICATION_POINTS) {
-                if (DateUtil.between(currentTimeMillis, highlightNote.getLastModifyTime()) <= notificationPoint * 1000 * 60 + scanPeriod + 1000
+            for (long notificationPoint : NOTIFICATION_POINTS) {
+                if (DateUtil.between(currentTimeMillis, highlightNote.getLastModifyTime()) <= notificationPoint * 1000 * 60 + scanPeriod/2 - 1000
                         && DateUtil.between(currentTimeMillis, highlightNote.getLastModifyTime()) > notificationPoint * 1000 * 60) {
                     notifyNotes.add(highlightNote);
                 }
@@ -67,7 +67,7 @@ public class NoteNotifyScheduleCallback implements ScheduleCallback {
         }
     }
 
-    private void buildNotification(Context context, Note note) {
+    protected void buildNotification(Context context, Note note) {
         Intent intent = new Intent(context, NotificationClickReceiver.class);
         intent.setAction(ACTION);
         intent.putExtra("id", note.getId());
