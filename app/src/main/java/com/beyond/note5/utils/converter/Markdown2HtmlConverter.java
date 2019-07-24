@@ -1,5 +1,7 @@
 package com.beyond.note5.utils.converter;
 
+import android.util.Log;
+
 import org.apache.commons.lang3.StringUtils;
 import org.markdownj.MarkdownProcessor;
 
@@ -19,7 +21,9 @@ public class Markdown2HtmlConverter implements Converter<String,String> {
     public String convert(String markdown) {
         markdown = replaceUrlsToMarkDownStyle(markdown);
         String html = markdownProcessor.markdown(markdown);
-        return processImage(html);
+        html = processImage(html);
+        Log.d(getClass().getSimpleName(),"html:\n"+html);
+        return html;
     }
 
     private String processImage(String html) {

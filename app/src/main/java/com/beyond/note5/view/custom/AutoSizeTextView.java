@@ -32,6 +32,7 @@ public class AutoSizeTextView extends android.support.v7.widget.AppCompatTextVie
         TypedArray typedArray = context.obtainStyledAttributes(attrs, R.styleable.AutoSizeTextView);
         mScaleFactor = typedArray.getFloat(R.styleable.AutoSizeTextView_scaleFactor, 0.618f);
         typedArray.recycle();
+        baseTextSize = null;
     }
 
     @Override
@@ -43,12 +44,23 @@ public class AutoSizeTextView extends android.support.v7.widget.AppCompatTextVie
         super.setText(text, type);
     }
 
-    public void computeAndSetTextSize(CharSequence text) {
-        if (baseTextSize == null){
+    private void computeAndSetTextSize(CharSequence text) {
+        if (baseTextSize == null) {
             baseTextSize = getTextSize();
         }
         float targetSize = (float) (baseTextSize * (1 + mScaleFactor * Math.pow(1.618, -text.length() / 10)));
         setTextSize(TypedValue.COMPLEX_UNIT_PX, targetSize);
     }
 
+    @Override
+    public void setTextSize(float size) {
+        super.setTextSize(size);
+        baseTextSize = getTextSize();
+    }
+
+    @Override
+    public void setTextSize(int unit, float size) {
+        super.setTextSize(unit, size);
+        baseTextSize = getTextSize();
+    }
 }

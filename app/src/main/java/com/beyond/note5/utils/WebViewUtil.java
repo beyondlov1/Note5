@@ -56,6 +56,7 @@ public class WebViewUtil {
     }
 
     public static void loadWebContent(WebView webView, Document document, Converter<Document, String> converter) {
+        Log.d(WebViewUtil.class.getSimpleName(),document.getContent());
         String html = converter.convert(document);
         loadWebContent(webView, html);
     }

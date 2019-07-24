@@ -88,9 +88,9 @@ public class NoteRecyclerViewAdapter extends DocumentRecyclerViewAdapter<Note, N
         viewHolder.dataContainer.setBackground(null);
         StaggeredGridLayoutManager.LayoutParams layoutParams = (StaggeredGridLayoutManager.LayoutParams) viewHolder.itemView.getLayoutParams();
         layoutParams.setFullSpan(true);
-        if (shouldFullSpan) {
+        if (shouldFullSpan){
             viewHolder.fullSpanSwitch.setChecked(true);
-        } else {
+        }else {
             viewHolder.fullSpanSwitch.setChecked(false);
         }
     }
@@ -127,7 +127,6 @@ public class NoteRecyclerViewAdapter extends DocumentRecyclerViewAdapter<Note, N
     private void refreshShouldShowLink() {
         shouldLinkShow = PreferenceUtil.getBoolean(SHOULD_SHOW_LINK);
     }
-
     private void refreshShouldFullSpan() {
         shouldFullSpan = PreferenceUtil.getBoolean(SHOULD_FULL_SPAN);
     }
@@ -172,10 +171,9 @@ public class NoteRecyclerViewAdapter extends DocumentRecyclerViewAdapter<Note, N
         if (itemDataGenerator.getSingleContentPositions().contains(position)) {
             layoutParams.setFullSpan(true);
         } else {
-            if (shouldFullSpan) {
+            if (shouldFullSpan){
                 layoutParams.setFullSpan(true);
-                viewHolder.content.setLineSpacing(0, 1.5f);
-            } else {
+            }else {
                 layoutParams.setFullSpan(false);
             }
         }
@@ -225,8 +223,14 @@ public class NoteRecyclerViewAdapter extends DocumentRecyclerViewAdapter<Note, N
     }
 
     private void setText(TextView textView, String content) {
-        textView.setTextSize(12);
-        MarkdownRenders.render(textView, content);
+        if (shouldFullSpan){
+            textView.setTextSize(12*1.2f);
+            textView.setLineSpacing(0,1.2f);
+        }else {
+            textView.setTextSize(12);
+            textView.setLineSpacing(0,1f);
+        }
+        MarkdownRenders.render(textView,content);
     }
 
     @Override
