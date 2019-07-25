@@ -145,7 +145,6 @@ public class MainActivity extends FragmentActivity implements
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-        EventBus.getDefault().register(this);
         ButterKnife.bind(this);
 
         initInjection();
@@ -159,6 +158,7 @@ public class MainActivity extends FragmentActivity implements
 
 //        initColorPicker();
 
+        EventBus.getDefault().register(this);
     }
 
     private void initColorPicker() {
@@ -270,6 +270,10 @@ public class MainActivity extends FragmentActivity implements
     @Override
     public void onWindowFocusChanged(boolean hasFocus) {
         super.onWindowFocusChanged(hasFocus);
+        initFABAnimator();
+    }
+
+    private void initFABAnimator() {
         showAnimatorSet = (AnimatorSet) AnimatorInflater.loadAnimator(this, R.animator.fab_show);
         hideAnimatorSet = (AnimatorSet) AnimatorInflater.loadAnimator(this, R.animator.fab_hide);
     }
@@ -280,6 +284,9 @@ public class MainActivity extends FragmentActivity implements
     }
 
     private void showFAB(){
+        if (showAnimatorSet == null){
+            initFABAnimator();
+        }
         if (!isFabShown.get()) {
             showAnimatorSet.setTarget(addDocumentButton);
             showAnimatorSet.start();
@@ -299,6 +306,9 @@ public class MainActivity extends FragmentActivity implements
     }
 
     private void hideFAB(){
+        if (hideAnimatorSet == null){
+            initFABAnimator();
+        }
         if (isFabShown.get()) {
             hideAnimatorSet.setTarget(addDocumentButton);
             hideAnimatorSet.start();
@@ -313,7 +323,7 @@ public class MainActivity extends FragmentActivity implements
         }
     }
 
-    @Subscribe(threadMode = ThreadMode.MAIN)
+    @Subscribe(threadMode = ThreadMode.MAIN,sticky = true)
     public void onReceived(final ShowNoteDetailEvent event) {
         showNoteDetail(event.get(),event.getData(),event.getIndex(),event.getLoadType());
     }

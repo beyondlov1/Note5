@@ -3,6 +3,7 @@ package com.beyond.note5.service;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
+import android.os.Handler;
 
 import com.beyond.note5.bean.Note;
 import com.beyond.note5.constant.LoadType;
@@ -41,6 +42,12 @@ public class NotificationClickReceiver extends BroadcastReceiver {
         showNoteDetailEvent.setLoadType(LoadType.CONTENT);
         showNoteDetailEvent.setData(all);
         showNoteDetailEvent.setIndex(index);
-        EventBus.getDefault().post(showNoteDetailEvent);
+        new Handler().postDelayed(new Runnable() {
+            @Override
+            public void run() {
+                EventBus.getDefault().postSticky(showNoteDetailEvent);
+            }
+        },300);
+
     }
 }

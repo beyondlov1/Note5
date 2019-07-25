@@ -367,6 +367,9 @@ public class NoteDetailSuperFragment extends AbstractDocumentDialogFragment impl
         smoothScaleAnimation.setBeforeShowHook(new Runnable() {
             @Override
             public void run() {
+                if (getActivity() == null){
+                    return;
+                }
                 int systemUiVisibility = getActivity().getWindow().getDecorView().getSystemUiVisibility();
                 getActivity().getWindow().getDecorView().setSystemUiVisibility(systemUiVisibility|View.SYSTEM_UI_FLAG_FULLSCREEN);
 //                getActivity().getWindow().setStatusBarColor(ContextCompat.getColor(getActivity(), R.color.white));
@@ -376,6 +379,9 @@ public class NoteDetailSuperFragment extends AbstractDocumentDialogFragment impl
         smoothScaleAnimation.setBeforeHideHook(new Runnable() {
             @Override
             public void run() {
+                if (getActivity() == null){
+                    return;
+                }
 //                getActivity().getWindow().getDecorView().setSystemUiVisibility(View.SYSTEM_UI_FLAG_LIGHT_STATUS_BAR);
 //                getActivity().getWindow().setStatusBarColor(ContextCompat.getColor(getActivity(), R.color.white));
                 getActivity().getWindow().getDecorView().setSystemUiVisibility(View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN

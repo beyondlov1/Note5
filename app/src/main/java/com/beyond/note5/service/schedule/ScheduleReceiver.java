@@ -67,6 +67,10 @@ public class ScheduleReceiver extends BroadcastReceiver {
                                     long startTime, @NonNull String callbackClassName,
                                     @Nullable Map<String, String> data,
                                     String id) {
+        long current = System.currentTimeMillis();
+        if (current > startTime) {
+            return;
+        }
         AlarmManager alarmManager = (AlarmManager) context.getSystemService(ALARM_SERVICE);
         if (alarmManager != null) {
             Intent it = new Intent(context, ScheduleReceiver.class);

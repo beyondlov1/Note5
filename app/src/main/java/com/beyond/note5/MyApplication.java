@@ -4,12 +4,15 @@ import android.app.Application;
 import android.database.sqlite.SQLiteDatabase;
 import android.os.Environment;
 import android.os.Handler;
+import android.util.Log;
 
 import com.beyond.note5.bean.Account;
 import com.beyond.note5.bean.Note;
 import com.beyond.note5.bean.Todo;
 import com.beyond.note5.model.AccountModel;
 import com.beyond.note5.model.AccountModelImpl;
+import com.beyond.note5.model.NoteModel;
+import com.beyond.note5.model.NoteModelImpl;
 import com.beyond.note5.model.PredictModel;
 import com.beyond.note5.model.PredictModelImpl;
 import com.beyond.note5.model.dao.DaoMaster;
@@ -21,6 +24,7 @@ import com.beyond.note5.predict.train.filter.TimeExpressionTrainTagFilter;
 import com.beyond.note5.predict.train.filter.UrlTrainTagFilter;
 import com.beyond.note5.service.schedule.ScheduleReceiver;
 import com.beyond.note5.service.schedule.callback.SyncScheduleCallback;
+import com.beyond.note5.service.schedule.utils.ScheduleUtil;
 import com.beyond.note5.sync.Synchronizer;
 import com.beyond.note5.sync.datasource.DavDataSource;
 import com.beyond.note5.sync.datasource.impl.DefaultDavDataSource;
@@ -49,6 +53,7 @@ import org.sqldroid.DroidDataSource;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.Calendar;
+import java.util.Date;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -92,14 +97,12 @@ public class MyApplication extends Application {
 
     public Handler handler = new Handler();
 
-    private Synchronizer<Note> noteSynchronizer;
-    private Synchronizer<Todo> todoSynchronizer;
-
     private List<Synchronizer<Note>> noteSynchronizers;
     private List<Synchronizer<Todo>> todoSynchronizers;
 
     private DaoSession daoSession;
     private ExecutorService executorService;
+    private NoteModel noteModel;
     private PredictModel predictModel;
     private AccountModel accountModel;
 
@@ -154,6 +157,24 @@ public class MyApplication extends Application {
 //        }else {
 //            ScheduleReceiver.cancel(this,ScheduleReceiver.NOTIFICATION_SCAN_REQUEST_CODE);
 //        }
+        boolean shouldSchedule = PreferenceUtil.getBoolean(NOTE_NOTIFICATION_SHOULD_SCHEDULE, false);
+        if (!shouldSchedule) {
+            return;
+        }
+        List<Note> toNotifyNote = getNoteModel().findByPriority(5);
+        for (Note note : toNotifyNote) {
+            try {
+                if (!ScheduleUtil.isSet(note)){
+                    Date lastModifyTime = note.getLastModifyTime();
+                    if (lastModifyTime == null){
+                        continue;
+                    }
+                    ScheduleUtil.scheduleNotificationFrom(note, lastModifyTime.getTime());
+                }
+            }catch (Exception e){
+                Log.e(getClass().getSimpleName(),"初始化定时任务设置失败:"+note.getId(),e);
+            }
+        }
     }
 
     public void initPreference() {
@@ -274,20 +295,6 @@ public class MyApplication extends Application {
         return daoSession;
     }
 
-    public PredictModel getPredictModel() {
-        if (predictModel == null) {
-            File storageDir = this.getExternalFilesDir(Environment.DIRECTORY_DOCUMENTS);
-            assert storageDir != null;
-            TagPredictor<String, TagGraph> tagPredictor = new TagPredictorImpl(
-                    new File(storageDir.getAbsolutePath() + File.separator + "model.json"), true);
-            tagPredictor.addTrainFilter(new UrlTrainTagFilter());
-            tagPredictor.addTrainFilter(new TimeExpressionTrainTagFilter());
-            tagPredictor.setExecutorService(executorService);
-            predictModel = PredictModelImpl.getRelativeSingletonInstance(tagPredictor);
-        }
-        return predictModel;
-    }
-
     public boolean isApplicationToBeBorn() {
         return isApplicationToBeBorn;
     }
@@ -295,6 +302,8 @@ public class MyApplication extends Application {
     public void resetApplicationState() {
         isApplicationToBeBorn = false;
     }
+
+    /** sync start */
 
     public void sync() {
         sync(null);
@@ -363,25 +372,11 @@ public class MyApplication extends Application {
         initSynchronizer();
     }
 
-    public Synchronizer<Note> getNoteSynchronizer() {
-        if (noteSynchronizer == null) {
-            initSynchronizer();
-        }
-        return noteSynchronizer;
-    }
-
     public List<Synchronizer<Note>> getNoteSynchronizers() {
         if (CollectionUtils.isEmpty(noteSynchronizers)) {
             initSynchronizer();
         }
         return noteSynchronizers;
-    }
-
-    public Synchronizer<Todo> getTodoSynchronizer() {
-        if (todoSynchronizer == null) {
-            initSynchronizer();
-        }
-        return todoSynchronizer;
     }
 
     public List<Synchronizer<Todo>> getTodoSynchronizers() {
@@ -391,11 +386,34 @@ public class MyApplication extends Application {
         return todoSynchronizers;
     }
 
+    /** sync end */
+
     public File getFileStorageDir() {
         return this.getExternalFilesDir(Environment.DIRECTORY_PICTURES);
     }
 
+    public PredictModel getPredictModel() {
+        if (predictModel == null) {
+            File storageDir = this.getExternalFilesDir(Environment.DIRECTORY_DOCUMENTS);
+            assert storageDir != null;
+            TagPredictor<String, TagGraph> tagPredictor = new TagPredictorImpl(
+                    new File(storageDir.getAbsolutePath() + File.separator + "model.json"), true);
+            tagPredictor.addTrainFilter(new UrlTrainTagFilter());
+            tagPredictor.addTrainFilter(new TimeExpressionTrainTagFilter());
+            tagPredictor.setExecutorService(executorService);
+            predictModel = PredictModelImpl.getRelativeSingletonInstance(tagPredictor);
+        }
+        return predictModel;
+    }
+
     public AccountModel getAccountModel() {
         return accountModel;
+    }
+
+    public NoteModel getNoteModel(){
+        if (noteModel == null){
+            noteModel = NoteModelImpl.getSingletonInstance();
+        }
+        return noteModel;
     }
 }
