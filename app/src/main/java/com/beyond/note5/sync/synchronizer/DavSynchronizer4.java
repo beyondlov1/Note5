@@ -134,6 +134,10 @@ public class DavSynchronizer4<T extends Tracable> implements Synchronizer<T> {
             excludeSuccess(modified1);
             excludeSuccess(modified2);
 
+            if (modified1.isEmpty() && modified2.isEmpty()){
+                return false;
+            }
+
             try {
                 dataSource1.saveAll(modified2);
                 recordSyncState(modified2);

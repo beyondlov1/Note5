@@ -6,11 +6,11 @@ import com.thegrizzlylabs.sardineandroid.DavResource;
 
 import java.util.Date;
 
-public class PostLastModifyTimeDavFilter implements DavFilter {
+public class AfterModifiedTimeDavFilter implements DavFilter {
 
     private Date date;
 
-    public PostLastModifyTimeDavFilter(Date date) {
+    public AfterModifiedTimeDavFilter(Date date) {
         this.date = date;
     }
 

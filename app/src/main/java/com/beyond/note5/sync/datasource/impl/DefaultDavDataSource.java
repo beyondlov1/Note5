@@ -17,7 +17,7 @@ import com.beyond.note5.sync.model.impl.DavSharedTraceInfo;
 import com.beyond.note5.sync.webdav.Lock;
 import com.beyond.note5.sync.webdav.client.DavClient;
 import com.beyond.note5.sync.webdav.client.DavFilter;
-import com.beyond.note5.sync.webdav.client.PostLastModifyTimeDavFilter;
+import com.beyond.note5.sync.webdav.client.AfterModifiedTimeDavFilter;
 import com.beyond.note5.utils.OkWebDavUtil;
 
 import org.apache.commons.lang3.time.DateUtils;
@@ -283,7 +283,7 @@ public class DefaultDavDataSource<T extends Document> implements DavDataSource<T
 
         DavFilter davFilter = null;
         if (date != null) {
-            davFilter = new PostLastModifyTimeDavFilter(date);
+            davFilter = new AfterModifiedTimeDavFilter(date);
         }
         /**
          * 单线程方法
