@@ -45,6 +45,8 @@ import com.beyond.note5.bean.Attachment;
 import com.beyond.note5.bean.Document;
 import com.beyond.note5.bean.Note;
 import com.beyond.note5.constant.LoadType;
+import com.beyond.note5.event.PollingRequest;
+import com.beyond.note5.event.PollingResponse;
 import com.beyond.note5.event.FillNoteDetailEvent;
 import com.beyond.note5.event.HideFABEvent;
 import com.beyond.note5.event.HideKeyBoardEvent2;
@@ -158,7 +160,6 @@ public class MainActivity extends FragmentActivity implements
 
 //        initColorPicker();
 
-        EventBus.getDefault().register(this);
     }
 
     private void initColorPicker() {
@@ -323,7 +324,7 @@ public class MainActivity extends FragmentActivity implements
         }
     }
 
-    @Subscribe(threadMode = ThreadMode.MAIN,sticky = true)
+    @Subscribe(threadMode = ThreadMode.MAIN)
     public void onReceived(final ShowNoteDetailEvent event) {
         showNoteDetail(event.get(),event.getData(),event.getIndex(),event.getLoadType());
     }
@@ -428,6 +429,13 @@ public class MainActivity extends FragmentActivity implements
     }
 
 
+    @Subscribe(threadMode = ThreadMode.MAIN)
+    public void onReceived(PollingRequest event) {
+       if (event.get() == this.getClass()){
+           EventBus.getDefault().post(new PollingResponse(this.getClass()));
+       }
+    }
+
     @Override
     protected void onResume() {
         super.onResume();
@@ -441,6 +449,7 @@ public class MainActivity extends FragmentActivity implements
     @Override
     protected void onStart() {
         super.onStart();
+        EventBus.getDefault().register(this);
         showFloatEditor();
     }
 
@@ -463,6 +472,7 @@ public class MainActivity extends FragmentActivity implements
     @Override
     protected void onStop() {
         EventBus.getDefault().post(new ShowFloatButtonEvent(null));
+        EventBus.getDefault().unregister(this);
         super.onStop();
     }
 
@@ -471,7 +481,6 @@ public class MainActivity extends FragmentActivity implements
         int currentItem = mainViewPager.getCurrentItem();
         PreferenceUtil.put(MyApplication.DEFAULT_PAGE, currentItem);
         Log.d("MainActivity", currentItem + "");
-        EventBus.getDefault().unregister(this);
         super.onDestroy();
     }
 

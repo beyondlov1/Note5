@@ -6,7 +6,8 @@ import android.content.Intent;
 import android.net.Uri;
 
 import com.beyond.note5.MyApplication;
-import com.beyond.note5.bean.Note;
+import com.beyond.note5.bean.Document;
+import com.beyond.note5.bean.Element;
 import com.beyond.note5.service.schedule.ScheduleReceiver;
 import com.beyond.note5.service.schedule.callback.NoteExactNotifyScheduleCallback;
 
@@ -26,23 +27,23 @@ import static com.beyond.note5.service.schedule.callback.NoteNotifyScheduleCallb
 
 public class ScheduleUtil {
 
-    private static void scheduleNotificationFromNow(Note note) {
-        scheduleNotificationFrom(note, System.currentTimeMillis());
+    private static void scheduleNotificationFromNow(Document document) {
+        scheduleNotificationFrom(document, System.currentTimeMillis());
     }
 
-    public static void scheduleNotificationFrom(Note note, long timeMillis) {
-        if (note.getPriority() == 5) {
-            startScheduleFrom(note, timeMillis);
+    public static void scheduleNotificationFrom(Document document, long timeMillis) {
+        if (document.getPriority() == 5) {
+            startScheduleFrom(document, timeMillis);
         } else {
-            cancelSchedule(note);
+            cancelSchedule(document);
         }
     }
 
-    private static void startScheduleFrom(Note note, long timeMillis) {
+    private static void startScheduleFrom(Element element, long timeMillis) {
         Map<String, String> data = new HashMap<>(2);
-        data.put("id", note.getId());
+        data.put("id", element.getId());
         data.put("index", String.valueOf(0));
-        List<String> scheduleIds = getScheduleIds(note);
+        List<String> scheduleIds = getScheduleIds(element);
         for (int i = 0; i < scheduleIds.size(); i++) {
             ScheduleReceiver.scheduleOnce(MyApplication.getInstance(), NOTIFICATION_EXACT_REQUEST_CODE,
                     timeMillis + NOTIFICATION_POINTS[i] * 60 * 1000,
@@ -51,23 +52,23 @@ public class ScheduleUtil {
         }
     }
 
-    public static void cancelSchedule(Note note) {
-        List<String> scheduleIds = getScheduleIds(note);
+    public static void cancelSchedule(Element element) {
+        List<String> scheduleIds = getScheduleIds(element);
         for (String scheduleId : scheduleIds) {
             ScheduleReceiver.cancel(MyApplication.getInstance(), NOTIFICATION_EXACT_REQUEST_CODE, scheduleId);
         }
     }
 
-    private static List<String> getScheduleIds(Note note) {
+    public static List<String> getScheduleIds(Element element) {
         List<String> scheduleIs = new ArrayList<>(NOTIFICATION_POINTS.length);
         for (long notificationPoint : NOTIFICATION_POINTS) {
-            scheduleIs.add(note.getId() + "/" + notificationPoint);
+            scheduleIs.add(element.getId() + "/" + notificationPoint);
         }
         return scheduleIs;
     }
 
-    public static boolean isSet(Note note) {
-        List<String> scheduleIds = getScheduleIds(note);
+    public static boolean isSet(Element element) {
+        List<String> scheduleIds = getScheduleIds(element);
         for (String scheduleId : scheduleIds) {
             if (isExist(scheduleId)) {
                 return true;
@@ -84,4 +85,7 @@ public class ScheduleUtil {
         return pendingIntent != null;
     }
 
+    public static String getScheduleId(Element element, int index) {
+        return element.getId() + "/" + NOTIFICATION_POINTS[index];
+    }
 }

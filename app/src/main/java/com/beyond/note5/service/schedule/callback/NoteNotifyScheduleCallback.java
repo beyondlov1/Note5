@@ -5,6 +5,7 @@ import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.content.Context;
 import android.content.Intent;
+import android.net.Uri;
 import android.os.Handler;
 import android.support.v4.app.NotificationCompat;
 
@@ -13,6 +14,7 @@ import com.beyond.note5.bean.Note;
 import com.beyond.note5.model.NoteModel;
 import com.beyond.note5.model.NoteModelImpl;
 import com.beyond.note5.service.NotificationClickReceiver;
+import com.beyond.note5.service.schedule.utils.ScheduleUtil;
 import com.beyond.note5.utils.DateUtil;
 
 import java.util.ArrayList;
@@ -61,14 +63,15 @@ public class NoteNotifyScheduleCallback implements ScheduleCallback {
             handler.post(new Runnable() {
                 @Override
                 public void run() {
-                    buildNotification(context, notifyNote);
+                    buildNotification(context, notifyNote, 0);
                 }
             });
         }
     }
 
-    protected void buildNotification(Context context, Note note) {
+    protected void buildNotification(Context context, Note note, Integer index) {
         Intent intent = new Intent(context, NotificationClickReceiver.class);
+        intent.setData(Uri.parse(ScheduleUtil.getScheduleId(note,index)));
         intent.setAction(ACTION);
         intent.putExtra("id", note.getId());
         PendingIntent pendingIntent = PendingIntent.getBroadcast(context, NOTIFICATION_REDIRECT_REQUEST_CODE, intent, PendingIntent.FLAG_UPDATE_CURRENT);

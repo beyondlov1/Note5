@@ -26,8 +26,9 @@ public class NoteExactNotifyScheduleCallback extends NoteNotifyScheduleCallback 
             return;
         }
         String id = intent.getStringExtra("id");
+        String index = intent.getStringExtra("index");
         Note note = noteModel.findById(id);
-        buildNotification(context, note);
+        buildNotification(context, note,Integer.valueOf(index));
     }
 
     private void scheduleNext(Context context, Intent intent, String id) {
