@@ -10,7 +10,7 @@ import com.beyond.note5.event.ScrollNoteToTopEvent;
 import com.beyond.note5.event.ShowNoteDetailEvent;
 import com.beyond.note5.model.NoteModel;
 import com.beyond.note5.model.NoteModelImpl;
-import com.beyond.note5.utils.PollingSupport;
+import com.beyond.note5.utils.PollSupport;
 import com.beyond.note5.utils.ListUtil;
 import com.beyond.note5.view.MainActivity;
 
@@ -25,7 +25,7 @@ public class NotificationClickReceiver extends BroadcastReceiver {
         intent.setClass(context, MainActivity.class);
         context.startActivity(intent);
         String id = intent.getStringExtra("id");
-        new PollingSupport().sendRequest(new PollingSupport.OnResponseListener() {
+        new PollSupport().sendRequest(new PollSupport.OnResponseListener() {
             @Override
             public void onResponse(Object o) {
                 Note note = new Note();

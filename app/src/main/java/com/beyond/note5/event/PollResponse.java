@@ -5,8 +5,8 @@ package com.beyond.note5.event;
  * @date: 2019/7/25
  */
 
-public class PollingResponse extends AbstractEvent<Object>{
-    public PollingResponse(Object data) {
+public class PollResponse extends AbstractEvent<Object>{
+    public PollResponse(Object data) {
         super(data);
     }
 }

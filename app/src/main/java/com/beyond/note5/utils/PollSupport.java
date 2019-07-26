@@ -3,15 +3,15 @@ package com.beyond.note5.utils;
 import android.os.Handler;
 import android.util.Log;
 
-import com.beyond.note5.event.PollingRequest;
-import com.beyond.note5.event.PollingResponse;
+import com.beyond.note5.event.PollRequest;
+import com.beyond.note5.event.PollResponse;
 import com.beyond.note5.view.MainActivity;
 
 import org.greenrobot.eventbus.EventBus;
 import org.greenrobot.eventbus.Subscribe;
 import org.greenrobot.eventbus.ThreadMode;
 
-public class PollingSupport {
+public class PollSupport {
 
     private static final int MAX_CHECK_COUNT = 7;
 
@@ -35,7 +35,7 @@ public class PollingSupport {
             return;
         }
         checkCount--;
-        EventBus.getDefault().post(new PollingRequest(MainActivity.class));
+        EventBus.getDefault().post(new PollRequest(MainActivity.class));
         new Handler().postDelayed(new Runnable() {
             @Override
             public void run() {
@@ -51,7 +51,7 @@ public class PollingSupport {
     }
 
     @Subscribe(threadMode = ThreadMode.MAIN)
-    public void onReceived(PollingResponse event) {
+    public void onReceived(PollResponse event) {
         responseData = event.get();
         isResponse = true;
         Log.d(getClass().getSimpleName(), "polling success");

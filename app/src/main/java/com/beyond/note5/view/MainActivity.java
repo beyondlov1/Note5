@@ -45,8 +45,8 @@ import com.beyond.note5.bean.Attachment;
 import com.beyond.note5.bean.Document;
 import com.beyond.note5.bean.Note;
 import com.beyond.note5.constant.LoadType;
-import com.beyond.note5.event.PollingRequest;
-import com.beyond.note5.event.PollingResponse;
+import com.beyond.note5.event.PollRequest;
+import com.beyond.note5.event.PollResponse;
 import com.beyond.note5.event.FillNoteDetailEvent;
 import com.beyond.note5.event.HideFABEvent;
 import com.beyond.note5.event.HideKeyBoardEvent2;
@@ -430,9 +430,9 @@ public class MainActivity extends FragmentActivity implements
 
 
     @Subscribe(threadMode = ThreadMode.MAIN)
-    public void onReceived(PollingRequest event) {
+    public void onReceived(PollRequest event) {
        if (event.get() == this.getClass()){
-           EventBus.getDefault().post(new PollingResponse(this.getClass()));
+           EventBus.getDefault().post(new PollResponse(this.getClass()));
        }
     }
 
