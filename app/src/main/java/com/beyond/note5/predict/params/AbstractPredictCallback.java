@@ -14,7 +14,7 @@ import java.util.List;
  * @author beyondlov1
  * @date 2019/03/13
  */
-public abstract class AbstractTagPredictCallback implements TagPredictCallback<String, TagGraph> {
+public abstract class AbstractPredictCallback implements PredictCallback<String, TagGraph> {
     @Override
     public void onSuccess(String s, TagGraph tagGraph) {
         List<Tag> result = new ArrayList<>();
@@ -32,6 +32,6 @@ public abstract class AbstractTagPredictCallback implements TagPredictCallback<S
 
     @Override
     public void onFail() {
-        Log.e("AbstractTagPredictCallback","预测失败");
+        Log.e("AbstractPredictCallback","预测失败");
     }
 }

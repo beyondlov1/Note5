@@ -41,11 +41,8 @@ import butterknife.OnClick;
 
 public abstract class LoginActivity extends AppCompatActivity {
 
-    public static final String DAV_LOGIN_REMEMBER_USERNAME = "dav.login.remember.username";
     public static final String DAV_LOGIN_USERNAME = "dav.login.username";
-    public static final String DAV_LOGIN_REMEMBER_PASSWORD = "dav.login.remember.password";
     public static final String DAV_LOGIN_PASSWORD = "dav.login.password";
-    public static final String DAV_LOGIN = "dav.login";
 
     private Handler handler = new Handler();
 

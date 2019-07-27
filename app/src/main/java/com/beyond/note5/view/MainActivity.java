@@ -45,13 +45,13 @@ import com.beyond.note5.bean.Attachment;
 import com.beyond.note5.bean.Document;
 import com.beyond.note5.bean.Note;
 import com.beyond.note5.constant.LoadType;
-import com.beyond.note5.event.PollRequest;
-import com.beyond.note5.event.PollResponse;
 import com.beyond.note5.event.FillNoteDetailEvent;
 import com.beyond.note5.event.HideFABEvent;
 import com.beyond.note5.event.HideKeyBoardEvent2;
 import com.beyond.note5.event.HideNoteDetailEvent;
 import com.beyond.note5.event.HideTodoEditorEvent;
+import com.beyond.note5.event.PollRequest;
+import com.beyond.note5.event.PollResponse;
 import com.beyond.note5.event.ShowFABEvent;
 import com.beyond.note5.event.ShowFloatButtonEvent;
 import com.beyond.note5.event.ShowKeyBoardEvent;
@@ -70,11 +70,11 @@ import com.beyond.note5.view.adapter.view.NoteViewAdapter;
 import com.beyond.note5.view.animator.DefaultSmoothScaleAnimation;
 import com.beyond.note5.view.animator.SmoothScalable;
 import com.beyond.note5.view.animator.SmoothScaleAnimation;
-import com.beyond.note5.view.fragment.PreferenceFragment;
 import com.beyond.note5.view.fragment.FragmentContainerAware;
 import com.beyond.note5.view.fragment.NoteDetailSuperFragment;
 import com.beyond.note5.view.fragment.NoteEditFragment;
 import com.beyond.note5.view.fragment.NoteListFragment;
+import com.beyond.note5.view.fragment.PreferenceFragment;
 import com.beyond.note5.view.fragment.TodoEditFragment;
 import com.beyond.note5.view.fragment.TodoListFragment;
 import com.beyond.note5.view.fragment.TodoModifySuperFragment;
@@ -666,7 +666,12 @@ public class MainActivity extends FragmentActivity implements
         } else if (fragment instanceof TodoListFragment) {
             currentType = Document.TODO;
         }
-        EventBus.getDefault().post(new ShowFABEvent(R.id.note_recycler_view));
+
+        if (fragment instanceof PreferenceFragment){
+            EventBus.getDefault().post(new HideFABEvent(R.id.note_recycler_view));
+        }else {
+            EventBus.getDefault().post(new ShowFABEvent(R.id.note_recycler_view));
+        }
     }
 
     private class MyOnKeyboardChangeListener extends OnKeyboardChangeListener {

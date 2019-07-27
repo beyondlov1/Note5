@@ -13,7 +13,6 @@ import com.beyond.note5.predict.bean.Tag;
 import com.beyond.note5.predict.bean.TagEdge;
 import com.beyond.note5.predict.bean.TagGraph;
 import com.beyond.note5.predict.bean.TimeTag;
-import com.beyond.note5.predict.train.target.TrainTagTarget;
 import com.beyond.note5.predict.params.SegResponse;
 import com.beyond.note5.predict.utils.TagUtils;
 import com.beyond.note5.utils.TimeNLPUtil;
@@ -38,32 +37,32 @@ import okhttp3.Response;
  * @author beyondlov1
  * @date 2019/03/11
  */
-public class TagTrainerImpl implements TagTrainer{
+public class TrainerImpl implements Trainer {
 
     private TagGraphSerializer serializer;
     private TagGraphInjector injector;
     private OkHttpClient okHttpClient;
 
-    public static TagTrainerImpl create(TagGraphSerializer serializer){
-        TagTrainerImpl tagTrainer = new TagTrainerImpl();
+    public static TrainerImpl create(TagGraphSerializer serializer){
+        TrainerImpl tagTrainer = new TrainerImpl();
         tagTrainer.serializer = serializer;
         tagTrainer.injector = new TagGraphInjectorImpl(serializer);
         tagTrainer.okHttpClient = new OkHttpClient();
         return tagTrainer;
     }
 
-    private TagTrainerImpl() {
+    private TrainerImpl() {
 
     }
 
     @Override
-    public void trainSync(TrainTagTarget target) throws Exception{
-        trainSync(target.getTarget());
+    public void trainSync(TrainSource source) throws Exception{
+        trainSync(source.getContent());
     }
 
     @Override
-    public void trainAsync(TrainTagTarget target) throws Exception {
-        final String content = target.getTarget();
+    public void trainAsync(TrainSource source) throws Exception {
+        final String content = source.getContent();
         if (StringUtils.isBlank(content)){
             return;
         }

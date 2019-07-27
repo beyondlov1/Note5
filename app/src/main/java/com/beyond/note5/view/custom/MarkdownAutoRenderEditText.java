@@ -8,7 +8,9 @@ import android.text.SpannableStringBuilder;
 import android.text.TextWatcher;
 import android.util.AttributeSet;
 
+import com.beyond.note5.MyApplication;
 import com.beyond.note5.R;
+import com.beyond.note5.utils.PreferenceUtil;
 import com.beyond.note5.view.markdown.decorate.DefaultMarkdownDecorator;
 import com.beyond.note5.view.markdown.decorate.MarkdownDecorator;
 import com.beyond.note5.view.markdown.decorate.resolver.init.H1LineResolver;
@@ -40,6 +42,9 @@ public class MarkdownAutoRenderEditText extends AppCompatEditText {
 
     public MarkdownAutoRenderEditText(Context context, AttributeSet attrs, int defStyleAttr) {
         super(context, attrs, defStyleAttr);
+        if (!PreferenceUtil.getBoolean(MyApplication.NOTE_SHOULD_EDIT_MARKDOWN_JUST_IN_TIME,true)){
+            return;
+        }
         this.addTextChangedListener(new MyOnTextChangeListener());
         markdownDecorator = DefaultMarkdownDecorator.createDefault(this);
         markdownRender = createMarkdownRender();
@@ -104,21 +109,6 @@ public class MarkdownAutoRenderEditText extends AppCompatEditText {
                 addTextChangedListener(this);
             }
             setSelection(getSelectionStart());
-        }
-    }
-
-
-    class MyEditable extends SpannableStringBuilder {
-
-        private String realContent;
-
-        @Override
-        public String toString() {
-            return realContent;
-        }
-
-        public void setRealContent(String realContent) {
-            this.realContent = realContent;
         }
     }
 }

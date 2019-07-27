@@ -1,9 +1,9 @@
 package com.beyond.note5.model;
 
-import com.beyond.note5.predict.TagPredictor;
+import com.beyond.note5.predict.Predictor;
 import com.beyond.note5.predict.bean.Tag;
 import com.beyond.note5.predict.bean.TagGraph;
-import com.beyond.note5.predict.train.target.TrainTagTarget;
+import com.beyond.note5.predict.train.TrainSource;
 
 import java.util.HashMap;
 import java.util.List;
@@ -15,34 +15,34 @@ import java.util.Map;
  */
 public class PredictModelImpl implements PredictModel{
 
-    private TagPredictor<String, TagGraph> tagPredictor;
+    private Predictor<String, TagGraph> predictor;
 
-    private static Map<TagPredictor<String, TagGraph> , PredictModel> instanceContainer = new HashMap<>(2);
+    private static Map<Predictor<String, TagGraph>, PredictModel> instanceContainer = new HashMap<>(2);
 
-    public static PredictModel getRelativeSingletonInstance(TagPredictor<String, TagGraph> tagPredictor){
-        if (instanceContainer.get(tagPredictor) == null) {
+    public static PredictModel getRelativeSingletonInstance(Predictor<String, TagGraph> predictor){
+        if (instanceContainer.get(predictor) == null) {
             synchronized (PredictModel.class) {
-                PredictModel predictModel = new PredictModelImpl(tagPredictor);
-                instanceContainer.put(tagPredictor, predictModel);
+                PredictModel predictModel = new PredictModelImpl(predictor);
+                instanceContainer.put(predictor, predictModel);
                 return predictModel;
             }
         }
-        return instanceContainer.get(tagPredictor);
+        return instanceContainer.get(predictor);
     }
 
 
-    public PredictModelImpl(TagPredictor<String, TagGraph> tagPredictor) {
-        this.tagPredictor = tagPredictor;
+    public PredictModelImpl(Predictor<String, TagGraph> predictor) {
+        this.predictor = predictor;
     }
 
     @Override
     public List<Tag> predict(String source) {
-        return tagPredictor.predictSync(source);
+        return predictor.predictSync(source);
     }
 
     @Override
     public void train(String source) throws Exception {
-        tagPredictor.trainSync(new TrainTagTarget(source));
+        predictor.trainSync(new TrainSource(source));
     }
 
 }

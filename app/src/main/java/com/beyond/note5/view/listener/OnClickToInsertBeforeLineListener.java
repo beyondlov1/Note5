@@ -4,6 +4,8 @@ import android.view.View;
 import android.widget.EditText;
 import android.widget.TextView;
 
+import com.beyond.note5.MyApplication;
+import com.beyond.note5.utils.PreferenceUtil;
 import com.beyond.note5.view.custom.MarkdownAutoRenderEditText;
 import com.beyond.note5.view.markdown.decorate.DefaultMarkdownDecorator;
 
@@ -32,10 +34,12 @@ public class OnClickToInsertBeforeLineListener implements View.OnClickListener {
         int caretPosition = editText.getSelectionEnd();
         int lineStart = getLineStart(caretPosition, (editText.getText() + "\n").toCharArray());
         if (editText instanceof MarkdownAutoRenderEditText){
-            DefaultMarkdownDecorator markdownDecorator = (DefaultMarkdownDecorator)((MarkdownAutoRenderEditText) editText).getMarkdownDecorator();
-            boolean decorated = markdownDecorator.isDecorated(editText.getText(), lineStart, getLineEnd(caretPosition, (editText.getText() + "\n").toCharArray()));
-            if (decorated){
-                return;
+            if (PreferenceUtil.getBoolean(MyApplication.NOTE_SHOULD_EDIT_MARKDOWN_JUST_IN_TIME)){
+                DefaultMarkdownDecorator markdownDecorator = (DefaultMarkdownDecorator)((MarkdownAutoRenderEditText) editText).getMarkdownDecorator();
+                boolean decorated = markdownDecorator.isDecorated(editText.getText(), lineStart, getLineEnd(caretPosition, (editText.getText() + "\n").toCharArray()));
+                if (decorated){
+                    return;
+                }
             }
         }
         editText.getText().insert(lineStart, text + " ");

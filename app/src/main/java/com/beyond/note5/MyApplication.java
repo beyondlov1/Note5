@@ -17,11 +17,12 @@ import com.beyond.note5.model.PredictModel;
 import com.beyond.note5.model.PredictModelImpl;
 import com.beyond.note5.model.dao.DaoMaster;
 import com.beyond.note5.model.dao.DaoSession;
-import com.beyond.note5.predict.TagPredictor;
-import com.beyond.note5.predict.TagPredictorImpl;
+import com.beyond.note5.predict.Predictor;
+import com.beyond.note5.predict.PredictorImpl;
 import com.beyond.note5.predict.bean.TagGraph;
-import com.beyond.note5.predict.train.filter.TimeExpressionTrainTagFilter;
-import com.beyond.note5.predict.train.filter.UrlTrainTagFilter;
+import com.beyond.note5.predict.filter.train.TimeExpressionTrainFilter;
+import com.beyond.note5.predict.filter.train.UrlTrainFilter;
+import com.beyond.note5.predict.filter.train.UselessTrainFilter;
 import com.beyond.note5.service.schedule.ScheduleReceiver;
 import com.beyond.note5.service.schedule.callback.SyncScheduleCallback;
 import com.beyond.note5.service.schedule.utils.ScheduleUtil;
@@ -65,19 +66,9 @@ import java.util.concurrent.Executors;
 
 public class MyApplication extends Application {
 
-    //FIXME: Constrain Preference
+    // Constant
     public static final String SHARED_PREFERENCES_NAME = "note5_preferences";
-    public static final String DEFAULT_PAGE = "default_page";
-    public static final String VIRTUAL_USER_ID = "user.virtual.id";
-    public static final String SYNC_REMOTE_URL = "sync.remote.rootUrl";
     public static final String LOCK_DIR = "/LOCK";
-    private static final String NOTE_SYNC_REMOTE_DAV_SERVERS = "note.sync.remote.dav.servers";
-    public static final String NOTE_SYNC_REMOTE_ROOT_PATHS = "note.sync.remote.root.paths";
-    private static final String TODO_SYNC_REMOTE_DAV_SERVERS = "todo.sync.remote.dav.servers";
-    public static final String TODO_SYNC_REMOTE_ROOT_PATHS = "todo.sync.remote.root.paths";
-
-    public static final String DAV_ROOT_DIR = "test/version2";
-
     public static final String LOG_PATH = "LOCK/sync.log";
     public static final String NOTE_LOCK_PATH = "/LOCK/note_lock.lock";
     public static final String LOGIN_PATH = "/LOCK/";
@@ -86,10 +77,20 @@ public class MyApplication extends Application {
     public static final String TODO_LOCK_PATH = "/LOCK/todo_lock.lock";
     public static final String TODO_LST_PATH = "/LOCK/todo_last_sync_time.mark";
     public static final String TODO_LOG_PATH = "/LOCK/todo_sync.log";
+    public static final String DAV_ROOT_DIR = "test/version2";
 
-    public static final String SYNC_SCHEDULED = "sync.scheduled";
-    public static final String SYNC_SHOULD_SCHEDULE = "sync.should.schedule";
-    public static final String NOTE_NOTIFICATION_SHOULD_SCHEDULE = "note.notification.should.schedule";
+    // Preference Name Auto Config
+    public static final String DEFAULT_PAGE = "default_page";
+    public static final String NOTE_SYNC_REMOTE_ROOT_PATHS = "note.sync.remote.root.paths";
+    public static final String TODO_SYNC_REMOTE_ROOT_PATHS = "todo.sync.remote.root.paths";
+
+    // Preference Name Manual Configurable
+    public static final String VIRTUAL_USER_ID = "user.virtual.id";
+    public static final String SYNC_SHOULD_SCHEDULE = "sync.schedule.enabled";
+    public static final String NOTE_NOTIFICATION_SHOULD_SCHEDULE = "note.notification.schedule.enabled";
+    public static final String NOTE_SHOULD_EDIT_MARKDOWN_JUST_IN_TIME = "todo.markdown.edit.render.jit.enabled";
+    public static final String TODO_SHOULD_TRAIN = "todo.train.enabled";
+    public static final String FLOAT_BUTTON_SHOULD_SHOW = "float.button.enabled";
 
     private static MyApplication instance;
 
@@ -126,7 +127,6 @@ public class MyApplication extends Application {
     }
 
     private void scheduleSyncService() {
-        PreferenceUtil.put(SYNC_SHOULD_SCHEDULE, true);
         boolean shouldSchedule = PreferenceUtil.getBoolean(SYNC_SHOULD_SCHEDULE, false);
 
         String userId = PreferenceUtil.getString(VIRTUAL_USER_ID);
@@ -138,25 +138,12 @@ public class MyApplication extends Application {
             ScheduleReceiver.cancel(this,ScheduleReceiver.SYNC_REQUEST_CODE);
             ScheduleReceiver.scheduleRepeat(this,ScheduleReceiver.SYNC_REQUEST_CODE,
                     calendar.getTimeInMillis(),24*60*60*1000,SyncScheduleCallback.class);
-            PreferenceUtil.put(SYNC_SCHEDULED, true);
         } else {
             ScheduleReceiver.cancel(this,ScheduleReceiver.SYNC_REQUEST_CODE);
-            PreferenceUtil.put(SYNC_SCHEDULED, false);
         }
-        boolean scheduled = PreferenceUtil.getBoolean(SYNC_SCHEDULED, false);
-        ToastUtil.toast(this,"是否已设定同步时间:"+scheduled);
     }
 
     private void startNotificationScanner() {
-        PreferenceUtil.put(NOTE_NOTIFICATION_SHOULD_SCHEDULE, true);
-//        boolean shouldSchedule = PreferenceUtil.getBoolean(NOTE_NOTIFICATION_SHOULD_SCHEDULE, false);
-//        if (shouldSchedule){
-//            ScheduleReceiver.cancel(this,ScheduleReceiver.NOTIFICATION_SCAN_REQUEST_CODE);
-//            ScheduleReceiver.scheduleRepeat(this,ScheduleReceiver.NOTIFICATION_SCAN_REQUEST_CODE,
-//                    System.currentTimeMillis(), 60*1000,NoteNotifyScheduleCallback.class);
-//        }else {
-//            ScheduleReceiver.cancel(this,ScheduleReceiver.NOTIFICATION_SCAN_REQUEST_CODE);
-//        }
         boolean shouldSchedule = PreferenceUtil.getBoolean(NOTE_NOTIFICATION_SHOULD_SCHEDULE, false);
         if (!shouldSchedule) {
             return;
@@ -178,17 +165,7 @@ public class MyApplication extends Application {
     }
 
     public void initPreference() {
-        String syncRemoteUrl = PreferenceUtil.getString(SYNC_REMOTE_URL);
-        if (StringUtils.isBlank(syncRemoteUrl)) {
-            PreferenceUtil.put(SYNC_REMOTE_URL, "https://dav.jianguoyun.com/dav/Note5/data/note.dat");
-        }
-
-        String noteSyncRemoteRootUrls = PreferenceUtil.getString(NOTE_SYNC_REMOTE_ROOT_PATHS);
-        PreferenceUtil.put(NOTE_SYNC_REMOTE_DAV_SERVERS, "http://192.168.1.103:8070/repository/default/nut3/|https://dav.jianguoyun.com/dav/tera3/");
         PreferenceUtil.put(NOTE_SYNC_REMOTE_ROOT_PATHS, "note/splice1|note/splice2");
-
-        String syncRemoteRootUrls = PreferenceUtil.getString(TODO_SYNC_REMOTE_ROOT_PATHS);
-        PreferenceUtil.put(TODO_SYNC_REMOTE_DAV_SERVERS, "http://192.168.1.103:8070/repository/default/nut3/|https://dav.jianguoyun.com/dav/tera3/");
         PreferenceUtil.put(TODO_SYNC_REMOTE_ROOT_PATHS, "todo/splice1|todo/splice2");
 
         String virtualUserId = PreferenceUtil.getString(VIRTUAL_USER_ID);
@@ -396,12 +373,13 @@ public class MyApplication extends Application {
         if (predictModel == null) {
             File storageDir = this.getExternalFilesDir(Environment.DIRECTORY_DOCUMENTS);
             assert storageDir != null;
-            TagPredictor<String, TagGraph> tagPredictor = new TagPredictorImpl(
+            Predictor<String, TagGraph> predictor = new PredictorImpl(
                     new File(storageDir.getAbsolutePath() + File.separator + "model.json"), true);
-            tagPredictor.addTrainFilter(new UrlTrainTagFilter());
-            tagPredictor.addTrainFilter(new TimeExpressionTrainTagFilter());
-            tagPredictor.setExecutorService(executorService);
-            predictModel = PredictModelImpl.getRelativeSingletonInstance(tagPredictor);
+            predictor.addTrainFilter(new UselessTrainFilter());
+            predictor.addTrainFilter(new UrlTrainFilter());
+            predictor.addTrainFilter(new TimeExpressionTrainFilter());
+            predictor.setExecutorService(executorService);
+            predictModel = PredictModelImpl.getRelativeSingletonInstance(predictor);
         }
         return predictModel;
     }

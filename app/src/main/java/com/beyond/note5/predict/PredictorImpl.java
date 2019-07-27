@@ -4,13 +4,13 @@ import android.util.Log;
 
 import com.beyond.note5.predict.bean.Tag;
 import com.beyond.note5.predict.bean.TagGraph;
-import com.beyond.note5.predict.params.TagPredictCallback;
+import com.beyond.note5.predict.params.PredictCallback;
 import com.beyond.note5.predict.serializer.TagGraphSerializerImpl;
-import com.beyond.note5.predict.train.FilterableTagTrainer;
-import com.beyond.note5.predict.train.TagTrainer;
-import com.beyond.note5.predict.train.TagTrainerImpl;
-import com.beyond.note5.predict.train.filter.AbstractTrainTagFilter;
-import com.beyond.note5.predict.train.target.TrainTagTarget;
+import com.beyond.note5.predict.train.FilterableTrainer;
+import com.beyond.note5.predict.train.Trainer;
+import com.beyond.note5.predict.train.TrainerImpl;
+import com.beyond.note5.predict.filter.train.TrainFilter;
+import com.beyond.note5.predict.train.TrainSource;
 
 import org.apache.commons.lang3.StringUtils;
 
@@ -29,31 +29,31 @@ import java.util.concurrent.atomic.AtomicBoolean;
  * @date 2019/03/11
  */
 @SuppressWarnings("WeakerAccess")
-public class TagPredictorImpl implements TagPredictor<String, TagGraph>, Observer {
+public class PredictorImpl implements Predictor<String, TagGraph>, Observer {
 
     private TagGraph tagGraph;
-    private TagTrainer tagTrainer;
+    private Trainer trainer;
     private ExecutorService executorService;
 
     private AtomicBoolean isReady = new AtomicBoolean(false);
 
-    public TagPredictorImpl(File file) {
+    public PredictorImpl(File file) {
         TagGraphSerializerImpl serializer = new TagGraphSerializerImpl(file);
         serializer.addObserver(this);
 
-        this.tagTrainer = TagTrainerImpl.create(serializer);
+        this.trainer = TrainerImpl.create(serializer);
         this.tagGraph = serializer.generate();
     }
 
-    public TagPredictorImpl(File file,boolean isFilterable) {
+    public PredictorImpl(File file, boolean isFilterable) {
         TagGraphSerializerImpl serializer = new TagGraphSerializerImpl(file);
         serializer.addObserver(this);
 
-        TagTrainer tagTrainer = TagTrainerImpl.create(serializer);
+        Trainer trainer = TrainerImpl.create(serializer);
         if (isFilterable){
-            this.tagTrainer = new FilterableTagTrainer(tagTrainer);
+            this.trainer = new FilterableTrainer(trainer);
         }else {
-            this.tagTrainer = tagTrainer;
+            this.trainer = trainer;
         }
         this.tagGraph = serializer.generate();
     }
@@ -63,9 +63,9 @@ public class TagPredictorImpl implements TagPredictor<String, TagGraph>, Observe
      *
      * @param content 预测内容
      */
-    public void predictAsync(final String content, final TagPredictCallback<String, TagGraph> tagPredictCallback) {
+    public void predictAsync(final String content, final PredictCallback<String, TagGraph> predictCallback) {
         if (isReady.get() && tagGraph == null) { // 试图解决缓存失效的问题， 不知道管不管用
-            this.tagGraph = tagTrainer.getTagGraph();
+            this.tagGraph = trainer.getTagGraph();
         }
         executorService.execute(new Runnable() {
             @Override
@@ -80,9 +80,9 @@ public class TagPredictorImpl implements TagPredictor<String, TagGraph>, Observe
                     count++;
                 }
                 if (count < 80) {
-                    tagPredictCallback.onSuccess(content, tagGraph);
+                    predictCallback.onSuccess(content, tagGraph);
                 } else {
-                    tagPredictCallback.onFail();
+                    predictCallback.onFail();
                 }
             }
         });
@@ -116,22 +116,22 @@ public class TagPredictorImpl implements TagPredictor<String, TagGraph>, Observe
     }
 
     @Override
-    public void addTrainFilter(AbstractTrainTagFilter filter) {
-        if (tagTrainer instanceof FilterableTagTrainer){
-            ((FilterableTagTrainer) tagTrainer).addFilter(filter);
+    public void addTrainFilter(TrainFilter filter) {
+        if (trainer instanceof FilterableTrainer){
+            ((FilterableTrainer) trainer).addFilter(filter);
         }else {
             Log.w("TagPredictImpl","not filterableTagTrainer, can not add filter");
         }
     }
 
     @Override
-    public void trainSync(TrainTagTarget trainTagTarget) throws Exception {
-        tagTrainer.trainSync(trainTagTarget);
+    public void trainSync(TrainSource trainTagTarget) throws Exception {
+        trainer.trainSync(trainTagTarget);
     }
 
     @Override
-    public void trainAsync(TrainTagTarget trainTagTarget) throws Exception {
-        tagTrainer.trainAsync(trainTagTarget);
+    public void trainAsync(TrainSource trainTagTarget) throws Exception {
+        trainer.trainAsync(trainTagTarget);
     }
 
     public void setExecutorService(ExecutorService executorService) {

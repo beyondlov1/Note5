@@ -7,6 +7,7 @@ import android.util.Log;
 import com.beyond.note5.MyApplication;
 import com.beyond.note5.model.PredictModel;
 import com.beyond.note5.predict.bean.Tag;
+import com.beyond.note5.utils.PreferenceUtil;
 import com.beyond.note5.view.PredictView;
 
 import java.util.List;
@@ -33,6 +34,9 @@ public class PredictPresenterImpl implements PredictPresenter {
 
     @Override
     public void predict(final String source) {
+        if (!PreferenceUtil.getBoolean(MyApplication.TODO_SHOULD_TRAIN,true)){
+            return;
+        }
         executorService.execute(new Runnable() {
             @Override
             public void run() {
@@ -70,6 +74,9 @@ public class PredictPresenterImpl implements PredictPresenter {
 
     @Override
     public void train(final String source) {
+        if (PreferenceUtil.getBoolean(MyApplication.TODO_SHOULD_TRAIN,true)){
+            return;
+        }
         executorService.execute(new Runnable() {
             @Override
             public void run() {
