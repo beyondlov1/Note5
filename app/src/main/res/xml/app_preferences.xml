@@ -1,0 +1,56 @@
+<android.support.v7.preference.PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
+
+    <!--<android.support.v7.preference.PreferenceCategory-->
+        <!--android:title="Category 1">-->
+
+        <!--<android.support.v7.preference.SwitchPreferenceCompat-->
+            <!--android:key="key1"-->
+            <!--android:title="Switch Preference"-->
+            <!--android:summary="Switch Summary"-->
+            <!--android:defaultValue="true" />-->
+
+        <!--<android.support.v7.preference.EditTextPreference-->
+            <!--android:key="key2"-->
+            <!--android:title="EditText Preference"-->
+            <!--android:summary="EditText Summary"-->
+            <!--android:dialogMessage="Dialog Message"-->
+            <!--android:defaultValue="Default value" />-->
+        <!--<android.support.v7.preference.CheckBoxPreference-->
+            <!--android:key="key3"-->
+            <!--android:title="CheckBox Preference"-->
+            <!--android:summary="CheckBox Summary"-->
+            <!--android:defaultValue="true"/>-->
+        <!--<com.beyond.note5.config.ForwardPreference-->
+            <!--android:key="key4"-->
+            <!--android:title="ForwardPreference Preference"-->
+            <!--android:summary="ForwardPreference Summary"-->
+            <!--android:dialogMessage="Dialog Message"-->
+            <!--android:defaultValue="Default value"-->
+            <!--app:forwardClassName = "com.beyond.note5.view.DavLoginActivity"/>-->
+        <!--<android.support.v7.preference.ListPreference-->
+            <!--android:key="key5"-->
+            <!--android:title="ForwardPreference Preference"-->
+            <!--android:summary="ForwardPreference Summary"-->
+            <!--android:entries="@array/list_entries"-->
+            <!--android:entryValues="@array/list_entries_value"-->
+            <!--android:dialogTitle="dialogTitle"-->
+            <!--android:defaultValue="@array/list_entries_value2"/>-->
+
+    <!--</android.support.v7.preference.PreferenceCategory>-->
+
+    <android.support.v7.preference.PreferenceCategory
+        android:title="同步">
+
+        <com.beyond.note5.config.ForwardPreference
+            android:key="sync.accounts"
+            android:title="管理同步账号"
+            android:summary="DAV账号: 坚果云, TeraCloud ..."
+            android:dialogMessage="Dialog Message"
+            android:defaultValue="Default value"
+            app:forwardClassName = "com.beyond.note5.view.DavLoginActivity"/>
+
+    </android.support.v7.preference.PreferenceCategory>
+
+
+</android.support.v7.preference.PreferenceScreen>

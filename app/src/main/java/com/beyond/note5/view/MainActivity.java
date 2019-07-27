@@ -70,7 +70,7 @@ import com.beyond.note5.view.adapter.view.NoteViewAdapter;
 import com.beyond.note5.view.animator.DefaultSmoothScaleAnimation;
 import com.beyond.note5.view.animator.SmoothScalable;
 import com.beyond.note5.view.animator.SmoothScaleAnimation;
-import com.beyond.note5.view.fragment.ConfigFragment;
+import com.beyond.note5.view.fragment.PreferenceFragment;
 import com.beyond.note5.view.fragment.FragmentContainerAware;
 import com.beyond.note5.view.fragment.NoteDetailSuperFragment;
 import com.beyond.note5.view.fragment.NoteEditFragment;
@@ -226,7 +226,7 @@ public class MainActivity extends FragmentActivity implements
     private void initViewPager() {
         Fragment noteFragment = new NoteListFragment();
         Fragment todoFragment = new TodoListFragment();
-        Fragment configFragment = new ConfigFragment();
+        Fragment configFragment = new PreferenceFragment();
         fragments.add(noteFragment);
         fragments.add(todoFragment);
         fragments.add(configFragment);
@@ -471,13 +471,14 @@ public class MainActivity extends FragmentActivity implements
 
     @Override
     protected void onStop() {
-        EventBus.getDefault().post(new ShowFloatButtonEvent(null));
+
         EventBus.getDefault().unregister(this);
         super.onStop();
     }
 
     @Override
     protected void onDestroy() {
+        EventBus.getDefault().post(new ShowFloatButtonEvent(null));
         int currentItem = mainViewPager.getCurrentItem();
         PreferenceUtil.put(MyApplication.DEFAULT_PAGE, currentItem);
         Log.d("MainActivity", currentItem + "");

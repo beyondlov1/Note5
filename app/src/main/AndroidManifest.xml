@@ -76,6 +76,11 @@
             android:launchMode="singleInstance"
             android:screenOrientation="portrait"
             android:theme="@style/TranslucentTheme" />
+        <activity
+            android:name=".view.TestActivity"
+            android:launchMode="singleTask"
+            android:screenOrientation="portrait"
+            android:theme="@style/StartLoadBackgroundFullScreenTheme" />
 
 
         <activity
