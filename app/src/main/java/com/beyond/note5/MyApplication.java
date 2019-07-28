@@ -208,7 +208,7 @@ public class MyApplication extends Application {
 
             NoteDavDataSourceWrap noteDavDataSourceWrap = new NoteDavDataSourceWrap(noteDavDataSource1);
             noteSynchronizers.add(new DavSynchronizer4.Builder<Note>()
-                    .localDataSource(new NoteSqlDataSourceWrap(noteLocalDataSource, noteDavDataSourceWrap))
+                    .localDataSource(new NoteSqlDataSourceWrap(noteLocalDataSource))
                     .remoteDataSource(noteDavDataSourceWrap)
                     .logPath(NOTE_LOG_PATH)
                     .build());
@@ -258,7 +258,7 @@ public class MyApplication extends Application {
         DaoMaster daoMaster = new DaoMaster(writableDatabase);
         daoSession = daoMaster.newSession();
 
-//        daoSession.getAccountDao().deleteAll();
+//        daoSession.getSyncInfoDao().queryBuilder().where(SyncInfoDao.Properties.Id.like("50f13%")).buildDelete().executeDeleteWithoutDetachingEntities();
     }
 
     public ExecutorService getExecutorService() {
@@ -339,7 +339,7 @@ public class MyApplication extends Application {
             }, new Runnable() {
                 @Override
                 public void run() {
-                    ToastUtil.toast(getApplicationContext(), "同步失败");
+                    ToastUtil.toast(getApplicationContext(), "同步失败, 将于稍后重试");
                 }
             });
         }

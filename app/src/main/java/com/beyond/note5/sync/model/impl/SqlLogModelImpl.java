@@ -136,4 +136,13 @@ public class SqlLogModelImpl<T> implements SqlLogModel {
                 .list();
     }
 
+    @Override
+    public List<SyncLogInfo> getAllWithoutSourceWhereCreateTimeAfter(Date date, String excludeSource) {
+        return logInfoDao.queryBuilder()
+                .where(SyncLogInfoDao.Properties.CreateTime.gt(date))
+                .where(SyncLogInfoDao.Properties.Source.notEq(excludeSource))
+                .where(SyncLogInfoDao.Properties.Type.eq(type))
+                .list();
+    }
+
 }

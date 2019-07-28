@@ -5,6 +5,8 @@ import android.util.Log;
 import com.beyond.note5.MyApplication;
 import com.beyond.note5.bean.Tracable;
 import com.beyond.note5.service.SyncRetryService;
+import com.beyond.note5.sync.SyncContext;
+import com.beyond.note5.sync.SyncContextAware;
 import com.beyond.note5.sync.Synchronizer;
 import com.beyond.note5.sync.datasource.DataSource;
 import com.beyond.note5.sync.datasource.DavDataSource;
@@ -75,7 +77,7 @@ public class DavSynchronizer4<T extends Tracable> implements Synchronizer<T> {
 
     private void retryIfNecessary(long delay) {
         SyncRetryService.retryIfNecessary(MyApplication.getInstance(), delay);
-        SyncRetryService.failed();
+        SyncRetryService.addFailCount();
     }
 
     private boolean doSync() throws Exception {
@@ -134,7 +136,7 @@ public class DavSynchronizer4<T extends Tracable> implements Synchronizer<T> {
             excludeSuccess(modified1);
             excludeSuccess(modified2);
 
-            if (modified1.isEmpty() && modified2.isEmpty()){
+            if (modified1.isEmpty() && modified2.isEmpty()) {
                 return false;
             }
 
@@ -335,10 +337,9 @@ public class DavSynchronizer4<T extends Tracable> implements Synchronizer<T> {
 
     public static class Builder<T extends Tracable> {
 
+        private SyncContext context;
         private DataSource<T> local;
-
         private DavDataSource<T> remote;
-
         private String logPath;
 
         public Builder() {
@@ -358,6 +359,11 @@ public class DavSynchronizer4<T extends Tracable> implements Synchronizer<T> {
             return this;
         }
 
+        public Builder<T> context(SyncContext context) {
+            this.context = context;
+            return this;
+        }
+
         public Builder<T> logPath(String logPath) {
             this.logPath = logPath;
             return this;
@@ -367,6 +373,15 @@ public class DavSynchronizer4<T extends Tracable> implements Synchronizer<T> {
             DavSynchronizer4<T> synchronizer = new DavSynchronizer4<>();
             if (local == null || remote == null) {
                 throw new RuntimeException("dataSource1 and dataSource2 can not be null");
+            }
+            if (context == null) {
+                context = new SyncContext(local, remote);
+            }
+            if (local instanceof SyncContextAware) {
+                ((SyncContextAware) local).setContext(context);
+            }
+            if (remote instanceof SyncContextAware) {
+                ((SyncContextAware) remote).setContext(context);
             }
             synchronizer.dataSource1 = local;
             synchronizer.dataSource2 = remote;

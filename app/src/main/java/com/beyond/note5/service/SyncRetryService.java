@@ -49,13 +49,18 @@ public class SyncRetryService extends Service {
 
     public static void retryIfNecessary(Context context, long delay) {
         long currentTimeMillis = System.currentTimeMillis();
-        if (nextRetryTimeMillis == null || nextRetryTimeMillis.get() < currentTimeMillis) {
+        if (nextRetryTimeMillis == null ){
+            SyncRetryService.retry(context, delay);
+            nextRetryTimeMillis= new AtomicLong(currentTimeMillis + delay);
+            return;
+        }
+        if (nextRetryTimeMillis.get() < currentTimeMillis) {
             SyncRetryService.retry(context, delay);
             nextRetryTimeMillis.set(currentTimeMillis + delay);
         }
     }
 
-    public static void failed() {
+    public static void addFailCount() {
         failCount++;
     }
 

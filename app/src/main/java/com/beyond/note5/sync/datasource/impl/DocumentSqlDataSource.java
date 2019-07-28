@@ -5,6 +5,8 @@ import com.beyond.note5.bean.Document;
 import com.beyond.note5.event.AbstractEvent;
 import com.beyond.note5.model.dao.SyncInfoDao;
 import com.beyond.note5.presenter.DocumentPresenter;
+import com.beyond.note5.sync.SyncContext;
+import com.beyond.note5.sync.SyncContextAware;
 import com.beyond.note5.sync.datasource.DataSource;
 import com.beyond.note5.sync.model.SqlLogModel;
 import com.beyond.note5.sync.model.bean.SyncInfo;
@@ -27,10 +29,10 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-public abstract class DocumentSqlDataSource<T extends Document> implements DataSource<T> {
+public abstract class DocumentSqlDataSource<T extends Document> implements DataSource<T>, SyncContextAware {
 
+    private SyncContext context;
     private DocumentPresenter<T> documentPresenter;
-
     private SqlLogModel sqlLogModel;
 
     public DocumentSqlDataSource() {
@@ -134,15 +136,14 @@ public abstract class DocumentSqlDataSource<T extends Document> implements DataS
 
         // 日志的操作时间大于上次同步成功的最后修改时间
         // 会改变lastModifyTime类型的, 如 add, update
-        List<SyncLogInfo> lastModifyTimeChangeableLogs = sqlLogModel.getAllBySourceWhereOperationTimeAfter(
-                traceInfo.getLastModifyTime() == null?new Date(0):traceInfo.getLastModifyTime(),
-                getKey());
+        List<SyncLogInfo> lastModifyTimeChangeableLogs = sqlLogModel.getAllWhereOperationTimeAfter(
+                traceInfo.getLastModifyTime() == null?new Date(0):traceInfo.getLastModifyTime());
 
-        // 日志的操作时间大于上次同步成功的同步开始时间 , 并且source是本机的
+        // 日志的操作时间大于上次同步成功的同步开始时间 , 并且source是不是对方dataSource的
         // 改变priority这种不更改lastModifyTime的, 如 改变priority
-        List<SyncLogInfo> lastModifyTimeUnchangeableLogs = sqlLogModel.getAllBySourceWhereCreateTimeAfter(
+        List<SyncLogInfo> lastModifyTimeUnchangeableLogs = sqlLogModel.getAllWithoutSourceWhereCreateTimeAfter(
                 traceInfo.getLastSyncTimeStart() == null?new Date(0):traceInfo.getLastSyncTimeStart(),
-                getKey());
+                context.getCorrespondKey(this));
         List<SyncLogInfo> modifiedLogs = new ArrayList<>();
         modifiedLogs.addAll(lastModifyTimeChangeableLogs);
         modifiedLogs.addAll(lastModifyTimeUnchangeableLogs);
@@ -261,5 +262,10 @@ public abstract class DocumentSqlDataSource<T extends Document> implements DataS
     @Override
     public boolean release() {
         return true;
+    }
+
+    @Override
+    public void setContext(SyncContext context) {
+        this.context = context;
     }
 }

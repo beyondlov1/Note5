@@ -6,7 +6,6 @@ import android.content.Context;
 import android.graphics.Color;
 import android.support.v4.content.ContextCompat;
 import android.view.View;
-import android.view.Window;
 import android.view.WindowManager;
 
 import com.beyond.note5.R;
@@ -23,12 +22,6 @@ public class StatusBarUtil {
         View decorView = activity.getWindow().getDecorView();
         decorView.setSystemUiVisibility(View.SYSTEM_UI_FLAG_LIGHT_STATUS_BAR);
         activity.getWindow().setStatusBarColor(ContextCompat.getColor(activity, R.color.white));
-    }
-
-    public static void showLightWhiteStatusBar(Context context, Window window) {
-        View decorView = window.getDecorView();
-        decorView.setSystemUiVisibility(View.SYSTEM_UI_FLAG_LIGHT_STATUS_BAR);
-        window.setStatusBarColor(ContextCompat.getColor(context, R.color.white));
     }
 
     public static void showStableStatusBar(Activity activity) {

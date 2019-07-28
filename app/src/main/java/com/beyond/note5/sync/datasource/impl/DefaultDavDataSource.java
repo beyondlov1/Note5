@@ -346,6 +346,16 @@ public class DefaultDavDataSource<T extends Document> implements DavDataSource<T
         return result;
     }
 
+    @Override
+    public void upload(String url, String path) throws IOException {
+        getClient().upload(path,url);
+    }
+
+    @Override
+    public void download(String url, String path) throws IOException {
+        getClient().download(url,path);
+    }
+
     public static class Builder<T extends Document> {
         private DavClient client;
 

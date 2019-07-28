@@ -2,8 +2,10 @@ package com.beyond.note5.sync.datasource.impl;
 
 
 import com.beyond.note5.bean.Todo;
+import com.beyond.note5.sync.SyncContext;
 import com.beyond.note5.sync.datasource.DataSource;
 import com.beyond.note5.sync.datasource.DavDataSource;
+import com.beyond.note5.sync.datasource.SqlDataSource;
 import com.beyond.note5.sync.exception.SyncException;
 import com.beyond.note5.sync.model.bean.TraceInfo;
 
@@ -11,7 +13,7 @@ import java.io.IOException;
 import java.util.Date;
 import java.util.List;
 
-public class TodoSqlDataSourceWrap implements DataSource<Todo> {
+public class TodoSqlDataSourceWrap implements SqlDataSource<Todo> {
 
     private final TodoSqlDataSource todoSqlDataSource;
 
@@ -145,5 +147,10 @@ public class TodoSqlDataSourceWrap implements DataSource<Todo> {
     @Override
     public boolean release() {
         return todoSqlDataSource.release();
+    }
+
+    @Override
+    public void setContext(SyncContext context) {
+        todoSqlDataSource.setContext(context);
     }
 }

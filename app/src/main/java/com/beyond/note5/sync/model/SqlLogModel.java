@@ -29,4 +29,6 @@ public interface SqlLogModel {
     List<SyncLogInfo> getAllBySourceWhereCreateTimeAfter(Date date,String source);
 
     List<SyncLogInfo> getAllBySourceWhereOperationTimeAfter(Date date, String source);
+
+    List<SyncLogInfo> getAllWithoutSourceWhereCreateTimeAfter(Date date,String excludeSource);
 }

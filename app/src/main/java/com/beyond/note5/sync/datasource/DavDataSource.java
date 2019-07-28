@@ -2,7 +2,7 @@ package com.beyond.note5.sync.datasource;
 
 import com.beyond.note5.sync.webdav.client.DavClient;
 
-public interface DavDataSource<T> extends DataSource<T> {
+public interface DavDataSource<T> extends DataSource<T>,FileStore {
     String getServer();
 
     String[] getPaths();

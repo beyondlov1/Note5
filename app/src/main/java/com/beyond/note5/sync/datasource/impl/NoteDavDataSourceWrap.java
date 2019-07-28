@@ -39,9 +39,9 @@ public class NoteDavDataSourceWrap implements DavDataSource<Note> {
         if (attachments!= null && !attachments.isEmpty()){
             for (Attachment attachment : attachments) {
                 if (new File(attachment.getPath()).exists()){
-                    getClient().upload(
-                            getLocalPath(attachment),
-                            getRemoteUrl(note, server, attachment)
+                    upload(
+                            getRemoteUrl(note, server, attachment),
+                            getLocalPath(attachment)
                     );
                 }else {
                     Log.i(getClass().getSimpleName(),"附件不存在");
@@ -123,9 +123,9 @@ public class NoteDavDataSourceWrap implements DavDataSource<Note> {
                     continue;
                 }
                 if (new File(attachment.getPath()).exists()){
-                    getClient().upload(
-                            getLocalPath(attachment),
-                            getRemoteUrl(note, server, attachment)
+                    upload(
+                            getRemoteUrl(note, server, attachment),
+                            getLocalPath(attachment)
                     );
                 }else {
                     Log.i(getClass().getSimpleName(),"附件不存在");
@@ -228,5 +228,13 @@ public class NoteDavDataSourceWrap implements DavDataSource<Note> {
         return defaultDavDataSource.selectByModifiedDate(date);
     }
 
+    @Override
+    public void upload(String url, String path) throws IOException {
+        defaultDavDataSource.upload(url, path);
+    }
 
+    @Override
+    public void download(String url, String path) throws IOException {
+        defaultDavDataSource.download(url, path);
+    }
 }

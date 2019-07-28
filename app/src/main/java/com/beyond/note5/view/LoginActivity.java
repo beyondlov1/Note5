@@ -5,11 +5,14 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.support.annotation.Nullable;
 import android.support.v7.app.AppCompatActivity;
+import android.support.v7.widget.ListPopupWindow;
 import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.StaggeredGridLayoutManager;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.AdapterView;
+import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.CheckBox;
 import android.widget.CompoundButton;
@@ -24,6 +27,7 @@ import com.beyond.note5.model.AccountModelImpl;
 import com.beyond.note5.presenter.AccountPresenter;
 import com.beyond.note5.presenter.AccountPresenterImpl;
 import com.beyond.note5.utils.OkWebDavUtil;
+import com.beyond.note5.utils.StatusBarUtil;
 import com.beyond.note5.utils.ToastUtil;
 import com.beyond.note5.view.adapter.view.AccountViewAdapter;
 
@@ -70,11 +74,48 @@ public abstract class LoginActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_login);
 
+        StatusBarUtil.showLightWhiteStatusBar(this);
+
         accountPresenter = new AccountPresenterImpl(new AccountModelImpl(),new MyAccountView());
 
         initView();
 
+        initEvent();
 
+    }
+
+    protected void initEvent(){
+        server.setOnFocusChangeListener(new View.OnFocusChangeListener() {
+            @Override
+            public void onFocusChange(View v, boolean hasFocus) {
+                if (hasFocus){
+                    showListPopupWindow();
+                }
+            }
+        });
+    }
+
+
+    private void showListPopupWindow() {
+        final String[] showArray = {"坚果云", "TeraCloud"};//要填充的数据
+        final String[] dataArray = {"https://dav.jianguoyun.com/dav/", "https://yura.teracloud.jp/dav/"};//要填充的数据
+        final ListPopupWindow listPopupWindow;
+        listPopupWindow = new ListPopupWindow(this);
+        listPopupWindow.setAdapter(new ArrayAdapter<String>(
+                this, android.R.layout.simple_list_item_1,
+                showArray) {
+        });//用android内置布局，或设计自己的样式
+        listPopupWindow.setAnchorView(server);//以哪个控件为基准，在该处以mEditText为基准
+        listPopupWindow.setModal(false);
+
+        listPopupWindow.setOnItemClickListener(new AdapterView.OnItemClickListener() {//设置项点击监听
+            @Override
+            public void onItemClick(AdapterView<?> adapterView, View view, int i, long l) {
+                server.setText(dataArray[i]);//把选择的选项内容展示在EditText上
+                listPopupWindow.dismiss();//如果已经选择了，隐藏起来
+            }
+        });
+        listPopupWindow.show();
     }
 
     protected void initView(){
