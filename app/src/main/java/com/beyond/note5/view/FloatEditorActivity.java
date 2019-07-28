@@ -7,11 +7,11 @@ import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentActivity;
 import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentTransaction;
-import android.support.v4.content.ContextCompat;
 import android.view.View;
 
 import com.beyond.note5.R;
 import com.beyond.note5.event.AfterFloatEditorSavedEvent;
+import com.beyond.note5.utils.StatusBarUtil;
 import com.beyond.note5.view.fragment.TodoEditFragment;
 import com.beyond.note5.view.listener.OnKeyboardChangeListener;
 
@@ -34,9 +34,7 @@ public class FloatEditorActivity extends FragmentActivity implements View.OnClic
     }
 
     private void initStatusBar(){
-        View decorView = getWindow().getDecorView();
-        decorView.setSystemUiVisibility(View.SYSTEM_UI_FLAG_LIGHT_STATUS_BAR);
-        getWindow().setStatusBarColor(ContextCompat.getColor(this,R.color.transparent));
+        StatusBarUtil.showTransparentStatusBar(this);
     }
 
     private void initView() {

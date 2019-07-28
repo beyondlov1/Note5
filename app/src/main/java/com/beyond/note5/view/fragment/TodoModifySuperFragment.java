@@ -2,7 +2,6 @@ package com.beyond.note5.view.fragment;
 
 import android.annotation.SuppressLint;
 import android.content.Intent;
-import android.graphics.Color;
 import android.net.Uri;
 import android.os.Bundle;
 import android.support.v4.content.ContextCompat;
@@ -36,6 +35,7 @@ import com.beyond.note5.utils.HighlightUtil;
 import com.beyond.note5.utils.HtmlUtil;
 import com.beyond.note5.utils.IDUtil;
 import com.beyond.note5.utils.InputMethodUtil;
+import com.beyond.note5.utils.StatusBarUtil;
 import com.beyond.note5.utils.TimeNLPUtil;
 import com.beyond.note5.utils.ToastUtil;
 import com.beyond.note5.utils.ViewUtil;
@@ -367,8 +367,7 @@ public class TodoModifySuperFragment extends AbstractTodoEditorFragment implemen
         smoothScaleAnimation.setAfterShowHook(new Runnable() {
             @Override
             public void run() {
-                getActivity().getWindow().getDecorView().setSystemUiVisibility(View.SYSTEM_UI_FLAG_VISIBLE);
-                getActivity().getWindow().setStatusBarColor(ContextCompat.getColor(getActivity(), R.color.white));
+                StatusBarUtil.showWhiteStatusBar(getActivity());
             }
         });
         smoothScaleAnimation.setAfterHideHook(new Runnable() {
@@ -386,10 +385,7 @@ public class TodoModifySuperFragment extends AbstractTodoEditorFragment implemen
         smoothScaleAnimation.setBeforeHideHook(new Runnable() {
             @Override
             public void run() {
-                getActivity().getWindow().getDecorView().setSystemUiVisibility(View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN
-                        |View.SYSTEM_UI_FLAG_LAYOUT_STABLE
-                        |View.SYSTEM_UI_FLAG_LIGHT_STATUS_BAR);
-                getActivity().getWindow().setStatusBarColor(Color.TRANSPARENT);
+                StatusBarUtil.showStableLightStatusBar(getActivity());
             }
         });
     }

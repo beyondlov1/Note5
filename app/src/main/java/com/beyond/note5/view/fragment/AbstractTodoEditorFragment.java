@@ -23,6 +23,7 @@ import com.beyond.note5.R;
 import com.beyond.note5.bean.Todo;
 import com.beyond.note5.event.ShowKeyBoardEvent;
 import com.beyond.note5.utils.InputMethodUtil;
+import com.beyond.note5.utils.StatusBarUtil;
 import com.beyond.note5.view.custom.SelectionListenableEditText;
 import com.zhy.view.flowlayout.FlowLayout;
 import com.zhy.view.flowlayout.TagAdapter;
@@ -30,7 +31,6 @@ import com.zhy.view.flowlayout.TagFlowLayout;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Objects;
 
 import butterknife.BindView;
 
@@ -88,10 +88,7 @@ public abstract class AbstractTodoEditorFragment extends AbstractDocumentEditorF
     }
 
     private void processStatusBarColor(AlertDialog dialog) {
-        Objects.requireNonNull(dialog.getWindow()).clearFlags(WindowManager.LayoutParams.FLAG_TRANSLUCENT_STATUS);
-        dialog.getWindow().addFlags(WindowManager.LayoutParams.FLAG_DRAWS_SYSTEM_BAR_BACKGROUNDS);
-        dialog.getWindow().setStatusBarColor(ContextCompat.getColor(this.getContext(), R.color.white));
-        dialog.getWindow().getDecorView().setSystemUiVisibility(View.VISIBLE);
+        StatusBarUtil.showWhiteStatusBarForDialog(getActivity(),dialog);
     }
 
     protected abstract void onOKClick();

@@ -8,7 +8,6 @@ import android.annotation.TargetApi;
 import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
-import android.graphics.Color;
 import android.graphics.PixelFormat;
 import android.graphics.Point;
 import android.hardware.display.DisplayManager;
@@ -35,7 +34,6 @@ import android.util.DisplayMetrics;
 import android.util.Log;
 import android.view.MotionEvent;
 import android.view.View;
-import android.view.WindowManager;
 import android.widget.FrameLayout;
 import android.widget.Toast;
 
@@ -64,6 +62,7 @@ import com.beyond.note5.utils.GBData;
 import com.beyond.note5.utils.IDUtil;
 import com.beyond.note5.utils.PhotoUtil;
 import com.beyond.note5.utils.PreferenceUtil;
+import com.beyond.note5.utils.StatusBarUtil;
 import com.beyond.note5.utils.ToastUtil;
 import com.beyond.note5.utils.ViewUtil;
 import com.beyond.note5.view.adapter.view.NoteViewAdapter;
@@ -163,9 +162,9 @@ public class MainActivity extends FragmentActivity implements
     }
 
     private void initColorPicker() {
-        mediaProjectionManager = (MediaProjectionManager)getSystemService(Context.MEDIA_PROJECTION_SERVICE);
+        mediaProjectionManager = (MediaProjectionManager) getSystemService(Context.MEDIA_PROJECTION_SERVICE);
         assert mediaProjectionManager != null;
-        startActivityForResult(mediaProjectionManager.createScreenCaptureIntent(),REQUEST_MEDIA_PROJECTION);
+        startActivityForResult(mediaProjectionManager.createScreenCaptureIntent(), REQUEST_MEDIA_PROJECTION);
     }
 
     private void initInjection() {
@@ -218,9 +217,7 @@ public class MainActivity extends FragmentActivity implements
         pagerTabStrip.setTabIndicatorColor(ContextCompat.getColor(this, R.color.google_yellow));
         pagerTabStrip.setTextColor(ContextCompat.getColor(this, R.color.black));
 
-        View decorView = getWindow().getDecorView();
-        decorView.setSystemUiVisibility(View.SYSTEM_UI_FLAG_LIGHT_STATUS_BAR);
-        getWindow().setStatusBarColor(ContextCompat.getColor(this, R.color.white));
+        StatusBarUtil.showLightWhiteStatusBar(this);
     }
 
     private void initViewPager() {
@@ -254,7 +251,7 @@ public class MainActivity extends FragmentActivity implements
 
         });
         mainViewPager.setCurrentItem(PreferenceUtil.getInt(MyApplication.DEFAULT_PAGE));
-        if (mainViewPager.getCurrentItem() < 2){
+        if (mainViewPager.getCurrentItem() < 2) {
             currentType = documentTypes[mainViewPager.getCurrentItem()];
         }
     }
@@ -265,7 +262,6 @@ public class MainActivity extends FragmentActivity implements
         this.getWindow().getDecorView().getViewTreeObserver().addOnGlobalLayoutListener(onKeyboardChangeListener);
         mainViewPager.setOnScrollChangeListener(this);
     }
-
 
 
     @Override
@@ -284,8 +280,13 @@ public class MainActivity extends FragmentActivity implements
         showFAB();
     }
 
-    private void showFAB(){
-        if (showAnimatorSet == null){
+    private void showFAB() {
+        Fragment currentFragment = fragments.get(mainViewPager.getCurrentItem());
+        if (currentFragment instanceof PreferenceFragment){
+            hideFAB();
+            return;
+        }
+        if (showAnimatorSet == null) {
             initFABAnimator();
         }
         if (!isFabShown.get()) {
@@ -306,8 +307,8 @@ public class MainActivity extends FragmentActivity implements
         hideFAB();
     }
 
-    private void hideFAB(){
-        if (hideAnimatorSet == null){
+    private void hideFAB() {
+        if (hideAnimatorSet == null) {
             initFABAnimator();
         }
         if (isFabShown.get()) {
@@ -326,10 +327,10 @@ public class MainActivity extends FragmentActivity implements
 
     @Subscribe(threadMode = ThreadMode.MAIN)
     public void onReceived(final ShowNoteDetailEvent event) {
-        showNoteDetail(event.get(),event.getData(),event.getIndex(),event.getLoadType());
+        showNoteDetail(event.get(), event.getData(), event.getIndex(), event.getLoadType());
     }
 
-    private void showNoteDetail(View startView, List<Note> data, int index, LoadType loadType){
+    private void showNoteDetail(View startView, List<Note> data, int index, LoadType loadType) {
         noteDetailFragmentContainer.setVisibility(View.VISIBLE);
         EventBus.getDefault().post(new HideFABEvent(null));
 
@@ -347,17 +348,14 @@ public class MainActivity extends FragmentActivity implements
     public void onReceived(HideNoteDetailEvent event) {
         Integer currIndex = event.get();
         int firstIndex = event.getFirstIndex();
-        hideNoteDetail(currIndex,firstIndex);
+        hideNoteDetail(currIndex, firstIndex);
     }
 
-    private void hideNoteDetail(int currIndex, int firstIndex){
-        if (!Document.NOTE.equals(currentType)) {
-            return;
-        }
+    private void hideNoteDetail(int currIndex, int firstIndex) {
         EventBus.getDefault().post(new ShowFABEvent(null));
 
         //获取viewSwitcher划到的位置，获取动画要返回的view
-        View view = getNoteViewToReturn(currIndex, firstIndex);
+        View view = Document.NOTE.equals(currentType) ? getNoteViewToReturn(currIndex, firstIndex) : null;
         noteDetailSmoothScaleAnimation.setEndView(view);
         noteDetailSmoothScaleAnimation.hide();
     }
@@ -367,7 +365,7 @@ public class MainActivity extends FragmentActivity implements
         showTodoEdit(event.get());
     }
 
-    private void showTodoEdit(View startView){
+    private void showTodoEdit(View startView) {
         todoEditFragmentContainer.setVisibility(View.VISIBLE);
         EventBus.getDefault().post(new HideFABEvent(null));
 
@@ -382,31 +380,29 @@ public class MainActivity extends FragmentActivity implements
         hideTodoEditor(event.get());
     }
 
-   private void hideTodoEditor(int returnIndex){
-       if (!Document.TODO.equals(currentType)) {
-           return;
-       }
-       EventBus.getDefault().post(new ShowFABEvent(null));
+    private void hideTodoEditor(int returnIndex) {
+        EventBus.getDefault().post(new ShowFABEvent(null));
 
-       todoEditSmoothScaleAnimation.setEndView(getTodoViewToReturn(returnIndex));
-       todoEditSmoothScaleAnimation.hide();
-   }
+        View view = Document.TODO.equals(currentType) ? getTodoViewToReturn(returnIndex) : null;
+        todoEditSmoothScaleAnimation.setEndView(view);
+        todoEditSmoothScaleAnimation.hide();
+    }
 
     @SuppressWarnings("unchecked")
     private View getNoteViewToReturn(Integer currIndex, Integer firstIndex) {
         View view;
         if (currIndex == -1) {
-            view = ViewUtil.getLeftTopView(this,mainContainer);
+            view = ViewUtil.getLeftTopView(this, mainContainer);
         } else {
             NoteListFragment fragment = (NoteListFragment) fragments.get(0);
             fragment.scrollTo(currIndex);
             view = fragment.findViewBy(currIndex);
             if (view == null && firstIndex < currIndex) {
-                view = ViewUtil.getRightBottomView(this,mainContainer);
+                view = ViewUtil.getRightBottomView(this, mainContainer);
             } else if (view == null && firstIndex > currIndex) {
-                view = ViewUtil.getLeftTopView(this,mainContainer);
+                view = ViewUtil.getLeftTopView(this, mainContainer);
             } else if (view == null) {
-                view = ViewUtil.getRightBottomView(this,mainContainer); // 正常情况下不会执行
+                view = ViewUtil.getRightBottomView(this, mainContainer); // 正常情况下不会执行
             }
         }
         return view;
@@ -416,34 +412,28 @@ public class MainActivity extends FragmentActivity implements
     private View getTodoViewToReturn(Integer currIndex) {
         View view;
         if (currIndex == -1) {
-            view = ViewUtil.getLeftTopView(this,mainContainer);
+            view = ViewUtil.getLeftTopView(this, mainContainer);
         } else {
             TodoListFragment fragment = (TodoListFragment) fragments.get(1);
-//            fragment.scrollTo(currIndex);
             view = fragment.findViewBy(currIndex);
             if (view == null) {
-                view = ViewUtil.getRightBottomView(this,mainContainer);
+                view = ViewUtil.getRightBottomView(this, mainContainer);
             }
         }
         return view;
     }
 
-
     @Subscribe(threadMode = ThreadMode.MAIN)
     public void onReceived(PollRequest event) {
-       if (event.get() == this.getClass()){
-           EventBus.getDefault().post(new PollResponse(this.getClass()));
-       }
+        if (event.get() == this.getClass()) {
+            EventBus.getDefault().post(new PollResponse(this.getClass()));
+        }
     }
 
     @Override
     protected void onResume() {
         super.onResume();
-        int systemUiVisibility = getWindow().getDecorView().getSystemUiVisibility();
-        getWindow().getDecorView().setSystemUiVisibility(systemUiVisibility|View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN|View.SYSTEM_UI_FLAG_LAYOUT_STABLE);
-        WindowManager.LayoutParams layoutParams = getWindow().getAttributes();
-//        layoutParams.flags = WindowManager.LayoutParams.FLAG_TRANSLUCENT_STATUS;
-        getWindow().setStatusBarColor(Color.TRANSPARENT);
+        StatusBarUtil.showStableStatusBar(this);
     }
 
     @Override
@@ -506,7 +496,6 @@ public class MainActivity extends FragmentActivity implements
     }
 
 
-
     @OnClick(R.id.add_document_button)
     public void onViewClicked() {
         addDocument();
@@ -527,8 +516,9 @@ public class MainActivity extends FragmentActivity implements
     }
 
 
-
-    /** Media Note START **/
+    /**
+     * Media Note START
+     **/
 
     @OnTouch(R.id.add_document_button)
     public boolean onAddDocumentButtonTouch(View v, MotionEvent event) {
@@ -572,19 +562,19 @@ public class MainActivity extends FragmentActivity implements
 
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
-        if (requestCode == REQUEST_MEDIA_PROJECTION){
-            if (resultCode != RESULT_OK ){
-                Log.d(getClass().getSimpleName(),"canceled");
+        if (requestCode == REQUEST_MEDIA_PROJECTION) {
+            if (resultCode != RESULT_OK) {
+                Log.d(getClass().getSimpleName(), "canceled");
                 return;
             }
-            mediaProjection = mediaProjectionManager.getMediaProjection(resultCode,data);
+            mediaProjection = mediaProjectionManager.getMediaProjection(resultCode, data);
             setUpVirtualDisplay();
         }
 
         if (resultCode == RESULT_OK && requestCode == TAKE_PHOTO_REQUEST_CODE) {
             addPhotoNote();
         } else if (resultCode == RESULT_CANCELED && requestCode == TAKE_PHOTO_REQUEST_CODE) {
-            if (PhotoUtil.getLastPhotoFile()!=null){
+            if (PhotoUtil.getLastPhotoFile() != null) {
                 boolean delete = PhotoUtil.getLastPhotoFile().delete();
                 Log.d(this.getClass().getSimpleName(), "" + delete);
             }
@@ -609,12 +599,12 @@ public class MainActivity extends FragmentActivity implements
     private void setUpVirtualDisplay() {
         DisplayMetrics displayMetrics = new DisplayMetrics();
         getWindowManager().getDefaultDisplay().getRealMetrics(displayMetrics);
-        ImageReader imageReader = ImageReader.newInstance(displayMetrics.widthPixels,displayMetrics.heightPixels,
-                PixelFormat.RGBA_8888,1);
+        ImageReader imageReader = ImageReader.newInstance(displayMetrics.widthPixels, displayMetrics.heightPixels,
+                PixelFormat.RGBA_8888, 1);
         mediaProjection.createVirtualDisplay("ScreenCapture",
-                displayMetrics.widthPixels,displayMetrics.heightPixels, displayMetrics.densityDpi,
+                displayMetrics.widthPixels, displayMetrics.heightPixels, displayMetrics.densityDpi,
                 DisplayManager.VIRTUAL_DISPLAY_FLAG_AUTO_MIRROR,
-                imageReader.getSurface(),null,null);
+                imageReader.getSurface(), null, null);
         GBData.reader = imageReader;
     }
 
@@ -647,8 +637,9 @@ public class MainActivity extends FragmentActivity implements
         notePresenter.add(note);
     }
 
-    /** Media Note END **/
-
+    /**
+     * Media Note END
+     **/
 
 
     @Override
@@ -667,11 +658,7 @@ public class MainActivity extends FragmentActivity implements
             currentType = Document.TODO;
         }
 
-        if (fragment instanceof PreferenceFragment){
-            EventBus.getDefault().post(new HideFABEvent(R.id.note_recycler_view));
-        }else {
-            EventBus.getDefault().post(new ShowFABEvent(R.id.note_recycler_view));
-        }
+        EventBus.getDefault().post(new ShowFABEvent(0));
     }
 
     private class MyOnKeyboardChangeListener extends OnKeyboardChangeListener {

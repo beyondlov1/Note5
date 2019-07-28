@@ -4,14 +4,13 @@ import android.app.Activity;
 import android.content.Intent;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
-import android.support.v4.content.ContextCompat;
-import android.view.View;
 import android.view.animation.AlphaAnimation;
 import android.view.animation.Animation;
 import android.widget.ImageView;
 
 import com.beyond.note5.MyApplication;
 import com.beyond.note5.R;
+import com.beyond.note5.utils.StatusBarUtil;
 
 public class SplashActivity extends Activity {
 
@@ -47,8 +46,7 @@ public class SplashActivity extends Activity {
     }
 
     private void initStatusBar() {
-        getWindow().getDecorView().setSystemUiVisibility(View.SYSTEM_UI_FLAG_VISIBLE);
-        getWindow().setStatusBarColor(ContextCompat.getColor(this, R.color.white));
+        StatusBarUtil.showWhiteStatusBar(this);
     }
 
     private void resetSplashState() {

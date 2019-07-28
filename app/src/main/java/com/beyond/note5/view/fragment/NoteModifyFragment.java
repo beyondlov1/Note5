@@ -2,12 +2,12 @@ package com.beyond.note5.view.fragment;
 
 import android.content.DialogInterface;
 import android.os.Bundle;
-import android.view.View;
 
 import com.beyond.note5.bean.Note;
 import com.beyond.note5.event.FillNoteModifyEvent;
 import com.beyond.note5.presenter.NotePresenter;
 import com.beyond.note5.presenter.NotePresenterImpl;
+import com.beyond.note5.utils.StatusBarUtil;
 import com.beyond.note5.utils.ToastUtil;
 import com.beyond.note5.utils.WebViewUtil;
 import com.beyond.note5.view.adapter.view.NoteViewAdapter;
@@ -58,7 +58,7 @@ public class NoteModifyFragment extends AbstractNoteEditorFragment {
     @Override
     public void onDismiss(DialogInterface dialog) {
         super.onDismiss(dialog);
-        getActivity().getWindow().getDecorView().setSystemUiVisibility(View.SYSTEM_UI_FLAG_FULLSCREEN);
+        StatusBarUtil.hideStatusBar(getActivity());
     }
 
     private class MyNoteView extends NoteViewAdapter {

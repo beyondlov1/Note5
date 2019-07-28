@@ -31,13 +31,12 @@ import com.beyond.note5.bean.Note;
 import com.beyond.note5.event.HideKeyBoardEvent2;
 import com.beyond.note5.event.ShowKeyBoardEvent;
 import com.beyond.note5.utils.InputMethodUtil;
+import com.beyond.note5.utils.StatusBarUtil;
 import com.beyond.note5.utils.WebViewUtil;
 import com.beyond.note5.view.custom.MarkdownAutoRenderEditText;
 import com.beyond.note5.view.listener.OnClickToInsertBeforeLineListener;
 
 import org.apache.commons.lang3.StringUtils;
-
-import java.util.Objects;
 
 import butterknife.BindView;
 
@@ -91,10 +90,7 @@ public abstract class AbstractNoteEditorFragment extends AbstractDocumentEditorF
     }
 
     private void processStatusBarColor(AlertDialog dialog) {
-        Objects.requireNonNull(dialog.getWindow()).clearFlags(WindowManager.LayoutParams.FLAG_TRANSLUCENT_STATUS);
-        dialog.getWindow().addFlags(WindowManager.LayoutParams.FLAG_DRAWS_SYSTEM_BAR_BACKGROUNDS);
-        dialog.getWindow().setStatusBarColor(getResources().getColor(R.color.white));
-        dialog.getWindow().getDecorView().setSystemUiVisibility(View.VISIBLE);
+        StatusBarUtil.showWhiteStatusBarForDialog(getActivity(),dialog);
     }
 
     protected abstract void onOKClick();

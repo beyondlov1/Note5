@@ -3,7 +3,6 @@ package com.beyond.note5.view.fragment;
 import android.annotation.SuppressLint;
 import android.app.Dialog;
 import android.content.Intent;
-import android.graphics.Color;
 import android.net.Uri;
 import android.os.Bundle;
 import android.support.v4.content.ContextCompat;
@@ -34,6 +33,7 @@ import com.beyond.note5.presenter.PredictPresenterImpl;
 import com.beyond.note5.presenter.TodoCompositePresenter;
 import com.beyond.note5.presenter.TodoCompositePresenterImpl;
 import com.beyond.note5.presenter.TodoPresenterImpl;
+import com.beyond.note5.utils.StatusBarUtil;
 import com.beyond.note5.utils.ToastUtil;
 import com.beyond.note5.utils.ViewUtil;
 import com.beyond.note5.utils.WebViewUtil;
@@ -367,27 +367,19 @@ public class NoteDetailSuperFragment extends AbstractDocumentDialogFragment impl
         smoothScaleAnimation.setBeforeShowHook(new Runnable() {
             @Override
             public void run() {
-                if (getActivity() == null){
+                if (getActivity() == null) {
                     return;
                 }
-                int systemUiVisibility = getActivity().getWindow().getDecorView().getSystemUiVisibility();
-                getActivity().getWindow().getDecorView().setSystemUiVisibility(systemUiVisibility|View.SYSTEM_UI_FLAG_FULLSCREEN);
-//                getActivity().getWindow().setStatusBarColor(ContextCompat.getColor(getActivity(), R.color.white));
-
+                StatusBarUtil.hideStatusBar(getActivity());
             }
         });
         smoothScaleAnimation.setBeforeHideHook(new Runnable() {
             @Override
             public void run() {
-                if (getActivity() == null){
+                if (getActivity() == null) {
                     return;
                 }
-//                getActivity().getWindow().getDecorView().setSystemUiVisibility(View.SYSTEM_UI_FLAG_LIGHT_STATUS_BAR);
-//                getActivity().getWindow().setStatusBarColor(ContextCompat.getColor(getActivity(), R.color.white));
-                getActivity().getWindow().getDecorView().setSystemUiVisibility(View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN
-                        |View.SYSTEM_UI_FLAG_LAYOUT_STABLE
-                |View.SYSTEM_UI_FLAG_LIGHT_STATUS_BAR);
-                getActivity().getWindow().setStatusBarColor(Color.TRANSPARENT);
+                StatusBarUtil.showStableLightStatusBar(getActivity());
             }
         });
     }
@@ -460,7 +452,7 @@ public class NoteDetailSuperFragment extends AbstractDocumentDialogFragment impl
                 @Override
                 protected void onSlideDown() {
                     if (operationContainer.getVisibility() == View.GONE) {
-                        pageCountTextView.setTextColor(ContextCompat.getColor(getContext(),R.color.dark_gray));
+                        pageCountTextView.setTextColor(ContextCompat.getColor(getContext(), R.color.dark_gray));
                         operationContainer.setVisibility(View.VISIBLE);
                     }
                 }

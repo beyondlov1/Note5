@@ -1,16 +1,15 @@
 package com.beyond.note5.view.fragment;
 
-import android.support.v4.content.ContextCompat;
 import android.view.View;
 import android.widget.EditText;
 
-import com.beyond.note5.R;
 import com.beyond.note5.bean.Document;
 import com.beyond.note5.bean.Todo;
 import com.beyond.note5.event.HideKeyBoardEvent2;
 import com.beyond.note5.event.HideTodoEditorEvent;
 import com.beyond.note5.event.ShowKeyBoardEvent;
 import com.beyond.note5.utils.InputMethodUtil;
+import com.beyond.note5.utils.StatusBarUtil;
 import com.beyond.note5.view.animator.SmoothScalable;
 import com.beyond.note5.view.animator.SmoothScaleAnimation;
 import com.beyond.note5.view.listener.OnBackPressListener;
@@ -81,8 +80,7 @@ public abstract class TodoEditSuperFragment extends AbstractTodoEditorFragment i
         smoothScaleAnimation.setAfterShowHook(new Runnable() {
             @Override
             public void run() {
-                getActivity().getWindow().getDecorView().setSystemUiVisibility(View.SYSTEM_UI_FLAG_VISIBLE);
-                getActivity().getWindow().setStatusBarColor(ContextCompat.getColor(getActivity(), R.color.white));
+                StatusBarUtil.showLightWhiteStatusBar(getActivity());
             }
         });
         smoothScaleAnimation.setAfterHideHook(new Runnable() {
@@ -100,8 +98,7 @@ public abstract class TodoEditSuperFragment extends AbstractTodoEditorFragment i
         smoothScaleAnimation.setBeforeHideHook(new Runnable() {
             @Override
             public void run() {
-                getActivity().getWindow().getDecorView().setSystemUiVisibility(View.SYSTEM_UI_FLAG_LIGHT_STATUS_BAR);
-                getActivity().getWindow().setStatusBarColor(ContextCompat.getColor(getActivity(),R.color.white));
+                StatusBarUtil.showLightWhiteStatusBar(getActivity());
             }
         });
     }
