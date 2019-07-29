@@ -10,7 +10,9 @@ import com.beyond.note5.sync.SyncContextAware;
 import com.beyond.note5.sync.Synchronizer;
 import com.beyond.note5.sync.datasource.DataSource;
 import com.beyond.note5.sync.datasource.DavDataSource;
-import com.beyond.note5.sync.exception.SyncException;
+import com.beyond.note5.sync.exception.ConnectException;
+import com.beyond.note5.sync.exception.MessageException;
+import com.beyond.note5.sync.exception.SaveException;
 import com.beyond.note5.sync.model.SyncStateModel;
 import com.beyond.note5.sync.model.bean.SyncStateInfo;
 import com.beyond.note5.sync.model.bean.TraceInfo;
@@ -24,9 +26,11 @@ import java.util.Date;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Random;
+import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 
+import static com.beyond.note5.MyApplication.CPU_COUNT;
 import static com.beyond.note5.service.SyncRetryService.DEFAULT_RETRY_DELAY;
 
 /**
@@ -34,7 +38,7 @@ import static com.beyond.note5.service.SyncRetryService.DEFAULT_RETRY_DELAY;
  *
  * @param <T>
  */
-public class DavSynchronizer4<T extends Tracable> implements Synchronizer<T> {
+public class DefaultSynchronizer<T extends Tracable> implements Synchronizer<T> {
 
     private ThreadLocal<Integer> threadLocal = new ThreadLocal<>();
 
@@ -46,11 +50,11 @@ public class DavSynchronizer4<T extends Tracable> implements Synchronizer<T> {
 
     private SyncStateModel syncStateModel;
 
-    private long remoteLockTimeOutMills = 5 * 60000L; // 5min
+    private long remoteLockTimeOutMills = 30 * 60000L; // 30min
 
     private Lock lock;
 
-    private DavSynchronizer4() {
+    private DefaultSynchronizer() {
         lock = new ReentrantLock();
     }
 
@@ -59,13 +63,16 @@ public class DavSynchronizer4<T extends Tracable> implements Synchronizer<T> {
         if (lock.tryLock()) {
             try {
                 Log.d(getClass().getSimpleName(), dataSource2.getKey() + " sync start");
+                ((ThreadPoolExecutor)MyApplication.getInstance().getExecutorService()).setCorePoolSize(CPU_COUNT*2+1);
                 doSync();
+                ((ThreadPoolExecutor)MyApplication.getInstance().getExecutorService()).setCorePoolSize(0);
                 Log.d(getClass().getSimpleName(), "同步成功");
             } catch (Exception e) {
                 long delay = (new Random().nextInt(20) + 35) * 60 * 1000;
                 retryIfNecessary(delay);
                 Log.e(getClass().getSimpleName(), "同步失败", e);
-                throw e;
+                e.printStackTrace();
+                throw new MessageException(e);
             } finally {
                 lock.unlock();
             }
@@ -96,7 +103,7 @@ public class DavSynchronizer4<T extends Tracable> implements Synchronizer<T> {
             dataSource1.setLatestTraceInfo(TraceInfo.ZERO);
             dataSource1.setCorrespondTraceInfo(TraceInfo.ZERO, dataSource2);
             traceInfo1 = this.dataSource1.getCorrespondTraceInfo(dataSource2);
-            List<T> modified1 = dataSource1.getModifiedData(traceInfo1);
+            List<T> modified1 = dataSource1.getChangedData(traceInfo1);
             return syncByOneSide(dataSource2, modified1);
         }
 
@@ -105,7 +112,7 @@ public class DavSynchronizer4<T extends Tracable> implements Synchronizer<T> {
             dataSource2.setLatestTraceInfo(TraceInfo.ZERO);
             dataSource2.setCorrespondTraceInfo(TraceInfo.ZERO, dataSource1);
             traceInfo2 = this.dataSource2.getCorrespondTraceInfo(dataSource1);
-            List<T> modified2 = dataSource2.getModifiedData(traceInfo2);
+            List<T> modified2 = dataSource2.getChangedData(traceInfo2);
             return syncByOneSide(dataSource1, modified2);
         }
 
@@ -115,12 +122,12 @@ public class DavSynchronizer4<T extends Tracable> implements Synchronizer<T> {
         Log.d(getClass().getSimpleName(), dataSource1.getKey() + "是否修改:" + isDataSource1Changed + "; " + dataSource2.getKey() + "是否修改:" + isDataSource2Changed);
 
         if (isDataSource1Changed && !isDataSource2Changed) {
-            List<T> modified1 = dataSource1.getModifiedData(traceInfo1);
+            List<T> modified1 = dataSource1.getChangedData(traceInfo1);
             return syncByOneSide(dataSource2, modified1);
         }
 
         if (!isDataSource1Changed && isDataSource2Changed) {
-            List<T> modified2 = dataSource2.getModifiedData(traceInfo2);
+            List<T> modified2 = dataSource2.getChangedData(traceInfo2);
             return syncByOneSide(dataSource1, modified2);
         }
 
@@ -130,8 +137,8 @@ public class DavSynchronizer4<T extends Tracable> implements Synchronizer<T> {
         }
 
         if (dataSource1.tryLock(remoteLockTimeOutMills) && dataSource2.tryLock(remoteLockTimeOutMills)) {
-            List<T> modified1 = dataSource1.getModifiedData(traceInfo1);
-            List<T> modified2 = dataSource2.getModifiedData(traceInfo2);
+            List<T> modified1 = dataSource1.getChangedData(traceInfo1);
+            List<T> modified2 = dataSource2.getChangedData(traceInfo2);
 
             excludeSuccess(modified1);
             excludeSuccess(modified2);
@@ -142,18 +149,18 @@ public class DavSynchronizer4<T extends Tracable> implements Synchronizer<T> {
 
             try {
                 dataSource1.saveAll(modified2);
-                recordSyncState(modified2);
-            } catch (SyncException e) {
-                onSaveFail(modified2, e);
-                throw (Exception) e.getCause();
+                recordSyncStateForT(modified2);
+            } catch (SaveException e) {
+                onSaveFail(e);
+                throw e;
             }
 
             try {
                 dataSource2.saveAll(modified1);
-                recordSyncState(modified1);
-            } catch (SyncException e) {
-                onSaveFail(modified1, e);
-                throw (Exception) e.getCause();
+                recordSyncStateForT(modified1);
+            } catch (SaveException e) {
+                onSaveFail(e);
+                throw e;
             }
 
             clearSyncState();
@@ -177,9 +184,9 @@ public class DavSynchronizer4<T extends Tracable> implements Synchronizer<T> {
         return true;
     }
 
-    private void onSaveFail(List<T> savingList, SyncException e) {
+    private void onSaveFail( SaveException e) {
         Log.d(getClass().getSimpleName(), "同步失败", e);
-        List<T> successList = savingList.subList(0, e.getFailIndex());
+        List<String> successList = e.getSuccessIds();
         recordSyncState(successList);
         retryIfNecessary(DEFAULT_RETRY_DELAY);
     }
@@ -193,10 +200,10 @@ public class DavSynchronizer4<T extends Tracable> implements Synchronizer<T> {
             try {
                 excludeSuccess(modified);
                 changingDataSource.saveAll(modified);
-                recordSyncState(modified);
-            } catch (SyncException e) {
-                onSaveFail(modified, e);
-                throw (Exception) e.getCause();
+                recordSyncStateForT(modified);
+            } catch (SaveException e) {
+                onSaveFail(e);
+                throw e;
             }
 
             clearSyncState();
@@ -218,11 +225,24 @@ public class DavSynchronizer4<T extends Tracable> implements Synchronizer<T> {
         return syncByOneSide(changingDataSource, modified);
     }
 
-    private void recordSyncState(List<T> successList) {
+    private void recordSyncStateForT(List<T> successList){
         ArrayList<SyncStateInfo> successSyncStates = new ArrayList<>();
         for (T t : successList) {
             SyncStateInfo syncStateInfo = SyncStateInfo.create();
             syncStateInfo.setDocumentId(t.getId());
+            syncStateInfo.setLocal(dataSource1.getKey());
+            syncStateInfo.setServer(dataSource2.getKey());
+            syncStateInfo.setType(dataSource1.clazz().getSimpleName().toLowerCase());
+            successSyncStates.add(syncStateInfo);
+        }
+        syncStateModel.saveAll(successSyncStates);
+    }
+
+    private void recordSyncState(List<String> successIds) {
+        ArrayList<SyncStateInfo> successSyncStates = new ArrayList<>();
+        for (String id : successIds) {
+            SyncStateInfo syncStateInfo = SyncStateInfo.create();
+            syncStateInfo.setDocumentId(id);
             syncStateInfo.setLocal(dataSource1.getKey());
             syncStateInfo.setServer(dataSource2.getKey());
             syncStateInfo.setType(dataSource1.clazz().getSimpleName().toLowerCase());
@@ -314,7 +334,7 @@ public class DavSynchronizer4<T extends Tracable> implements Synchronizer<T> {
         syncStart = null;
     }
 
-    private void checkFailCount() {
+    private void checkFailCount() throws ConnectException {
         Integer integer = threadLocal.get();
         if (integer == null) {
             threadLocal.set(0);
@@ -324,7 +344,7 @@ public class DavSynchronizer4<T extends Tracable> implements Synchronizer<T> {
             long delay = (new Random().nextInt(70) + 10) * 60 * 1000;
             retryIfNecessary(delay);
             Log.i(getClass().getSimpleName(), "同步失败超过3次, " + delay / 60 / 1000 + "分钟后重试");
-            throw new RuntimeException("同步失败超过3次");
+            throw new ConnectException("连接失败",dataSource2.getKey());
         }
 
         threadLocal.set(threadLocal.get() + 1);
@@ -369,8 +389,8 @@ public class DavSynchronizer4<T extends Tracable> implements Synchronizer<T> {
             return this;
         }
 
-        public DavSynchronizer4<T> build() {
-            DavSynchronizer4<T> synchronizer = new DavSynchronizer4<>();
+        public DefaultSynchronizer<T> build() {
+            DefaultSynchronizer<T> synchronizer = new DefaultSynchronizer<>();
             if (local == null || remote == null) {
                 throw new RuntimeException("dataSource1 and dataSource2 can not be null");
             }

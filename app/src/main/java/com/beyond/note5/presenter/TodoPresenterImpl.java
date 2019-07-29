@@ -268,8 +268,8 @@ public class TodoPresenterImpl implements TodoPresenter {
     }
 
     @Override
-    public List<Todo> selectByModifiedDate(Date date) {
-        return todoModel.findByModifiedDate(date);
+    public List<Todo> selectAllAfterLastModifyTime(Date date) {
+        return todoModel.findAllAfterLastModifyTime(date);
     }
 
     @Override

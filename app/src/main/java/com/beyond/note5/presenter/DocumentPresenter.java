@@ -23,7 +23,7 @@ public interface DocumentPresenter<T>  extends CRUDPresenter<T>{
 
     T selectById(String id);
 
-    List<T> selectByModifiedDate(Date date);
+    List<T> selectAllAfterLastModifyTime(Date date);
 
     List<T> selectByIds(Collection<String> ids);
 

@@ -37,6 +37,7 @@ public class NoteSyncPresenterImpl implements SyncPresenter {
         MyApplication.getInstance().getExecutorService().execute(new Runnable() {
             @Override
             public void run() {
+                StringBuilder msg = new StringBuilder();
                 boolean success = true;
                 for (Synchronizer<Note> synchronizer : synchronizers) {
                     try {
@@ -44,21 +45,24 @@ public class NoteSyncPresenterImpl implements SyncPresenter {
                     }catch (Exception e){
                         Log.e(getClass().getSimpleName(),"同步失败",e);
                         success = false;
+                        msg.append("同步失败:");
+                        msg.append(e.getMessage());
+                        msg.append("\n");
                     }
                 }
                 if (success){
                     handler.post(new Runnable() {
                         @Override
                         public void run() {
-                            syncView.onSyncSuccess();
-
+                            syncView.onSyncSuccess("Note同步成功");
                         }
                     });
                 }else {
                     handler.post(new Runnable() {
                         @Override
                         public void run() {
-                            syncView.onSyncFail();
+                            msg.append("将于一小时内重试");
+                            syncView.onSyncFail(msg.toString());
                         }
                     });
                 }

@@ -8,15 +8,20 @@ import com.beyond.note5.bean.Note;
 import com.beyond.note5.sync.datasource.DataSource;
 import com.beyond.note5.sync.datasource.DavDataSource;
 import com.beyond.note5.sync.datasource.DavPathStrategy;
-import com.beyond.note5.sync.exception.SyncException;
+import com.beyond.note5.sync.exception.SaveException;
 import com.beyond.note5.sync.model.bean.TraceInfo;
 import com.beyond.note5.sync.webdav.client.DavClient;
 import com.beyond.note5.utils.OkWebDavUtil;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.Date;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.Callable;
+import java.util.concurrent.CompletionService;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.ExecutorCompletionService;
+import java.util.concurrent.Future;
 
 public class NoteDavDataSourceWrap implements DavDataSource<Note> {
 
@@ -106,8 +111,8 @@ public class NoteDavDataSourceWrap implements DavDataSource<Note> {
     }
 
     @Override
-    public List<Note> getModifiedData(TraceInfo traceInfo) throws IOException {
-        return defaultDavDataSource.getModifiedData(traceInfo);
+    public List<Note> getChangedData(TraceInfo traceInfo) throws IOException {
+        return defaultDavDataSource.getChangedData(traceInfo);
     }
 
     @Override
@@ -135,21 +140,62 @@ public class NoteDavDataSourceWrap implements DavDataSource<Note> {
     }
 
     @Override
-    public void saveAll(List<Note> notes) throws IOException, SyncException {
-        int index = 0;
-        for (Note t : notes) {
+    public void saveAll(List<Note> ts) throws IOException, SaveException {
+        if (defaultDavDataSource.executorService == null){
+            singleThreadSaveAll(ts);
+            return;
+        }
+        multiThreadSaveAll(ts);
+    }
+
+    private void multiThreadSaveAll(List<Note> ts) throws SaveException {
+        defaultDavDataSource.mkDirForMultiThread();
+        CompletionService<Note> completionService = new ExecutorCompletionService<>(defaultDavDataSource.executorService);
+        for (Note t : ts) {
+            completionService.submit(new Callable<Note>() {
+                @Override
+                public Note call() throws Exception {
+                    save(t);
+                    return t;
+                }
+            });
+        }
+
+        List<Note> result = new ArrayList<>();
+        try {
+            for (int i = 0; i < ts.size(); i++) {
+                Future<Note> future = completionService.take();
+                Note t = future.get();
+                if (t != null) {
+                    result.add(t);
+                }
+            }
+        } catch (InterruptedException | ExecutionException e) {
+            e.printStackTrace();
+            Log.e(getClass().getSimpleName(), "", e);
+            List<String> successIds = new ArrayList<>(result.size());
+            for (Note t : result) {
+                successIds.add(t.getId());
+            }
+            throw new SaveException(e,getKey(),successIds);
+        }
+    }
+
+    private void singleThreadSaveAll(List<Note> ts) throws SaveException {
+        List<String> successIds = new ArrayList<>();
+        for (Note t : ts) {
             try {
                 save(t);
-            }catch (Exception e){
-                Log.e(getClass().getSimpleName(),"save失败",e);
-                throw new SyncException(e,index);
+                successIds.add(t.getId());
+            } catch (Exception e) {
+                Log.e(getClass().getSimpleName(), "save失败", e);
+                throw new SaveException(e,getKey(),successIds);
             }
-            index++;
         }
     }
 
     @Override
-    public void saveAll(List<Note> notes, String source) throws IOException, SyncException {
+    public void saveAll(List<Note> notes, String source) throws IOException, SaveException {
         saveAll(notes);
     }
 
@@ -221,11 +267,6 @@ public class NoteDavDataSourceWrap implements DavDataSource<Note> {
     @Override
     public DavPathStrategy getPathStrategy() {
         return defaultDavDataSource.getPathStrategy();
-    }
-
-    @Override
-    public List<Note> selectByModifiedDate(Date date) throws IOException {
-        return defaultDavDataSource.selectByModifiedDate(date);
     }
 
     @Override

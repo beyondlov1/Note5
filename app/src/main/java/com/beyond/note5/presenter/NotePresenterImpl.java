@@ -409,8 +409,8 @@ public class NotePresenterImpl implements NotePresenter {
     }
 
     @Override
-    public List<Note> selectByModifiedDate(Date date) {
-        return noteModel.findByModifiedDate(date);
+    public List<Note> selectAllAfterLastModifyTime(Date date) {
+        return noteModel.findAllAfterLastModifyTime(date);
     }
 
     @Override

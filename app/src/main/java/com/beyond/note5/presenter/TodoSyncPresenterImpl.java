@@ -35,6 +35,7 @@ public class TodoSyncPresenterImpl implements SyncPresenter {
         MyApplication.getInstance().getExecutorService().execute(new Runnable() {
             @Override
             public void run() {
+                StringBuilder msg = new StringBuilder();
                 boolean success = true;
                 for (Synchronizer<Todo> synchronizer : synchronizers) {
                     try {
@@ -42,6 +43,8 @@ public class TodoSyncPresenterImpl implements SyncPresenter {
                     } catch (Exception e) {
                         Log.e(getClass().getSimpleName(), "同步失败", e);
                         success = false;
+                        msg.append(e.getMessage());
+                        msg.append("\n");
                     }
                 }
 
@@ -49,14 +52,14 @@ public class TodoSyncPresenterImpl implements SyncPresenter {
                     handler.post(new Runnable() {
                         @Override
                         public void run() {
-                            syncView.onSyncSuccess();
+                            syncView.onSyncSuccess("Todo同步成功");
                         }
                     });
                 } else {
                     handler.post(new Runnable() {
                         @Override
                         public void run() {
-                            syncView.onSyncFail();
+                            syncView.onSyncFail(msg.toString());
                         }
                     });
                 }

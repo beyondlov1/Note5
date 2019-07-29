@@ -100,11 +100,6 @@ public abstract class DocumentSqlDataSource<T extends Document> implements DataS
     }
 
     @Override
-    public List<T> selectByModifiedDate(Date date) throws IOException {
-        return documentPresenter.selectByModifiedDate(date);
-    }
-
-    @Override
     public TraceInfo getLatestTraceInfo() throws IOException {
         List<T> list = selectAll();
         if (list!=null && !list.isEmpty()){
@@ -132,7 +127,7 @@ public abstract class DocumentSqlDataSource<T extends Document> implements DataS
     }
 
     @Override
-    public List<T> getModifiedData(TraceInfo traceInfo) throws IOException {
+    public List<T> getChangedData(TraceInfo traceInfo) throws IOException {
 
         // 日志的操作时间大于上次同步成功的最后修改时间
         // 会改变lastModifyTime类型的, 如 add, update
@@ -194,7 +189,8 @@ public abstract class DocumentSqlDataSource<T extends Document> implements DataS
         for (String id : map.keySet()) {
             if (localMap.containsKey(id)) {
                 if (map.get(id).getLastModifyTime().after(localMap.get(id).getLastModifyTime())
-                        || map.get(id).getVersion()>localMap.get(id).getVersion()) {
+                        || (map.get(id).getVersion() == null? 0: map.get(id).getVersion())
+                        >(localMap.get(id).getVersion() == null? 0: localMap.get(id).getVersion())) {
                     updateList.add(map.get(id));
                 }
             }else {
@@ -207,7 +203,7 @@ public abstract class DocumentSqlDataSource<T extends Document> implements DataS
 
     @Override
     public boolean isChanged(DataSource<T> targetDataSource) throws IOException {
-        return !getModifiedData(getCorrespondTraceInfo(targetDataSource)).isEmpty();
+        return !getChangedData(getCorrespondTraceInfo(targetDataSource)).isEmpty();
     }
 
     @Override

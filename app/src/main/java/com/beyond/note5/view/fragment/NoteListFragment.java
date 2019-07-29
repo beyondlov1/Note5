@@ -295,15 +295,15 @@ public class NoteListFragment extends Fragment {
 
     private class MySyncView implements SyncView {
         @Override
-        public void onSyncSuccess() {
+        public void onSyncSuccess(String msg) {
             refreshLayout.finishRefresh();
-            ToastUtil.toast(getContext(), "Note同步成功");
+            ToastUtil.toast(getContext(), msg);
         }
 
         @Override
-        public void onSyncFail() {
+        public void onSyncFail(String msg) {
             refreshLayout.finishRefresh();
-            ToastUtil.toast(getContext(), "Note同步失败");
+            ToastUtil.toast(getContext(), msg);
         }
     }
 }

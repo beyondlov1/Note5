@@ -6,27 +6,24 @@ import com.beyond.note5.sync.SyncContext;
 import com.beyond.note5.sync.datasource.DataSource;
 import com.beyond.note5.sync.datasource.DavDataSource;
 import com.beyond.note5.sync.datasource.SqlDataSource;
-import com.beyond.note5.sync.exception.SyncException;
+import com.beyond.note5.sync.exception.SaveException;
 import com.beyond.note5.sync.model.bean.TraceInfo;
 
 import java.io.IOException;
-import java.util.Date;
 import java.util.List;
 
 public class TodoSqlDataSourceWrap implements SqlDataSource<Todo> {
 
     private final TodoSqlDataSource todoSqlDataSource;
 
-    private final DavDataSource<Todo> davDataSource;
+    private DavDataSource<Todo> davDataSource;
 
-    public TodoSqlDataSourceWrap( DavDataSource<Todo> davDataSource) {
+    public TodoSqlDataSourceWrap( ) {
         this.todoSqlDataSource = new TodoSqlDataSource();
-        this.davDataSource = davDataSource;
     }
 
-    public TodoSqlDataSourceWrap(TodoSqlDataSource todoSqlDataSource, DavDataSource<Todo> davDataSource) {
+    public TodoSqlDataSourceWrap(TodoSqlDataSource todoSqlDataSource) {
         this.todoSqlDataSource = todoSqlDataSource;
-        this.davDataSource = davDataSource;
     }
 
     @Override
@@ -75,11 +72,6 @@ public class TodoSqlDataSourceWrap implements SqlDataSource<Todo> {
     }
 
     @Override
-    public List<Todo> selectByModifiedDate(Date date) throws IOException {
-        return todoSqlDataSource.selectByModifiedDate(date);
-    }
-
-    @Override
     public TraceInfo getLatestTraceInfo() throws IOException {
         return todoSqlDataSource.getLatestTraceInfo();
     }
@@ -95,8 +87,8 @@ public class TodoSqlDataSourceWrap implements SqlDataSource<Todo> {
     }
 
     @Override
-    public List<Todo> getModifiedData(TraceInfo traceInfo) throws IOException {
-        return todoSqlDataSource.getModifiedData(traceInfo);
+    public List<Todo> getChangedData(TraceInfo traceInfo) throws IOException {
+        return todoSqlDataSource.getChangedData(traceInfo);
     }
 
     @Override
@@ -110,7 +102,7 @@ public class TodoSqlDataSourceWrap implements SqlDataSource<Todo> {
     }
 
     @Override
-    public void saveAll(List<Todo> todos, String source) throws IOException, SyncException {
+    public void saveAll(List<Todo> todos, String source) throws IOException, SaveException {
         todoSqlDataSource.saveAll(todos,source);
     }
 
@@ -149,8 +141,12 @@ public class TodoSqlDataSourceWrap implements SqlDataSource<Todo> {
         return todoSqlDataSource.release();
     }
 
+    @SuppressWarnings("unchecked")
     @Override
     public void setContext(SyncContext context) {
         todoSqlDataSource.setContext(context);
+        if (context.getCorrespondDataSource(this) instanceof DavDataSource){
+            davDataSource = (DavDataSource<Todo>) context.getCorrespondDataSource(this);
+        }
     }
 }

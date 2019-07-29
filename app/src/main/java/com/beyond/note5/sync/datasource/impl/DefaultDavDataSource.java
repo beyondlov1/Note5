@@ -10,14 +10,14 @@ import com.beyond.note5.bean.Document;
 import com.beyond.note5.sync.datasource.DataSource;
 import com.beyond.note5.sync.datasource.DavDataSource;
 import com.beyond.note5.sync.datasource.DavPathStrategy;
-import com.beyond.note5.sync.exception.SyncException;
+import com.beyond.note5.sync.exception.SaveException;
 import com.beyond.note5.sync.model.SharedSource;
 import com.beyond.note5.sync.model.bean.TraceInfo;
 import com.beyond.note5.sync.model.impl.DavSharedTraceInfo;
 import com.beyond.note5.sync.webdav.Lock;
+import com.beyond.note5.sync.webdav.client.AfterModifiedTimeDavFilter;
 import com.beyond.note5.sync.webdav.client.DavClient;
 import com.beyond.note5.sync.webdav.client.DavFilter;
-import com.beyond.note5.sync.webdav.client.AfterModifiedTimeDavFilter;
 import com.beyond.note5.utils.OkWebDavUtil;
 
 import org.apache.commons.lang3.time.DateUtils;
@@ -28,7 +28,9 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.concurrent.Callable;
+import java.util.concurrent.CompletionService;
 import java.util.concurrent.ExecutionException;
+import java.util.concurrent.ExecutorCompletionService;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Future;
 
@@ -37,7 +39,7 @@ public class DefaultDavDataSource<T extends Document> implements DavDataSource<T
 
     private DavClient client;
 
-    private ExecutorService executorService;
+    ExecutorService executorService;
 
     private String server;
 
@@ -124,7 +126,7 @@ public class DefaultDavDataSource<T extends Document> implements DavDataSource<T
     }
 
     @Override
-    public List<T> getModifiedData(TraceInfo traceInfo) throws IOException {
+    public List<T> getChangedData(TraceInfo traceInfo) throws IOException {
         return selectByModifiedDate(traceInfo.getLastSyncTimeEnd());
     }
 
@@ -133,7 +135,7 @@ public class DefaultDavDataSource<T extends Document> implements DavDataSource<T
         if (client.exists(getDocumentUrl(t))) {
             T remoteT = decode(client.get(getDocumentUrl(t)));
             if (t.getLastModifyTime().after(remoteT.getLastModifyTime())
-                    || t.getVersion() > remoteT.getVersion()) {
+                    || (t.getVersion()==null?0:t.getVersion()) >(remoteT.getVersion()==null?0:remoteT.getVersion()) ) {
                 update(t);
             }
         } else {
@@ -142,21 +144,70 @@ public class DefaultDavDataSource<T extends Document> implements DavDataSource<T
     }
 
     @Override
-    public void saveAll(List<T> ts) throws IOException, SyncException {
-        int index = 0;
+    public void saveAll(List<T> ts) throws IOException, SaveException {
+        if (executorService == null){
+            singleThreadSaveAll(ts);
+            return;
+        }
+        multiThreadSaveAll(ts);
+    }
+
+    private void multiThreadSaveAll(List<T> ts) throws SaveException {
+        mkDirForMultiThread();
+        CompletionService<T> completionService = new ExecutorCompletionService<>(executorService);
+        for (T t : ts) {
+            completionService.submit(new Callable<T>() {
+                @Override
+                public T call() throws Exception {
+                    save(t);
+                    return t;
+                }
+            });
+        }
+
+        List<T> result = new ArrayList<>();
+        try {
+            for (int i = 0; i < ts.size(); i++) {
+                Future<T> future = completionService.take();
+                T t = future.get();
+                if (t != null) {
+                    result.add(t);
+                }
+            }
+        } catch (InterruptedException | ExecutionException e) {
+            e.printStackTrace();
+            Log.e(getClass().getSimpleName(), "", e);
+            List<String> successIds = new ArrayList<>(result.size());
+            for (T t : result) {
+                successIds.add(t.getId());
+            }
+            throw new SaveException(e,getKey(),successIds);
+        }
+    }
+
+    void mkDirForMultiThread() {
+        String[] paths = getPaths();
+        for (String path : paths) {
+            getClient().mkDirQuietly(OkWebDavUtil.concat(getServer(),path));
+            getClient().mkDirQuietly(OkWebDavUtil.concat(getServer(),path,"files"));
+        }
+    }
+
+    private void singleThreadSaveAll(List<T> ts) throws SaveException {
+        List<String> successIds = new ArrayList<>();
         for (T t : ts) {
             try {
                 save(t);
+                successIds.add(t.getId());
             } catch (Exception e) {
                 Log.e(getClass().getSimpleName(), "save失败", e);
-                throw new SyncException(e, index);
+                throw new SaveException(e,getKey(),successIds);
             }
-            index++;
         }
     }
 
     @Override
-    public void saveAll(List<T> ts, String source) throws IOException, SyncException {
+    public void saveAll(List<T> ts, String source) throws IOException, SaveException {
         saveAll(ts);
     }
 
@@ -275,8 +326,7 @@ public class DefaultDavDataSource<T extends Document> implements DavDataSource<T
         return davPathStrategy;
     }
 
-    @Override
-    public List<T> selectByModifiedDate(Date date) throws IOException {
+    private List<T> selectByModifiedDate(Date date) throws IOException {
         if (paths == null) {
             throw new RuntimeException("paths is null");
         }
@@ -285,49 +335,37 @@ public class DefaultDavDataSource<T extends Document> implements DavDataSource<T
         if (date != null) {
             davFilter = new AfterModifiedTimeDavFilter(date);
         }
+
+        List<String> modifiedIds = getModifiedIds(davFilter);
         /**
          * 单线程方法
          */
         if (executorService == null) {
-            List<T> result = new ArrayList<>();
-            for (String path : paths) {
-                List<String> ids = client.listAllFileName(OkWebDavUtil.concat(server, path), davFilter);
-                for (String id : ids) {
-                    if (id.contains(".")) {
-                        continue;
-                    }
-                    try {
-                        T t = clazz.newInstance();
-                        t.setId(id);
-                        result.add(select(t));
-                    } catch (InstantiationException | IllegalAccessException e) {
-                        e.printStackTrace();
-                    }
-                }
-            }
-            return result;
+            return singleThreadRetrieve(modifiedIds);
         }
 
         /**
          * 多线程方法
          */
+        return multiThreadRetrieve(modifiedIds);
+    }
+
+    @NonNull
+    private List<T> multiThreadRetrieve(List<String> ids) throws IOException {
         List<Future<T>> resultFutures = new ArrayList<>();
-        for (String path : paths) {
-            List<String> ids = client.listAllFileName(OkWebDavUtil.concat(server, path), davFilter);
-            for (String id : ids) {
-                Future<T> future = executorService.submit(new Callable<T>() {
-                    @Override
-                    public T call() throws Exception {
-                        if (id.contains(".")) {
-                            return null;
-                        }
-                        T t = clazz.newInstance();
-                        t.setId(id);
-                        return select(t);
+        for (String id : ids) {
+            Future<T> future = executorService.submit(new Callable<T>() {
+                @Override
+                public T call() throws Exception {
+                    if (id.contains(".")) {
+                        return null;
                     }
-                });
-                resultFutures.add(future);
-            }
+                    T t = clazz.newInstance();
+                    t.setId(id);
+                    return select(t);
+                }
+            });
+            resultFutures.add(future);
         }
 
         List<T> result = new ArrayList<>();
@@ -346,14 +384,41 @@ public class DefaultDavDataSource<T extends Document> implements DavDataSource<T
         return result;
     }
 
+    @NonNull
+    private List<T> singleThreadRetrieve(List<String> ids) throws IOException {
+        List<T> result = new ArrayList<>();
+        for (String id : ids) {
+            if (id.contains(".")) {
+                continue;
+            }
+            try {
+                T t = clazz.newInstance();
+                t.setId(id);
+                result.add(select(t));
+            } catch (InstantiationException | IllegalAccessException e) {
+                e.printStackTrace();
+            }
+        }
+        return result;
+    }
+
+    @NonNull
+    private List<String> getModifiedIds(DavFilter davFilter) throws IOException {
+        List<String> ids = new ArrayList<>();
+        for (String path : paths) {
+            ids.addAll(client.listAllFileName(OkWebDavUtil.concat(server, path), davFilter));
+        }
+        return ids;
+    }
+
     @Override
     public void upload(String url, String path) throws IOException {
-        getClient().upload(path,url);
+        getClient().upload(path, url);
     }
 
     @Override
     public void download(String url, String path) throws IOException {
-        getClient().download(url,path);
+        getClient().download(url, path);
     }
 
     public static class Builder<T extends Document> {

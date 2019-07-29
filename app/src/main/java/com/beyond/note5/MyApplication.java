@@ -35,7 +35,7 @@ import com.beyond.note5.sync.datasource.impl.NoteSqlDataSourceWrap;
 import com.beyond.note5.sync.datasource.impl.TodoSqlDataSource;
 import com.beyond.note5.sync.datasource.impl.TodoSqlDataSourceWrap;
 import com.beyond.note5.sync.model.impl.DavSharedTraceInfo;
-import com.beyond.note5.sync.synchronizer.DavSynchronizer4;
+import com.beyond.note5.sync.synchronizer.DefaultSynchronizer;
 import com.beyond.note5.sync.webdav.DavLock;
 import com.beyond.note5.sync.webdav.client.DavClient;
 import com.beyond.note5.sync.webdav.client.SardineDavClient;
@@ -57,7 +57,9 @@ import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
+import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.ThreadPoolExecutor;
+import java.util.concurrent.TimeUnit;
 
 /**
  * @author: beyond
@@ -67,6 +69,7 @@ import java.util.concurrent.Executors;
 public class MyApplication extends Application {
 
     // Constant
+    public static final int CPU_COUNT =  Runtime.getRuntime().availableProcessors();
     public static final String SHARED_PREFERENCES_NAME = "note5_preferences";
     public static final String LOCK_DIR = "/LOCK";
     public static final String LOG_PATH = "LOCK/sync.log";
@@ -189,47 +192,69 @@ public class MyApplication extends Application {
 
         for (Account account : accounts) {
             String server = account.getServer();
+
+            //common
             DavClient davClient = new SardineDavClient(account.getUsername(), account.getPassword());
+            String serverWithPath = OkWebDavUtil.concat(server, DAV_ROOT_DIR);
+            ExecutorService executorService = null; // 防止坚果云503
+            if (server.contains("teracloud")){
+                executorService = getExecutorService();
+            }
 
+            //local
             NoteSqlDataSource noteLocalDataSource = new NoteSqlDataSource();
-            String[] notePaths = StringUtils.split(PreferenceUtil.getString(NOTE_SYNC_REMOTE_ROOT_PATHS), "|");
 
-            String server1 = OkWebDavUtil.concat(server, DAV_ROOT_DIR);
+            //remote
+            String[] notePaths = StringUtils.split(PreferenceUtil.getString(NOTE_SYNC_REMOTE_ROOT_PATHS), "|");
+            DavLock noteDavLock = new DavLock(davClient, OkWebDavUtil.concat(serverWithPath, NOTE_LOCK_PATH));
+            DavSharedTraceInfo noteSharedTraceInfo = new DavSharedTraceInfo(davClient, OkWebDavUtil.concat(serverWithPath, NOTE_LST_PATH));
+
             DefaultDavDataSource<Note> noteDavDataSource1 = new DefaultDavDataSource.Builder<Note>()
                     .clazz(Note.class)
                     .davClient(davClient)
-                    .executorService(null) // 防止坚果云503
-                    .server(server1)
+                    .executorService(executorService)
+                    .server(serverWithPath)
                     .paths(notePaths)
-                    .lock(new DavLock(davClient, OkWebDavUtil.concat(server1, NOTE_LOCK_PATH)))
-                    .sharedSource(new DavSharedTraceInfo(davClient, OkWebDavUtil.concat(server1, NOTE_LST_PATH)))
+                    .lock(noteDavLock)
+                    .sharedSource(noteSharedTraceInfo)
                     .build();
 
 
             NoteDavDataSourceWrap noteDavDataSourceWrap = new NoteDavDataSourceWrap(noteDavDataSource1);
-            noteSynchronizers.add(new DavSynchronizer4.Builder<Note>()
+            noteSynchronizers.add(
+                    new DefaultSynchronizer.Builder<Note>()
                     .localDataSource(new NoteSqlDataSourceWrap(noteLocalDataSource))
                     .remoteDataSource(noteDavDataSourceWrap)
                     .logPath(NOTE_LOG_PATH)
-                    .build());
+                    .build()
+            );
 
+
+            //local
             TodoSqlDataSource todoLocalDataSource = new TodoSqlDataSource();
+
+            // remote
             String[] todoPaths = StringUtils.split(PreferenceUtil.getString(TODO_SYNC_REMOTE_ROOT_PATHS), "|");
+            DavLock todoDavLock = new DavLock(davClient, OkWebDavUtil.concat(serverWithPath, TODO_LOCK_PATH));
+            DavSharedTraceInfo todoSharedTraceInfo = new DavSharedTraceInfo(davClient, OkWebDavUtil.concat(serverWithPath, TODO_LST_PATH));
+
             DavDataSource<Todo> todoDavDataSource1 = new DefaultDavDataSource.Builder<Todo>()
                     .clazz(Todo.class)
                     .davClient(davClient)
-                    .executorService(null) // 防止坚果云503
-                    .server(server1)
+                    .executorService(executorService)
+                    .server(serverWithPath)
                     .paths(todoPaths)
-                    .lock(new DavLock(davClient, OkWebDavUtil.concat(server1, TODO_LOCK_PATH)))
-                    .sharedSource(new DavSharedTraceInfo(davClient, OkWebDavUtil.concat(server1, TODO_LST_PATH)))
+                    .lock(todoDavLock)
+                    .sharedSource(todoSharedTraceInfo)
                     .build();
 
-            todoSynchronizers.add(new DavSynchronizer4.Builder<Todo>()
-                    .localDataSource(new TodoSqlDataSourceWrap(todoLocalDataSource, todoDavDataSource1))
+            todoSynchronizers.add(
+                    new DefaultSynchronizer.Builder<Todo>()
+                    .localDataSource(new TodoSqlDataSourceWrap(todoLocalDataSource))
                     .remoteDataSource(todoDavDataSource1)
                     .logPath(TODO_LOG_PATH)
-                    .build());
+                    .build()
+            );
         }
 
     }
@@ -258,12 +283,14 @@ public class MyApplication extends Application {
         DaoMaster daoMaster = new DaoMaster(writableDatabase);
         daoSession = daoMaster.newSession();
 
-//        daoSession.getSyncInfoDao().queryBuilder().where(SyncInfoDao.Properties.Id.like("50f13%")).buildDelete().executeDeleteWithoutDetachingEntities();
     }
 
     public ExecutorService getExecutorService() {
         if (executorService == null) {
-            executorService = Executors.newCachedThreadPool();
+            executorService = new ThreadPoolExecutor(
+                    0,60,
+                    60, TimeUnit.SECONDS,
+                    new LinkedBlockingQueue<>());
         }
         return executorService;
     }

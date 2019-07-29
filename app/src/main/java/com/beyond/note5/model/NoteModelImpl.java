@@ -170,7 +170,7 @@ public class NoteModelImpl implements NoteModel {
     }
 
     @Override
-    public List<Note> findByModifiedDate(Date date) {
+    public List<Note> findAllAfterLastModifyTime(Date date) {
         return noteDao.queryBuilder()
                 .where(NoteDao.Properties.Type.eq(Document.NOTE))
                 .where(NoteDao.Properties.LastModifyTime.gt(date))

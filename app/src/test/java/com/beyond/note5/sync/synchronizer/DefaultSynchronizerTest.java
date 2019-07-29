@@ -4,7 +4,7 @@ import org.junit.Test;
 
 import static org.junit.Assert.*;
 
-public class DavSynchronizer4Test {
+public class DefaultSynchronizerTest {
 
     @Test
     public void sync() {

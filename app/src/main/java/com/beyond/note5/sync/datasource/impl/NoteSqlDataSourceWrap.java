@@ -9,13 +9,12 @@ import com.beyond.note5.sync.SyncContext;
 import com.beyond.note5.sync.datasource.DataSource;
 import com.beyond.note5.sync.datasource.DavDataSource;
 import com.beyond.note5.sync.datasource.SqlDataSource;
-import com.beyond.note5.sync.exception.SyncException;
+import com.beyond.note5.sync.exception.SaveException;
 import com.beyond.note5.sync.model.bean.TraceInfo;
 import com.beyond.note5.utils.OkWebDavUtil;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.Date;
 import java.util.List;
 
 public class NoteSqlDataSourceWrap implements SqlDataSource<Note> {
@@ -104,11 +103,6 @@ public class NoteSqlDataSourceWrap implements SqlDataSource<Note> {
     }
 
     @Override
-    public List<Note> selectByModifiedDate(Date date) throws IOException {
-        return noteSqlDataSource.selectByModifiedDate(date);
-    }
-
-    @Override
     public TraceInfo getLatestTraceInfo() throws IOException {
         return noteSqlDataSource.getLatestTraceInfo();
     }
@@ -129,8 +123,8 @@ public class NoteSqlDataSourceWrap implements SqlDataSource<Note> {
     }
 
     @Override
-    public List<Note> getModifiedData(TraceInfo traceInfo) throws IOException {
-        return noteSqlDataSource.getModifiedData(traceInfo);
+    public List<Note> getChangedData(TraceInfo traceInfo) throws IOException {
+        return noteSqlDataSource.getChangedData(traceInfo);
     }
 
     @Override
@@ -160,12 +154,12 @@ public class NoteSqlDataSourceWrap implements SqlDataSource<Note> {
     }
 
     @Override
-    public void saveAll(List<Note> notes) throws IOException, SyncException {
+    public void saveAll(List<Note> notes) throws IOException, SaveException {
         saveAll(notes,davDataSource.getKey());
     }
 
     @Override
-    public void saveAll(List<Note> notes, String source) throws IOException, SyncException {
+    public void saveAll(List<Note> notes, String source) throws IOException, SaveException {
         noteSqlDataSource.saveAll(notes,source);
 
         if (davDataSource == null){
