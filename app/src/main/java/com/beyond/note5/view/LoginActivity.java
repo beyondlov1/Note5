@@ -23,9 +23,9 @@ import android.widget.TextView;
 import com.beyond.note5.MyApplication;
 import com.beyond.note5.R;
 import com.beyond.note5.bean.Account;
-import com.beyond.note5.model.AccountModelImpl;
+import com.beyond.note5.inject.BeanInjectUtils;
+import com.beyond.note5.inject.PrototypeInject;
 import com.beyond.note5.presenter.AccountPresenter;
-import com.beyond.note5.presenter.AccountPresenterImpl;
 import com.beyond.note5.utils.OkWebDavUtil;
 import com.beyond.note5.utils.StatusBarUtil;
 import com.beyond.note5.utils.ToastUtil;
@@ -50,6 +50,7 @@ public abstract class LoginActivity extends AppCompatActivity {
 
     private Handler handler = new Handler();
 
+    @PrototypeInject
     private AccountPresenter accountPresenter;
 
     @BindView(R.id.login_server)
@@ -73,15 +74,14 @@ public abstract class LoginActivity extends AppCompatActivity {
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_login);
-
         StatusBarUtil.showLightWhiteStatusBar(this);
-
-        accountPresenter = new AccountPresenterImpl(new AccountModelImpl(),new MyAccountView());
-
+        initInject();
         initView();
-
         initEvent();
+    }
 
+    protected void initInject(){
+        BeanInjectUtils.inject(this,new MyAccountView());
     }
 
     protected void initEvent(){

@@ -49,13 +49,6 @@ public class FloatEditorActivity extends FragmentActivity implements View.OnClic
     }
 
     private void initFragment() {
-
-//        Fragment fragment = new FloatEditorFragment();
-//        FragmentManager fragmentManager = getSupportFragmentManager();
-//        FragmentTransaction fragmentTransaction = fragmentManager.beginTransaction();
-//        fragmentTransaction.replace(R.id.float_editor_fragment_container, fragment);
-//        fragmentTransaction.commit();
-
         Fragment fragment = new TodoEditFragment();
         FragmentManager fragmentManager = getSupportFragmentManager();
         FragmentTransaction fragmentTransaction = fragmentManager.beginTransaction();

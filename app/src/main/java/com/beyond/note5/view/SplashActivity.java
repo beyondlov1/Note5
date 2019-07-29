@@ -19,11 +19,6 @@ public class SplashActivity extends Activity {
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-//        getWindow().requestFeature(Window.FEATURE_CONTENT_TRANSITIONS);
-//        getWindow().requestFeature(Window.FEATURE_ACTIVITY_TRANSITIONS);
-//        Transition transition = TransitionInflater.from(this).inflateTransition(android.R.transition.fade);
-//        getWindow().setEnterTransition(transition);
-//        getWindow().setExitTransition(transition);
 
         if (!shouldSplash()) {
             splash = false;
@@ -32,11 +27,8 @@ public class SplashActivity extends Activity {
         }
 
         splash = true;
-
         resetSplashState();
-
         showSplashView();
-
     }
 
     private void showSplashView() {

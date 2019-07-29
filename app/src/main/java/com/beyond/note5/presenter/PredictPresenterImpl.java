@@ -5,6 +5,8 @@ import android.support.annotation.Nullable;
 import android.util.Log;
 
 import com.beyond.note5.MyApplication;
+import com.beyond.note5.inject.BeanInjectUtils;
+import com.beyond.note5.inject.SingletonInject;
 import com.beyond.note5.model.PredictModel;
 import com.beyond.note5.predict.bean.Tag;
 import com.beyond.note5.utils.PreferenceUtil;
@@ -19,17 +21,17 @@ import java.util.concurrent.ExecutorService;
  */
 public class PredictPresenterImpl implements PredictPresenter {
 
-    private PredictModel predictModel;
     private PredictView predictView;
-
+    @SingletonInject
+    private PredictModel predictModel;
+    @SingletonInject
     private ExecutorService executorService;
-
-    private Handler handler = new Handler();
+    @SingletonInject
+    private Handler handler;
 
     public PredictPresenterImpl(@Nullable PredictView predictView) {
         this.predictView = predictView;
-        this.predictModel = MyApplication.getInstance().getPredictModel();
-        this.executorService = MyApplication.getInstance().getExecutorService();
+        BeanInjectUtils.inject(this);
     }
 
     @Override

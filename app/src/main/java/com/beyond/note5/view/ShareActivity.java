@@ -13,8 +13,9 @@ import android.util.Log;
 
 import com.beyond.note5.bean.Attachment;
 import com.beyond.note5.bean.Note;
+import com.beyond.note5.inject.BeanInjectUtils;
+import com.beyond.note5.inject.PrototypeInject;
 import com.beyond.note5.presenter.NotePresenter;
-import com.beyond.note5.presenter.NotePresenterImpl;
 import com.beyond.note5.utils.IDUtil;
 import com.beyond.note5.utils.PhotoUtil;
 import com.beyond.note5.utils.ToastUtil;
@@ -31,8 +32,6 @@ import java.io.OutputStream;
 import java.util.ArrayList;
 import java.util.List;
 
-import javax.inject.Inject;
-
 /**
  * @author: beyond
  * @date: 17-12-15
@@ -46,7 +45,7 @@ public class ShareActivity extends Activity {
 
     private Intent intent;
 
-    @Inject
+    @PrototypeInject
     NotePresenter notePresenter;
 
     @Override
@@ -78,7 +77,7 @@ public class ShareActivity extends Activity {
     }
 
     private void initInjection() {
-        notePresenter = new NotePresenterImpl(new MyNoteView());
+        BeanInjectUtils.inject(this,new MyNoteView());
     }
 
     private Note generateNoteFromSend(Intent intent) {

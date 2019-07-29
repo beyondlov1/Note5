@@ -9,6 +9,7 @@ import android.util.Log;
 import com.beyond.note5.bean.Account;
 import com.beyond.note5.bean.Note;
 import com.beyond.note5.bean.Todo;
+import com.beyond.note5.inject.BeanInjectUtils;
 import com.beyond.note5.model.AccountModel;
 import com.beyond.note5.model.AccountModelImpl;
 import com.beyond.note5.model.NoteModel;
@@ -60,6 +61,8 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
+
+import okhttp3.OkHttpClient;
 
 /**
  * @author: beyond
@@ -119,6 +122,7 @@ public class MyApplication extends Application {
         super.onCreate();
         isApplicationToBeBorn = true;
         instance = this;
+        initSingletons();
         initPreference();
         initDaoSession();
         initSynchronizer();
@@ -127,6 +131,21 @@ public class MyApplication extends Application {
 
 //        syncWithToast();
 
+    }
+
+    private void initSingletons() {
+        OkHttpClient.Builder httpBuilder = new OkHttpClient.Builder();
+        httpBuilder.connectTimeout(10000, TimeUnit.MILLISECONDS);
+        httpBuilder.readTimeout(10000, TimeUnit.MILLISECONDS);
+        BeanInjectUtils.registerSingletonBean(OkHttpClient.class,httpBuilder.build());
+
+        BeanInjectUtils.registerSingletonBean(ExecutorService.class,getExecutorService());
+
+        BeanInjectUtils.registerSingletonBean(Handler.class,handler);
+
+        BeanInjectUtils.registerSingletonBean(DaoSession.class, getDaoSession());
+
+        BeanInjectUtils.registerSingletonBean(PredictModel.class, getPredictModel());
     }
 
     private void scheduleSyncService() {

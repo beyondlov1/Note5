@@ -6,6 +6,7 @@ import android.graphics.Color;
 import android.graphics.drawable.ColorDrawable;
 import android.os.Bundle;
 import android.os.Handler;
+import android.support.annotation.Nullable;
 import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AlertDialog;
 import android.util.DisplayMetrics;
@@ -22,6 +23,8 @@ import android.widget.TextView;
 import com.beyond.note5.R;
 import com.beyond.note5.bean.Todo;
 import com.beyond.note5.event.ShowKeyBoardEvent;
+import com.beyond.note5.inject.BeanInjectUtils;
+import com.beyond.note5.inject.SingletonInject;
 import com.beyond.note5.utils.InputMethodUtil;
 import com.beyond.note5.utils.StatusBarUtil;
 import com.beyond.note5.view.custom.SelectionListenableEditText;
@@ -65,7 +68,14 @@ public abstract class AbstractTodoEditorFragment extends AbstractDocumentEditorF
     protected TagAdapter<String> tagAdapter;
     protected List<String> tagData = new ArrayList<>();
 
-    protected Handler handler = new Handler();
+    @SingletonInject
+    protected Handler handler;
+
+    @Override
+    public void onCreate(@Nullable Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        BeanInjectUtils.inject(this);
+    }
 
     @Override
     protected Dialog createDialogInternal(Bundle savedInstanceState) {

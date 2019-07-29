@@ -32,6 +32,8 @@ import com.beyond.note5.event.todo.CompleteTodoEvent;
 import com.beyond.note5.event.todo.DeleteTodoSuccessEvent;
 import com.beyond.note5.event.todo.UpdateTodoPriorityEvent;
 import com.beyond.note5.event.todo.UpdateTodoSuccessEvent;
+import com.beyond.note5.inject.BeanInjectUtils;
+import com.beyond.note5.inject.PrototypeInject;
 import com.beyond.note5.presenter.CalendarPresenterImpl;
 import com.beyond.note5.presenter.PredictPresenterImpl;
 import com.beyond.note5.presenter.SyncPresenter;
@@ -87,6 +89,7 @@ public class TodoListFragment extends Fragment {
 
     TodoCompositePresenter todoCompositePresenter;
 
+    @PrototypeInject
     private SyncPresenter syncPresenter;
 
     @Override
@@ -103,7 +106,7 @@ public class TodoListFragment extends Fragment {
                 .predictPresenter(new PredictPresenterImpl(predictView))
                 .build();
 
-        syncPresenter = new TodoSyncPresenterImpl(syncView,MyApplication.getInstance().handler);
+        BeanInjectUtils.inject(this, new Class[]{TodoSyncPresenterImpl.class}, syncView);
     }
 
     @Nullable
@@ -131,7 +134,7 @@ public class TodoListFragment extends Fragment {
         refreshLayout.setOnRefreshListener(new OnRefreshListener() {
             @Override
             public void onRefresh(@NonNull RefreshLayout refreshLayout) {
-                if (!checkAccount(refreshLayout)){
+                if (!checkAccount(refreshLayout)) {
                     return;
                 }
                 syncPresenter.sync();
@@ -404,13 +407,13 @@ public class TodoListFragment extends Fragment {
         @Override
         public void onSyncSuccess(String msg) {
             refreshLayout.finishRefresh();
-            ToastUtil.toast(getContext(),msg);
+            ToastUtil.toast(getContext(), msg);
         }
 
         @Override
         public void onSyncFail(String msg) {
             refreshLayout.finishRefresh();
-            ToastUtil.toast(getContext(),msg);
+            ToastUtil.toast(getContext(), msg);
         }
     }
 }

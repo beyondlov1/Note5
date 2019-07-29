@@ -55,8 +55,9 @@ import com.beyond.note5.event.ShowFloatButtonEvent;
 import com.beyond.note5.event.ShowKeyBoardEvent;
 import com.beyond.note5.event.ShowNoteDetailEvent;
 import com.beyond.note5.event.ShowTodoEditorEvent;
+import com.beyond.note5.inject.BeanInjectUtils;
+import com.beyond.note5.inject.PrototypeInject;
 import com.beyond.note5.presenter.NotePresenter;
-import com.beyond.note5.presenter.NotePresenterImpl;
 import com.beyond.note5.service.FloatEditorService;
 import com.beyond.note5.utils.GBData;
 import com.beyond.note5.utils.IDUtil;
@@ -135,6 +136,7 @@ public class MainActivity extends FragmentActivity implements
     private AnimatorSet showAnimatorSet;
     private AnimatorSet hideAnimatorSet;
 
+    @PrototypeInject
     protected NotePresenter notePresenter;
 
     private final static int REQUEST_MEDIA_PROJECTION = 2;
@@ -168,7 +170,7 @@ public class MainActivity extends FragmentActivity implements
     }
 
     private void initInjection() {
-        notePresenter = new NotePresenterImpl(new MyNoteView());
+        BeanInjectUtils.inject(this,new MyNoteView());
     }
 
     private void initNoteDetailFragmentContainer() {

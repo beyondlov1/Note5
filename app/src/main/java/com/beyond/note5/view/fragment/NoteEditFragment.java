@@ -4,8 +4,9 @@ import android.os.Bundle;
 
 import com.beyond.note5.bean.Note;
 import com.beyond.note5.constant.DocumentConst;
+import com.beyond.note5.inject.BeanInjectUtils;
+import com.beyond.note5.inject.PrototypeInject;
 import com.beyond.note5.presenter.NotePresenter;
-import com.beyond.note5.presenter.NotePresenterImpl;
 import com.beyond.note5.utils.IDUtil;
 import com.beyond.note5.utils.ToastUtil;
 import com.beyond.note5.view.adapter.view.NoteViewAdapter;
@@ -19,11 +20,12 @@ import java.util.Date;
 
 public class NoteEditFragment extends AbstractNoteEditorFragment {
 
+    @PrototypeInject
     protected NotePresenter notePresenter;
 
     @Override
     protected void init(Bundle savedInstanceState) {
-        notePresenter = new NotePresenterImpl(new MyNoteView());
+        BeanInjectUtils.inject(this,new MyNoteView());
     }
 
     @Override

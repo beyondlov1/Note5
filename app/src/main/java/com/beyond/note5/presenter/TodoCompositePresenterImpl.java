@@ -10,7 +10,8 @@ public class TodoCompositePresenterImpl implements TodoCompositePresenter {
     private CalendarPresenter calendarPresenter;
     private PredictPresenter predictPresenter;
 
-    private TodoCompositePresenterImpl(){}
+    private TodoCompositePresenterImpl(){
+    }
 
     @Override
     public void add(Todo todo) {

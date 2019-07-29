@@ -29,10 +29,11 @@ import com.beyond.note5.event.note.AddNoteSuccessEvent;
 import com.beyond.note5.event.note.DeleteNoteSuccessEvent;
 import com.beyond.note5.event.note.UpdateNotePriorityEvent;
 import com.beyond.note5.event.note.UpdateNoteSuccessEvent;
+import com.beyond.note5.inject.BeanInjectUtils;
+import com.beyond.note5.inject.PrototypeInject;
 import com.beyond.note5.ocr.OCRCallBack;
 import com.beyond.note5.ocr.OCRTask;
 import com.beyond.note5.presenter.NotePresenter;
-import com.beyond.note5.presenter.NotePresenterImpl;
 import com.beyond.note5.presenter.NoteSyncPresenterImpl;
 import com.beyond.note5.presenter.SyncPresenter;
 import com.beyond.note5.utils.RecyclerViewUtil;
@@ -72,8 +73,10 @@ public class NoteListFragment extends Fragment {
 
     protected List<Note> data = new ArrayList<>();
 
+    @PrototypeInject
     protected NotePresenter notePresenter;
 
+    @PrototypeInject
     protected SyncPresenter syncPresenter;
 
     protected NoteView noteView;
@@ -91,8 +94,7 @@ public class NoteListFragment extends Fragment {
     private void initInjection() {
         noteView = new MyNoteView();
         syncView = new MySyncView();
-        notePresenter = new NotePresenterImpl(noteView);
-        syncPresenter = new NoteSyncPresenterImpl(syncView,MyApplication.getInstance().handler);
+        BeanInjectUtils.inject(this, new Class[]{NoteSyncPresenterImpl.class}, noteView, syncView);
     }
 
     @Nullable
@@ -119,7 +121,7 @@ public class NoteListFragment extends Fragment {
         refreshLayout.setOnRefreshListener(new OnRefreshListener() {
             @Override
             public void onRefresh(@NonNull RefreshLayout refreshLayout) {
-                if (!checkAccount(refreshLayout)){
+                if (!checkAccount(refreshLayout)) {
                     return;
                 }
                 syncPresenter.sync();
@@ -247,7 +249,7 @@ public class NoteListFragment extends Fragment {
     public void onReceived(ScrollNoteToTopEvent event) {
         Note note = event.get();
         int position = recyclerViewAdapter.getItemDataGenerator().getPosition(note);
-        RecyclerViewUtil.tryScrollItemToTop(recyclerView,position);
+        RecyclerViewUtil.tryScrollItemToTop(recyclerView, position);
     }
 
     public void scrollTo(Integer index) {
