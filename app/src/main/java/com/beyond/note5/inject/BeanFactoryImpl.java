@@ -39,19 +39,24 @@ public class BeanFactoryImpl implements BeanFactory {
         return tClass.cast(getObjectBean(tClass));
     }
 
+    @Override
+    public <T> T getBean(Class<T> tClass, Object... additionalParams) {
+        return tClass.cast(getObjectBean(tClass, additionalParams));
+    }
+
     @SuppressWarnings("unchecked")
-    private Object getObjectBean(Class tClass) {
+    private Object getObjectBean(Class tClass, Object... additionalParams) {
         Object o = context.getSingletonBean(tClass);
         if (o == null) {
-            o = createBean(tClass);
+            o = createBean(tClass, additionalParams);
             if (o != null) {
-                context.registerSingletonBean(tClass,o);
+                context.registerSingletonBean(tClass, o);
             }
         }
         return o;
     }
 
-    private Object createBean(Class tClass) {
+    private Object createBean(Class tClass, Object[] additionalParams) {
         if (tClass.isInterface()) {
             tClass = context.getImplementClass(tClass);
         }
@@ -64,9 +69,21 @@ public class BeanFactoryImpl implements BeanFactory {
         Object[] parameters = new Object[chosenConstructor.getParameterTypes().length];
         Class[] parameterTypes = chosenConstructor.getParameterTypes();
         for (int i = 0; i < parameterCount; i++) {
-            parameters[i] = getObjectBean(parameterTypes[i]);
+            for (Object additionalParam : additionalParams) {
+                if (parameterTypes[i].isInstance(additionalParam)) {
+                    parameters[i] = additionalParam;
+                }
+            }
         }
+
+        for (int i = 0; i < parameterCount; i++) {
+            if (parameters[i] == null) {
+                parameters[i] = getObjectBean(parameterTypes[i]);
+            }
+        }
+
         try {
+            chosenConstructor.setAccessible(true);
             return chosenConstructor.newInstance(parameters);
         } catch (InstantiationException | IllegalAccessException | InvocationTargetException e) {
             e.printStackTrace();

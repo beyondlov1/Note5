@@ -2,6 +2,7 @@ package com.beyond.note5.view.fragment;
 
 import android.content.Intent;
 import android.os.Bundle;
+import android.os.Handler;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
@@ -30,10 +31,12 @@ import com.beyond.note5.event.note.DeleteNoteSuccessEvent;
 import com.beyond.note5.event.note.UpdateNotePriorityEvent;
 import com.beyond.note5.event.note.UpdateNoteSuccessEvent;
 import com.beyond.note5.inject.BeanInjectUtils;
-import com.beyond.note5.inject.PrototypeInject;
+import com.beyond.note5.inject.Qualifier;
+import com.beyond.note5.inject.SingletonInject;
 import com.beyond.note5.ocr.OCRCallBack;
 import com.beyond.note5.ocr.OCRTask;
 import com.beyond.note5.presenter.NotePresenter;
+import com.beyond.note5.presenter.NotePresenterImpl;
 import com.beyond.note5.presenter.NoteSyncPresenterImpl;
 import com.beyond.note5.presenter.SyncPresenter;
 import com.beyond.note5.utils.RecyclerViewUtil;
@@ -73,15 +76,20 @@ public class NoteListFragment extends Fragment {
 
     protected List<Note> data = new ArrayList<>();
 
-    @PrototypeInject
     protected NotePresenter notePresenter;
 
-    @PrototypeInject
     protected SyncPresenter syncPresenter;
 
+    @SingletonInject
+    @Qualifier(implementClass = MyNoteView.class)
     protected NoteView noteView;
 
+    @SingletonInject
+    @Qualifier(implementClass = MySyncView.class)
     protected SyncView syncView;
+
+    @SingletonInject
+    private Handler handler;
 
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
@@ -92,9 +100,9 @@ public class NoteListFragment extends Fragment {
     }
 
     private void initInjection() {
-        noteView = new MyNoteView();
-        syncView = new MySyncView();
-        BeanInjectUtils.inject(this, new Class[]{NoteSyncPresenterImpl.class}, noteView, syncView);
+        BeanInjectUtils.inject(this);
+        notePresenter = new NotePresenterImpl(noteView);
+        syncPresenter = new NoteSyncPresenterImpl(syncView, handler);
     }
 
     @Nullable

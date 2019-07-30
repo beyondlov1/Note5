@@ -2,12 +2,16 @@ package com.beyond.note5.inject;
 
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 
 public class BeanInjectorImpl implements BeanInjector {
 
     private InjectContext context;
 
     private BeanFactoryImpl factory;
+
 
     public BeanInjectorImpl(InjectContext context) {
         this.context = context;
@@ -16,44 +20,48 @@ public class BeanInjectorImpl implements BeanInjector {
 
     @Override
     public void inject(Object o, Object... params) {
-        Class<?> aClass = o.getClass();
-        Field[] declaredFields = aClass.getDeclaredFields();
-        for (Field field : declaredFields) {
-            if (field.isAnnotationPresent(SingletonInject.class)) {
-                injectSingleton(o, factory, field, new Class[0]);
-            }
-
-            if (field.isAnnotationPresent(PrototypeInject.class) && params.length>0) {
-                injectPrototype(o, factory, field, params, new Class[0]);
-            }
-        }
+        inject(o,new Class[0],params);
     }
 
     @Override
-    public void inject(Object o, Class[] implementClass, Object... params) {
-        Class<?> aClass = o.getClass();
-        Field[] declaredFields = aClass.getDeclaredFields();
-        for (Field field : declaredFields) {
+    public void inject(Object o, Class[] implementClasses, Object... params) {
+        List<Object> injectingObjects = new ArrayList<>();
+        injectInternal(o, injectingObjects,implementClasses, params);
+    }
+
+    private void injectInternal(Object o,List<Object> injectingObjects,Object... params) {
+        Field[] allFields = getAllFields(o);
+        for (Field field : allFields) {
             if (field.isAnnotationPresent(SingletonInject.class)) {
-                injectSingleton(o, factory, field, implementClass);
+                injectSingleton(o, factory, field,injectingObjects);
             }
 
             if (field.isAnnotationPresent(PrototypeInject.class) && params.length>0) {
-                injectPrototype(o, factory, field, params,implementClass);
+                injectPrototype(o, factory, field, params,injectingObjects);
             }
         }
     }
 
-    @SuppressWarnings("unchecked")
-    private void injectSingleton(Object o, BeanFactoryImpl factory, Field field, Class[] implementClass) {
-        Class type = field.getType();
-        for (Class aClass : implementClass) {
-            if (field.getType().isAssignableFrom(aClass)){
-                type = aClass;
-                break;
-            }
+    private Field[] getAllFields(Object o){
+        List<Field> fieldList = new ArrayList<>() ;
+        Class tempClass = o.getClass();
+        while (tempClass != null) {//当父类为null的时候说明到达了最上层的父类(Object类).
+            fieldList.addAll(Arrays.asList(tempClass .getDeclaredFields()));
+            tempClass = tempClass.getSuperclass(); //得到父类,然后赋给自己
         }
-        Object bean = factory.getBean(type);
+        return fieldList.toArray(new Field[0]);
+    }
+
+    @SuppressWarnings("unchecked")
+    private void injectSingleton(Object o, BeanFactory factory,
+                                 Field field,
+                                 List<Object> injectingObjects) {
+        injectingObjects.add(o);
+        Class type = getFieldImplType(field);
+        Object bean = factory.getBean(type, o);
+        if (!injectingObjects.contains(bean)){
+            injectInternal(bean,injectingObjects);
+        }
         field.setAccessible(true);
         try {
             field.set(o, bean);
@@ -62,17 +70,20 @@ public class BeanInjectorImpl implements BeanInjector {
         }
     }
 
-    private void injectPrototype(Object o, BeanFactoryImpl factory, Field field, Object[] params, Class[] implementClass) {
+    private Class getFieldImplType(Field field) {
+        Class type = field.getType();
+        if (field.isAnnotationPresent(Qualifier.class)){
+            Qualifier qualifier = field.getAnnotation(Qualifier.class);
+            type = qualifier.implementClass();
+        }
+        return type;
+    }
+
+    private void injectPrototype(Object o, BeanFactoryImpl factory, Field field, Object[] params, List<Object> injectingObjects) {
         PrototypeInject prototypeInject = field.getAnnotation(PrototypeInject.class);
         boolean consume = prototypeInject.paramConsume();
-        Class<?> type = field.getType();
-        for (Class aClass : implementClass) {
-            if (type.isAssignableFrom(aClass)){
-                type = aClass;
-                break;
-            }
-        }
-        Constructor constructor = chooseConstructor(type);
+        Class<?> type =getFieldImplType(field);
+        Constructor constructor = choseConstructor(type);
         Class[] parameterTypes = constructor.getParameterTypes();
         Object[] thisParams = new Object[parameterTypes.length];
         int i = 0;
@@ -94,8 +105,8 @@ public class BeanInjectorImpl implements BeanInjector {
             }
             i++;
         }
-
         Object bean = factory.getPrototypeBean(type, thisParams);
+        injectInternal(bean,injectingObjects);
         field.setAccessible(true);
         try {
             field.set(o, bean);
@@ -109,7 +120,7 @@ public class BeanInjectorImpl implements BeanInjector {
         thisParams[i] = factory.getBean(parameterType);
     }
 
-    private Constructor chooseConstructor(Class<?> type) {
+    private Constructor choseConstructor(Class<?> type) {
         type = context.getImplementClass(type);
         return context.chooseConstructor(type);
     }

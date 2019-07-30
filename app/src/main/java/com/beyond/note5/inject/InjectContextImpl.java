@@ -1,5 +1,7 @@
 package com.beyond.note5.inject;
 
+import android.util.Log;
+
 import java.lang.reflect.Constructor;
 import java.util.HashMap;
 import java.util.Map;
@@ -19,14 +21,23 @@ public class InjectContextImpl implements InjectContext {
         if (!interfaceClass.isInterface()){
             return interfaceClass;
         }
-        Class result;
+        Class result = interfaceToImplMap.get(interfaceClass);
+        if (result!=null){
+            return result;
+        }
+        result = getDefaultImplementStrategy(interfaceClass);
+        if (result == null) {
+            throw new RuntimeException("no implement class found");
+        }
+        return result;
+    }
+
+    protected Class getDefaultImplementStrategy(Class interfaceClass) {
+        Class result = null;
         try {
             result = Class.forName(interfaceClass.getName() + "Impl");
         } catch (ClassNotFoundException e) {
-            result = interfaceToImplMap.get(interfaceClass);
-        }
-        if (result == null) {
-            throw new RuntimeException("no implement class found");
+            Log.i(getClass().getSimpleName(),"class not found",e);
         }
         return result;
     }
@@ -35,7 +46,7 @@ public class InjectContextImpl implements InjectContext {
     public Constructor chooseConstructor(Class tClass) {
         Constructor chosenConstructor = null;
         int parameterCount = 0;
-        Constructor[] constructors = tClass.getConstructors();
+        Constructor[] constructors = tClass.getDeclaredConstructors();
         for (Constructor constructor : constructors) {
             if (parameterCount <= constructor.getParameterTypes().length
                     && !containsBasicTypeOrArray(constructor)) {

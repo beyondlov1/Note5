@@ -24,8 +24,12 @@ import com.beyond.note5.MyApplication;
 import com.beyond.note5.R;
 import com.beyond.note5.bean.Account;
 import com.beyond.note5.inject.BeanInjectUtils;
-import com.beyond.note5.inject.PrototypeInject;
+import com.beyond.note5.inject.Qualifier;
+import com.beyond.note5.inject.SingletonInject;
+import com.beyond.note5.model.AccountModel;
+import com.beyond.note5.model.AccountModelImpl;
 import com.beyond.note5.presenter.AccountPresenter;
+import com.beyond.note5.presenter.AccountPresenterImpl;
 import com.beyond.note5.utils.OkWebDavUtil;
 import com.beyond.note5.utils.StatusBarUtil;
 import com.beyond.note5.utils.ToastUtil;
@@ -48,10 +52,17 @@ public abstract class LoginActivity extends AppCompatActivity {
     public static final String DAV_LOGIN_USERNAME = "dav.login.username";
     public static final String DAV_LOGIN_PASSWORD = "dav.login.password";
 
-    private Handler handler = new Handler();
+    @SingletonInject
+    private Handler handler;
 
-    @PrototypeInject
     private AccountPresenter accountPresenter;
+
+    @SingletonInject
+    @Qualifier(implementClass = AccountModelImpl.class)
+    private AccountModel accountModel;
+
+    @SingletonInject
+    private  MyAccountView accountView;
 
     @BindView(R.id.login_server)
     EditText server;
@@ -81,7 +92,8 @@ public abstract class LoginActivity extends AppCompatActivity {
     }
 
     protected void initInject(){
-        BeanInjectUtils.inject(this,new MyAccountView());
+        BeanInjectUtils.inject(this);
+        accountPresenter = new AccountPresenterImpl(accountModel,accountView);
     }
 
     protected void initEvent(){

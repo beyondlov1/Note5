@@ -4,6 +4,7 @@ import android.annotation.SuppressLint;
 import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
+import android.os.Handler;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
@@ -33,7 +34,8 @@ import com.beyond.note5.event.todo.DeleteTodoSuccessEvent;
 import com.beyond.note5.event.todo.UpdateTodoPriorityEvent;
 import com.beyond.note5.event.todo.UpdateTodoSuccessEvent;
 import com.beyond.note5.inject.BeanInjectUtils;
-import com.beyond.note5.inject.PrototypeInject;
+import com.beyond.note5.inject.Qualifier;
+import com.beyond.note5.inject.SingletonInject;
 import com.beyond.note5.presenter.CalendarPresenterImpl;
 import com.beyond.note5.presenter.PredictPresenterImpl;
 import com.beyond.note5.presenter.SyncPresenter;
@@ -82,15 +84,28 @@ public class TodoListFragment extends Fragment {
     protected DocumentRecyclerViewAdapter recyclerViewAdapter;
     protected List<Todo> data = new ArrayList<>();
 
-    MyCalendarView calendarView = new MyCalendarView();
-    MyPredictView predictView = new MyPredictView();
-    MyTodoView todoView = new MyTodoView();
-    MySyncView syncView = new MySyncView();
+    @Qualifier(implementClass = MyTodoView.class)
+    @SingletonInject
+    MyTodoView todoView ;
+
+    @Qualifier(implementClass = MyCalendarView.class)
+    @SingletonInject
+    MyCalendarView calendarView ;
+
+    @Qualifier(implementClass = MyPredictView.class)
+    @SingletonInject
+    MyPredictView predictView;
+
+    @Qualifier(implementClass = MySyncView.class)
+    @SingletonInject
+    MySyncView syncView;
 
     TodoCompositePresenter todoCompositePresenter;
 
-    @PrototypeInject
     private SyncPresenter syncPresenter;
+
+    @SingletonInject
+    private Handler handler;
 
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
@@ -101,12 +116,13 @@ public class TodoListFragment extends Fragment {
     }
 
     private void initInjection() {
+        BeanInjectUtils.inject(this);
         todoCompositePresenter = new TodoCompositePresenterImpl.Builder(new TodoPresenterImpl(todoView))
                 .calendarPresenter(new CalendarPresenterImpl(getActivity(), calendarView))
                 .predictPresenter(new PredictPresenterImpl(predictView))
                 .build();
 
-        BeanInjectUtils.inject(this, new Class[]{TodoSyncPresenterImpl.class}, syncView);
+        syncPresenter = new TodoSyncPresenterImpl(syncView,handler);
     }
 
     @Nullable

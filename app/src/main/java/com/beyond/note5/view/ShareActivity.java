@@ -14,8 +14,10 @@ import android.util.Log;
 import com.beyond.note5.bean.Attachment;
 import com.beyond.note5.bean.Note;
 import com.beyond.note5.inject.BeanInjectUtils;
-import com.beyond.note5.inject.PrototypeInject;
+import com.beyond.note5.inject.Qualifier;
+import com.beyond.note5.inject.SingletonInject;
 import com.beyond.note5.presenter.NotePresenter;
+import com.beyond.note5.presenter.NotePresenterImpl;
 import com.beyond.note5.utils.IDUtil;
 import com.beyond.note5.utils.PhotoUtil;
 import com.beyond.note5.utils.ToastUtil;
@@ -45,8 +47,10 @@ public class ShareActivity extends Activity {
 
     private Intent intent;
 
-    @PrototypeInject
     NotePresenter notePresenter;
+    @SingletonInject
+    @Qualifier(implementClass = MyNoteView.class)
+    private NoteView noteView;
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
@@ -77,7 +81,8 @@ public class ShareActivity extends Activity {
     }
 
     private void initInjection() {
-        BeanInjectUtils.inject(this,new MyNoteView());
+        BeanInjectUtils.inject(this);
+        notePresenter = new NotePresenterImpl(noteView);
     }
 
     private Note generateNoteFromSend(Intent intent) {
