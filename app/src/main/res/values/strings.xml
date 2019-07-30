@@ -27,4 +27,7 @@
     <string name="open_account_config">添加同步账号</string>
     <string name="close">close</string>
     <integer name="config_shortAnimTime">100</integer>
+
+    <string name="settings">Settings</string>
+    <string name="search_hint">Tap here to search</string>
 </resources>

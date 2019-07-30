@@ -30,13 +30,24 @@ import android.support.v4.app.FragmentTransaction;
 import android.support.v4.content.ContextCompat;
 import android.support.v4.view.PagerTabStrip;
 import android.support.v4.view.ViewPager;
+import android.transition.Transition;
+import android.transition.TransitionManager;
 import android.util.DisplayMetrics;
 import android.util.Log;
+import android.view.Menu;
+import android.view.MenuItem;
 import android.view.MotionEvent;
 import android.view.View;
+import android.view.inputmethod.InputMethodManager;
 import android.widget.FrameLayout;
 import android.widget.Toast;
 
+import com.alexstyl.searchtransition.boilerplate.ShareDemo;
+import com.alexstyl.searchtransition.mainscreen.SimpleToolbar;
+import com.alexstyl.searchtransition.searchscreen.SearchActivity;
+import com.alexstyl.searchtransition.transition.FadeInTransition;
+import com.alexstyl.searchtransition.transition.FadeOutTransition;
+import com.alexstyl.searchtransition.transition.SimpleTransitionListener;
 import com.beyond.note5.MyApplication;
 import com.beyond.note5.R;
 import com.beyond.note5.bean.Attachment;
@@ -55,8 +66,6 @@ import com.beyond.note5.event.ShowFloatButtonEvent;
 import com.beyond.note5.event.ShowKeyBoardEvent;
 import com.beyond.note5.event.ShowNoteDetailEvent;
 import com.beyond.note5.event.ShowTodoEditorEvent;
-import com.beyond.note5.inject.BeanInjectUtils;
-import com.beyond.note5.inject.SingletonInject;
 import com.beyond.note5.presenter.NotePresenter;
 import com.beyond.note5.presenter.NotePresenterImpl;
 import com.beyond.note5.service.FloatEditorService;
@@ -139,13 +148,15 @@ public class MainActivity extends FragmentActivity implements
 
     protected NotePresenter notePresenter;
 
-    @SingletonInject
-    private MyNoteView noteView;
+    private MyNoteView noteView = new MyNoteView();
 
     private final static int REQUEST_MEDIA_PROJECTION = 2;
     private MediaProjectionManager mediaProjectionManager;
     private MediaProjection mediaProjection;
     private VirtualDisplay virtualDisplay;
+
+    private SimpleToolbar toolbar;
+    private int toolbarMargin;
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
@@ -155,6 +166,7 @@ public class MainActivity extends FragmentActivity implements
 
         initInjection();
 
+        initSearchBar();
         initView();
         initViewPager();
         initEvent();
@@ -166,6 +178,115 @@ public class MainActivity extends FragmentActivity implements
 
     }
 
+    private void initSearchBar() {
+        // setup your Toolbar as you would normally would
+        // For simplicity, I am wrapping the styling of it into its a separate class
+        toolbar =  findViewById(R.id.main_toolbar);
+
+        toolbarMargin = getResources().getDimensionPixelSize(R.dimen.toolbarMargin);
+        toolbar.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                // Prepare the keyboard as soon as the user touches the Toolbar
+                // This will make the transition look faster
+                showKeyboard();
+                transitionToSearch();
+            }
+        });
+    }
+
+//    private int topMargin =0;
+//    @Subscribe(threadMode = ThreadMode.MAIN)
+//    public void hideToolBar(HideToolBarEvent event){
+////        toolbar.setVisibility(View.GONE);
+//        FrameLayout.LayoutParams layoutParams = (FrameLayout.LayoutParams) mainViewPager.getLayoutParams();
+//        topMargin = layoutParams.topMargin;
+//        layoutParams.topMargin = 0;
+//        mainViewPager.setLayoutParams(layoutParams);
+//    }
+//
+//    @Subscribe(threadMode = ThreadMode.MAIN)
+//    public void hideToolBar(ShowToolBarEvent event){
+////        toolbar.setVisibility(View.VISIBLE);
+//        FrameLayout.LayoutParams layoutParams = (FrameLayout.LayoutParams) mainViewPager.getLayoutParams();
+//        layoutParams.topMargin = topMargin;
+//        mainViewPager.setLayoutParams(layoutParams);
+//    }
+
+    private void transitionToSearch() {
+        // create a transition that navigates to search when complete
+        Transition transition = FadeOutTransition.withAction(navigateToSearchWhenDone());
+
+        // let the TransitionManager do the heavy work for us!
+        // all we have to do is change the attributes of the toolbar and the TransitionManager animates the changes
+        // in this case I am removing the bounds of the toolbar (to hide the blue padding on the screen) and
+        // I am hiding the contents of the Toolbar (Navigation icon, Title and Option Items)
+        TransitionManager.beginDelayedTransition(toolbar, transition);
+        FrameLayout.LayoutParams frameLP = (FrameLayout.LayoutParams) toolbar.getLayoutParams();
+        frameLP.setMargins(0, 0, 0, 0);
+        toolbar.setLayoutParams(frameLP);
+        toolbar.hideContent();
+    }
+
+    private Transition.TransitionListener navigateToSearchWhenDone() {
+        return new SimpleTransitionListener() {
+            @Override
+            public void onTransitionEnd(Transition transition) {
+                Intent intent = new Intent(MainActivity.this, SearchActivity.class);
+                startActivity(intent);
+
+                // we are handing the enter transitions ourselves
+                // this line overrides that
+                overridePendingTransition(0, 0);
+
+                // by this point of execution we have animated the 'expansion' of the Toolbar and hidden its contents.
+                // We are half way there. Continue to the SearchActivity to finish the animation
+            }
+        };
+    }
+
+    protected void hideKeyboard() {
+        InputMethodManager imm = (InputMethodManager) getSystemService(Activity.INPUT_METHOD_SERVICE);
+        imm.toggleSoftInput(InputMethodManager.HIDE_IMPLICIT_ONLY, 0);
+
+    }
+
+    protected void showKeyboard() {
+        InputMethodManager imm = (InputMethodManager) getSystemService(Context.INPUT_METHOD_SERVICE);
+        imm.toggleSoftInput(InputMethodManager.SHOW_IMPLICIT, 0);
+    }
+
+    protected void shareDemo() {
+        // shameless self promotion :dance:
+        ShareDemo shareDemo = new ShareDemo(this);
+        shareDemo.shareDemo();
+    }
+
+    private void fadeToolbarIn() {
+        TransitionManager.beginDelayedTransition(toolbar, FadeInTransition.createTransition());
+        FrameLayout.LayoutParams layoutParams = (FrameLayout.LayoutParams) toolbar.getLayoutParams();
+        layoutParams.setMargins(toolbarMargin, toolbarMargin, toolbarMargin, toolbarMargin);
+        toolbar.showContent();
+        toolbar.setLayoutParams(layoutParams);
+    }
+
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        getMenuInflater().inflate(R.menu.menu_main, menu);
+        return true;
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        if (item.getItemId() == R.id.main_action_share) {
+            shareDemo();
+            return true;
+        }
+        return super.onOptionsItemSelected(item);
+    }
+
+
+
     private void initColorPicker() {
         mediaProjectionManager = (MediaProjectionManager) getSystemService(Context.MEDIA_PROJECTION_SERVICE);
         assert mediaProjectionManager != null;
@@ -173,7 +294,6 @@ public class MainActivity extends FragmentActivity implements
     }
 
     private void initInjection() {
-        BeanInjectUtils.inject(this);
         notePresenter = new NotePresenterImpl(noteView);
     }
 
@@ -268,7 +388,6 @@ public class MainActivity extends FragmentActivity implements
         this.getWindow().getDecorView().getViewTreeObserver().addOnGlobalLayoutListener(onKeyboardChangeListener);
         mainViewPager.setOnScrollChangeListener(this);
     }
-
 
     @Override
     public void onWindowFocusChanged(boolean hasFocus) {
@@ -440,6 +559,7 @@ public class MainActivity extends FragmentActivity implements
     protected void onResume() {
         super.onResume();
         StatusBarUtil.showStableStatusBar(this);
+        fadeToolbarIn();
     }
 
     @Override

@@ -34,7 +34,6 @@ import com.beyond.note5.event.todo.DeleteTodoSuccessEvent;
 import com.beyond.note5.event.todo.UpdateTodoPriorityEvent;
 import com.beyond.note5.event.todo.UpdateTodoSuccessEvent;
 import com.beyond.note5.inject.BeanInjectUtils;
-import com.beyond.note5.inject.Qualifier;
 import com.beyond.note5.inject.SingletonInject;
 import com.beyond.note5.presenter.CalendarPresenterImpl;
 import com.beyond.note5.presenter.PredictPresenterImpl;
@@ -84,21 +83,13 @@ public class TodoListFragment extends Fragment {
     protected DocumentRecyclerViewAdapter recyclerViewAdapter;
     protected List<Todo> data = new ArrayList<>();
 
-    @Qualifier(implementClass = MyTodoView.class)
-    @SingletonInject
-    MyTodoView todoView ;
+    MyTodoView todoView = new MyTodoView();
 
-    @Qualifier(implementClass = MyCalendarView.class)
-    @SingletonInject
-    MyCalendarView calendarView ;
+    MyCalendarView calendarView  = new MyCalendarView();
 
-    @Qualifier(implementClass = MyPredictView.class)
-    @SingletonInject
-    MyPredictView predictView;
+    MyPredictView predictView = new MyPredictView();
 
-    @Qualifier(implementClass = MySyncView.class)
-    @SingletonInject
-    MySyncView syncView;
+    MySyncView syncView = new MySyncView();
 
     TodoCompositePresenter todoCompositePresenter;
 
@@ -356,6 +347,9 @@ public class TodoListFragment extends Fragment {
 
     public View findViewBy(Integer index) {
         ItemDataGenerator itemDataGenerator = recyclerViewAdapter.getItemDataGenerator();
+        if (itemDataGenerator.getContentData().isEmpty()){
+            return null;
+        }
         Object note = itemDataGenerator.getContentData().get(index);
         int position = itemDataGenerator.getPosition(note);
         return recyclerView.getLayoutManager().findViewByPosition(position);

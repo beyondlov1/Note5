@@ -31,7 +31,6 @@ import com.beyond.note5.event.note.DeleteNoteSuccessEvent;
 import com.beyond.note5.event.note.UpdateNotePriorityEvent;
 import com.beyond.note5.event.note.UpdateNoteSuccessEvent;
 import com.beyond.note5.inject.BeanInjectUtils;
-import com.beyond.note5.inject.Qualifier;
 import com.beyond.note5.inject.SingletonInject;
 import com.beyond.note5.ocr.OCRCallBack;
 import com.beyond.note5.ocr.OCRTask;
@@ -80,13 +79,9 @@ public class NoteListFragment extends Fragment {
 
     protected SyncPresenter syncPresenter;
 
-    @SingletonInject
-    @Qualifier(implementClass = MyNoteView.class)
-    protected NoteView noteView;
+    protected NoteView noteView = new MyNoteView();
 
-    @SingletonInject
-    @Qualifier(implementClass = MySyncView.class)
-    protected SyncView syncView;
+    protected SyncView syncView = new MySyncView();
 
     @SingletonInject
     private Handler handler;
@@ -141,6 +136,9 @@ public class NoteListFragment extends Fragment {
                 //上划
                 if (velocityY < 0) {
                     EventBus.getDefault().post(new ShowFABEvent(R.id.note_recycler_view));
+//                    EventBus.getDefault().post(new ShowToolBarEvent(null));
+                }else {
+//                    EventBus.getDefault().post(new HideToolBarEvent(null));
                 }
                 return false;
             }

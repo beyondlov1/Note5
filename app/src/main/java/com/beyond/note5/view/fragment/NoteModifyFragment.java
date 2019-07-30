@@ -5,9 +5,6 @@ import android.os.Bundle;
 
 import com.beyond.note5.bean.Note;
 import com.beyond.note5.event.FillNoteModifyEvent;
-import com.beyond.note5.inject.BeanInjectUtils;
-import com.beyond.note5.inject.Qualifier;
-import com.beyond.note5.inject.SingletonInject;
 import com.beyond.note5.presenter.NotePresenter;
 import com.beyond.note5.presenter.NotePresenterImpl;
 import com.beyond.note5.utils.StatusBarUtil;
@@ -31,13 +28,10 @@ public class NoteModifyFragment extends AbstractNoteEditorFragment {
 
     protected NotePresenter notePresenter;
 
-    @SingletonInject
-    @Qualifier(implementClass = MyNoteView.class)
-    private NoteView noteView;
+    private NoteView noteView = new MyNoteView();
 
     @Override
     protected void init(Bundle savedInstanceState) {
-        BeanInjectUtils.inject(this);
         notePresenter = new NotePresenterImpl(noteView);
     }
 

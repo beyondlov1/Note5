@@ -11,17 +11,28 @@
          is needed to present your content, e.g. VideoView, SurfaceView,
          TextureView, etc. -->
 
+
     <FrameLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:orientation="vertical"
-        android:paddingTop="20dp"
-        >
+        android:paddingTop="20dp">
+
+        <com.alexstyl.searchtransition.mainscreen.SimpleToolbar
+            android:id="@+id/main_toolbar"
+            app:titleTextAppearance="@style/Toolbar.TitleText"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_gravity="top"
+            android:layout_margin="@dimen/toolbarMargin"
+            android:elevation="2dp" />
+
 
         <android.support.v4.view.ViewPager
             android:id="@+id/main_view_pager"
             android:layout_width="match_parent"
-            android:layout_height="match_parent">
+            android:layout_height="match_parent"
+            android:layout_marginTop="64dp">
 
             <android.support.v4.view.PagerTabStrip
                 android:id="@+id/pager_tab_strip"
@@ -29,7 +40,8 @@
                 android:layout_height="wrap_content"
                 android:layout_gravity="top"
                 android:background="@color/white"
-                android:elevation="2dp"/>
+                android:elevation="2dp"
+                android:visibility="gone"/>
         </android.support.v4.view.ViewPager>
 
     </FrameLayout>

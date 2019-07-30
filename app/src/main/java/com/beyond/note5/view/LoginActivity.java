@@ -61,8 +61,7 @@ public abstract class LoginActivity extends AppCompatActivity {
     @Qualifier(implementClass = AccountModelImpl.class)
     private AccountModel accountModel;
 
-    @SingletonInject
-    private  MyAccountView accountView;
+    private  MyAccountView accountView = new MyAccountView();
 
     @BindView(R.id.login_server)
     EditText server;

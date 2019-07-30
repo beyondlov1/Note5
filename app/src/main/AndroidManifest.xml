@@ -86,6 +86,9 @@
         <activity
             android:name=".view.DavLoginActivity"
             android:theme="@style/StartLoadBackgroundFullScreenTheme" />
+        <activity android:name="com.alexstyl.searchtransition.searchscreen.SearchActivity"
+            android:theme="@style/Theme.AppCompat.Light.NoActionBar"
+            android:windowSoftInputMode="stateVisible"/>
 
         <provider
             android:name="android.support.v4.content.FileProvider"

@@ -7,9 +7,6 @@ import com.beyond.note5.R;
 import com.beyond.note5.bean.Document;
 import com.beyond.note5.bean.Todo;
 import com.beyond.note5.event.HideKeyBoardEvent2;
-import com.beyond.note5.inject.BeanInjectUtils;
-import com.beyond.note5.inject.Qualifier;
-import com.beyond.note5.inject.SingletonInject;
 import com.beyond.note5.predict.bean.Tag;
 import com.beyond.note5.presenter.CalendarPresenterImpl;
 import com.beyond.note5.presenter.PredictPresenterImpl;
@@ -41,22 +38,14 @@ public class TodoEditFragment extends AbstractTodoEditorFragment {
 
     TodoCompositePresenter todoCompositePresenter;
 
-    @Qualifier(implementClass = MyTodoView.class)
-    @SingletonInject
-    MyTodoView todoView ;
+    MyTodoView todoView = new MyTodoView();
 
-    @Qualifier(implementClass = MyCalendarView.class)
-    @SingletonInject
-    MyCalendarView calendarView ;
+    MyCalendarView calendarView = new MyCalendarView();
 
-    @Qualifier(implementClass = MyPredictView.class)
-    @SingletonInject
-    MyPredictView predictView;
+    MyPredictView predictView = new MyPredictView();
 
     @Override
     protected void init(Bundle savedInstanceState) {
-
-        BeanInjectUtils.inject(this);
         todoCompositePresenter = new TodoCompositePresenterImpl.Builder(new TodoPresenterImpl(todoView))
                 .calendarPresenter(new CalendarPresenterImpl(getActivity(), calendarView))
                 .predictPresenter(new PredictPresenterImpl(predictView))

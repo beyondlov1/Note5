@@ -24,12 +24,10 @@ import com.beyond.note5.event.HideKeyBoardEvent2;
 import com.beyond.note5.event.HideTodoEditorEvent;
 import com.beyond.note5.event.ScrollToTodoByDateEvent;
 import com.beyond.note5.event.ShowKeyBoardEvent;
-import com.beyond.note5.inject.BeanInjectUtils;
-import com.beyond.note5.inject.Qualifier;
-import com.beyond.note5.inject.SingletonInject;
 import com.beyond.note5.predict.bean.Tag;
 import com.beyond.note5.presenter.CalendarPresenterImpl;
 import com.beyond.note5.presenter.NotePresenter;
+import com.beyond.note5.presenter.NotePresenterImpl;
 import com.beyond.note5.presenter.PredictPresenterImpl;
 import com.beyond.note5.presenter.TodoCompositePresenter;
 import com.beyond.note5.presenter.TodoCompositePresenterImpl;
@@ -81,25 +79,21 @@ public class TodoModifySuperFragment extends AbstractTodoEditorFragment implemen
 
     private NotePresenter notePresenter;
 
-    @Qualifier(implementClass = MyTodoView.class)
-    @SingletonInject
-    MyTodoView todoView ;
+    MyNoteView noteView = new MyNoteView();
 
-    @Qualifier(implementClass = MyCalendarView.class)
-    @SingletonInject
-    MyCalendarView calendarView ;
+    MyTodoView todoView = new MyTodoView();
 
-    @Qualifier(implementClass = MyPredictView.class)
-    @SingletonInject
-    MyPredictView predictView;
+    MyCalendarView calendarView = new MyCalendarView();
+
+    MyPredictView predictView = new MyPredictView();
 
     @Override
     protected void init(Bundle savedInstanceState) {
-        BeanInjectUtils.inject(this);
         todoCompositePresenter = new TodoCompositePresenterImpl.Builder(new TodoPresenterImpl(todoView))
                 .calendarPresenter(new CalendarPresenterImpl(getActivity(), calendarView))
                 .predictPresenter(new PredictPresenterImpl(predictView))
                 .build();
+        notePresenter = new NotePresenterImpl(noteView);
     }
 
     @Override
