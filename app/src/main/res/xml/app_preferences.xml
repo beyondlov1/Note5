@@ -1,7 +1,7 @@
 <android.support.v7.preference.PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto">
 
-    <android.support.v7.preference.PreferenceCategory android:title="同步">
+    <android.support.v7.preference.PreferenceCategory android:title="\n\n\n同步">
         <PreferenceScreen
             android:summary="DAV账号: 坚果云, TeraCloud ..."
             android:title="管理同步账号">

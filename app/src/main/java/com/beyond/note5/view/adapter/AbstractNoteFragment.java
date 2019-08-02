@@ -12,8 +12,8 @@ import com.beyond.note5.module.NoteComponent;
 import com.beyond.note5.module.NoteModule;
 import com.beyond.note5.presenter.NotePresenter;
 import com.beyond.note5.view.NoteView;
-import com.beyond.note5.view.adapter.component.NoteRecyclerViewAdapter;
-import com.beyond.note5.view.adapter.component.header.ReadFlagItemDataGenerator;
+import com.beyond.note5.view.adapter.list.NoteRecyclerViewAdapter;
+import com.beyond.note5.view.adapter.list.header.ReadFlagItemDataGenerator;
 
 import javax.inject.Inject;
 

@@ -7,8 +7,8 @@ import android.support.v7.widget.RecyclerView;
 import android.view.View;
 
 import com.beyond.note5.bean.Document;
-import com.beyond.note5.view.adapter.component.DocumentRecyclerViewAdapter;
-import com.beyond.note5.view.adapter.component.header.ItemDataGenerator;
+import com.beyond.note5.view.adapter.list.DocumentRecyclerViewAdapter;
+import com.beyond.note5.view.adapter.list.header.ItemDataGenerator;
 
 import org.apache.commons.lang3.StringUtils;
 import org.greenrobot.eventbus.EventBus;

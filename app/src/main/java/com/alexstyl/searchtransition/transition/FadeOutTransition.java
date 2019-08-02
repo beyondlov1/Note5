@@ -9,7 +9,7 @@ public class FadeOutTransition extends AutoTransition {
         // force callers to call the factory method to instantiate this class
     }
 
-    private static final int FADE_OUT_DURATION = 50;
+    public static final int FADE_OUT_DURATION = 50;
 
     /**
      * Creates a AutoTransition that calls the {@linkplain TransitionListener#onTransitionEnd(Transition)}

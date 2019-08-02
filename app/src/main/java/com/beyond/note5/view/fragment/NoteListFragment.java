@@ -3,9 +3,9 @@ package com.beyond.note5.view.fragment;
 import android.content.Intent;
 import android.os.Bundle;
 import android.os.Handler;
-import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
+import android.support.v4.widget.SwipeRefreshLayout;
 import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.StaggeredGridLayoutManager;
 import android.util.Base64;
@@ -44,13 +44,12 @@ import com.beyond.note5.view.DavLoginActivity;
 import com.beyond.note5.view.MainActivity;
 import com.beyond.note5.view.NoteView;
 import com.beyond.note5.view.SyncView;
-import com.beyond.note5.view.adapter.component.DocumentRecyclerViewAdapter;
-import com.beyond.note5.view.adapter.component.NoteRecyclerViewAdapter;
-import com.beyond.note5.view.adapter.component.header.ItemDataGenerator;
-import com.beyond.note5.view.adapter.component.header.ReadFlagItemDataGenerator;
+import com.beyond.note5.view.adapter.list.DocumentRecyclerViewAdapter;
+import com.beyond.note5.view.adapter.list.NoteRecyclerViewAdapter;
+import com.beyond.note5.view.adapter.list.RecyclerViewTopMargin;
+import com.beyond.note5.view.adapter.list.header.ItemDataGenerator;
+import com.beyond.note5.view.adapter.list.header.ReadFlagItemDataGenerator;
 import com.beyond.note5.view.adapter.view.DocumentViewBase;
-import com.scwang.smartrefresh.layout.api.RefreshLayout;
-import com.scwang.smartrefresh.layout.listener.OnRefreshListener;
 
 import org.greenrobot.eventbus.EventBus;
 import org.greenrobot.eventbus.Subscribe;
@@ -69,7 +68,8 @@ import java.util.List;
 public class NoteListFragment extends Fragment {
 
     protected RecyclerView recyclerView;
-    private RefreshLayout refreshLayout;
+
+    private SwipeRefreshLayout refreshLayout;
 
     protected DocumentRecyclerViewAdapter recyclerViewAdapter;
 
@@ -113,18 +113,20 @@ public class NoteListFragment extends Fragment {
 
     protected void initView(ViewGroup viewGroup) {
         refreshLayout = viewGroup.findViewById(R.id.note_refresh_layout);
+        refreshLayout.setProgressViewOffset(false, 100, 200);
         recyclerView = viewGroup.findViewById(R.id.note_recycler_view);
         recyclerView.setAdapter(recyclerViewAdapter);
         //设置显示格式
         final StaggeredGridLayoutManager staggeredGridLayoutManager = new StaggeredGridLayoutManager(2, StaggeredGridLayoutManager.VERTICAL);
         recyclerView.setLayoutManager(staggeredGridLayoutManager);
+        recyclerView.addItemDecoration(new RecyclerViewTopMargin());
     }
 
     protected void initEvent(ViewGroup viewGroup) {
-        refreshLayout.setOnRefreshListener(new OnRefreshListener() {
+        refreshLayout.setOnRefreshListener(new SwipeRefreshLayout.OnRefreshListener() {
             @Override
-            public void onRefresh(@NonNull RefreshLayout refreshLayout) {
-                if (!checkAccount(refreshLayout)) {
+            public void onRefresh() {
+                if (!checkAccount()) {
                     return;
                 }
                 syncPresenter.sync();
@@ -166,10 +168,10 @@ public class NoteListFragment extends Fragment {
         });
     }
 
-    private boolean checkAccount(@NonNull RefreshLayout refreshLayout) {
+    private boolean checkAccount() {
         List<Account> all = MyApplication.getInstance().getAccountModel().findAllValid();
         if (all == null || all.isEmpty()) {
-            refreshLayout.finishRefresh();
+            stopRefresh();
             Intent intent = new Intent(getContext(), DavLoginActivity.class);
             startActivity(intent);
             return false;
@@ -241,7 +243,7 @@ public class NoteListFragment extends Fragment {
 
     @Subscribe(threadMode = ThreadMode.MAIN)
     public void onReceived(SyncNoteListEvent event) {
-        refreshLayout.autoRefresh();
+        refreshLayout.setRefreshing(true);
     }
 
     @Subscribe(threadMode = ThreadMode.MAIN)
@@ -304,14 +306,18 @@ public class NoteListFragment extends Fragment {
     private class MySyncView implements SyncView {
         @Override
         public void onSyncSuccess(String msg) {
-            refreshLayout.finishRefresh();
+            stopRefresh();
             ToastUtil.toast(getContext(), msg);
         }
 
         @Override
         public void onSyncFail(String msg) {
-            refreshLayout.finishRefresh();
+            stopRefresh();
             ToastUtil.toast(getContext(), msg);
         }
+    }
+
+    private void stopRefresh() {
+        refreshLayout.setRefreshing(false);
     }
 }

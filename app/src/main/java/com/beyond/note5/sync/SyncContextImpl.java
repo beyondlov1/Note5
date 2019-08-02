@@ -69,8 +69,8 @@ public class SyncContextImpl implements SyncContext {
 
     public void recordSyncState(List<String> ids, SyncState syncState) {
         List<SyncStateInfo> syncStateInfos = new ArrayList<>();
-        SyncStateInfo syncStateInfo = SyncStateInfo.create();
         for (String id : ids) {
+            SyncStateInfo syncStateInfo = SyncStateInfo.create();
             syncStateInfo.setDocumentId(id);
             syncStateInfo.setLocal(dataSource1.getKey());
             syncStateInfo.setServer(dataSource2.getKey());

@@ -1,4 +1,4 @@
-package com.beyond.note5.view.adapter.component.viewholder;
+package com.beyond.note5.view.adapter.list.viewholder;
 
 import android.support.v7.widget.RecyclerView;
 import android.view.View;

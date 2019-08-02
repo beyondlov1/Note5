@@ -1,5 +1,6 @@
-package com.beyond.note5.view.adapter.component.viewholder;
+package com.beyond.note5.view.adapter.list.viewholder;
 
+import android.support.v7.widget.CardView;
 import android.view.View;
 import android.widget.ImageButton;
 import android.widget.Switch;
@@ -10,6 +11,7 @@ import com.shehuan.niv.NiceImageView;
 
 public class NoteViewHolder extends DocumentViewHolder {
 
+    public CardView cardViewContainer;
     public View container;
     public View nonImageContainer;
     public TextView title;
@@ -32,6 +34,7 @@ public class NoteViewHolder extends DocumentViewHolder {
         image = itemView.findViewById(R.id.item_note_image);
         nonImageContainer = itemView.findViewById(R.id.item_note_non_image_container);
         textContainer = itemView.findViewById(R.id.item_note_text_container);
+        cardViewContainer = itemView.findViewById(R.id.item_note_cardview_container);
     }
 
 }

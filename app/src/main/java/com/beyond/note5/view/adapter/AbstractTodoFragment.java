@@ -18,8 +18,8 @@ import com.beyond.note5.presenter.TodoPresenter;
 import com.beyond.note5.view.CalendarView;
 import com.beyond.note5.view.PredictView;
 import com.beyond.note5.view.TodoView;
-import com.beyond.note5.view.adapter.component.TodoRecyclerViewAdapter;
-import com.beyond.note5.view.adapter.component.header.ReminderTimeItemDataGenerator;
+import com.beyond.note5.view.adapter.list.TodoRecyclerViewAdapter;
+import com.beyond.note5.view.adapter.list.header.ReminderTimeItemDataGenerator;
 
 import java.util.List;
 

@@ -10,7 +10,7 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import com.beyond.note5.R;
-import com.beyond.note5.view.adapter.component.viewholder.NoteViewHolder;
+import com.beyond.note5.view.adapter.list.viewholder.NoteViewHolder;
 
 public class TestFragment extends Fragment {
     @Nullable

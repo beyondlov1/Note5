@@ -1,4 +1,4 @@
-package com.beyond.note5.view.adapter.component.viewholder;
+package com.beyond.note5.view.adapter.list.viewholder;
 
 import android.view.View;
 import android.widget.CheckBox;

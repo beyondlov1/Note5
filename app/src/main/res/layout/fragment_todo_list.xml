@@ -5,7 +5,7 @@
     android:layout_height="match_parent"
     android:orientation="vertical">
 
-    <com.scwang.smartrefresh.layout.SmartRefreshLayout
+    <android.support.v4.widget.SwipeRefreshLayout
         android:id="@+id/todo_refresh_layout"
         android:layout_width="match_parent"
         android:layout_height="match_parent">
@@ -14,5 +14,5 @@
             android:id="@+id/todo_recycler_view"
             android:layout_width="match_parent"
             android:layout_height="match_parent" />
-    </com.scwang.smartrefresh.layout.SmartRefreshLayout>
+    </android.support.v4.widget.SwipeRefreshLayout>
 </LinearLayout>

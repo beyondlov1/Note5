@@ -3,5 +3,5 @@
   <dimen name="activity_vertical_margin">16dp</dimen>
 
   <dimen name="toolbar_height">64dp</dimen>
-  <dimen name="toolbarMargin">8dp</dimen>
+  <dimen name="toolbarMargin">10dp</dimen>
 </resources>

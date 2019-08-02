@@ -30,6 +30,7 @@ import android.support.v4.app.FragmentTransaction;
 import android.support.v4.content.ContextCompat;
 import android.support.v4.view.PagerTabStrip;
 import android.support.v4.view.ViewPager;
+import android.support.v7.widget.CardView;
 import android.transition.Transition;
 import android.transition.TransitionManager;
 import android.util.DisplayMetrics;
@@ -155,6 +156,7 @@ public class MainActivity extends FragmentActivity implements
     private MediaProjection mediaProjection;
     private VirtualDisplay virtualDisplay;
 
+    private CardView toolbarContainer;
     private SimpleToolbar toolbar;
     private int toolbarMargin;
 
@@ -182,6 +184,7 @@ public class MainActivity extends FragmentActivity implements
         // setup your Toolbar as you would normally would
         // For simplicity, I am wrapping the styling of it into its a separate class
         toolbar =  findViewById(R.id.main_toolbar);
+        toolbarContainer =  findViewById(R.id.main_toolbar_container);
 
         toolbarMargin = getResources().getDimensionPixelSize(R.dimen.toolbarMargin);
         toolbar.setOnClickListener(new View.OnClickListener() {
@@ -221,26 +224,25 @@ public class MainActivity extends FragmentActivity implements
         // all we have to do is change the attributes of the toolbar and the TransitionManager animates the changes
         // in this case I am removing the bounds of the toolbar (to hide the blue padding on the screen) and
         // I am hiding the contents of the Toolbar (Navigation icon, Title and Option Items)
-        TransitionManager.beginDelayedTransition(toolbar, transition);
-        FrameLayout.LayoutParams frameLP = (FrameLayout.LayoutParams) toolbar.getLayoutParams();
+        TransitionManager.beginDelayedTransition(toolbarContainer, transition);
+        FrameLayout.LayoutParams frameLP = (FrameLayout.LayoutParams) toolbarContainer.getLayoutParams();
         frameLP.setMargins(0, 0, 0, 0);
-        toolbar.setLayoutParams(frameLP);
+        toolbarContainer.setLayoutParams(frameLP);
         toolbar.hideContent();
     }
 
     private Transition.TransitionListener navigateToSearchWhenDone() {
         return new SimpleTransitionListener() {
+
             @Override
             public void onTransitionEnd(Transition transition) {
+                doNavigate();
+            }
+
+            private void doNavigate(){
                 Intent intent = new Intent(MainActivity.this, SearchActivity.class);
                 startActivity(intent);
-
-                // we are handing the enter transitions ourselves
-                // this line overrides that
                 overridePendingTransition(0, 0);
-
-                // by this point of execution we have animated the 'expansion' of the Toolbar and hidden its contents.
-                // We are half way there. Continue to the SearchActivity to finish the animation
             }
         };
     }
@@ -263,11 +265,11 @@ public class MainActivity extends FragmentActivity implements
     }
 
     private void fadeToolbarIn() {
-        TransitionManager.beginDelayedTransition(toolbar, FadeInTransition.createTransition());
-        FrameLayout.LayoutParams layoutParams = (FrameLayout.LayoutParams) toolbar.getLayoutParams();
+        TransitionManager.beginDelayedTransition(toolbarContainer, FadeInTransition.createTransition());
+        FrameLayout.LayoutParams layoutParams = (FrameLayout.LayoutParams) toolbarContainer.getLayoutParams();
         layoutParams.setMargins(toolbarMargin, toolbarMargin, toolbarMargin, toolbarMargin);
+        toolbarContainer.setLayoutParams(layoutParams);
         toolbar.showContent();
-        toolbar.setLayoutParams(layoutParams);
     }
 
     @Override

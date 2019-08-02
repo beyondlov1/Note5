@@ -1,4 +1,4 @@
-package com.beyond.note5.view.adapter.component;
+package com.beyond.note5.view.adapter.list;
 
 import android.content.Context;
 import android.graphics.Paint;
@@ -27,10 +27,10 @@ import com.beyond.note5.event.RefreshTodoListEvent;
 import com.beyond.note5.event.ShowTodoEditorEvent;
 import com.beyond.note5.event.todo.UpdateTodoPriorityEvent;
 import com.beyond.note5.utils.HtmlUtil;
-import com.beyond.note5.view.adapter.component.header.Header;
-import com.beyond.note5.view.adapter.component.header.ItemDataGenerator;
-import com.beyond.note5.view.adapter.component.header.TodoHeader;
-import com.beyond.note5.view.adapter.component.viewholder.TodoViewHolder;
+import com.beyond.note5.view.adapter.list.header.Header;
+import com.beyond.note5.view.adapter.list.header.ItemDataGenerator;
+import com.beyond.note5.view.adapter.list.header.TodoHeader;
+import com.beyond.note5.view.adapter.list.viewholder.TodoViewHolder;
 import com.beyond.note5.view.animator.svg.VectorAnimation;
 import com.beyond.note5.view.animator.svg.VectorAnimationImpl;
 import com.time.util.DateUtil;
@@ -136,6 +136,7 @@ public class TodoRecyclerViewAdapter extends DocumentRecyclerViewAdapter<Todo, T
             gradientDrawable.setStroke(2, ContextCompat.getColor(context, R.color.google_red));
         }
         viewHolder.dataContainer.setBackground(gradientDrawable);
+        viewHolder.dataContainer.setPadding(15,30,15,30);
         viewHolder.checkbox.setVisibility(View.VISIBLE);
         if (todo.getReadFlag().equals(DocumentConst.READ_FLAG_DONE)) {
             viewHolder.checkbox.setChecked(true);

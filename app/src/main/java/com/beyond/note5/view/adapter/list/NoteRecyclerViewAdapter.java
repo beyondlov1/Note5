@@ -1,4 +1,4 @@
-package com.beyond.note5.view.adapter.component;
+package com.beyond.note5.view.adapter.list;
 
 import android.content.Context;
 import android.graphics.Bitmap;
@@ -12,6 +12,7 @@ import android.support.v7.widget.StaggeredGridLayoutManager;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.FrameLayout;
 import android.widget.TextView;
 
 import com.beyond.note5.MyApplication;
@@ -26,9 +27,9 @@ import com.beyond.note5.utils.BitmapUtil;
 import com.beyond.note5.utils.HtmlUtil;
 import com.beyond.note5.utils.PreferenceUtil;
 import com.beyond.note5.utils.WebViewUtil;
-import com.beyond.note5.view.adapter.component.header.Header;
-import com.beyond.note5.view.adapter.component.header.ItemDataGenerator;
-import com.beyond.note5.view.adapter.component.viewholder.NoteViewHolder;
+import com.beyond.note5.view.adapter.list.header.Header;
+import com.beyond.note5.view.adapter.list.header.ItemDataGenerator;
+import com.beyond.note5.view.adapter.list.viewholder.NoteViewHolder;
 import com.beyond.note5.view.animator.svg.VectorAnimation;
 import com.beyond.note5.view.animator.svg.VectorAnimationImpl;
 import com.beyond.note5.view.custom.MarkdownRenderAsyncTask;
@@ -88,11 +89,12 @@ public class NoteRecyclerViewAdapter extends DocumentRecyclerViewAdapter<Note, N
         viewHolder.dataContainer.setBackground(null);
         StaggeredGridLayoutManager.LayoutParams layoutParams = (StaggeredGridLayoutManager.LayoutParams) viewHolder.itemView.getLayoutParams();
         layoutParams.setFullSpan(true);
-        if (shouldFullSpan){
+        if (shouldFullSpan) {
             viewHolder.fullSpanSwitch.setChecked(true);
-        }else {
+        } else {
             viewHolder.fullSpanSwitch.setChecked(false);
         }
+        viewHolder.cardViewContainer.setCardElevation(0);
     }
 
     @Override
@@ -127,6 +129,7 @@ public class NoteRecyclerViewAdapter extends DocumentRecyclerViewAdapter<Note, N
     private void refreshShouldShowLink() {
         shouldLinkShow = PreferenceUtil.getBoolean(SHOULD_SHOW_LINK);
     }
+
     private void refreshShouldFullSpan() {
         shouldFullSpan = PreferenceUtil.getBoolean(SHOULD_FULL_SPAN);
     }
@@ -140,10 +143,19 @@ public class NoteRecyclerViewAdapter extends DocumentRecyclerViewAdapter<Note, N
         if (note.getPriority() != null && note.getPriority() > 0) {
             gradientDrawable.setStroke(2, ContextCompat.getColor(context, R.color.google_red));
         }
-
         viewHolder.dataContainer.setBackground(gradientDrawable);
+//        viewHolder.cardViewContainer.setCardElevation(4);
+        FrameLayout.LayoutParams cardLp = (FrameLayout.LayoutParams) viewHolder.cardViewContainer.getLayoutParams();
+        if (shouldFullSpan) {
+            cardLp.setMargins(20,15,20,15);
+            viewHolder.nonImageContainer.setPadding(25, 20, 25, 20);
+        } else {
+            cardLp.setMargins(10,10,10,10);
+            viewHolder.nonImageContainer.setPadding(10, 15, 10, 15);
+        }
+
         viewHolder.title.setTextColor(Color.DKGRAY);
-        viewHolder.content.setVisibility(View.VISIBLE);
+
         String content;
         if (StringUtils.isNotBlank(note.getTitle())) {
             content = prefixWithH3(StringUtils.trim(note.getTitle()));
@@ -157,6 +169,7 @@ public class NoteRecyclerViewAdapter extends DocumentRecyclerViewAdapter<Note, N
                 }
             }
         }
+        viewHolder.content.setVisibility(View.VISIBLE);
         setText(viewHolder.content, content);
 
         if (shouldLinkShow && WebViewUtil.getUrlOrSearchUrl(note) != null) {
@@ -171,9 +184,9 @@ public class NoteRecyclerViewAdapter extends DocumentRecyclerViewAdapter<Note, N
         if (itemDataGenerator.getSingleContentPositions().contains(position)) {
             layoutParams.setFullSpan(true);
         } else {
-            if (shouldFullSpan){
+            if (shouldFullSpan) {
                 layoutParams.setFullSpan(true);
-            }else {
+            } else {
                 layoutParams.setFullSpan(false);
             }
         }
@@ -223,14 +236,14 @@ public class NoteRecyclerViewAdapter extends DocumentRecyclerViewAdapter<Note, N
     }
 
     private void setText(TextView textView, String content) {
-        if (shouldFullSpan){
-            textView.setTextSize(12*1.2f);
-            textView.setLineSpacing(0,1.2f);
-        }else {
+        if (shouldFullSpan) {
+            textView.setTextSize(12 * 1.2f);
+            textView.setLineSpacing(0, 1.2f);
+        } else {
             textView.setTextSize(12);
-            textView.setLineSpacing(0,1f);
+            textView.setLineSpacing(0, 1f);
         }
-        MarkdownRenders.render(textView,content);
+        MarkdownRenders.render(textView, content);
     }
 
     @Override

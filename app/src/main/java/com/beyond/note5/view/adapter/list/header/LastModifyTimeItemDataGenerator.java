@@ -1,4 +1,4 @@
-package com.beyond.note5.view.adapter.component.header;
+package com.beyond.note5.view.adapter.list.header;
 
 import com.beyond.note5.bean.Document;
 

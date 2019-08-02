@@ -56,14 +56,14 @@ public class NoteSqlDataSourceWrap implements SqlDataSource<Note>, SyncContextAw
     public void add(Note note) {
         noteSqlDataSource.add(note);
 
-        if (getDavDataSource() == null){
+        if (getDavDataSource() == null) {
             return;
         }
         List<Attachment> attachments = note.getAttachments();
         if (attachments != null && !attachments.isEmpty()) {
             for (Attachment attachment : attachments) {
                 try {
-                    if (new File(attachment.getPath()).exists()){
+                    if (new File(attachment.getPath()).exists()) {
                         continue;
                     }
                     getDavDataSource().download(
@@ -147,7 +147,7 @@ public class NoteSqlDataSourceWrap implements SqlDataSource<Note>, SyncContextAw
     public void save(Note note) throws IOException {
         noteSqlDataSource.save(note);
 
-        if (getDavDataSource() == null){
+        if (getDavDataSource() == null) {
             return;
         }
 
@@ -155,7 +155,7 @@ public class NoteSqlDataSourceWrap implements SqlDataSource<Note>, SyncContextAw
         if (attachments != null && !attachments.isEmpty()) {
             for (Attachment attachment : attachments) {
                 try {
-                    if (new File(attachment.getPath()).exists()){
+                    if (new File(attachment.getPath()).exists()) {
                         continue;
                     }
                     getDavDataSource().download(
@@ -171,14 +171,20 @@ public class NoteSqlDataSourceWrap implements SqlDataSource<Note>, SyncContextAw
 
     @Override
     public void saveAll(List<Note> notes) throws IOException, SaveException {
-        saveAll(notes,getDavDataSource().getKey());
+        String key;
+        if (getDavDataSource() == null) {
+            key = null;
+        }else {
+            key = getDavDataSource().getKey();
+        }
+        saveAll(notes, key);
     }
 
     @Override
     public void saveAll(List<Note> notes, String source) throws IOException, SaveException {
-        noteSqlDataSource.saveAll(notes,source);
+        noteSqlDataSource.saveAll(notes, source);
 
-        if (getDavDataSource() == null){
+        if (getDavDataSource() == null) {
             return;
         }
         for (Note note : notes) {
@@ -186,7 +192,7 @@ public class NoteSqlDataSourceWrap implements SqlDataSource<Note>, SyncContextAw
             if (attachments != null && !attachments.isEmpty()) {
                 for (Attachment attachment : attachments) {
                     try {
-                        if (new File(attachment.getPath()).exists()){
+                        if (new File(attachment.getPath()).exists()) {
                             continue;
                         }
                         getDavDataSource().download(

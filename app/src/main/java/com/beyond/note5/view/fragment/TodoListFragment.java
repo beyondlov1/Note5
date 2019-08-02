@@ -5,9 +5,9 @@ import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
 import android.os.Handler;
-import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
+import android.support.v4.widget.SwipeRefreshLayout;
 import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.StaggeredGridLayoutManager;
 import android.view.GestureDetector;
@@ -46,16 +46,15 @@ import com.beyond.note5.utils.ToastUtil;
 import com.beyond.note5.view.DavLoginActivity;
 import com.beyond.note5.view.SyncView;
 import com.beyond.note5.view.TodoView;
-import com.beyond.note5.view.adapter.component.DocumentRecyclerViewAdapter;
-import com.beyond.note5.view.adapter.component.TodoRecyclerViewAdapter;
-import com.beyond.note5.view.adapter.component.header.Header;
-import com.beyond.note5.view.adapter.component.header.ItemDataGenerator;
-import com.beyond.note5.view.adapter.component.header.ReminderTimeItemDataGenerator;
+import com.beyond.note5.view.adapter.list.DocumentRecyclerViewAdapter;
+import com.beyond.note5.view.adapter.list.RecyclerViewTopMargin;
+import com.beyond.note5.view.adapter.list.TodoRecyclerViewAdapter;
+import com.beyond.note5.view.adapter.list.header.Header;
+import com.beyond.note5.view.adapter.list.header.ItemDataGenerator;
+import com.beyond.note5.view.adapter.list.header.ReminderTimeItemDataGenerator;
 import com.beyond.note5.view.adapter.view.CalendarViewAdapter;
 import com.beyond.note5.view.adapter.view.DocumentViewBase;
 import com.beyond.note5.view.adapter.view.PredictViewAdapter;
-import com.scwang.smartrefresh.layout.api.RefreshLayout;
-import com.scwang.smartrefresh.layout.listener.OnRefreshListener;
 
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.time.DateFormatUtils;
@@ -78,7 +77,8 @@ import static com.beyond.note5.model.TodoModelImpl.IS_SHOW_READ_FLAG_DONE;
 public class TodoListFragment extends Fragment {
 
     protected RecyclerView recyclerView;
-    private RefreshLayout refreshLayout;
+
+    private SwipeRefreshLayout refreshLayout;
 
     protected DocumentRecyclerViewAdapter recyclerViewAdapter;
     protected List<Todo> data = new ArrayList<>();
@@ -128,20 +128,22 @@ public class TodoListFragment extends Fragment {
 
     private void initView(ViewGroup viewGroup) {
         refreshLayout = viewGroup.findViewById(R.id.todo_refresh_layout);
+        refreshLayout.setProgressViewOffset(false, 100, 200);
         recyclerView = viewGroup.findViewById(R.id.todo_recycler_view);
         recyclerView.setAdapter(recyclerViewAdapter);
         //设置显示格式
         final StaggeredGridLayoutManager staggeredGridLayoutManager = new StaggeredGridLayoutManager(1, StaggeredGridLayoutManager.VERTICAL);
         recyclerView.setLayoutManager(staggeredGridLayoutManager);
+        recyclerView.addItemDecoration(new RecyclerViewTopMargin());
     }
 
     @SuppressLint("ClickableViewAccessibility")
     protected void initEvent() {
 
-        refreshLayout.setOnRefreshListener(new OnRefreshListener() {
+        refreshLayout.setOnRefreshListener(new SwipeRefreshLayout.OnRefreshListener() {
             @Override
-            public void onRefresh(@NonNull RefreshLayout refreshLayout) {
-                if (!checkAccount(refreshLayout)) {
+            public void onRefresh() {
+                if (!checkAccount()) {
                     return;
                 }
                 syncPresenter.sync();
@@ -231,15 +233,19 @@ public class TodoListFragment extends Fragment {
         });
     }
 
-    private boolean checkAccount(@NonNull RefreshLayout refreshLayout) {
+    private boolean checkAccount() {
         List<Account> all = MyApplication.getInstance().getAccountModel().findAllValid();
         if (all == null || all.isEmpty()) {
-            refreshLayout.finishRefresh();
+            stopRefresh();
             Intent intent = new Intent(getContext(), DavLoginActivity.class);
             startActivity(intent);
             return false;
         }
         return true;
+    }
+
+    private void stopRefresh() {
+        refreshLayout.setRefreshing(false);
     }
 
     @Override
@@ -416,13 +422,13 @@ public class TodoListFragment extends Fragment {
     private class MySyncView implements SyncView {
         @Override
         public void onSyncSuccess(String msg) {
-            refreshLayout.finishRefresh();
+            stopRefresh();
             ToastUtil.toast(getContext(), msg);
         }
 
         @Override
         public void onSyncFail(String msg) {
-            refreshLayout.finishRefresh();
+            stopRefresh();
             ToastUtil.toast(getContext(), msg);
         }
     }

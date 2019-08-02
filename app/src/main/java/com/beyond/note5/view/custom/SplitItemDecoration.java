@@ -5,7 +5,7 @@ import android.graphics.Rect;
 import android.support.v7.widget.RecyclerView;
 import android.view.View;
 
-import com.beyond.note5.view.adapter.component.NoteRecyclerViewAdapter;
+import com.beyond.note5.view.adapter.list.NoteRecyclerViewAdapter;
 
 /**
  * @author: beyond

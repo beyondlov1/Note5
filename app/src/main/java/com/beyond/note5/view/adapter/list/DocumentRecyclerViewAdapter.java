@@ -1,4 +1,4 @@
-package com.beyond.note5.view.adapter.component;
+package com.beyond.note5.view.adapter.list;
 
 import android.content.Context;
 import android.support.v7.widget.RecyclerView;
@@ -7,9 +7,9 @@ import android.view.ViewGroup;
 import com.beyond.note5.R;
 import com.beyond.note5.bean.Document;
 import com.beyond.note5.bean.Element;
-import com.beyond.note5.view.adapter.component.header.Header;
-import com.beyond.note5.view.adapter.component.header.ItemDataGenerator;
-import com.beyond.note5.view.adapter.component.viewholder.DocumentViewHolder;
+import com.beyond.note5.view.adapter.list.header.Header;
+import com.beyond.note5.view.adapter.list.header.ItemDataGenerator;
+import com.beyond.note5.view.adapter.list.viewholder.DocumentViewHolder;
 
 import java.util.List;
 

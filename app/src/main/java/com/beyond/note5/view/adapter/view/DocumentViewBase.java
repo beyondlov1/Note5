@@ -4,7 +4,7 @@ import android.support.v7.widget.RecyclerView;
 
 import com.beyond.note5.bean.Document;
 import com.beyond.note5.view.DocumentView;
-import com.beyond.note5.view.adapter.component.DocumentRecyclerViewAdapter;
+import com.beyond.note5.view.adapter.list.DocumentRecyclerViewAdapter;
 
 import org.apache.commons.lang3.StringUtils;
 
