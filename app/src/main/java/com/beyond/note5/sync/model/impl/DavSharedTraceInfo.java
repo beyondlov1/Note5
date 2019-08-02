@@ -2,7 +2,7 @@ package com.beyond.note5.sync.model.impl;
 
 import com.alibaba.fastjson.JSONObject;
 import com.beyond.note5.sync.model.SharedSource;
-import com.beyond.note5.sync.model.bean.TraceInfo;
+import com.beyond.note5.sync.model.entity.TraceInfo;
 import com.beyond.note5.sync.webdav.client.DavClient;
 
 

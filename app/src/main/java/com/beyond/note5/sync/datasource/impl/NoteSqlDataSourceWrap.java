@@ -6,22 +6,23 @@ import com.beyond.note5.MyApplication;
 import com.beyond.note5.bean.Attachment;
 import com.beyond.note5.bean.Note;
 import com.beyond.note5.sync.SyncContext;
+import com.beyond.note5.sync.SyncContextAware;
 import com.beyond.note5.sync.datasource.DataSource;
 import com.beyond.note5.sync.datasource.DavDataSource;
 import com.beyond.note5.sync.datasource.SqlDataSource;
 import com.beyond.note5.sync.exception.SaveException;
-import com.beyond.note5.sync.model.bean.TraceInfo;
+import com.beyond.note5.sync.model.entity.TraceInfo;
 import com.beyond.note5.utils.OkWebDavUtil;
 
 import java.io.File;
 import java.io.IOException;
 import java.util.List;
 
-public class NoteSqlDataSourceWrap implements SqlDataSource<Note> {
+public class NoteSqlDataSourceWrap implements SqlDataSource<Note>, SyncContextAware {
 
     private NoteSqlDataSource noteSqlDataSource;
 
-    private DavDataSource<Note> davDataSource;
+    private SyncContext context;
 
     public NoteSqlDataSourceWrap() {
         this.noteSqlDataSource = new NoteSqlDataSource();
@@ -29,6 +30,21 @@ public class NoteSqlDataSourceWrap implements SqlDataSource<Note> {
 
     public NoteSqlDataSourceWrap(NoteSqlDataSource noteSqlDataSource) {
         this.noteSqlDataSource = noteSqlDataSource;
+    }
+
+    @Override
+    public void setContext(SyncContext context) {
+        this.context = context;
+        noteSqlDataSource.setContext(context);
+    }
+
+    @SuppressWarnings("unchecked")
+    private DavDataSource<Note> getDavDataSource() {
+        DataSource correspondDataSource = context.getCorrespondDataSource(this);
+        if (correspondDataSource instanceof DavDataSource) {
+            return (DavDataSource<Note>) correspondDataSource;
+        }
+        return null;
     }
 
     @Override
@@ -40,7 +56,7 @@ public class NoteSqlDataSourceWrap implements SqlDataSource<Note> {
     public void add(Note note) {
         noteSqlDataSource.add(note);
 
-        if (davDataSource == null){
+        if (getDavDataSource() == null){
             return;
         }
         List<Attachment> attachments = note.getAttachments();
@@ -50,7 +66,7 @@ public class NoteSqlDataSourceWrap implements SqlDataSource<Note> {
                     if (new File(attachment.getPath()).exists()){
                         continue;
                     }
-                    davDataSource.download(
+                    getDavDataSource().download(
                             getRemoteUrl(note, attachment),
                             getLocalPath(attachment)
                     );
@@ -67,7 +83,7 @@ public class NoteSqlDataSourceWrap implements SqlDataSource<Note> {
 
     private String getRemoteUrl(Note note, Attachment attachment) {
         return OkWebDavUtil.concat(
-                OkWebDavUtil.concat(davDataSource.getServer(), davDataSource.getPath(note)),
+                OkWebDavUtil.concat(getDavDataSource().getServer(), getDavDataSource().getPath(note)),
                 getLocalPath(attachment).replaceFirst(MyApplication.getInstance().getFileStorageDir().getAbsolutePath(), "/files")
         );
     }
@@ -131,7 +147,7 @@ public class NoteSqlDataSourceWrap implements SqlDataSource<Note> {
     public void save(Note note) throws IOException {
         noteSqlDataSource.save(note);
 
-        if (davDataSource == null){
+        if (getDavDataSource() == null){
             return;
         }
 
@@ -142,7 +158,7 @@ public class NoteSqlDataSourceWrap implements SqlDataSource<Note> {
                     if (new File(attachment.getPath()).exists()){
                         continue;
                     }
-                    davDataSource.download(
+                    getDavDataSource().download(
                             getRemoteUrl(note, attachment),
                             getLocalPath(attachment)
                     );
@@ -155,14 +171,14 @@ public class NoteSqlDataSourceWrap implements SqlDataSource<Note> {
 
     @Override
     public void saveAll(List<Note> notes) throws IOException, SaveException {
-        saveAll(notes,davDataSource.getKey());
+        saveAll(notes,getDavDataSource().getKey());
     }
 
     @Override
     public void saveAll(List<Note> notes, String source) throws IOException, SaveException {
         noteSqlDataSource.saveAll(notes,source);
 
-        if (davDataSource == null){
+        if (getDavDataSource() == null){
             return;
         }
         for (Note note : notes) {
@@ -173,7 +189,7 @@ public class NoteSqlDataSourceWrap implements SqlDataSource<Note> {
                         if (new File(attachment.getPath()).exists()){
                             continue;
                         }
-                        davDataSource.download(
+                        getDavDataSource().download(
                                 getRemoteUrl(note, attachment),
                                 getLocalPath(attachment)
                         );
@@ -218,14 +234,5 @@ public class NoteSqlDataSourceWrap implements SqlDataSource<Note> {
     @Override
     public boolean release() {
         return noteSqlDataSource.release();
-    }
-
-    @SuppressWarnings("unchecked")
-    @Override
-    public void setContext(SyncContext context) {
-        noteSqlDataSource.setContext(context);
-        if (context.getCorrespondDataSource(this) instanceof DavDataSource){
-            davDataSource = (DavDataSource<Note>) context.getCorrespondDataSource(this);
-        }
     }
 }

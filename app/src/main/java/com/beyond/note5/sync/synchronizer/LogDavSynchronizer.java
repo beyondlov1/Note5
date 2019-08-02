@@ -1,6 +1,6 @@
 package com.beyond.note5.sync.synchronizer;
 
-import com.beyond.note5.sync.model.bean.SyncLogInfo;
+import com.beyond.note5.sync.model.entity.SyncLogInfo;
 import com.beyond.note5.sync.model.impl.DavLogModelImpl;
 import com.beyond.note5.sync.model.SqlLogModel;
 import com.beyond.note5.sync.Synchronizer;

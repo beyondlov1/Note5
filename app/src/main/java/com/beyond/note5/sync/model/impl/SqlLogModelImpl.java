@@ -2,7 +2,7 @@ package com.beyond.note5.sync.model.impl;
 
 import com.beyond.note5.model.dao.SyncLogInfoDao;
 import com.beyond.note5.sync.model.SqlLogModel;
-import com.beyond.note5.sync.model.bean.SyncLogInfo;
+import com.beyond.note5.sync.model.entity.SyncLogInfo;
 import com.beyond.note5.utils.PreferenceUtil;
 
 import org.apache.commons.collections4.ListUtils;

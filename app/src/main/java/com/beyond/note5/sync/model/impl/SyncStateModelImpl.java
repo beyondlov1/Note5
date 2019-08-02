@@ -3,7 +3,7 @@ package com.beyond.note5.sync.model.impl;
 import com.beyond.note5.MyApplication;
 import com.beyond.note5.model.dao.SyncStateInfoDao;
 import com.beyond.note5.sync.model.SyncStateModel;
-import com.beyond.note5.sync.model.bean.SyncStateInfo;
+import com.beyond.note5.sync.model.entity.SyncStateInfo;
 
 import org.apache.commons.lang3.StringUtils;
 import org.greenrobot.greendao.query.QueryBuilder;
@@ -30,17 +30,37 @@ public class SyncStateModelImpl implements SyncStateModel {
     }
 
     @Override
-    public void saveAll(ArrayList<SyncStateInfo> successSyncStates) {
+    public void save(SyncStateInfo syncStateInfo) {
+       SyncStateInfo foundState = dao.queryBuilder()
+                .where(SyncStateInfoDao.Properties.DocumentId.eq(syncStateInfo.getDocumentId()))
+                .unique();
+
+       if (foundState!=null){
+           syncStateInfo.setId(foundState.getId());
+           update(syncStateInfo);
+       }else {
+           add(syncStateInfo);
+       }
+
+    }
+
+    @Override
+    public void saveAll(List<SyncStateInfo> successSyncStates) {
+        List<String> documentIds = new ArrayList<>(successSyncStates.size());
+        for (SyncStateInfo successSyncState : successSyncStates) {
+            documentIds.add(successSyncState.getDocumentId());
+        }
         List<SyncStateInfo> list = dao.queryBuilder()
-                .where(SyncStateInfoDao.Properties.Id.in(successSyncStates))
+                .where(SyncStateInfoDao.Properties.DocumentId.in(documentIds))
                 .list();
 
         List<SyncStateInfo> addList = new ArrayList<>();
         List<SyncStateInfo> updateList = new ArrayList<>();
         for (SyncStateInfo successSyncState : successSyncStates) {
             boolean found = false;
-            for (SyncStateInfo syncStateInfo : list) {
-                if (StringUtils.equals(successSyncState.getDocumentId(),syncStateInfo.getDocumentId())){
+            for (SyncStateInfo foundStateInfo : list) {
+                if (StringUtils.equals(successSyncState.getDocumentId(),foundStateInfo.getDocumentId())){
+                    successSyncState.setId(foundStateInfo.getId());
                     updateList.add(successSyncState);
                     found = true;
                 }
@@ -55,7 +75,7 @@ public class SyncStateModelImpl implements SyncStateModel {
     }
 
     @Override
-    public List<SyncStateInfo> select(SyncStateInfo syncStateInfo) {
+    public List<SyncStateInfo> findAll(SyncStateInfo syncStateInfo) {
         QueryBuilder<SyncStateInfo> queryBuilder = dao.queryBuilder();
         if (syncStateInfo.getId() != null) {
             queryBuilder.where(SyncStateInfoDao.Properties.Id.eq(syncStateInfo.getId()));

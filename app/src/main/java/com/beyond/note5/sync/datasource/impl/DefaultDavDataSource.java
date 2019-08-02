@@ -7,12 +7,15 @@ import com.alibaba.fastjson.JSONException;
 import com.alibaba.fastjson.JSONObject;
 import com.beyond.note5.MyApplication;
 import com.beyond.note5.bean.Document;
+import com.beyond.note5.sync.SyncContext;
+import com.beyond.note5.sync.SyncContextAware;
 import com.beyond.note5.sync.datasource.DataSource;
 import com.beyond.note5.sync.datasource.DavDataSource;
 import com.beyond.note5.sync.datasource.DavPathStrategy;
 import com.beyond.note5.sync.exception.SaveException;
 import com.beyond.note5.sync.model.SharedSource;
-import com.beyond.note5.sync.model.bean.TraceInfo;
+import com.beyond.note5.sync.model.SyncState;
+import com.beyond.note5.sync.model.entity.TraceInfo;
 import com.beyond.note5.sync.model.impl.DavSharedTraceInfo;
 import com.beyond.note5.sync.webdav.Lock;
 import com.beyond.note5.sync.webdav.client.AfterModifiedTimeDavFilter;
@@ -35,7 +38,7 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Future;
 
 
-public class DefaultDavDataSource<T extends Document> implements DavDataSource<T> {
+public class DefaultDavDataSource<T extends Document> implements DavDataSource<T>,SyncContextAware {
 
     private DavClient client;
 
@@ -52,6 +55,8 @@ public class DefaultDavDataSource<T extends Document> implements DavDataSource<T
     private SharedSource<TraceInfo> trace;
 
     private DavPathStrategy davPathStrategy;
+
+    private SyncContext context;
 
     private DefaultDavDataSource() {
 
@@ -141,6 +146,7 @@ public class DefaultDavDataSource<T extends Document> implements DavDataSource<T
         } else {
             add(t);
         }
+        context.recordSyncState(t.getId(), SyncState.SUCCESS);
     }
 
     @Override
@@ -419,6 +425,11 @@ public class DefaultDavDataSource<T extends Document> implements DavDataSource<T
     @Override
     public void download(String url, String path) throws IOException {
         getClient().download(url, path);
+    }
+
+    @Override
+    public void setContext(SyncContext context) {
+        this.context = context;
     }
 
     public static class Builder<T extends Document> {

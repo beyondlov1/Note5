@@ -1,7 +1,7 @@
 package com.beyond.note5.sync.datasource;
 
 import com.beyond.note5.sync.exception.SaveException;
-import com.beyond.note5.sync.model.bean.TraceInfo;
+import com.beyond.note5.sync.model.entity.TraceInfo;
 import com.beyond.note5.sync.webdav.Lock;
 
 import java.io.IOException;

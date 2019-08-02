@@ -1,4 +1,4 @@
-package com.beyond.note5.sync.model.bean;
+package com.beyond.note5.sync.model.entity;
 
 import com.beyond.note5.utils.IDUtil;
 

@@ -1,6 +1,6 @@
 package com.beyond.note5.sync.model;
 
-import com.beyond.note5.sync.model.bean.SyncLogInfo;
+import com.beyond.note5.sync.model.entity.SyncLogInfo;
 
 import java.io.IOException;
 import java.util.List;

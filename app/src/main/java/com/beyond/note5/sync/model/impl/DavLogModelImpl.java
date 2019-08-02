@@ -1,7 +1,7 @@
 package com.beyond.note5.sync.model.impl;
 
 import com.alibaba.fastjson.JSONObject;
-import com.beyond.note5.sync.model.bean.SyncLogInfo;
+import com.beyond.note5.sync.model.entity.SyncLogInfo;
 import com.beyond.note5.sync.model.DavLogModel;
 import com.beyond.note5.sync.webdav.client.DavClient;
 import com.beyond.note5.utils.StringCompressUtil;

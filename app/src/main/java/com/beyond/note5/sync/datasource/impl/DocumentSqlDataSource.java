@@ -8,10 +8,11 @@ import com.beyond.note5.presenter.DocumentPresenter;
 import com.beyond.note5.sync.SyncContext;
 import com.beyond.note5.sync.SyncContextAware;
 import com.beyond.note5.sync.datasource.DataSource;
+import com.beyond.note5.sync.datasource.SqlDataSource;
 import com.beyond.note5.sync.model.SqlLogModel;
-import com.beyond.note5.sync.model.bean.SyncInfo;
-import com.beyond.note5.sync.model.bean.SyncLogInfo;
-import com.beyond.note5.sync.model.bean.TraceInfo;
+import com.beyond.note5.sync.model.entity.SyncInfo;
+import com.beyond.note5.sync.model.entity.SyncLogInfo;
+import com.beyond.note5.sync.model.entity.TraceInfo;
 import com.beyond.note5.sync.model.impl.SqlLogModelImpl;
 import com.beyond.note5.utils.IDUtil;
 import com.beyond.note5.utils.PreferenceUtil;
@@ -29,11 +30,13 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-public abstract class DocumentSqlDataSource<T extends Document> implements DataSource<T>, SyncContextAware {
+public abstract class DocumentSqlDataSource<T extends Document> implements SqlDataSource<T>, SyncContextAware {
+
+    private DocumentPresenter<T> documentPresenter;
+
+    private SqlLogModel sqlLogModel;
 
     private SyncContext context;
-    private DocumentPresenter<T> documentPresenter;
-    private SqlLogModel sqlLogModel;
 
     public DocumentSqlDataSource() {
         this.documentPresenter = getDocumentPresenter();
@@ -102,16 +105,16 @@ public abstract class DocumentSqlDataSource<T extends Document> implements DataS
     @Override
     public TraceInfo getLatestTraceInfo() throws IOException {
         List<T> list = selectAll();
-        if (list!=null && !list.isEmpty()){
+        if (list != null && !list.isEmpty()) {
             Collections.sort(list, new Comparator<T>() {
                 @Override
                 public int compare(T o1, T o2) {
-                    return (int) (o1.getLastModifyTime().getTime()-o2.getLastModifyTime().getTime());
+                    return (int) (o1.getLastModifyTime().getTime() - o2.getLastModifyTime().getTime());
                 }
             });
-            T latestNote = list.get(list.size()-1);
-            return TraceInfo.create(latestNote.getLastModifyTime(),latestNote.getLastModifyTime());
-        }else {
+            T latestNote = list.get(list.size() - 1);
+            return TraceInfo.create(latestNote.getLastModifyTime(), latestNote.getLastModifyTime());
+        } else {
             return TraceInfo.ZERO;
         }
     }
@@ -132,17 +135,17 @@ public abstract class DocumentSqlDataSource<T extends Document> implements DataS
         // 日志的操作时间大于上次同步成功的最后修改时间
         // 会改变lastModifyTime类型的, 如 add, update
         List<SyncLogInfo> lastModifyTimeChangeableLogs = sqlLogModel.getAllWhereOperationTimeAfter(
-                traceInfo.getLastModifyTime() == null?new Date(0):traceInfo.getLastModifyTime());
+                traceInfo.getLastModifyTime() == null ? new Date(0) : traceInfo.getLastModifyTime());
 
         // 日志的操作时间大于上次同步成功的同步开始时间 , 并且source是不是对方dataSource的
         // 改变priority这种不更改lastModifyTime的, 如 改变priority
         List<SyncLogInfo> lastModifyTimeUnchangeableLogs = sqlLogModel.getAllWithoutSourceWhereCreateTimeAfter(
-                traceInfo.getLastSyncTimeStart() == null?new Date(0):traceInfo.getLastSyncTimeStart(),
+                traceInfo.getLastSyncTimeStart() == null ? new Date(0) : traceInfo.getLastSyncTimeStart(),
                 context.getCorrespondKey(this));
         List<SyncLogInfo> modifiedLogs = new ArrayList<>();
         modifiedLogs.addAll(lastModifyTimeChangeableLogs);
         modifiedLogs.addAll(lastModifyTimeUnchangeableLogs);
-        if (modifiedLogs.isEmpty()){
+        if (modifiedLogs.isEmpty()) {
             return new ArrayList<>();
         }
         Set<String> ids = new HashSet<>(modifiedLogs.size());
@@ -158,7 +161,7 @@ public abstract class DocumentSqlDataSource<T extends Document> implements DataS
         T localNote = documentPresenter.selectById(t.getId());
         if (localNote != null) {
             if (t.getLastModifyTime().after(localNote.getLastModifyTime())
-                    || t.getVersion()>localNote.getVersion()) {
+                    || t.getVersion() > localNote.getVersion()) {
                 update(t);
             }
         } else {
@@ -168,7 +171,7 @@ public abstract class DocumentSqlDataSource<T extends Document> implements DataS
 
     @Override
     public void saveAll(List<T> ts) throws IOException {
-        saveAll(ts,getKey());
+        saveAll(ts, getKey());
     }
 
     @Override
@@ -189,16 +192,16 @@ public abstract class DocumentSqlDataSource<T extends Document> implements DataS
         for (String id : map.keySet()) {
             if (localMap.containsKey(id)) {
                 if (map.get(id).getLastModifyTime().after(localMap.get(id).getLastModifyTime())
-                        || (map.get(id).getVersion() == null? 0: map.get(id).getVersion())
-                        >(localMap.get(id).getVersion() == null? 0: localMap.get(id).getVersion())) {
+                        || (map.get(id).getVersion() == null ? 0 : map.get(id).getVersion())
+                        > (localMap.get(id).getVersion() == null ? 0 : localMap.get(id).getVersion())) {
                     updateList.add(map.get(id));
                 }
-            }else {
+            } else {
                 addList.add(map.get(id));
             }
         }
-        documentPresenter.addAllForSync(addList,source);
-        documentPresenter.updateAllForSync(updateList,source);
+        documentPresenter.addAllForSync(addList, source);
+        documentPresenter.updateAllForSync(updateList, source);
     }
 
     @Override
@@ -212,7 +215,7 @@ public abstract class DocumentSqlDataSource<T extends Document> implements DataS
                 .where(SyncInfoDao.Properties.RemoteKey.eq(targetDataSource.getKey()))
                 .where(SyncInfoDao.Properties.Type.eq(targetDataSource.clazz().getSimpleName().toLowerCase()))
                 .unique();
-        return syncInfo == null ? TraceInfo.ZERO : TraceInfo.create(syncInfo.getLastModifyTime(),syncInfo.getLastSyncTimeStart(), syncInfo.getLastSyncTime());
+        return syncInfo == null ? TraceInfo.ZERO : TraceInfo.create(syncInfo.getLastModifyTime(), syncInfo.getLastSyncTimeStart(), syncInfo.getLastSyncTime());
     }
 
     @Override
@@ -264,4 +267,5 @@ public abstract class DocumentSqlDataSource<T extends Document> implements DataS
     public void setContext(SyncContext context) {
         this.context = context;
     }
+
 }

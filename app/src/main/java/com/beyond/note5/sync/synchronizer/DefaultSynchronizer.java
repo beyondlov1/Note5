@@ -7,16 +7,15 @@ import com.beyond.note5.bean.Tracable;
 import com.beyond.note5.service.SyncRetryService;
 import com.beyond.note5.sync.SyncContext;
 import com.beyond.note5.sync.SyncContextAware;
+import com.beyond.note5.sync.SyncContextImpl;
 import com.beyond.note5.sync.Synchronizer;
 import com.beyond.note5.sync.datasource.DataSource;
 import com.beyond.note5.sync.datasource.DavDataSource;
 import com.beyond.note5.sync.exception.ConnectException;
 import com.beyond.note5.sync.exception.MessageException;
 import com.beyond.note5.sync.exception.SaveException;
-import com.beyond.note5.sync.model.SyncStateModel;
-import com.beyond.note5.sync.model.bean.SyncStateInfo;
-import com.beyond.note5.sync.model.bean.TraceInfo;
-import com.beyond.note5.sync.model.impl.SyncStateModelImpl;
+import com.beyond.note5.sync.model.SyncState;
+import com.beyond.note5.sync.model.entity.TraceInfo;
 
 import org.apache.commons.lang3.time.DateUtils;
 
@@ -46,13 +45,15 @@ public class DefaultSynchronizer<T extends Tracable> implements Synchronizer<T> 
 
     private DataSource<T> dataSource2;
 
-    private Date syncStart;
+    private SyncContext context;
 
-    private SyncStateModel syncStateModel;
+    private ExceptionHandler exceptionHandler;
 
     private long remoteLockTimeOutMills = 30 * 60000L; // 30min
 
     private Lock lock;
+
+    private Date syncStart;
 
     private DefaultSynchronizer() {
         lock = new ReentrantLock();
@@ -140,8 +141,8 @@ public class DefaultSynchronizer<T extends Tracable> implements Synchronizer<T> 
             List<T> modified1 = dataSource1.getChangedData(traceInfo1);
             List<T> modified2 = dataSource2.getChangedData(traceInfo2);
 
-            excludeSuccess(modified1);
-            excludeSuccess(modified2);
+            ignoreSuccess(modified1);
+            ignoreSuccess(modified2);
 
             if (modified1.isEmpty() && modified2.isEmpty()) {
                 return false;
@@ -149,7 +150,7 @@ public class DefaultSynchronizer<T extends Tracable> implements Synchronizer<T> 
 
             try {
                 dataSource1.saveAll(modified2);
-                recordSyncStateForT(modified2);
+                recordSyncSuccessState(modified2);
             } catch (SaveException e) {
                 onSaveFail(e);
                 throw e;
@@ -157,7 +158,7 @@ public class DefaultSynchronizer<T extends Tracable> implements Synchronizer<T> 
 
             try {
                 dataSource2.saveAll(modified1);
-                recordSyncStateForT(modified1);
+                recordSyncSuccessState(modified1);
             } catch (SaveException e) {
                 onSaveFail(e);
                 throw e;
@@ -187,7 +188,7 @@ public class DefaultSynchronizer<T extends Tracable> implements Synchronizer<T> 
     private void onSaveFail( SaveException e) {
         Log.d(getClass().getSimpleName(), "同步失败", e);
         List<String> successList = e.getSuccessIds();
-        recordSyncState(successList);
+        context.recordSyncState(successList,SyncState.SUCCESS);
         retryIfNecessary(DEFAULT_RETRY_DELAY);
     }
 
@@ -198,9 +199,9 @@ public class DefaultSynchronizer<T extends Tracable> implements Synchronizer<T> 
         if (changingDataSource.tryLock(remoteLockTimeOutMills)) {
 
             try {
-                excludeSuccess(modified);
+                ignoreSuccess(modified);
                 changingDataSource.saveAll(modified);
-                recordSyncStateForT(modified);
+                recordSyncSuccessState(modified);
             } catch (SaveException e) {
                 onSaveFail(e);
                 throw e;
@@ -225,55 +226,24 @@ public class DefaultSynchronizer<T extends Tracable> implements Synchronizer<T> 
         return syncByOneSide(changingDataSource, modified);
     }
 
-    private void recordSyncStateForT(List<T> successList){
-        ArrayList<SyncStateInfo> successSyncStates = new ArrayList<>();
+    private void recordSyncSuccessState(List<T> successList){
+        List<String> ids = new ArrayList<>(successList.size());
         for (T t : successList) {
-            SyncStateInfo syncStateInfo = SyncStateInfo.create();
-            syncStateInfo.setDocumentId(t.getId());
-            syncStateInfo.setLocal(dataSource1.getKey());
-            syncStateInfo.setServer(dataSource2.getKey());
-            syncStateInfo.setType(dataSource1.clazz().getSimpleName().toLowerCase());
-            successSyncStates.add(syncStateInfo);
+            ids.add(t.getId());
         }
-        syncStateModel.saveAll(successSyncStates);
-    }
-
-    private void recordSyncState(List<String> successIds) {
-        ArrayList<SyncStateInfo> successSyncStates = new ArrayList<>();
-        for (String id : successIds) {
-            SyncStateInfo syncStateInfo = SyncStateInfo.create();
-            syncStateInfo.setDocumentId(id);
-            syncStateInfo.setLocal(dataSource1.getKey());
-            syncStateInfo.setServer(dataSource2.getKey());
-            syncStateInfo.setType(dataSource1.clazz().getSimpleName().toLowerCase());
-            successSyncStates.add(syncStateInfo);
-        }
-        syncStateModel.saveAll(successSyncStates);
+        context.recordSyncState(ids, SyncState.SUCCESS);
     }
 
     private void clearSyncState() {
-        SyncStateInfo syncStateInfo = new SyncStateInfo();
-        syncStateInfo.setLocal(dataSource1.getKey());
-        syncStateInfo.setServer(dataSource2.getKey());
-        syncStateInfo.setType(dataSource1.clazz().getSimpleName().toLowerCase());
-        syncStateModel.deleteAll(syncStateInfo);
+        context.clearSyncState();
     }
 
-    private void excludeSuccess(List<T> modified) {
-        SyncStateInfo queryState = new SyncStateInfo();
-        queryState.setLocal(dataSource1.getKey());
-        queryState.setServer(dataSource2.getKey());
-        queryState.setState(SyncStateInfo.SUCCESS);
-        queryState.setType(dataSource1.clazz().getSimpleName().toLowerCase());
-        List<SyncStateInfo> successSynced = syncStateModel.select(queryState);
-        List<String> successSyncedIds = new ArrayList<>(successSynced.size());
-        for (SyncStateInfo syncStateInfo : successSynced) {
-            successSyncedIds.add(syncStateInfo.getDocumentId());
-        }
+    private void ignoreSuccess(List<T> modified) {
+        List<String> syncExcludeIds = context.findSyncExcludeIds();
         Iterator<T> iterator = modified.iterator();
         while (iterator.hasNext()) {
             T next = iterator.next();
-            if (successSyncedIds.contains(next.getId())) {
+            if (syncExcludeIds.contains(next.getId())) {
                 iterator.remove();
             }
         }
@@ -357,7 +327,7 @@ public class DefaultSynchronizer<T extends Tracable> implements Synchronizer<T> 
 
     public static class Builder<T extends Tracable> {
 
-        private SyncContext context;
+        private SyncContextImpl context;
         private DataSource<T> local;
         private DavDataSource<T> remote;
         private String logPath;
@@ -379,7 +349,7 @@ public class DefaultSynchronizer<T extends Tracable> implements Synchronizer<T> 
             return this;
         }
 
-        public Builder<T> context(SyncContext context) {
+        public Builder<T> context(SyncContextImpl context) {
             this.context = context;
             return this;
         }
@@ -395,7 +365,7 @@ public class DefaultSynchronizer<T extends Tracable> implements Synchronizer<T> 
                 throw new RuntimeException("dataSource1 and dataSource2 can not be null");
             }
             if (context == null) {
-                context = new SyncContext(local, remote);
+                context = new SyncContextImpl(local, remote);
             }
             if (local instanceof SyncContextAware) {
                 ((SyncContextAware) local).setContext(context);
@@ -405,7 +375,7 @@ public class DefaultSynchronizer<T extends Tracable> implements Synchronizer<T> 
             }
             synchronizer.dataSource1 = local;
             synchronizer.dataSource2 = remote;
-            synchronizer.syncStateModel = new SyncStateModelImpl();
+            synchronizer.context = context;
             return synchronizer;
         }
     }

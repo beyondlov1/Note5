@@ -1,4 +1,4 @@
-package com.beyond.note5.sync.model.bean;
+package com.beyond.note5.sync.model.entity;
 
 import org.greenrobot.greendao.annotation.Entity;
 import org.greenrobot.greendao.annotation.Generated;

@@ -4,10 +4,9 @@ package com.beyond.note5.sync.datasource.impl;
 import com.beyond.note5.bean.Todo;
 import com.beyond.note5.sync.SyncContext;
 import com.beyond.note5.sync.datasource.DataSource;
-import com.beyond.note5.sync.datasource.DavDataSource;
 import com.beyond.note5.sync.datasource.SqlDataSource;
 import com.beyond.note5.sync.exception.SaveException;
-import com.beyond.note5.sync.model.bean.TraceInfo;
+import com.beyond.note5.sync.model.entity.TraceInfo;
 
 import java.io.IOException;
 import java.util.List;
@@ -16,14 +15,20 @@ public class TodoSqlDataSourceWrap implements SqlDataSource<Todo> {
 
     private final TodoSqlDataSource todoSqlDataSource;
 
-    private DavDataSource<Todo> davDataSource;
+    private SyncContext context;
 
-    public TodoSqlDataSourceWrap( ) {
+    public TodoSqlDataSourceWrap() {
         this.todoSqlDataSource = new TodoSqlDataSource();
     }
 
     public TodoSqlDataSourceWrap(TodoSqlDataSource todoSqlDataSource) {
         this.todoSqlDataSource = todoSqlDataSource;
+    }
+
+    @Override
+    public void setContext(SyncContext context) {
+        this.context = context;
+        todoSqlDataSource.setContext(context);
     }
 
     @Override
@@ -98,12 +103,12 @@ public class TodoSqlDataSourceWrap implements SqlDataSource<Todo> {
 
     @Override
     public void saveAll(List<Todo> todos) throws IOException {
-        todoSqlDataSource.saveAll(todos,davDataSource.getKey());
+        todoSqlDataSource.saveAll(todos, context.getCorrespondDataSource(this).getKey());
     }
 
     @Override
     public void saveAll(List<Todo> todos, String source) throws IOException, SaveException {
-        todoSqlDataSource.saveAll(todos,source);
+        todoSqlDataSource.saveAll(todos, source);
     }
 
     @Override
@@ -141,12 +146,4 @@ public class TodoSqlDataSourceWrap implements SqlDataSource<Todo> {
         return todoSqlDataSource.release();
     }
 
-    @SuppressWarnings("unchecked")
-    @Override
-    public void setContext(SyncContext context) {
-        todoSqlDataSource.setContext(context);
-        if (context.getCorrespondDataSource(this) instanceof DavDataSource){
-            davDataSource = (DavDataSource<Todo>) context.getCorrespondDataSource(this);
-        }
-    }
 }

@@ -12,7 +12,7 @@ import com.beyond.note5.model.dao.ReminderDao;
 import com.beyond.note5.model.dao.SyncLogInfoDao;
 import com.beyond.note5.model.dao.SyncStateInfoDao;
 import com.beyond.note5.model.dao.TodoDao;
-import com.beyond.note5.sync.model.bean.SyncLogInfo;
+import com.beyond.note5.sync.model.entity.SyncLogInfo;
 import com.beyond.note5.utils.IDUtil;
 import com.beyond.note5.utils.PreferenceUtil;
 

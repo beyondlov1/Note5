@@ -1,6 +1,6 @@
 package com.beyond.note5.sync.model.impl;
 
-import com.beyond.note5.sync.model.bean.SyncInfo;
+import com.beyond.note5.sync.model.entity.SyncInfo;
 import com.beyond.note5.model.dao.SyncInfoDao;
 import com.beyond.note5.sync.datasource.DataSource;
 import com.beyond.note5.sync.model.LMTSharedSource;

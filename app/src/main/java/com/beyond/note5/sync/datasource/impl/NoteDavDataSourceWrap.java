@@ -5,11 +5,13 @@ import android.util.Log;
 import com.beyond.note5.MyApplication;
 import com.beyond.note5.bean.Attachment;
 import com.beyond.note5.bean.Note;
+import com.beyond.note5.sync.SyncContext;
+import com.beyond.note5.sync.SyncContextAware;
 import com.beyond.note5.sync.datasource.DataSource;
 import com.beyond.note5.sync.datasource.DavDataSource;
 import com.beyond.note5.sync.datasource.DavPathStrategy;
 import com.beyond.note5.sync.exception.SaveException;
-import com.beyond.note5.sync.model.bean.TraceInfo;
+import com.beyond.note5.sync.model.entity.TraceInfo;
 import com.beyond.note5.sync.webdav.client.DavClient;
 import com.beyond.note5.utils.OkWebDavUtil;
 
@@ -23,9 +25,14 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorCompletionService;
 import java.util.concurrent.Future;
 
-public class NoteDavDataSourceWrap implements DavDataSource<Note> {
+public class NoteDavDataSourceWrap implements DavDataSource<Note>, SyncContextAware {
 
     private DefaultDavDataSource<Note> defaultDavDataSource;
+
+    @Override
+    public void setContext(SyncContext context) {
+        defaultDavDataSource.setContext(context);
+    }
 
     public NoteDavDataSourceWrap(DefaultDavDataSource<Note> defaultDavDataSource) {
         this.defaultDavDataSource = defaultDavDataSource;
