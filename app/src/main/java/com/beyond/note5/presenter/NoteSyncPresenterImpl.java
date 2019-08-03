@@ -9,8 +9,6 @@ import com.beyond.note5.sync.Synchronizer;
 import com.beyond.note5.utils.ToastUtil;
 import com.beyond.note5.view.SyncView;
 
-import org.apache.commons.collections4.CollectionUtils;
-
 import java.util.List;
 
 public class NoteSyncPresenterImpl implements SyncPresenter {
@@ -29,11 +27,7 @@ public class NoteSyncPresenterImpl implements SyncPresenter {
     @Override
     public void sync() {
         ToastUtil.toast(MyApplication.getInstance(), "开始同步");
-
-        if (CollectionUtils.isEmpty(synchronizers)){
-            synchronizers = MyApplication.getInstance().getNoteSynchronizers();
-        }
-
+        synchronizers = MyApplication.getInstance().getNoteSynchronizers();
         MyApplication.getInstance().getExecutorService().execute(new Runnable() {
             @Override
             public void run() {

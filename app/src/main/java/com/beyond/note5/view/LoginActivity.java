@@ -243,6 +243,7 @@ public abstract class LoginActivity extends AppCompatActivity {
                 @Override
                 public void onClick(View v) {
                     accountPresenter.delete(data.get(position));
+                    refreshSynchronizers();
                 }
             });
         }
