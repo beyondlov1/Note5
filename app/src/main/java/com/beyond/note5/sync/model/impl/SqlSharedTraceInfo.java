@@ -1,56 +1,56 @@
 package com.beyond.note5.sync.model.impl;
 
-import com.beyond.note5.model.dao.SyncInfoDao;
+import com.beyond.note5.model.dao.LatestSyncStampDao;
 import com.beyond.note5.sync.datasource.DataSource;
+import com.beyond.note5.sync.datasource.entity.LatestSyncStamp;
 import com.beyond.note5.sync.model.SharedSource;
-import com.beyond.note5.sync.model.entity.SyncInfo;
-import com.beyond.note5.sync.model.entity.TraceInfo;
+import com.beyond.note5.sync.datasource.entity.SyncStamp;
 import com.beyond.note5.utils.IDUtil;
 
 import java.io.IOException;
 
-public class SqlSharedTraceInfo implements SharedSource<TraceInfo> {
+public class SqlSharedTraceInfo implements SharedSource<SyncStamp> {
 
     private DataSource localDataSource;
 
     private DataSource remoteDataSource;
 
-    private SyncInfoDao syncInfoDao;
+    private LatestSyncStampDao syncInfoDao;
 
-    public SqlSharedTraceInfo(DataSource localDataSource, DataSource remoteDataSource, SyncInfoDao syncInfoDao) {
+    public SqlSharedTraceInfo(DataSource localDataSource, DataSource remoteDataSource, LatestSyncStampDao syncInfoDao) {
         this.localDataSource = localDataSource;
         this.remoteDataSource = remoteDataSource;
         this.syncInfoDao = syncInfoDao;
     }
 
     @Override
-    public TraceInfo get() throws IOException {
-        SyncInfo syncInfo = syncInfoDao.queryBuilder()
-                .where(SyncInfoDao.Properties.RemoteKey.eq(remoteDataSource.getKey()))
-                .where(SyncInfoDao.Properties.Type.eq(remoteDataSource.clazz().getSimpleName().toLowerCase()))
+    public SyncStamp get() throws IOException {
+        LatestSyncStamp latestSyncStamp = syncInfoDao.queryBuilder()
+                .where(LatestSyncStampDao.Properties.RemoteKey.eq(remoteDataSource.getKey()))
+                .where(LatestSyncStampDao.Properties.Type.eq(remoteDataSource.clazz().getSimpleName().toLowerCase()))
                 .unique();
-        return syncInfo == null?TraceInfo.ZERO:TraceInfo.create(syncInfo.getLastModifyTime(),syncInfo.getLastSyncTime());
+        return latestSyncStamp == null? SyncStamp.ZERO: SyncStamp.create(latestSyncStamp.getLastModifyTime(), latestSyncStamp.getLastSyncTime());
     }
 
     @Override
-    public void set(TraceInfo traceInfo) throws IOException {
-        SyncInfo syncInfo = syncInfoDao.queryBuilder()
-                .where(SyncInfoDao.Properties.RemoteKey.eq(remoteDataSource.getKey()))
-                .where(SyncInfoDao.Properties.Type.eq(remoteDataSource.clazz().getSimpleName().toLowerCase()))
+    public void set(SyncStamp syncStamp) throws IOException {
+        LatestSyncStamp latestSyncStamp = syncInfoDao.queryBuilder()
+                .where(LatestSyncStampDao.Properties.RemoteKey.eq(remoteDataSource.getKey()))
+                .where(LatestSyncStampDao.Properties.Type.eq(remoteDataSource.clazz().getSimpleName().toLowerCase()))
                 .unique();
-        if (syncInfo == null){
-            SyncInfo info = new SyncInfo();
+        if (latestSyncStamp == null){
+            LatestSyncStamp info = new LatestSyncStamp();
             info.setId(IDUtil.uuid());
             info.setLocalKey(localDataSource.getKey());
             info.setRemoteKey(remoteDataSource.getKey());
-            info.setLastModifyTime(traceInfo.getLastModifyTime());
-            info.setLastSyncTime(traceInfo.getLastSyncTimeEnd());
+            info.setLastModifyTime(syncStamp.getLastModifyTime());
+            info.setLastSyncTime(syncStamp.getLastSyncTimeEnd());
             info.setType(remoteDataSource.clazz().getSimpleName().toLowerCase());
             syncInfoDao.insert(info);
         }else {
-            syncInfo.setLastModifyTime(traceInfo.getLastModifyTime());
-            syncInfo.setLastSyncTime(traceInfo.getLastSyncTimeEnd());
-            syncInfoDao.update(syncInfo);
+            latestSyncStamp.setLastModifyTime(syncStamp.getLastModifyTime());
+            latestSyncStamp.setLastSyncTime(syncStamp.getLastSyncTimeEnd());
+            syncInfoDao.update(latestSyncStamp);
         }
     }
 }

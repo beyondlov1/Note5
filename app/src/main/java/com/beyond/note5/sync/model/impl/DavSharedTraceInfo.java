@@ -2,13 +2,13 @@ package com.beyond.note5.sync.model.impl;
 
 import com.alibaba.fastjson.JSONObject;
 import com.beyond.note5.sync.model.SharedSource;
-import com.beyond.note5.sync.model.entity.TraceInfo;
+import com.beyond.note5.sync.datasource.entity.SyncStamp;
 import com.beyond.note5.sync.webdav.client.DavClient;
 
 
 import java.io.IOException;
 
-public class DavSharedTraceInfo implements SharedSource<TraceInfo> {
+public class DavSharedTraceInfo implements SharedSource<SyncStamp> {
     private DavClient client;
 
     private String url;
@@ -19,16 +19,16 @@ public class DavSharedTraceInfo implements SharedSource<TraceInfo> {
     }
 
     @Override
-    public TraceInfo get() throws IOException {
+    public SyncStamp get() throws IOException {
         if (client.exists(url)){
-            return JSONObject.parseObject(client.get(url), TraceInfo.class);
+            return JSONObject.parseObject(client.get(url), SyncStamp.class);
         }else {
-            return TraceInfo.ZERO;
+            return SyncStamp.ZERO;
         }
     }
 
     @Override
-    public void set(TraceInfo traceInfo) throws IOException {
-        client.put(url,JSONObject.toJSONString(traceInfo));
+    public void set(SyncStamp syncStamp) throws IOException {
+        client.put(url,JSONObject.toJSONString(syncStamp));
     }
 }

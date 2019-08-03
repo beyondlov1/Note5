@@ -9,10 +9,10 @@ import com.beyond.note5.bean.Reminder;
 import com.beyond.note5.bean.Todo;
 import com.beyond.note5.model.dao.DaoSession;
 import com.beyond.note5.model.dao.ReminderDao;
-import com.beyond.note5.model.dao.SyncLogInfoDao;
-import com.beyond.note5.model.dao.SyncStateInfoDao;
+import com.beyond.note5.model.dao.SyncStateDao;
 import com.beyond.note5.model.dao.TodoDao;
-import com.beyond.note5.sync.model.entity.SyncLogInfo;
+import com.beyond.note5.model.dao.TraceLogDao;
+import com.beyond.note5.sync.model.entity.TraceLog;
 import com.beyond.note5.utils.IDUtil;
 import com.beyond.note5.utils.PreferenceUtil;
 
@@ -29,8 +29,8 @@ public class TodoModelImpl implements TodoModel {
 
     private TodoDao todoDao;
     private ReminderDao reminderDao;
-    private SyncLogInfoDao syncLogInfoDao;
-    private SyncStateInfoDao syncStateInfoDao;
+    private TraceLogDao traceLogDao;
+    private SyncStateDao syncStateDao;
 
     public static TodoModel getSingletonInstance() {
         return TodoModelHolder.TODO_MODEL;
@@ -44,8 +44,8 @@ public class TodoModelImpl implements TodoModel {
         DaoSession daoSession = MyApplication.getInstance().getDaoSession();
         todoDao = daoSession.getTodoDao();
         reminderDao = daoSession.getReminderDao();
-        syncLogInfoDao = daoSession.getSyncLogInfoDao();
-        syncStateInfoDao = daoSession.getSyncStateInfoDao();
+        traceLogDao = daoSession.getTraceLogDao();
+        syncStateDao = daoSession.getSyncStateDao();
     }
 
     @Override
@@ -239,60 +239,60 @@ public class TodoModelImpl implements TodoModel {
 
 
     private void addAllInsertLog(String source, Todo... todos) {
-        List<SyncLogInfo> syncLogInfos = new ArrayList<>(todos.length);
+        List<TraceLog> traceLogs = new ArrayList<>(todos.length);
         for (Todo todo : todos) {
-            syncLogInfos.add(createAddSyncLogInfo(todo,source));
+            traceLogs.add(createAddSyncLogInfo(todo,source));
         }
-        syncLogInfoDao.insertInTx(syncLogInfos);
+        traceLogDao.insertInTx(traceLogs);
     }
 
     private void addAllUpdateLog( String source,Todo... todos) {
-        List<SyncLogInfo> syncLogInfos = new ArrayList<>(todos.length);
+        List<TraceLog> traceLogs = new ArrayList<>(todos.length);
         for (Todo todo : todos) {
-            syncLogInfos.add(createUpdateSyncLogInfo(todo,source));
+            traceLogs.add(createUpdateSyncLogInfo(todo,source));
         }
-        syncLogInfoDao.insertInTx(syncLogInfos);
+        traceLogDao.insertInTx(traceLogs);
     }
 
     private void addInsertLog(Todo todo, String source) {
-        SyncLogInfo syncLogInfo = createAddSyncLogInfo(todo,source);
-        syncLogInfoDao.insert(syncLogInfo);
+        TraceLog traceLog = createAddSyncLogInfo(todo,source);
+        traceLogDao.insert(traceLog);
     }
 
     private void addUpdateLog(Todo todo,String source) {
-        SyncLogInfo syncLogInfo = createUpdateSyncLogInfo(todo,source);
-        syncLogInfoDao.insert(syncLogInfo);
+        TraceLog traceLog = createUpdateSyncLogInfo(todo,source);
+        traceLogDao.insert(traceLog);
     }
 
     @NonNull
-    private SyncLogInfo createAddSyncLogInfo(Todo todo,String source) {
-        SyncLogInfo syncLogInfo = new SyncLogInfo();
-        syncLogInfo.setId(IDUtil.uuid());
-        syncLogInfo.setDocumentId(todo.getId());
-        syncLogInfo.setOperation(SyncLogInfo.ADD);
-        syncLogInfo.setOperationTime(todo.getLastModifyTime());
-        syncLogInfo.setCreateTime(new Date());
-        syncLogInfo.setSource(source);
-        syncLogInfo.setType(Todo.class.getSimpleName().toLowerCase());
-        return syncLogInfo;
+    private TraceLog createAddSyncLogInfo(Todo todo, String source) {
+        TraceLog traceLog = new TraceLog();
+        traceLog.setId(IDUtil.uuid());
+        traceLog.setDocumentId(todo.getId());
+        traceLog.setOperation(TraceLog.ADD);
+        traceLog.setOperationTime(todo.getLastModifyTime());
+        traceLog.setCreateTime(new Date());
+        traceLog.setSource(source);
+        traceLog.setType(Todo.class.getSimpleName().toLowerCase());
+        return traceLog;
     }
 
     @NonNull
-    private SyncLogInfo createUpdateSyncLogInfo(Todo todo,String source) {
-        SyncLogInfo syncLogInfo = new SyncLogInfo();
-        syncLogInfo.setId(IDUtil.uuid());
-        syncLogInfo.setDocumentId(todo.getId());
-        syncLogInfo.setOperation(SyncLogInfo.UPDATE);
-        syncLogInfo.setOperationTime(todo.getLastModifyTime());
-        syncLogInfo.setCreateTime(new Date());
-        syncLogInfo.setSource(source);
-        syncLogInfo.setType(Todo.class.getSimpleName().toLowerCase());
-        return syncLogInfo;
+    private TraceLog createUpdateSyncLogInfo(Todo todo, String source) {
+        TraceLog traceLog = new TraceLog();
+        traceLog.setId(IDUtil.uuid());
+        traceLog.setDocumentId(todo.getId());
+        traceLog.setOperation(TraceLog.UPDATE);
+        traceLog.setOperationTime(todo.getLastModifyTime());
+        traceLog.setCreateTime(new Date());
+        traceLog.setSource(source);
+        traceLog.setType(Todo.class.getSimpleName().toLowerCase());
+        return traceLog;
     }
 
     private void removeSyncSuccessStateInfo(Todo todo) {
-        syncStateInfoDao.queryBuilder()
-                .where(SyncStateInfoDao.Properties.DocumentId.eq(todo.getId()))
+        syncStateDao.queryBuilder()
+                .where(SyncStateDao.Properties.DocumentId.eq(todo.getId()))
                 .buildDelete()
                 .executeDeleteWithoutDetachingEntities();
     }

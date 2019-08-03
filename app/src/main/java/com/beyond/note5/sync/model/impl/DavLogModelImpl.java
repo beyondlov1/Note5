@@ -1,7 +1,7 @@
 package com.beyond.note5.sync.model.impl;
 
 import com.alibaba.fastjson.JSONObject;
-import com.beyond.note5.sync.model.entity.SyncLogInfo;
+import com.beyond.note5.sync.model.entity.TraceLog;
 import com.beyond.note5.sync.model.DavLogModel;
 import com.beyond.note5.sync.webdav.client.DavClient;
 import com.beyond.note5.utils.StringCompressUtil;
@@ -22,14 +22,14 @@ public class DavLogModelImpl implements DavLogModel {
     }
 
     @Override
-    public void saveAll(List<SyncLogInfo> syncLogInfos) throws IOException {
-        client.put(url,StringCompressUtil.compress(JSONObject.toJSONString(syncLogInfos)));
+    public void saveAll(List<TraceLog> traceLogs) throws IOException {
+        client.put(url,StringCompressUtil.compress(JSONObject.toJSONString(traceLogs)));
     }
 
     @Override
-    public List<SyncLogInfo> getAll() throws IOException {
+    public List<TraceLog> getAll() throws IOException {
         if (client.exists(url)){
-            return JSONObject.parseArray(StringCompressUtil.unCompress(client.get(url)),SyncLogInfo.class);
+            return JSONObject.parseArray(StringCompressUtil.unCompress(client.get(url)),TraceLog.class);
         }else {
             return new ArrayList<>();
         }

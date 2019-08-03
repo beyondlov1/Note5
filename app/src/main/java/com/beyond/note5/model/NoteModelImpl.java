@@ -11,9 +11,9 @@ import com.beyond.note5.bean.Note;
 import com.beyond.note5.model.dao.AttachmentDao;
 import com.beyond.note5.model.dao.DaoSession;
 import com.beyond.note5.model.dao.NoteDao;
-import com.beyond.note5.model.dao.SyncLogInfoDao;
-import com.beyond.note5.model.dao.SyncStateInfoDao;
-import com.beyond.note5.sync.model.entity.SyncLogInfo;
+import com.beyond.note5.model.dao.SyncStateDao;
+import com.beyond.note5.model.dao.TraceLogDao;
+import com.beyond.note5.sync.model.entity.TraceLog;
 import com.beyond.note5.utils.IDUtil;
 import com.beyond.note5.utils.PhotoUtil;
 import com.beyond.note5.utils.PreferenceUtil;
@@ -38,9 +38,9 @@ public class NoteModelImpl implements NoteModel {
 
     private AttachmentDao attachmentDao;
 
-    private SyncLogInfoDao syncLogInfoDao;
+    private TraceLogDao traceLogDao;
 
-    private SyncStateInfoDao syncStateInfoDao;
+    private SyncStateDao syncStateDao;
 
     public static NoteModel getSingletonInstance() {
         return NoteModelHolder.noteModel;
@@ -54,8 +54,8 @@ public class NoteModelImpl implements NoteModel {
         DaoSession daoSession = MyApplication.getInstance().getDaoSession();
         noteDao = daoSession.getNoteDao();
         attachmentDao = daoSession.getAttachmentDao();
-        syncLogInfoDao = daoSession.getSyncLogInfoDao();
-        syncStateInfoDao = daoSession.getSyncStateInfoDao();
+        traceLogDao = daoSession.getTraceLogDao();
+        syncStateDao = daoSession.getSyncStateDao();
     }
 
     @Override
@@ -262,63 +262,63 @@ public class NoteModelImpl implements NoteModel {
 
 
     private void addAllInsertLog(String source, Note... notes) {
-        List<SyncLogInfo> syncLogInfos = new ArrayList<>(notes.length);
+        List<TraceLog> traceLogs = new ArrayList<>(notes.length);
         for (Note note : notes) {
-            syncLogInfos.add(createAddSyncLogInfo(note,source));
+            traceLogs.add(createAddSyncLogInfo(note,source));
         }
-        syncLogInfoDao.insertInTx(syncLogInfos);
+        traceLogDao.insertInTx(traceLogs);
     }
 
     private void addAllUpdateLog( String source,Note... notes) {
-        List<SyncLogInfo> syncLogInfos = new ArrayList<>(notes.length);
+        List<TraceLog> traceLogs = new ArrayList<>(notes.length);
         for (Note note : notes) {
-            syncLogInfos.add(createUpdateSyncLogInfo(note,source));
+            traceLogs.add(createUpdateSyncLogInfo(note,source));
         }
-        syncLogInfoDao.insertInTx(syncLogInfos);
+        traceLogDao.insertInTx(traceLogs);
     }
 
     private void addInsertLog(Note note, String source) {
-        SyncLogInfo syncLogInfo = createAddSyncLogInfo(note,source);
-        syncLogInfoDao.insert(syncLogInfo);
+        TraceLog traceLog = createAddSyncLogInfo(note,source);
+        traceLogDao.insert(traceLog);
     }
 
     private void addUpdateLog(Note note,String source) {
-        SyncLogInfo syncLogInfo = createUpdateSyncLogInfo(note,source);
-        syncLogInfoDao.insert(syncLogInfo);
+        TraceLog traceLog = createUpdateSyncLogInfo(note,source);
+        traceLogDao.insert(traceLog);
     }
 
 
 
     @NonNull
-    private SyncLogInfo createAddSyncLogInfo(Note note,String source) {
-        SyncLogInfo syncLogInfo = new SyncLogInfo();
-        syncLogInfo.setId(IDUtil.uuid());
-        syncLogInfo.setDocumentId(note.getId());
-        syncLogInfo.setOperation(SyncLogInfo.ADD);
-        syncLogInfo.setOperationTime(note.getLastModifyTime());
-        syncLogInfo.setCreateTime(new Date());
-        syncLogInfo.setSource(source);
-        syncLogInfo.setType(Note.class.getSimpleName().toLowerCase());
-        return syncLogInfo;
+    private TraceLog createAddSyncLogInfo(Note note, String source) {
+        TraceLog traceLog = new TraceLog();
+        traceLog.setId(IDUtil.uuid());
+        traceLog.setDocumentId(note.getId());
+        traceLog.setOperation(TraceLog.ADD);
+        traceLog.setOperationTime(note.getLastModifyTime());
+        traceLog.setCreateTime(new Date());
+        traceLog.setSource(source);
+        traceLog.setType(Note.class.getSimpleName().toLowerCase());
+        return traceLog;
     }
 
     @NonNull
-    private SyncLogInfo createUpdateSyncLogInfo(Note note,String source) {
-        SyncLogInfo syncLogInfo = new SyncLogInfo();
-        syncLogInfo.setId(IDUtil.uuid());
-        syncLogInfo.setDocumentId(note.getId());
-        syncLogInfo.setOperation(SyncLogInfo.UPDATE);
-        syncLogInfo.setOperationTime(note.getLastModifyTime());
-        syncLogInfo.setCreateTime(new Date());
-        syncLogInfo.setSource(source);
-        syncLogInfo.setType(Note.class.getSimpleName().toLowerCase());
-        return syncLogInfo;
+    private TraceLog createUpdateSyncLogInfo(Note note, String source) {
+        TraceLog traceLog = new TraceLog();
+        traceLog.setId(IDUtil.uuid());
+        traceLog.setDocumentId(note.getId());
+        traceLog.setOperation(TraceLog.UPDATE);
+        traceLog.setOperationTime(note.getLastModifyTime());
+        traceLog.setCreateTime(new Date());
+        traceLog.setSource(source);
+        traceLog.setType(Note.class.getSimpleName().toLowerCase());
+        return traceLog;
     }
 
 
     private void removeSyncSuccessStateInfo(Note note) {
-        syncStateInfoDao.queryBuilder()
-                .where(SyncStateInfoDao.Properties.DocumentId.eq(note.getId()))
+        syncStateDao.queryBuilder()
+                .where(SyncStateDao.Properties.DocumentId.eq(note.getId()))
                 .buildDelete()
                 .executeDeleteWithoutDetachingEntities();
     }

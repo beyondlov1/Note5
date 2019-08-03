@@ -2,8 +2,8 @@ package com.beyond.note5.sync.webdav;
 
 import com.beyond.note5.bean.Attachment;
 import com.beyond.note5.bean.Note;
-import com.beyond.note5.sync.datasource.DavDataSource;
-import com.beyond.note5.sync.datasource.impl.DefaultDavDataSource;
+import com.beyond.note5.sync.datasource.dav.DavDataSource;
+import com.beyond.note5.sync.datasource.dav.DefaultDavDataSource;
 import com.beyond.note5.sync.model.impl.DavSharedTraceInfo;
 import com.beyond.note5.sync.webdav.client.DavClient;
 import com.beyond.note5.sync.webdav.client.SardineDavClient;

@@ -128,7 +128,7 @@ public class TodoListFragment extends Fragment {
 
     private void initView(ViewGroup viewGroup) {
         refreshLayout = viewGroup.findViewById(R.id.todo_refresh_layout);
-        refreshLayout.setProgressViewOffset(false, 100, 200);
+        refreshLayout.setProgressViewOffset(false, 100, 300);
         recyclerView = viewGroup.findViewById(R.id.todo_recycler_view);
         recyclerView.setAdapter(recyclerViewAdapter);
         //设置显示格式

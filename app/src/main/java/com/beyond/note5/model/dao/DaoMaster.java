@@ -27,9 +27,9 @@ public class DaoMaster extends AbstractDaoMaster {
         NoteDao.createTable(db, ifNotExists);
         ReminderDao.createTable(db, ifNotExists);
         TodoDao.createTable(db, ifNotExists);
-        SyncInfoDao.createTable(db, ifNotExists);
-        SyncLogInfoDao.createTable(db, ifNotExists);
-        SyncStateInfoDao.createTable(db, ifNotExists);
+        SyncStateDao.createTable(db, ifNotExists);
+        LatestSyncStampDao.createTable(db, ifNotExists);
+        TraceLogDao.createTable(db, ifNotExists);
     }
 
     /** Drops underlying database table using DAOs. */
@@ -40,9 +40,9 @@ public class DaoMaster extends AbstractDaoMaster {
         NoteDao.dropTable(db, ifExists);
         ReminderDao.dropTable(db, ifExists);
         TodoDao.dropTable(db, ifExists);
-        SyncInfoDao.dropTable(db, ifExists);
-        SyncLogInfoDao.dropTable(db, ifExists);
-        SyncStateInfoDao.dropTable(db, ifExists);
+        SyncStateDao.dropTable(db, ifExists);
+        LatestSyncStampDao.dropTable(db, ifExists);
+        TraceLogDao.dropTable(db, ifExists);
     }
 
     /**
@@ -67,9 +67,9 @@ public class DaoMaster extends AbstractDaoMaster {
         registerDaoClass(NoteDao.class);
         registerDaoClass(ReminderDao.class);
         registerDaoClass(TodoDao.class);
-        registerDaoClass(SyncInfoDao.class);
-        registerDaoClass(SyncLogInfoDao.class);
-        registerDaoClass(SyncStateInfoDao.class);
+        registerDaoClass(SyncStateDao.class);
+        registerDaoClass(LatestSyncStampDao.class);
+        registerDaoClass(TraceLogDao.class);
     }
 
     public DaoSession newSession() {

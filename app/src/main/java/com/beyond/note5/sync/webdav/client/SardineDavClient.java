@@ -138,7 +138,7 @@ public class SardineDavClient implements DavClient {
     }
 
     @Override
-    public synchronized List<String> listAllFilePath(String dirUrl) throws IOException {
+    public  List<String> listAllFilePath(String dirUrl) throws IOException {
         return listAllFilePath(dirUrl, null);
     }
 
@@ -148,7 +148,7 @@ public class SardineDavClient implements DavClient {
     }
 
     @Override
-    public synchronized List<String> listAllFileName(String dirUrl, DavFilter filter) throws IOException {
+    public List<String> listAllFileName(String dirUrl, DavFilter filter) throws IOException {
         List<DavResource> davResources = listAllFileResource(dirUrl);
         Iterator<DavResource> iterator = davResources.iterator();
         while (iterator.hasNext()) {
@@ -165,7 +165,7 @@ public class SardineDavClient implements DavClient {
     }
 
     @Override
-    public synchronized List<String> listAllFilePath(String dirUrl, DavFilter filter) throws IOException {
+    public List<String> listAllFilePath(String dirUrl, DavFilter filter) throws IOException {
         List<DavResource> davResources = listAllFileResource(dirUrl);
         Iterator<DavResource> iterator = davResources.iterator();
         while (iterator.hasNext()) {
@@ -192,7 +192,7 @@ public class SardineDavClient implements DavClient {
         return result;
     }
 
-    public synchronized List<DavResource> listAllFileResource(String dirUrl) throws IOException {
+    public List<DavResource> listAllFileResource(String dirUrl) throws IOException {
 
         List<DavResource> result = new ArrayList<>();
         mkDirQuietly(dirUrl);

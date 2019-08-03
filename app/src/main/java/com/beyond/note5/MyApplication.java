@@ -27,19 +27,10 @@ import com.beyond.note5.predict.filter.train.UselessTrainFilter;
 import com.beyond.note5.service.schedule.ScheduleReceiver;
 import com.beyond.note5.service.schedule.callback.SyncScheduleCallback;
 import com.beyond.note5.service.schedule.utils.ScheduleUtil;
+import com.beyond.note5.sync.builder.NoteSqlDavSynchronizerBuilder;
 import com.beyond.note5.sync.Synchronizer;
-import com.beyond.note5.sync.datasource.DavDataSource;
-import com.beyond.note5.sync.datasource.impl.DefaultDavDataSource;
-import com.beyond.note5.sync.datasource.impl.NoteDavDataSourceWrap;
-import com.beyond.note5.sync.datasource.impl.NoteSqlDataSource;
-import com.beyond.note5.sync.datasource.impl.NoteSqlDataSourceWrap;
-import com.beyond.note5.sync.datasource.impl.TodoSqlDataSource;
-import com.beyond.note5.sync.datasource.impl.TodoSqlDataSourceWrap;
-import com.beyond.note5.sync.model.impl.DavSharedTraceInfo;
-import com.beyond.note5.sync.synchronizer.DefaultSynchronizer;
-import com.beyond.note5.sync.webdav.DavLock;
-import com.beyond.note5.sync.webdav.client.DavClient;
-import com.beyond.note5.sync.webdav.client.SardineDavClient;
+import com.beyond.note5.sync.builder.SynchronizerBuilder;
+import com.beyond.note5.sync.builder.TodoSqlDavSynchronizerBuilder;
 import com.beyond.note5.utils.IDUtil;
 import com.beyond.note5.utils.OkWebDavUtil;
 import com.beyond.note5.utils.PreferenceUtil;
@@ -72,18 +63,18 @@ import okhttp3.OkHttpClient;
 public class MyApplication extends Application {
 
     // Constant
-    public static final int CPU_COUNT =  Runtime.getRuntime().availableProcessors();
+    public static final int CPU_COUNT = Runtime.getRuntime().availableProcessors();
     public static final String SHARED_PREFERENCES_NAME = "note5_preferences";
-    public static final String LOCK_DIR = "/LOCK";
-    public static final String LOG_PATH = "LOCK/sync.log";
     public static final String NOTE_LOCK_PATH = "/LOCK/note_lock.lock";
     public static final String LOGIN_PATH = "/LOCK/";
-    public static final String NOTE_LST_PATH = "/LOCK/note_last_sync_time.mark";
-    public static final String NOTE_LOG_PATH = "/LOCK/note_sync.log";
-    public static final String TODO_LOCK_PATH = "/LOCK/todo_lock.lock";
-    public static final String TODO_LST_PATH = "/LOCK/todo_last_sync_time.mark";
-    public static final String TODO_LOG_PATH = "/LOCK/todo_sync.log";
+
     public static final String DAV_ROOT_DIR = "test/version2";
+    public static final String DAV_DATA_DIR = "DATA";
+    public static final String DAV_STAMP_DIR = "STAMP";
+    public static final String DAV_STAMP_BASE_PREFIX = "BASE_STAMP_";
+    public static final String DAV_STAMP_LATEST_NAME = "LATEST_STAMP";
+    public static final String DAV_LOCK_DIR = "LOCK";
+
 
     // Preference Name Auto Config
     public static final String DEFAULT_PAGE = "default_page";
@@ -137,11 +128,11 @@ public class MyApplication extends Application {
         OkHttpClient.Builder httpBuilder = new OkHttpClient.Builder();
         httpBuilder.connectTimeout(10000, TimeUnit.MILLISECONDS);
         httpBuilder.readTimeout(10000, TimeUnit.MILLISECONDS);
-        BeanInjectUtils.registerSingletonBean(OkHttpClient.class,httpBuilder.build());
+        BeanInjectUtils.registerSingletonBean(OkHttpClient.class, httpBuilder.build());
 
-        BeanInjectUtils.registerSingletonBean(ExecutorService.class,getExecutorService());
+        BeanInjectUtils.registerSingletonBean(ExecutorService.class, getExecutorService());
 
-        BeanInjectUtils.registerSingletonBean(Handler.class,handler);
+        BeanInjectUtils.registerSingletonBean(Handler.class, handler);
 
         BeanInjectUtils.registerSingletonBean(DaoSession.class, getDaoSession());
 
@@ -156,12 +147,12 @@ public class MyApplication extends Application {
         if (shouldSchedule) {
             Calendar calendar = Calendar.getInstance();
             calendar.set(1992, Calendar.SEPTEMBER, 25, 0, 0, 0);
-            calendar.add(Calendar.MINUTE,syncTimeOffset);
-            ScheduleReceiver.cancel(this,ScheduleReceiver.SYNC_REQUEST_CODE);
-            ScheduleReceiver.scheduleRepeat(this,ScheduleReceiver.SYNC_REQUEST_CODE,
-                    calendar.getTimeInMillis(),24*60*60*1000,SyncScheduleCallback.class);
+            calendar.add(Calendar.MINUTE, syncTimeOffset);
+            ScheduleReceiver.cancel(this, ScheduleReceiver.SYNC_REQUEST_CODE);
+            ScheduleReceiver.scheduleRepeat(this, ScheduleReceiver.SYNC_REQUEST_CODE,
+                    calendar.getTimeInMillis(), 24 * 60 * 60 * 1000, SyncScheduleCallback.class);
         } else {
-            ScheduleReceiver.cancel(this,ScheduleReceiver.SYNC_REQUEST_CODE);
+            ScheduleReceiver.cancel(this, ScheduleReceiver.SYNC_REQUEST_CODE);
         }
     }
 
@@ -173,15 +164,15 @@ public class MyApplication extends Application {
         List<Note> toNotifyNote = getNoteModel().findByPriority(5);
         for (Note note : toNotifyNote) {
             try {
-                if (!ScheduleUtil.isSet(note)){
+                if (!ScheduleUtil.isSet(note)) {
                     Date lastModifyTime = note.getLastModifyTime();
-                    if (lastModifyTime == null){
+                    if (lastModifyTime == null) {
                         continue;
                     }
                     ScheduleUtil.scheduleNotificationFrom(note, lastModifyTime.getTime());
                 }
-            }catch (Exception e){
-                Log.e(getClass().getSimpleName(),"初始化定时任务设置失败:"+note.getId(),e);
+            } catch (Exception e) {
+                Log.e(getClass().getSimpleName(), "初始化定时任务设置失败:" + note.getId(), e);
             }
         }
     }
@@ -210,70 +201,15 @@ public class MyApplication extends Application {
         todoSynchronizers = new ArrayList<>();
 
         for (Account account : accounts) {
-            String server = account.getServer();
+            String key1 = PreferenceUtil.getString(VIRTUAL_USER_ID);
+            String key2 = OkWebDavUtil.concat(account.getServer(),DAV_ROOT_DIR);
+            SynchronizerBuilder<Note> noteSynchronizerBuilder =
+                    new NoteSqlDavSynchronizerBuilder(key1,key2,account);
+            noteSynchronizers.add(noteSynchronizerBuilder.build());
 
-            //common
-            DavClient davClient = new SardineDavClient(account.getUsername(), account.getPassword());
-            String serverWithPath = OkWebDavUtil.concat(server, DAV_ROOT_DIR);
-            ExecutorService executorService = null; // 防止坚果云503
-            if (server.contains("teracloud")){
-                executorService = getExecutorService();
-            }
-
-            //local
-            NoteSqlDataSource noteLocalDataSource = new NoteSqlDataSource();
-
-            //remote
-            String[] notePaths = StringUtils.split(PreferenceUtil.getString(NOTE_SYNC_REMOTE_ROOT_PATHS), "|");
-            DavLock noteDavLock = new DavLock(davClient, OkWebDavUtil.concat(serverWithPath, NOTE_LOCK_PATH));
-            DavSharedTraceInfo noteSharedTraceInfo = new DavSharedTraceInfo(davClient, OkWebDavUtil.concat(serverWithPath, NOTE_LST_PATH));
-
-            DefaultDavDataSource<Note> noteDavDataSource1 = new DefaultDavDataSource.Builder<Note>()
-                    .clazz(Note.class)
-                    .davClient(davClient)
-                    .executorService(executorService)
-                    .server(serverWithPath)
-                    .paths(notePaths)
-                    .lock(noteDavLock)
-                    .sharedSource(noteSharedTraceInfo)
-                    .build();
-
-
-            NoteDavDataSourceWrap noteDavDataSourceWrap = new NoteDavDataSourceWrap(noteDavDataSource1);
-            noteSynchronizers.add(
-                    new DefaultSynchronizer.Builder<Note>()
-                    .localDataSource(new NoteSqlDataSourceWrap(noteLocalDataSource))
-                    .remoteDataSource(noteDavDataSourceWrap)
-                    .logPath(NOTE_LOG_PATH)
-                    .build()
-            );
-
-
-            //local
-            TodoSqlDataSource todoLocalDataSource = new TodoSqlDataSource();
-
-            // remote
-            String[] todoPaths = StringUtils.split(PreferenceUtil.getString(TODO_SYNC_REMOTE_ROOT_PATHS), "|");
-            DavLock todoDavLock = new DavLock(davClient, OkWebDavUtil.concat(serverWithPath, TODO_LOCK_PATH));
-            DavSharedTraceInfo todoSharedTraceInfo = new DavSharedTraceInfo(davClient, OkWebDavUtil.concat(serverWithPath, TODO_LST_PATH));
-
-            DavDataSource<Todo> todoDavDataSource1 = new DefaultDavDataSource.Builder<Todo>()
-                    .clazz(Todo.class)
-                    .davClient(davClient)
-                    .executorService(executorService)
-                    .server(serverWithPath)
-                    .paths(todoPaths)
-                    .lock(todoDavLock)
-                    .sharedSource(todoSharedTraceInfo)
-                    .build();
-
-            todoSynchronizers.add(
-                    new DefaultSynchronizer.Builder<Todo>()
-                    .localDataSource(new TodoSqlDataSourceWrap(todoLocalDataSource))
-                    .remoteDataSource(todoDavDataSource1)
-                    .logPath(TODO_LOG_PATH)
-                    .build()
-            );
+            SynchronizerBuilder<Todo> todoSynchronizerBuilder =
+                    new TodoSqlDavSynchronizerBuilder(key1,key2,account);
+            todoSynchronizers.add(todoSynchronizerBuilder.build());
         }
 
     }
@@ -307,7 +243,7 @@ public class MyApplication extends Application {
     public ExecutorService getExecutorService() {
         if (executorService == null) {
             executorService = new ThreadPoolExecutor(
-                    0,60,
+                    0, 60,
                     60, TimeUnit.SECONDS,
                     new LinkedBlockingQueue<>());
         }
@@ -326,7 +262,9 @@ public class MyApplication extends Application {
         isApplicationToBeBorn = false;
     }
 
-    /** sync start */
+    /**
+     * sync start
+     */
 
     public void sync() {
         sync(null);
@@ -409,7 +347,9 @@ public class MyApplication extends Application {
         return todoSynchronizers;
     }
 
-    /** sync end */
+    /**
+     * sync end
+     */
 
     public File getFileStorageDir() {
         return this.getExternalFilesDir(Environment.DIRECTORY_PICTURES);
@@ -434,8 +374,8 @@ public class MyApplication extends Application {
         return accountModel;
     }
 
-    public NoteModel getNoteModel(){
-        if (noteModel == null){
+    public NoteModel getNoteModel() {
+        if (noteModel == null) {
             noteModel = NoteModelImpl.getSingletonInstance();
         }
         return noteModel;
