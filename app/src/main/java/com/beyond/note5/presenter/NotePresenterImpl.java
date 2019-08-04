@@ -72,9 +72,6 @@ public class NotePresenterImpl implements NotePresenter {
 
 
     private void initNotifySyncProxy() {
-        if (!PreferenceUtil.getBoolean(SYNC_ON_MODIFY)){
-            return;
-        }
         this.noteModel = (NoteModel) Proxy.newProxyInstance(this.noteModel.getClass().getClassLoader(),
                 this.noteModel.getClass().getInterfaces(), new SyncProxy(this.noteModel));
     }
@@ -89,16 +86,16 @@ public class NotePresenterImpl implements NotePresenter {
 
         @Override
         public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
-            Log.d(getClass().getSimpleName(),"start proxy"+method.getName());
             Object result = method.invoke(target,args);
-            Log.d(getClass().getSimpleName(),method.getName());
+            if (!PreferenceUtil.getBoolean(SYNC_ON_MODIFY)){
+                return result;
+            }
             if ((method.getName().startsWith("add")
                     ||method.getName().startsWith("update")
                     ||method.getName().startsWith("delete"))
                     && !method.getName().toLowerCase().contains("all")){
                 EventBus.getDefault().post(new NoteSyncEvent(method.getName()));
             }
-            Log.d(getClass().getSimpleName(),result.toString());
             return result;
         }
     }

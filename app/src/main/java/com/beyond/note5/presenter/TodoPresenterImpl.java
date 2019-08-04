@@ -38,9 +38,6 @@ public class TodoPresenterImpl implements TodoPresenter {
     }
 
     private void initNotifySyncProxy() {
-        if (!PreferenceUtil.getBoolean(SYNC_ON_MODIFY)){
-            return;
-        }
         this.todoModel = (TodoModel) Proxy.newProxyInstance(this.todoModel.getClass().getClassLoader(),
                 this.todoModel.getClass().getInterfaces(), new SyncProxy(this.todoModel));
     }
@@ -56,6 +53,9 @@ public class TodoPresenterImpl implements TodoPresenter {
         @Override
         public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
             Object result = method.invoke(target,args);
+            if (!PreferenceUtil.getBoolean(SYNC_ON_MODIFY)){
+                return result;
+            }
             if ((method.getName().startsWith("add")
                     ||method.getName().startsWith("update")
                     ||method.getName().startsWith("delete"))
