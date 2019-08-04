@@ -7,7 +7,6 @@ import android.util.Log;
 import com.beyond.note5.MyApplication;
 import com.beyond.note5.bean.Note;
 import com.beyond.note5.event.AddNoteAllSuccessEvent;
-import com.beyond.note5.event.NoteSyncEvent;
 import com.beyond.note5.event.UpdateNoteAllSuccessEvent;
 import com.beyond.note5.event.note.AddNoteSuccessEvent;
 import com.beyond.note5.event.note.DeleteNoteSuccessEvent;
@@ -26,9 +25,6 @@ import org.apache.commons.lang3.StringUtils;
 import org.greenrobot.eventbus.EventBus;
 
 import java.io.IOException;
-import java.lang.reflect.InvocationHandler;
-import java.lang.reflect.Method;
-import java.lang.reflect.Proxy;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Date;
@@ -43,7 +39,6 @@ import okhttp3.Request;
 import okhttp3.Response;
 
 import static com.beyond.note5.MyApplication.NOTE_NOTIFICATION_SHOULD_SCHEDULE;
-import static com.beyond.note5.MyApplication.SYNC_ON_MODIFY;
 import static com.beyond.note5.service.schedule.ScheduleReceiver.NOTIFICATION_EXACT_REQUEST_CODE;
 import static com.beyond.note5.service.schedule.callback.NoteNotifyScheduleCallback.NOTIFICATION_POINTS;
 
@@ -67,39 +62,7 @@ public class NotePresenterImpl implements NotePresenter {
     public NotePresenterImpl(@Nullable NoteView noteView) {
         this.noteView = noteView;
         BeanInjectUtils.inject(this);
-        initNotifySyncProxy();
     }
-
-
-    private void initNotifySyncProxy() {
-        this.noteModel = (NoteModel) Proxy.newProxyInstance(this.noteModel.getClass().getClassLoader(),
-                this.noteModel.getClass().getInterfaces(), new SyncProxy(this.noteModel));
-    }
-
-    private class SyncProxy implements InvocationHandler {
-
-        private final NoteModel target;
-
-        public SyncProxy(NoteModel target) {
-            this.target = target;
-        }
-
-        @Override
-        public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
-            Object result = method.invoke(target,args);
-            if (!PreferenceUtil.getBoolean(SYNC_ON_MODIFY)){
-                return result;
-            }
-            if ((method.getName().startsWith("add")
-                    ||method.getName().startsWith("update")
-                    ||method.getName().startsWith("delete"))
-                    && !method.getName().toLowerCase().contains("all")){
-                EventBus.getDefault().post(new NoteSyncEvent(method.getName()));
-            }
-            return result;
-        }
-    }
-
 
     @Override
     public void add(final Note note) {
