@@ -18,6 +18,12 @@
             android:summary="将于每日 00:00:00-01:00:00 之间同步"
             android:title="是否开启每日自动同步" />
 
+        <android.support.v7.preference.SwitchPreferenceCompat
+            android:defaultValue="false"
+            android:key="sync.modify.trigger.enabled"
+            android:summary="新增/修改/删除时立即开始同步"
+            android:title="是否即时同步" />
+
     </android.support.v7.preference.PreferenceCategory>
 
     <android.support.v7.preference.PreferenceCategory android:title="NOTE">

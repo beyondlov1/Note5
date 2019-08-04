@@ -6,7 +6,6 @@ import android.util.Log;
 import com.beyond.note5.MyApplication;
 import com.beyond.note5.bean.Todo;
 import com.beyond.note5.sync.Synchronizer;
-import com.beyond.note5.utils.ToastUtil;
 import com.beyond.note5.view.SyncView;
 
 import java.util.List;
@@ -26,7 +25,6 @@ public class TodoSyncPresenterImpl implements SyncPresenter {
 
     @Override
     public void sync() {
-        ToastUtil.toast(MyApplication.getInstance(), "开始同步");
         synchronizers = MyApplication.getInstance().getTodoSynchronizers();
         MyApplication.getInstance().getExecutorService().execute(new Runnable() {
             @Override

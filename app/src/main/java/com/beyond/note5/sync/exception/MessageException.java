@@ -1,5 +1,7 @@
 package com.beyond.note5.sync.exception;
 
+import com.thegrizzlylabs.sardineandroid.impl.SardineException;
+
 import java.net.UnknownHostException;
 
 /**
@@ -21,6 +23,11 @@ public class MessageException extends Exception {
         }
         if (exception instanceof ConnectException){
             return "连接失败["+((ConnectException) exception).getKey()+"]";
+        }
+        if (exception instanceof SardineException){
+            if (((SardineException) exception).getStatusCode() == 503){
+                return "服务器错误";
+            }
         }
         if (exception instanceof UnknownHostException){
             return "网络错误";

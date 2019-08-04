@@ -11,7 +11,6 @@ import org.apache.commons.lang3.StringUtils;
 
 import java.io.IOException;
 import java.net.URI;
-import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
@@ -35,17 +34,12 @@ public class OkWebDavUtil {
         return OkHttpClientHolder.INSTANCE;
     }
 
-    public static List<String> listAllFile(Sardine sardine, String rootUrl) {
-        return null;
-    }
-
     private static class OkHttpClientHolder {
         static final OkHttpClient INSTANCE = new OkHttpClient.Builder()
                 .connectTimeout(10000, TimeUnit.MILLISECONDS)
                 .readTimeout(10000, TimeUnit.MILLISECONDS)
                 .authenticator(new BasicAuthenticator(PreferenceUtil.getString(DAV_LOGIN_USERNAME),
                         PreferenceUtil.getString(DAV_LOGIN_PASSWORD)))
-//                .authenticator(new BasicAuthenticator("806784568@qq.com",""))
                 .build();
     }
 

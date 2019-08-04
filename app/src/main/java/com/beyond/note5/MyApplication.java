@@ -75,11 +75,11 @@ public class MyApplication extends Application {
     public static final String DAV_STAMP_LATEST_NAME = "LATEST_STAMP";
     public static final String DAV_LOCK_DIR = "LOCK";
 
-
     // Preference Name Auto Config
     public static final String DEFAULT_PAGE = "default_page";
     public static final String NOTE_SYNC_REMOTE_ROOT_PATHS = "note.sync.remote.root.paths";
     public static final String TODO_SYNC_REMOTE_ROOT_PATHS = "todo.sync.remote.root.paths";
+    public static final String SYNC_ON_MODIFY = "sync.modify.trigger.enabled";
 
     // Preference Name Manual Configurable
     public static final String VIRTUAL_USER_ID = "user.virtual.id";

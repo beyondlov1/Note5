@@ -4,21 +4,28 @@ import android.support.annotation.Nullable;
 
 import com.beyond.note5.bean.Todo;
 import com.beyond.note5.event.AddTodoAllSuccessEvent;
+import com.beyond.note5.event.TodoSyncEvent;
 import com.beyond.note5.event.UpdateTodoAllSuccessEvent;
 import com.beyond.note5.event.todo.AddTodoSuccessEvent;
 import com.beyond.note5.event.todo.DeleteTodoSuccessEvent;
 import com.beyond.note5.event.todo.UpdateTodoSuccessEvent;
 import com.beyond.note5.model.TodoModel;
 import com.beyond.note5.model.TodoModelImpl;
+import com.beyond.note5.utils.PreferenceUtil;
 import com.beyond.note5.utils.TimeNLPUtil;
 import com.beyond.note5.view.TodoView;
 
 import org.apache.commons.lang3.StringUtils;
 import org.greenrobot.eventbus.EventBus;
 
+import java.lang.reflect.InvocationHandler;
+import java.lang.reflect.Method;
+import java.lang.reflect.Proxy;
 import java.util.Collection;
 import java.util.Date;
 import java.util.List;
+
+import static com.beyond.note5.MyApplication.SYNC_ON_MODIFY;
 
 public class TodoPresenterImpl implements TodoPresenter {
     private TodoView todoView;
@@ -27,6 +34,36 @@ public class TodoPresenterImpl implements TodoPresenter {
     public TodoPresenterImpl(@Nullable TodoView todoView) {
         this.todoView = todoView;
         this.todoModel = TodoModelImpl.getSingletonInstance();
+        initNotifySyncProxy();
+    }
+
+    private void initNotifySyncProxy() {
+        if (!PreferenceUtil.getBoolean(SYNC_ON_MODIFY)){
+            return;
+        }
+        this.todoModel = (TodoModel) Proxy.newProxyInstance(this.todoModel.getClass().getClassLoader(),
+                this.todoModel.getClass().getInterfaces(), new SyncProxy(this.todoModel));
+    }
+
+    private class SyncProxy implements InvocationHandler {
+
+        private final TodoModel target;
+
+        public SyncProxy(TodoModel target) {
+            this.target = target;
+        }
+
+        @Override
+        public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
+            Object result = method.invoke(target,args);
+            if ((method.getName().startsWith("add")
+                    ||method.getName().startsWith("update")
+                    ||method.getName().startsWith("delete"))
+                    && !method.getName().toLowerCase().contains("all")){
+                EventBus.getDefault().post(new TodoSyncEvent(method.getName()));
+            }
+            return result;
+        }
     }
 
     @Override

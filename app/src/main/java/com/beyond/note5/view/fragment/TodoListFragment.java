@@ -27,6 +27,7 @@ import com.beyond.note5.event.RefreshTodoListEvent;
 import com.beyond.note5.event.ScrollToTodoByDateEvent;
 import com.beyond.note5.event.ScrollToTodoEvent;
 import com.beyond.note5.event.ShowFABEvent;
+import com.beyond.note5.event.TodoSyncEvent;
 import com.beyond.note5.event.UpdateTodoAllSuccessEvent;
 import com.beyond.note5.event.todo.AddTodoSuccessEvent;
 import com.beyond.note5.event.todo.CompleteTodoEvent;
@@ -338,6 +339,11 @@ public class TodoListFragment extends Fragment {
                 }
             }
         }
+    }
+
+    @Subscribe(threadMode = ThreadMode.MAIN)
+    public void onReceived(TodoSyncEvent event) {
+        syncPresenter.sync();
     }
 
     private boolean isNeedTrain(Todo oldTodo, Todo newTodo) {

@@ -20,6 +20,7 @@ import com.beyond.note5.bean.Account;
 import com.beyond.note5.bean.Note;
 import com.beyond.note5.event.AddNoteAllSuccessEvent;
 import com.beyond.note5.event.HideFABEvent;
+import com.beyond.note5.event.NoteSyncEvent;
 import com.beyond.note5.event.RefreshNoteListEvent;
 import com.beyond.note5.event.ScrollNoteToTopEvent;
 import com.beyond.note5.event.ScrollToNoteEvent;
@@ -260,6 +261,11 @@ public class NoteListFragment extends Fragment {
         RecyclerViewUtil.tryScrollItemToTop(recyclerView, position);
     }
 
+    @Subscribe(threadMode = ThreadMode.MAIN)
+    public void onReceived(NoteSyncEvent event) {
+        syncPresenter.sync();
+    }
+
     public void scrollTo(Integer index) {
         ItemDataGenerator itemDataGenerator = recyclerViewAdapter.getItemDataGenerator();
         Object note = itemDataGenerator.getContentData().get(index);
@@ -320,4 +326,5 @@ public class NoteListFragment extends Fragment {
     private void stopRefresh() {
         refreshLayout.setRefreshing(false);
     }
+
 }
