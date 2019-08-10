@@ -1,8 +1,9 @@
 package com.beyond.note5.sync.datasource;
 
-import com.beyond.note5.sync.context.SyncContext;
-import com.beyond.note5.sync.exception.SaveException;
+import android.support.annotation.Nullable;
+
 import com.beyond.note5.sync.datasource.entity.SyncStamp;
+import com.beyond.note5.sync.exception.SaveException;
 import com.beyond.note5.sync.webdav.Lock;
 
 import java.io.IOException;
@@ -10,17 +11,18 @@ import java.util.List;
 import java.util.concurrent.ExecutionException;
 
 public interface DataSource<T> extends Lock {
+
+    void init();
+
     String getKey();
 
-    void saveAll(List<T> tList) throws IOException, SaveException;
-
-    void saveAll(List<T> tList, String source) throws IOException, SaveException;
+    void saveAll(List<T> tList, String oppositeKey) throws IOException, SaveException;
 
     List<T> selectAll() throws IOException, ExecutionException, InterruptedException;
 
     boolean isChanged(DataSource<T> targetDataSource) throws IOException;
 
-    List<T> getChangedData(SyncStamp syncStamp) throws IOException;
+    List<T> getChangedData(SyncStamp syncStamp, @Nullable DataSource<T> targetDataSource) throws IOException;
 
     SyncStamp getLastSyncStamp(DataSource<T> targetDataSource) throws IOException;
 
@@ -32,5 +34,4 @@ public interface DataSource<T> extends Lock {
 
     Class<T> clazz();
 
-    void setContext(SyncContext context);
 }

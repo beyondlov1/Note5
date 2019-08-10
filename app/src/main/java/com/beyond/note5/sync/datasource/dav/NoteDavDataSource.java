@@ -5,19 +5,17 @@ import android.util.Log;
 import com.beyond.note5.MyApplication;
 import com.beyond.note5.bean.Attachment;
 import com.beyond.note5.bean.Note;
-import com.beyond.note5.sync.webdav.client.DavClient;
 import com.beyond.note5.utils.OkWebDavUtil;
 
 import java.io.File;
 import java.io.IOException;
 import java.util.List;
-import java.util.concurrent.ExecutorService;
 
 public class NoteDavDataSource extends DefaultDavDataSource<Note> {
 
 
-    public NoteDavDataSource(String oppositeKey, DavClient client, String server, DavPathStrategy pathStrategy, ExecutorService executorService, Class<Note> clazz) {
-        super(oppositeKey, client, server, pathStrategy, executorService, clazz);
+    public NoteDavDataSource(DavDataSourceProperty property, Class<Note> clazz) {
+        super(property, clazz);
     }
 
     @Override

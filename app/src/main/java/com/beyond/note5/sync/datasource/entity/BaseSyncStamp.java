@@ -1,13 +1,13 @@
 package com.beyond.note5.sync.datasource.entity;
 
 import org.greenrobot.greendao.annotation.Entity;
+import org.greenrobot.greendao.annotation.Generated;
 import org.greenrobot.greendao.annotation.Id;
 
 import java.util.Date;
-import org.greenrobot.greendao.annotation.Generated;
 
 @Entity
-public class LatestSyncStamp {
+public class BaseSyncStamp {
 
     @Id
     private String id;
@@ -21,9 +21,8 @@ public class LatestSyncStamp {
 
 
 
-
-    @Generated(hash = 1852850743)
-    public LatestSyncStamp(String id, String localKey, String remoteKey,
+    @Generated(hash = 2081333840)
+    public BaseSyncStamp(String id, String localKey, String remoteKey,
             Date lastModifyTime, Date lastSyncTimeStart, Date lastSyncTime,
             String type) {
         this.id = id;
@@ -35,10 +34,9 @@ public class LatestSyncStamp {
         this.type = type;
     }
 
-    @Generated(hash = 1307862632)
-    public LatestSyncStamp() {
+    @Generated(hash = 1862814984)
+    public BaseSyncStamp() {
     }
-
 
 
 

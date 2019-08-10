@@ -269,4 +269,45 @@ public class Note extends Document {
         attachments = null;
     }
 
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        if (!super.equals(o)) return false;
+
+        Note note = (Note) o;
+
+        if (id != null ? !id.equals(note.id) : note.id != null) return false;
+        if (title != null ? !title.equals(note.title) : note.title != null) return false;
+        if (content != null ? !content.equals(note.content) : note.content != null) return false;
+        if (type != null ? !type.equals(note.type) : note.type != null) return false;
+        if (createTime != null ? !createTime.equals(note.createTime) : note.createTime != null)
+            return false;
+        if (lastModifyTime != null ? !lastModifyTime.equals(note.lastModifyTime) : note.lastModifyTime != null)
+            return false;
+        if (version != null ? !version.equals(note.version) : note.version != null) return false;
+        if (readFlag != null ? !readFlag.equals(note.readFlag) : note.readFlag != null)
+            return false;
+        if (priority != null ? !priority.equals(note.priority) : note.priority != null)
+            return false;
+        if (valid != null ? !valid.equals(note.valid) : note.valid != null) return false;
+        return attachments != null ? attachments.equals(note.attachments) : note.attachments == null;
+    }
+
+    @Override
+    public int hashCode() {
+        int result = super.hashCode();
+        result = 31 * result + (id != null ? id.hashCode() : 0);
+        result = 31 * result + (title != null ? title.hashCode() : 0);
+        result = 31 * result + (content != null ? content.hashCode() : 0);
+        result = 31 * result + (type != null ? type.hashCode() : 0);
+        result = 31 * result + (createTime != null ? createTime.hashCode() : 0);
+        result = 31 * result + (lastModifyTime != null ? lastModifyTime.hashCode() : 0);
+        result = 31 * result + (version != null ? version.hashCode() : 0);
+        result = 31 * result + (readFlag != null ? readFlag.hashCode() : 0);
+        result = 31 * result + (priority != null ? priority.hashCode() : 0);
+        result = 31 * result + (valid != null ? valid.hashCode() : 0);
+        result = 31 * result + (attachments != null ? attachments.hashCode() : 0);
+        return result;
+    }
 }

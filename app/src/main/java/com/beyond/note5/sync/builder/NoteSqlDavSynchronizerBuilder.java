@@ -1,18 +1,12 @@
 package com.beyond.note5.sync.builder;
 
-import com.beyond.note5.MyApplication;
 import com.beyond.note5.bean.Account;
 import com.beyond.note5.bean.Note;
 import com.beyond.note5.sync.datasource.DataSource;
-import com.beyond.note5.sync.datasource.dav.DavPathStrategy;
+import com.beyond.note5.sync.datasource.dav.DavDataSourceProperty;
 import com.beyond.note5.sync.datasource.dav.NoteDavDataSource;
-import com.beyond.note5.sync.datasource.dav.UuidDavPathStrategy;
 import com.beyond.note5.sync.datasource.sql.NoteSqlDataSourceWrap;
-import com.beyond.note5.sync.webdav.client.DavClient;
-import com.beyond.note5.sync.webdav.client.SardineDavClient;
 import com.beyond.note5.utils.OkWebDavUtil;
-
-import java.util.concurrent.ExecutorService;
 
 import static com.beyond.note5.MyApplication.DAV_ROOT_DIR;
 
@@ -24,25 +18,41 @@ import static com.beyond.note5.MyApplication.DAV_ROOT_DIR;
 public class NoteSqlDavSynchronizerBuilder extends SynchronizerBuilder<Note> {
 
 
-    public NoteSqlDavSynchronizerBuilder(String key1, String key2, Account account) {
-        super(key1, key2, account);
+    public NoteSqlDavSynchronizerBuilder(Account account) {
+        super(account);
     }
 
     @Override
     public DataSource<Note> getDataSource1() {
-        return new NoteSqlDataSourceWrap(key2);
+        return new NoteSqlDataSourceWrap();
     }
 
+    /**
+     private String username;
+     private String password;
+     private String server;
+     private String lockPath;
+     private String syncStampPath;
+     private String dataPath;
+     private boolean needExecutorService;
+     private String latestSyncStampFileName;
+     private String baseSyncStampFilePrefix;
+     */
     @Override
     public DataSource<Note> getDataSource2() {
-        String serverWithPath = OkWebDavUtil.concat( account.getServer(), DAV_ROOT_DIR);
-        DavClient davClient = new SardineDavClient(account.getUsername(), account.getPassword());
-        DavPathStrategy pathStrategy = new UuidDavPathStrategy(serverWithPath, Note.class);
-        ExecutorService executorService = null;
+
+        DavDataSourceProperty property = new DavDataSourceProperty(
+                account.getUsername(),
+                account.getPassword(),
+                OkWebDavUtil.concat(account.getServer(), DAV_ROOT_DIR)
+        );
+
+        boolean needExecutor =false;
         if (!account.getServer().contains("jianguoyun")){
-            executorService =  MyApplication.getInstance().getExecutorService();
+            needExecutor = true;
         }
-        return new NoteDavDataSource(key1, davClient, serverWithPath,
-                pathStrategy,executorService,Note.class);
+        property.setNeedExecutorService(needExecutor);
+
+        return new NoteDavDataSource(property,Note.class);
     }
 }

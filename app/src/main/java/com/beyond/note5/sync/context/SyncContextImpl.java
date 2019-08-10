@@ -23,22 +23,17 @@ public class SyncContextImpl implements SyncContext {
     protected DataSource dataSource1;
     protected DataSource dataSource2;
 
-    private final String key1;
-    private final String key2;
-
-    public SyncContextImpl(String key1,String key2) {
-        this.key1 = key1;
-        this.key2 = key2;
+    public SyncContextImpl() {
         this.syncStateModel = new SyncStateModelImpl();
     }
 
     public String getOppositeKey(String key) {
-        if (StringUtils.equals(key,key1)){
-            return key2;
+        if (StringUtils.equals(key,dataSource1.getKey())){
+            return dataSource2.getKey();
         }
 
-        if (StringUtils.equals(key,key2)){
-            return key1;
+        if (StringUtils.equals(key,dataSource2.getKey())){
+            return dataSource1.getKey();
         }
 
         throw new RuntimeException("can not find the opposite key");

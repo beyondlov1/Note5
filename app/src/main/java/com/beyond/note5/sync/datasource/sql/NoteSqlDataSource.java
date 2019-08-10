@@ -8,10 +8,6 @@ import com.beyond.note5.view.adapter.view.NoteViewAdapter;
 
 public class NoteSqlDataSource extends DocumentSqlDataSource<Note> {
 
-    public NoteSqlDataSource(String oppositeKey) {
-        super(oppositeKey);
-    }
-
     @Override
     protected DocumentPresenter<Note> getDocumentPresenter() {
         return new NotePresenterImpl(new MyNoteView());

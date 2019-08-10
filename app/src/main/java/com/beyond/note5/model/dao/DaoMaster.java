@@ -28,8 +28,8 @@ public class DaoMaster extends AbstractDaoMaster {
         ReminderDao.createTable(db, ifNotExists);
         TodoDao.createTable(db, ifNotExists);
         SyncStateDao.createTable(db, ifNotExists);
-        LatestSyncStampDao.createTable(db, ifNotExists);
         TraceLogDao.createTable(db, ifNotExists);
+        BaseSyncStampDao.createTable(db, ifNotExists);
     }
 
     /** Drops underlying database table using DAOs. */
@@ -41,8 +41,8 @@ public class DaoMaster extends AbstractDaoMaster {
         ReminderDao.dropTable(db, ifExists);
         TodoDao.dropTable(db, ifExists);
         SyncStateDao.dropTable(db, ifExists);
-        LatestSyncStampDao.dropTable(db, ifExists);
         TraceLogDao.dropTable(db, ifExists);
+        BaseSyncStampDao.dropTable(db, ifExists);
     }
 
     /**
@@ -68,8 +68,8 @@ public class DaoMaster extends AbstractDaoMaster {
         registerDaoClass(ReminderDao.class);
         registerDaoClass(TodoDao.class);
         registerDaoClass(SyncStateDao.class);
-        registerDaoClass(LatestSyncStampDao.class);
         registerDaoClass(TraceLogDao.class);
+        registerDaoClass(BaseSyncStampDao.class);
     }
 
     public DaoSession newSession() {

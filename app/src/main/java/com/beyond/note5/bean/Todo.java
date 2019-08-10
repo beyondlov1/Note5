@@ -278,4 +278,52 @@ public class Todo extends Document {
     public void setValid(Boolean valid) {
         this.valid = valid;
     }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        if (!super.equals(o)) return false;
+
+        Todo todo = (Todo) o;
+
+        if (id != null ? !id.equals(todo.id) : todo.id != null) return false;
+        if (reminderId != null ? !reminderId.equals(todo.reminderId) : todo.reminderId != null)
+            return false;
+        if (title != null ? !title.equals(todo.title) : todo.title != null) return false;
+        if (content != null ? !content.equals(todo.content) : todo.content != null) return false;
+        if (contentWithoutTime != null ? !contentWithoutTime.equals(todo.contentWithoutTime) : todo.contentWithoutTime != null)
+            return false;
+        if (type != null ? !type.equals(todo.type) : todo.type != null) return false;
+        if (createTime != null ? !createTime.equals(todo.createTime) : todo.createTime != null)
+            return false;
+        if (lastModifyTime != null ? !lastModifyTime.equals(todo.lastModifyTime) : todo.lastModifyTime != null)
+            return false;
+        if (version != null ? !version.equals(todo.version) : todo.version != null) return false;
+        if (readFlag != null ? !readFlag.equals(todo.readFlag) : todo.readFlag != null)
+            return false;
+        if (priority != null ? !priority.equals(todo.priority) : todo.priority != null)
+            return false;
+        if (valid != null ? !valid.equals(todo.valid) : todo.valid != null) return false;
+        return reminder != null ? reminder.equals(todo.reminder) : todo.reminder == null;
+    }
+
+    @Override
+    public int hashCode() {
+        int result = super.hashCode();
+        result = 31 * result + (id != null ? id.hashCode() : 0);
+        result = 31 * result + (reminderId != null ? reminderId.hashCode() : 0);
+        result = 31 * result + (title != null ? title.hashCode() : 0);
+        result = 31 * result + (content != null ? content.hashCode() : 0);
+        result = 31 * result + (contentWithoutTime != null ? contentWithoutTime.hashCode() : 0);
+        result = 31 * result + (type != null ? type.hashCode() : 0);
+        result = 31 * result + (createTime != null ? createTime.hashCode() : 0);
+        result = 31 * result + (lastModifyTime != null ? lastModifyTime.hashCode() : 0);
+        result = 31 * result + (version != null ? version.hashCode() : 0);
+        result = 31 * result + (readFlag != null ? readFlag.hashCode() : 0);
+        result = 31 * result + (priority != null ? priority.hashCode() : 0);
+        result = 31 * result + (valid != null ? valid.hashCode() : 0);
+        result = 31 * result + (reminder != null ? reminder.hashCode() : 0);
+        return result;
+    }
 }

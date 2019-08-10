@@ -44,6 +44,7 @@ public class SardineDavClient implements DavClient {
 
     @Override
     public void put(String url, String content) throws IOException {
+        checkUrl(url);
         String dirUrl = StringUtils.substringBeforeLast(url, "/");
         mkDirQuietly(dirUrl);
         try {
@@ -63,6 +64,12 @@ public class SardineDavClient implements DavClient {
             }
         } finally {
             closeResponse();
+        }
+    }
+
+    private void checkUrl(String url) {
+        if (!url.startsWith("http")){
+            throw new RuntimeException("it is not a url: "+url);
         }
     }
 
@@ -193,10 +200,25 @@ public class SardineDavClient implements DavClient {
     }
 
     public List<DavResource> listAllFileResource(String dirUrl) throws IOException {
-
         List<DavResource> result = new ArrayList<>();
         mkDirQuietly(dirUrl);
-        List<DavResource> list = sardine.list(dirUrl);
+        List<DavResource> list;
+        try {
+            list = sardine.list(dirUrl,1,false);
+            failCount.set(0);
+        } catch (SardineException e) {
+            if (e.getStatusCode() == 404) {
+                if (failCount.get() > 2) {
+                    throw e;
+                }
+                IS_DIR_EXIST.clear();
+                closeResponse();
+                failCount.getAndAdd(1);
+                return listAllFileResource(dirUrl);
+            } else {
+                throw e;
+            }
+        }
         for (DavResource davResource : list) {
             if (OkWebDavUtil.urlEquals(
                     getRootUrl(dirUrl) + davResource.getPath(),

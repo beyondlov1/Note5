@@ -1,8 +1,8 @@
 package com.beyond.note5.sync.model.impl;
 
-import com.beyond.note5.model.dao.LatestSyncStampDao;
+import com.beyond.note5.model.dao.BaseSyncStampDao;
 import com.beyond.note5.sync.datasource.DataSource;
-import com.beyond.note5.sync.datasource.entity.LatestSyncStamp;
+import com.beyond.note5.sync.datasource.entity.BaseSyncStamp;
 import com.beyond.note5.sync.model.LMTSharedSource;
 import com.beyond.note5.utils.IDUtil;
 
@@ -17,40 +17,40 @@ public class SqlSharedLMT implements LMTSharedSource {
 
     private DataSource remoteDataSource;
 
-    private LatestSyncStampDao latestSyncStampDao;
+    private BaseSyncStampDao baseSyncStampDao;
 
-    public SqlSharedLMT(DataSource localDataSource, DataSource remoteDataSource, LatestSyncStampDao latestSyncStampDao) {
+    public SqlSharedLMT(DataSource localDataSource, DataSource remoteDataSource, BaseSyncStampDao baseSyncStampDao) {
         this.localDataSource = localDataSource;
         this.remoteDataSource = remoteDataSource;
-        this.latestSyncStampDao = latestSyncStampDao;
+        this.baseSyncStampDao = baseSyncStampDao;
     }
 
     @Override
     public Date get() throws IOException {
-        LatestSyncStamp latestSyncStamp = latestSyncStampDao.queryBuilder()
-                .where(LatestSyncStampDao.Properties.RemoteKey.eq(remoteDataSource.getKey()))
-                .where(LatestSyncStampDao.Properties.Type.eq(remoteDataSource.clazz().getSimpleName().toLowerCase()))
+        BaseSyncStamp baseSyncStamp = baseSyncStampDao.queryBuilder()
+                .where(BaseSyncStampDao.Properties.RemoteKey.eq(remoteDataSource.getKey()))
+                .where(BaseSyncStampDao.Properties.Type.eq(remoteDataSource.clazz().getSimpleName().toLowerCase()))
                 .unique();
-        return latestSyncStamp == null?new Date(0): latestSyncStamp.getLastSyncTime();
+        return baseSyncStamp == null?new Date(0): baseSyncStamp.getLastSyncTime();
     }
 
     @Override
     public void set(Date date) throws IOException {
-        LatestSyncStamp latestSyncStamp = latestSyncStampDao.queryBuilder()
-                .where(LatestSyncStampDao.Properties.RemoteKey.eq(remoteDataSource.getKey()))
-                .where(LatestSyncStampDao.Properties.Type.eq(remoteDataSource.clazz().getSimpleName().toLowerCase()))
+        BaseSyncStamp baseSyncStamp = baseSyncStampDao.queryBuilder()
+                .where(BaseSyncStampDao.Properties.RemoteKey.eq(remoteDataSource.getKey()))
+                .where(BaseSyncStampDao.Properties.Type.eq(remoteDataSource.clazz().getSimpleName().toLowerCase()))
                 .unique();
-        if (latestSyncStamp == null){
-            LatestSyncStamp info = new LatestSyncStamp();
+        if (baseSyncStamp == null){
+            BaseSyncStamp info = new BaseSyncStamp();
             info.setId(IDUtil.uuid());
             info.setLocalKey(localDataSource.getKey());
             info.setRemoteKey(remoteDataSource.getKey());
             info.setLastModifyTime(date);
             info.setType(remoteDataSource.clazz().getSimpleName().toLowerCase());
-            latestSyncStampDao.insert(info);
+            baseSyncStampDao.insert(info);
         }else {
-            latestSyncStamp.setLastModifyTime(date);
-            latestSyncStampDao.update(latestSyncStamp);
+            baseSyncStamp.setLastModifyTime(date);
+            baseSyncStampDao.update(baseSyncStamp);
         }
     }
 }

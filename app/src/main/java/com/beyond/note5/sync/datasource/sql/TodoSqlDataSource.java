@@ -8,11 +8,6 @@ import com.beyond.note5.view.adapter.view.TodoViewAdapter;
 
 public class TodoSqlDataSource extends DocumentSqlDataSource<Todo> {
 
-
-    public TodoSqlDataSource(String oppositeKey) {
-        super(oppositeKey);
-    }
-
     @Override
     protected DocumentPresenter<Todo> getDocumentPresenter() {
         return  new TodoPresenterImpl(new TodoSqlDataSource.MyTodoView());

@@ -6,8 +6,10 @@ import android.util.Log;
 import com.alibaba.fastjson.JSONException;
 import com.alibaba.fastjson.JSONObject;
 import com.beyond.note5.bean.Tracable;
-import com.beyond.note5.sync.context.SyncContext;
+import com.beyond.note5.sync.context.entity.SyncState;
 import com.beyond.note5.sync.context.model.SyncStateEnum;
+import com.beyond.note5.sync.context.model.SyncStateModel;
+import com.beyond.note5.sync.context.model.SyncStateModelImpl;
 import com.beyond.note5.sync.datasource.DataSource;
 import com.beyond.note5.sync.datasource.SyncStampModel;
 import com.beyond.note5.sync.datasource.entity.SyncStamp;
@@ -17,6 +19,7 @@ import com.beyond.note5.sync.webdav.Lock;
 import com.beyond.note5.sync.webdav.client.AfterModifiedTimeDavFilter;
 import com.beyond.note5.sync.webdav.client.DavClient;
 import com.beyond.note5.sync.webdav.client.DavFilter;
+import com.beyond.note5.sync.webdav.client.SardineDavClient;
 import com.beyond.note5.utils.OkWebDavUtil;
 
 import org.apache.commons.lang3.time.DateUtils;
@@ -32,20 +35,14 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorCompletionService;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Future;
-
-import static com.beyond.note5.MyApplication.DAV_LOCK_DIR;
-import static com.beyond.note5.MyApplication.DAV_STAMP_BASE_PREFIX;
-import static com.beyond.note5.MyApplication.DAV_STAMP_DIR;
-import static com.beyond.note5.MyApplication.DAV_STAMP_LATEST_NAME;
+import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.ThreadPoolExecutor;
+import java.util.concurrent.TimeUnit;
 
 
 public class DefaultDavDataSource<T extends Tracable> implements DavDataSource<T> {
 
-    private final String oppositeKey;
-
     private DavClient client;
-
-    private String server;
 
     private SyncStampModel baseSyncStampModel;
 
@@ -57,69 +54,60 @@ public class DefaultDavDataSource<T extends Tracable> implements DavDataSource<T
 
     private Lock lock;
 
-    private Class<T> clazz;
+    private SyncStateModel syncStateModel;
 
-    private SyncContext context;
+    protected Class<T> clazz;
 
-    public DefaultDavDataSource(String oppositeKey,
-                                DavClient client,
-                                String server,
-                                DavPathStrategy pathStrategy,
-                                ExecutorService executorService,
-                                Class<T> clazz) {
-        this.oppositeKey = oppositeKey;
-        this.client = client;
-        this.server = server;
-        this.executorService = executorService;
+    protected DavDataSourceProperty property;
+
+    public DefaultDavDataSource(DavDataSourceProperty property,Class<T> clazz){
+        this.property = property;
         this.clazz = clazz;
-        this.baseSyncStampModel = new DavSyncStampModel(client, server, getRemoteBaseSyncStampPath());
-        this.latestSyncStampModel = new DavSyncStampModel(client, server, getRemoteLatestSyncStampPath());
-        this.davPathStrategy = pathStrategy;
-        this.lock = new DavLock(client, getLockUrl(server));
+    }
+
+    @Override
+    public void init() {
+        this.client = new SardineDavClient(property.getUsername(),property.getPassword());
+        if (property.isNeedExecutorService()){
+            executorService  = new ThreadPoolExecutor(
+                    17, 60,
+                    60, TimeUnit.SECONDS,
+                    new LinkedBlockingQueue<>());
+        }
+        this.baseSyncStampModel = new DavBaseSyncStampModel(client, property , clazz);
+        this.latestSyncStampModel = new DavLatestSyncStampModel(client, property ,clazz);
+        this.davPathStrategy = new UuidDavPathStrategy(property.getServer(),clazz);
+        this.lock = new DavLock(client, getLockUrl(property.getServer()));
+        this.syncStateModel = new SyncStateModelImpl();
     }
 
     private String getLockUrl(String server) {
         String clazzUpCase = clazz.getSimpleName().toUpperCase();
-        return OkWebDavUtil.concat(server, clazzUpCase, DAV_LOCK_DIR, clazzUpCase + ".lock");
-    }
-
-    private String getRemoteLatestSyncStampPath() {
-        String clazzUpCase = clazz.getSimpleName().toUpperCase();
-        return OkWebDavUtil.concat(clazzUpCase, DAV_STAMP_DIR, DAV_STAMP_LATEST_NAME+".stamp");
-    }
-
-    private String getRemoteBaseSyncStampPath() {
-        String clazzUpCase = clazz.getSimpleName().toUpperCase();
-        return OkWebDavUtil.concat(clazzUpCase, DAV_STAMP_DIR, DAV_STAMP_BASE_PREFIX + oppositeKey + ".stamp");
+        return OkWebDavUtil.concat(server, clazzUpCase, property.getSyncStampPath(), clazzUpCase + ".lock");
     }
 
     @Override
     public String getKey() {
-        return server;
+        return property.getServer();
     }
 
     @Override
-    public void saveAll(List<T> ts) throws IOException, SaveException {
-        saveAll(ts, oppositeKey);
-    }
-
-    @Override
-    public void saveAll(List<T> ts, String source) throws IOException, SaveException {
+    public void saveAll(List<T> ts, String oppositeKey) throws IOException, SaveException {
         if (executorService == null) {
-            singleThreadSaveAll(ts);
+            singleThreadSaveAll(ts,oppositeKey);
             return;
         }
-        multiThreadSaveAll(ts);
+        multiThreadSaveAll(ts,oppositeKey);
     }
 
-    private void multiThreadSaveAll(List<T> ts) throws SaveException {
+    private void multiThreadSaveAll(List<T> ts,String oppositeKey) throws SaveException {
         mkDirForMultiThread();
         CompletionService<T> completionService = new ExecutorCompletionService<>(executorService);
         for (T t : ts) {
             completionService.submit(new Callable<T>() {
                 @Override
                 public T call() throws Exception {
-                    save(t);
+                    save(t,oppositeKey);
                     return t;
                 }
             });
@@ -153,11 +141,11 @@ public class DefaultDavDataSource<T extends Tracable> implements DavDataSource<T
         }
     }
 
-    private void singleThreadSaveAll(List<T> ts) throws SaveException {
+    private void singleThreadSaveAll(List<T> ts,String oppositeKey) throws SaveException {
         List<String> successIds = new ArrayList<>();
         for (T t : ts) {
             try {
-                save(t);
+                save(t,oppositeKey);
                 successIds.add(t.getId());
             } catch (Exception e) {
                 Log.e(getClass().getSimpleName(), "save失败", e);
@@ -166,7 +154,7 @@ public class DefaultDavDataSource<T extends Tracable> implements DavDataSource<T
         }
     }
 
-    private void save(T t) throws IOException {
+    private void save(T t ,String oppositeKey) throws IOException {
         if (client.exists(getDocumentUrl(t))) {
             T remoteT = decode(client.get(getDocumentUrl(t)));
             if (t.getLastModifyTime().after(remoteT.getLastModifyTime())
@@ -176,7 +164,18 @@ public class DefaultDavDataSource<T extends Tracable> implements DavDataSource<T
         } else {
             add(t);
         }
-        context.saveSyncState(t.getId(), SyncStateEnum.SUCCESS);
+
+        saveSuccessState(t, oppositeKey);
+    }
+
+    private void saveSuccessState(T t, String oppositeKey) {
+        SyncState syncStateInfo = SyncState.create();
+        syncStateInfo.setDocumentId(t.getId());
+        syncStateInfo.setLocal(oppositeKey);
+        syncStateInfo.setServer(getKey());
+        syncStateInfo.setState(SyncStateEnum.SUCCESS.getValue());
+        syncStateInfo.setType(clazz().getSimpleName().toLowerCase());
+        syncStateModel.save(syncStateInfo);
     }
 
     protected void add(T t) throws IOException {
@@ -194,7 +193,7 @@ public class DefaultDavDataSource<T extends Tracable> implements DavDataSource<T
 
     @Override
     public boolean isChanged(DataSource<T> targetDataSource) throws IOException {
-        SyncStamp baseSyncStamp = baseSyncStampModel.retrieve();
+        SyncStamp baseSyncStamp = baseSyncStampModel.retrieve(targetDataSource.getKey());
         SyncStamp latestSyncStamp = getLatestSyncStamp();
 
         Date correspondLastModifyTime = baseSyncStamp.getLastModifyTime();
@@ -207,7 +206,7 @@ public class DefaultDavDataSource<T extends Tracable> implements DavDataSource<T
     }
 
     @Override
-    public List<T> getChangedData(SyncStamp syncStamp) throws IOException {
+    public List<T> getChangedData(SyncStamp syncStamp, DataSource<T> targetDataSource) throws IOException {
         return selectByModifiedDate(syncStamp.getLastSyncTimeEnd());
     }
 
@@ -298,28 +297,23 @@ public class DefaultDavDataSource<T extends Tracable> implements DavDataSource<T
     }
 
     @Override
-    public void setContext(SyncContext context) {
-        this.context = context;
-    }
-
-    @Override
     public SyncStamp getLastSyncStamp(DataSource<T> targetDataSource) throws IOException {
-        return baseSyncStampModel.retrieve();
+        return baseSyncStampModel.retrieve(targetDataSource.getKey());
     }
 
     @Override
     public void updateLastSyncStamp(SyncStamp syncStamp, DataSource<T> targetDataSource) throws IOException {
-        baseSyncStampModel.update(syncStamp);
+        baseSyncStampModel.update(syncStamp,targetDataSource.getKey());
     }
 
     @Override
     public SyncStamp getLatestSyncStamp() throws IOException {
-        return latestSyncStampModel.retrieve();
+        return latestSyncStampModel.retrieve(null);
     }
 
     @Override
     public void updateLatestSyncStamp(SyncStamp syncStamp) throws IOException {
-        latestSyncStampModel.update(syncStamp);
+        latestSyncStampModel.update(syncStamp,null);
     }
 
     private String getDocumentUrl(T t) {
@@ -327,7 +321,7 @@ public class DefaultDavDataSource<T extends Tracable> implements DavDataSource<T
     }
 
     private String getDocumentUrl(String id) {
-        return OkWebDavUtil.concat(OkWebDavUtil.concat(server, getPathById(id)), id);
+        return OkWebDavUtil.concat(OkWebDavUtil.concat(property.getServer(), getPathById(id)), id);
     }
 
     private String getPathById(String id) {
@@ -373,7 +367,7 @@ public class DefaultDavDataSource<T extends Tracable> implements DavDataSource<T
 
     @Override
     public String getServer() {
-        return server;
+        return property.getServer();
     }
 
     @Override
@@ -401,7 +395,7 @@ public class DefaultDavDataSource<T extends Tracable> implements DavDataSource<T
         List<String> ids = new ArrayList<>();
         String[] allPaths = davPathStrategy.getAllStoragePaths(clazz.getSimpleName().toLowerCase());
         for (String path : allPaths) {
-            ids.addAll(client.listAllFileName(OkWebDavUtil.concat(server, path), davFilter));
+            ids.addAll(client.listAllFileName(OkWebDavUtil.concat(property.getServer(), path), davFilter));
         }
         return ids;
     }

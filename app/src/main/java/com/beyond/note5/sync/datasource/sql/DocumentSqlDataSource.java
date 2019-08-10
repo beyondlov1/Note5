@@ -1,16 +1,16 @@
 package com.beyond.note5.sync.datasource.sql;
 
+import android.support.annotation.Nullable;
+
 import com.beyond.note5.MyApplication;
 import com.beyond.note5.bean.Document;
 import com.beyond.note5.presenter.DocumentPresenter;
-import com.beyond.note5.sync.context.SyncContext;
 import com.beyond.note5.sync.datasource.DataSource;
 import com.beyond.note5.sync.datasource.SyncStampModel;
 import com.beyond.note5.sync.datasource.entity.SyncStamp;
 import com.beyond.note5.sync.datasource.sql.model.SqlBaseSyncStampModel;
 import com.beyond.note5.sync.datasource.sql.model.SqlLogModel;
 import com.beyond.note5.sync.datasource.sql.model.SqlLogModelImpl;
-import com.beyond.note5.sync.exception.SaveException;
 import com.beyond.note5.sync.model.entity.TraceLog;
 import com.beyond.note5.utils.PreferenceUtil;
 
@@ -27,26 +27,21 @@ import java.util.Set;
 
 public abstract class DocumentSqlDataSource<T extends Document> implements SqlDataSource<T> {
 
-    protected SyncContext context;
-
     private DocumentPresenter<T> documentPresenter;
 
     private SqlLogModel sqlLogModel;
 
-    private SyncStampModel baseSyncStampModel;
+    protected SyncStampModel baseSyncStampModel;
 
-    private String oppositeKey;
-
-    public DocumentSqlDataSource(String oppositeKey) {
-        this.oppositeKey = oppositeKey;
+    @Override
+    public void init() {
         this.documentPresenter = getDocumentPresenter();
         this.sqlLogModel = new SqlLogModelImpl(
                 MyApplication.getInstance().getDaoSession().getTraceLogDao(),
                 clazz().getSimpleName().toLowerCase());
         this.baseSyncStampModel = new SqlBaseSyncStampModel(
-                MyApplication.getInstance().getDaoSession().getLatestSyncStampDao(),
+                MyApplication.getInstance().getDaoSession().getBaseSyncStampDao(),
                 getKey(),
-                oppositeKey,
                 clazz().getSimpleName().toLowerCase()
         );
     }
@@ -59,12 +54,7 @@ public abstract class DocumentSqlDataSource<T extends Document> implements SqlDa
     }
 
     @Override
-    public void saveAll(List<T> ts) throws IOException, SaveException {
-        saveAll(ts, oppositeKey);
-    }
-
-    @Override
-    public void saveAll(List<T> ts, String source) throws IOException {
+    public void saveAll(List<T> ts, String oppositeKey) throws IOException {
         Map<String, T> map = new HashMap<>(ts.size());
         for (T t : ts) {
             map.put(t.getId(), t);
@@ -89,8 +79,8 @@ public abstract class DocumentSqlDataSource<T extends Document> implements SqlDa
                 addList.add(map.get(id));
             }
         }
-        documentPresenter.addAllForSync(addList, source);
-        documentPresenter.updateAllForSync(updateList, source);
+        documentPresenter.addAllForSync(addList, oppositeKey);
+        documentPresenter.updateAllForSync(updateList, oppositeKey);
     }
 
     @Override
@@ -101,11 +91,11 @@ public abstract class DocumentSqlDataSource<T extends Document> implements SqlDa
 
     @Override
     public boolean isChanged(DataSource<T> targetDataSource) throws IOException {
-        return !getChangedData(getLastSyncStamp(targetDataSource)).isEmpty();
+        return !getChangedData(getLastSyncStamp(targetDataSource),targetDataSource).isEmpty();
     }
 
     @Override
-    public List<T> getChangedData(SyncStamp syncStamp) throws IOException {
+    public List<T> getChangedData(SyncStamp syncStamp, @Nullable DataSource<T> targetDataSource) throws IOException {
 
         // 日志的操作时间大于上次同步成功的最后修改时间
         // 会改变lastModifyTime类型的, 如 add, update
@@ -114,12 +104,17 @@ public abstract class DocumentSqlDataSource<T extends Document> implements SqlDa
 
         // 日志的操作时间大于上次同步成功的同步开始时间 , 并且source是不是对方dataSource的
         // 改变priority这种不更改lastModifyTime的, 如 改变priority
-        List<TraceLog> lastModifyTimeUnchangeableLogs = sqlLogModel.getAllWithoutSourceWhereCreateTimeAfter(
-                syncStamp.getLastSyncTimeStart() == null ? new Date(0) : syncStamp.getLastSyncTimeStart(),
-                oppositeKey);
+        List<TraceLog> lastModifyTimeUnchangeableLogs = null;
+        if (targetDataSource != null){
+            lastModifyTimeUnchangeableLogs = sqlLogModel.getAllWithoutSourceWhereCreateTimeAfter(
+                    syncStamp.getLastSyncTimeStart() == null ? new Date(0) : syncStamp.getLastSyncTimeStart(),
+                    targetDataSource.getKey());
+        }
         List<TraceLog> modifiedLogs = new ArrayList<>();
         modifiedLogs.addAll(lastModifyTimeChangeableLogs);
-        modifiedLogs.addAll(lastModifyTimeUnchangeableLogs);
+        if (lastModifyTimeUnchangeableLogs!=null){
+            modifiedLogs.addAll(lastModifyTimeUnchangeableLogs);
+        }
         if (modifiedLogs.isEmpty()) {
             return new ArrayList<>();
         }
@@ -137,12 +132,12 @@ public abstract class DocumentSqlDataSource<T extends Document> implements SqlDa
 
     @Override
     public SyncStamp getLastSyncStamp(DataSource<T> targetDataSource) throws IOException {
-        return baseSyncStampModel.retrieve();
+        return baseSyncStampModel.retrieve(targetDataSource.getKey());
     }
 
     @Override
     public void updateLastSyncStamp(SyncStamp syncStamp, DataSource<T> targetDataSource) throws IOException {
-        baseSyncStampModel.update(syncStamp);
+        baseSyncStampModel.update(syncStamp,targetDataSource.getKey());
     }
 
     @Override
@@ -187,8 +182,4 @@ public abstract class DocumentSqlDataSource<T extends Document> implements SqlDa
         return true;
     }
 
-    @Override
-    public void setContext(SyncContext context) {
-        this.context = context;
-    }
 }

@@ -110,7 +110,7 @@ public class DefaultSynchronizer<T extends Tracable> implements Synchronizer<T> 
             dataSource1.updateLatestSyncStamp(SyncStamp.ZERO);
             dataSource1.updateLastSyncStamp(SyncStamp.ZERO, dataSource2);
             syncStamp1 = this.dataSource1.getLastSyncStamp(dataSource2);
-            List<T> modified1 = dataSource1.getChangedData(syncStamp1);
+            List<T> modified1 = dataSource1.getChangedData(syncStamp1, dataSource2);
             return syncByOneSide(dataSource2, modified1, syncStamp1, syncStamp2);
         }
 
@@ -119,7 +119,7 @@ public class DefaultSynchronizer<T extends Tracable> implements Synchronizer<T> 
             dataSource2.updateLatestSyncStamp(SyncStamp.ZERO);
             dataSource2.updateLastSyncStamp(SyncStamp.ZERO, dataSource1);
             syncStamp2 = this.dataSource2.getLastSyncStamp(dataSource1);
-            List<T> modified2 = dataSource2.getChangedData(syncStamp2);
+            List<T> modified2 = dataSource2.getChangedData(syncStamp2,dataSource1);
             return syncByOneSide(dataSource1, modified2, syncStamp1, syncStamp2);
         }
 
@@ -129,12 +129,12 @@ public class DefaultSynchronizer<T extends Tracable> implements Synchronizer<T> 
         Log.d(getClass().getSimpleName(), dataSource1.getKey() + "是否修改:" + isDataSource1Changed + "; " + dataSource2.getKey() + "是否修改:" + isDataSource2Changed);
 
         if (isDataSource1Changed && !isDataSource2Changed) {
-            List<T> modified1 = dataSource1.getChangedData(syncStamp1);
+            List<T> modified1 = dataSource1.getChangedData(syncStamp1,dataSource2);
             return syncByOneSide(dataSource2, modified1, syncStamp1, syncStamp2);
         }
 
         if (!isDataSource1Changed && isDataSource2Changed) {
-            List<T> modified2 = dataSource2.getChangedData(syncStamp2);
+            List<T> modified2 = dataSource2.getChangedData(syncStamp2,dataSource1);
             return syncByOneSide(dataSource1, modified2, syncStamp1, syncStamp2);
         }
 
@@ -144,8 +144,8 @@ public class DefaultSynchronizer<T extends Tracable> implements Synchronizer<T> 
         }
 
         if (dataSource1.tryLock(remoteLockTimeOutMills) && dataSource2.tryLock(remoteLockTimeOutMills)) {
-            List<T> modified1 = dataSource1.getChangedData(syncStamp1);
-            List<T> modified2 = dataSource2.getChangedData(syncStamp2);
+            List<T> modified1 = dataSource1.getChangedData(syncStamp1,dataSource2);
+            List<T> modified2 = dataSource2.getChangedData(syncStamp2,dataSource1);
 
             ignoreSuccess(modified1);
             ignoreSuccess(modified2);
@@ -156,7 +156,7 @@ public class DefaultSynchronizer<T extends Tracable> implements Synchronizer<T> 
             }
 
             try {
-                dataSource1.saveAll(modified2);
+                dataSource1.saveAll(modified2,dataSource2.getKey());
                 recordSyncSuccessState(modified2);
             } catch (SaveException e) {
                 onSaveFail(e);
@@ -164,7 +164,7 @@ public class DefaultSynchronizer<T extends Tracable> implements Synchronizer<T> 
             }
 
             try {
-                dataSource2.saveAll(modified1);
+                dataSource2.saveAll(modified1,dataSource1.getKey());
                 recordSyncSuccessState(modified1);
             } catch (SaveException e) {
                 onSaveFail(e);
@@ -225,7 +225,7 @@ public class DefaultSynchronizer<T extends Tracable> implements Synchronizer<T> 
             }
             try {
                 ignoreSuccess(modified);
-                changingDataSource.saveAll(modified);
+                changingDataSource.saveAll(modified,changingDataSource == dataSource1?dataSource2.getKey():dataSource1.getKey());
                 recordSyncSuccessState(modified);
             } catch (SaveException e) {
                 onSaveFail(e);

@@ -131,6 +131,7 @@ public class OkHttpSardine2 extends OkHttpSardine {
 //        prop.setGetcontenttype(objectFactory.createGetcontenttype());
 //        prop.setResourcetype(objectFactory.createResourcetype());
 //        prop.setGetetag(objectFactory.createGetetag());
+        prop.setGetlastmodified("modified");
         addCustomProperties(prop, props);
         body.setProp(prop);
         return propfind(url, depth, body);

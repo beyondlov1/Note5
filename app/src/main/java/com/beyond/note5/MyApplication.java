@@ -27,12 +27,10 @@ import com.beyond.note5.predict.filter.train.UselessTrainFilter;
 import com.beyond.note5.service.schedule.ScheduleReceiver;
 import com.beyond.note5.service.schedule.callback.SyncScheduleCallback;
 import com.beyond.note5.service.schedule.utils.ScheduleUtil;
-import com.beyond.note5.sync.builder.NoteSqlDavSynchronizerBuilder;
 import com.beyond.note5.sync.Synchronizer;
-import com.beyond.note5.sync.builder.SynchronizerBuilder;
-import com.beyond.note5.sync.builder.TodoSqlDavSynchronizerBuilder;
+import com.beyond.note5.sync.builder.NoteMultiSynchronizerBuilder;
+import com.beyond.note5.sync.builder.TodoMultiSynchronizerBuilder;
 import com.beyond.note5.utils.IDUtil;
-import com.beyond.note5.utils.OkWebDavUtil;
 import com.beyond.note5.utils.PreferenceUtil;
 import com.beyond.note5.utils.ToastUtil;
 
@@ -68,7 +66,7 @@ public class MyApplication extends Application {
     public static final String NOTE_LOCK_PATH = "/LOCK/note_lock.lock";
     public static final String LOGIN_PATH = "/LOCK/";
 
-    public static final String DAV_ROOT_DIR = "test/version2";
+    public static final String DAV_ROOT_DIR = "test/version5";
     public static final String DAV_DATA_DIR = "DATA";
     public static final String DAV_STAMP_DIR = "STAMP";
     public static final String DAV_STAMP_BASE_PREFIX = "BASE_STAMP_";
@@ -200,17 +198,30 @@ public class MyApplication extends Application {
         noteSynchronizers = new ArrayList<>();
         todoSynchronizers = new ArrayList<>();
 
-        for (Account account : accounts) {
-            String key1 = PreferenceUtil.getString(VIRTUAL_USER_ID);
-            String key2 = OkWebDavUtil.concat(account.getServer(),DAV_ROOT_DIR);
-            SynchronizerBuilder<Note> noteSynchronizerBuilder =
-                    new NoteSqlDavSynchronizerBuilder(key1,key2,account);
-            noteSynchronizers.add(noteSynchronizerBuilder.build());
+        /**
+         * heap
+         */
+        NoteMultiSynchronizerBuilder noteSyncBuilder = new NoteMultiSynchronizerBuilder(accounts);
+        Synchronizer<Note> noteMultiSynchronizer = noteSyncBuilder.build();
+        noteSynchronizers.add(noteMultiSynchronizer);
 
-            SynchronizerBuilder<Todo> todoSynchronizerBuilder =
-                    new TodoSqlDavSynchronizerBuilder(key1,key2,account);
-            todoSynchronizers.add(todoSynchronizerBuilder.build());
-        }
+        TodoMultiSynchronizerBuilder todoSyncBuilder = new TodoMultiSynchronizerBuilder(accounts);
+        Synchronizer<Todo> todoMultiSynchronizer = todoSyncBuilder.build();
+        todoSynchronizers.add(todoMultiSynchronizer);
+
+
+        /**
+         * one to one
+         */
+//        for (Account account : accounts) {
+//            SynchronizerBuilder<Note> noteSynchronizerBuilder =
+//                    new NoteSqlDavSynchronizerBuilder(account);
+//            noteSynchronizers.add(noteSynchronizerBuilder.build());
+//
+//            SynchronizerBuilder<Todo> todoSynchronizerBuilder =
+//                    new TodoSqlDavSynchronizerBuilder(account);
+//            todoSynchronizers.add(todoSynchronizerBuilder.build());
+//        }
 
     }
 

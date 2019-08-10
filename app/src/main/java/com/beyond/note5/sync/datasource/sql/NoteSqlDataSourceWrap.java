@@ -5,6 +5,8 @@ import android.util.Log;
 import com.beyond.note5.MyApplication;
 import com.beyond.note5.bean.Attachment;
 import com.beyond.note5.bean.Note;
+import com.beyond.note5.sync.context.SyncContext;
+import com.beyond.note5.sync.context.SyncContextAware;
 import com.beyond.note5.sync.datasource.DataSource;
 import com.beyond.note5.sync.datasource.dav.DavDataSource;
 import com.beyond.note5.utils.OkWebDavUtil;
@@ -13,12 +15,9 @@ import java.io.File;
 import java.io.IOException;
 import java.util.List;
 
-public class NoteSqlDataSourceWrap extends NoteSqlDataSource {
+public class NoteSqlDataSourceWrap extends NoteSqlDataSource implements SyncContextAware {
 
-
-    public NoteSqlDataSourceWrap(String oppositeKey) {
-        super(oppositeKey);
-    }
+    private SyncContext context;
 
     @SuppressWarnings("unchecked")
     private DavDataSource<Note> getDavDataSource() {
@@ -30,8 +29,8 @@ public class NoteSqlDataSourceWrap extends NoteSqlDataSource {
     }
 
     @Override
-    public void saveAll(List<Note> notes, String source) throws IOException {
-        super.saveAll(notes, source);
+    public void saveAll(List<Note> notes, String oppositeKey) throws IOException {
+        super.saveAll(notes, oppositeKey);
 
         if (getDavDataSource() == null) {
             return;
@@ -68,5 +67,10 @@ public class NoteSqlDataSourceWrap extends NoteSqlDataSource {
                 OkWebDavUtil.concat(davDataSource.getServer(), davDataSource.getPath(note)),
                 getLocalPath(attachment).replaceFirst(MyApplication.getInstance().getFileStorageDir().getAbsolutePath(), "/files")
         );
+    }
+
+    @Override
+    public void setContext(SyncContext context) {
+        this.context = context;
     }
 }
