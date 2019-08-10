@@ -35,7 +35,7 @@ import static com.beyond.note5.service.SyncRetryService.DEFAULT_RETRY_DELAY;
  *
  * @param <T>
  */
-public class DefaultSynchronizer<T extends Tracable> implements Synchronizer<T> {
+public class DefaultPointSynchronizer<T extends Tracable> implements Synchronizer<T> {
 
     private ThreadLocal<Integer> threadLocal = new ThreadLocal<>();
 
@@ -54,10 +54,10 @@ public class DefaultSynchronizer<T extends Tracable> implements Synchronizer<T> 
 
     private ExceptionHandler exceptionHandler;
 
-    public DefaultSynchronizer(SyncContext context,
-                               DataSource<T> dataSource1,
-                               DataSource<T> dataSource2,
-                               ExceptionHandler exceptionHandler) {
+    public DefaultPointSynchronizer(SyncContext context,
+                                    DataSource<T> dataSource1,
+                                    DataSource<T> dataSource2,
+                                    ExceptionHandler exceptionHandler) {
         this.dataSource1 = dataSource1;
         this.dataSource2 = dataSource2;
         this.context = context;

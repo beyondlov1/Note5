@@ -27,7 +27,7 @@ import static com.beyond.note5.sync.SyncUtils.blockExecute;
  * @date: 2019/8/9
  */
 //TODO: STATE
-public class MultiSynchronizer<T extends Tracable> implements Synchronizer<T> {
+public class DefaultMultiSynchronizer<T extends Tracable> implements Synchronizer<T> {
 
     private List<MultiDataSource<T>> dataSources;
 
@@ -39,7 +39,7 @@ public class MultiSynchronizer<T extends Tracable> implements Synchronizer<T> {
 
     private Date syncTimeStart;
 
-    public MultiSynchronizer(List<MultiDataSource<T>> dataSources, ExecutorService executorService) {
+    public DefaultMultiSynchronizer(List<MultiDataSource<T>> dataSources, ExecutorService executorService) {
         this.dataSources = dataSources;
         this.executorService = executorService;
         this.executorServiceExtra = new ThreadPoolExecutor(
@@ -59,7 +59,7 @@ public class MultiSynchronizer<T extends Tracable> implements Synchronizer<T> {
         initSyncStamps(dataSources);
 
         Log.d(getClass().getSimpleName(), "chooseRoot:" + new Date());
-        AsyncDataSourceNode<T> root = chooseRoot(dataSources);
+        MultiDataSourceNode<T> root = chooseRoot(dataSources);
 
         Log.d(getClass().getSimpleName(), "constructTree:" + new Date());
         constructTree(root, dataSources);
@@ -74,12 +74,12 @@ public class MultiSynchronizer<T extends Tracable> implements Synchronizer<T> {
         SyncStamp singlesSyncStamp = handleSingles(root, childrenModifiedData, dataSources);
 
         Log.d(getClass().getSimpleName(), "getAllChildrenNodes:" + new Date());
-        List<AsyncDataSourceNode<T>> childrenNodes = getAllChildrenNodes(root);
+        List<MultiDataSourceNode<T>> childrenNodes = getAllChildrenNodes(root);
 
         childrenNodes.add(root);
 
         Log.d(getClass().getSimpleName(), "saveAll:" + new Date());
-        List<AsyncDataSourceNode<T>> successNodes = saveAll(childrenModifiedData, childrenNodes);
+        List<MultiDataSourceNode<T>> successNodes = saveAll(childrenModifiedData, childrenNodes);
 
         Log.d(getClass().getSimpleName(), "saveSyncStamps:" + new Date());
         SyncStamp uniteSyncStamp = getUniteSyncStamp(childrenModifiedData, singlesSyncStamp,dataSources);
@@ -102,7 +102,7 @@ public class MultiSynchronizer<T extends Tracable> implements Synchronizer<T> {
                 new Date());
     }
 
-    private SyncStamp handleSingles(AsyncDataSourceNode<T> root, List<T> childrenModifiedData, List<MultiDataSource<T>> dataSources) throws IOException {
+    private SyncStamp handleSingles(MultiDataSourceNode<T> root, List<T> childrenModifiedData, List<MultiDataSource<T>> dataSources) throws IOException {
         if (dataSources.isEmpty()) {
             return null;
         }
@@ -121,7 +121,7 @@ public class MultiSynchronizer<T extends Tracable> implements Synchronizer<T> {
                         // 保存root的全量
                         param.saveAll(rootAll, root.getDataSource().getKey());
                         // 添加到树
-                        AsyncDataSourceNode<T> node = AsyncDataSourceNode.of(param);
+                        MultiDataSourceNode<T> node = MultiDataSourceNode.of(param);
                         node.setModifiedData(result);
                         root.addChild(node);
 
@@ -133,25 +133,25 @@ public class MultiSynchronizer<T extends Tracable> implements Synchronizer<T> {
                 new Date());
     }
 
-    private List<AsyncDataSourceNode<T>> getAllChildrenNodes(AsyncDataSourceNode<T> root) {
-        List<AsyncDataSourceNode<T>> nodes = new ArrayList<>();
+    private List<MultiDataSourceNode<T>> getAllChildrenNodes(MultiDataSourceNode<T> root) {
+        List<MultiDataSourceNode<T>> nodes = new ArrayList<>();
         root.getAllChildren(nodes);
         return nodes;
     }
 
-    private void saveSyncStamps(List<AsyncDataSourceNode<T>> nodes, SyncStamp syncStamp) {
+    private void saveSyncStamps(List<MultiDataSourceNode<T>> nodes, SyncStamp syncStamp) {
         if (syncStamp == null){
             return;
         }
         SyncUtils.blockExecute(executorService,
-                new SyncUtils.ParamCallable<AsyncDataSourceNode<T>, Void>() {
+                new SyncUtils.ParamCallable<MultiDataSourceNode<T>, Void>() {
                     @Override
-                    public Void call(AsyncDataSourceNode<T> singleExecutor) throws Exception {
+                    public Void call(MultiDataSourceNode<T> singleExecutor) throws Exception {
                         MultiDataSource<T> dataSource = singleExecutor.getDataSource();
                         blockExecute(executorServiceExtra,
-                                new SyncUtils.ParamCallable<AsyncDataSourceNode<T>, Void>() {
+                                new SyncUtils.ParamCallable<MultiDataSourceNode<T>, Void>() {
                                     @Override
-                                    public Void call(AsyncDataSourceNode<T> successNode) throws Exception {
+                                    public Void call(MultiDataSourceNode<T> successNode) throws Exception {
                                         if (singleExecutor == successNode) {
                                             return null;
                                         }
@@ -184,38 +184,38 @@ public class MultiSynchronizer<T extends Tracable> implements Synchronizer<T> {
         return latestTime;
     }
 
-    private List<AsyncDataSourceNode<T>> saveAll(List<T> modifiedData, List<AsyncDataSourceNode<T>> childrenNodes) {
-        List<AsyncDataSourceNode<T>> successNodes = new ArrayList<>();
+    private List<MultiDataSourceNode<T>> saveAll(List<T> modifiedData, List<MultiDataSourceNode<T>> childrenNodes) {
+        List<MultiDataSourceNode<T>> successNodes = new ArrayList<>();
         blockExecute(executorService,
-                new SyncUtils.ParamCallable<AsyncDataSourceNode<T>, Void>() {
+                new SyncUtils.ParamCallable<MultiDataSourceNode<T>, Void>() {
                     @Override
-                    public Void call(AsyncDataSourceNode<T> singleExecutor) throws Exception {
+                    public Void call(MultiDataSourceNode<T> singleExecutor) throws Exception {
                         singleExecutor.saveData(modifiedData);
 //                        context.clearSyncState(
 //                                singleExecutor.getDataSource().getKey(),
 //                                singleExecutor.getParent().getDataSource().getKey());
                         return null;
                     }
-                }, new SyncUtils.Handler<AsyncDataSourceNode<T>, Void>() {
+                }, new SyncUtils.Handler<MultiDataSourceNode<T>, Void>() {
                     @Override
-                    public void handle(AsyncDataSourceNode<T> param, Void result) {
+                    public void handle(MultiDataSourceNode<T> param, Void result) {
                         successNodes.add(param);
                     }
                 }, null, childrenNodes);
         return successNodes;
     }
 
-    private void initModifiedDataAndRemoveInValidNodes(AsyncDataSourceNode<T> root) {
-        ArrayList<AsyncDataSourceNode<T>> allChildren = new ArrayList<AsyncDataSourceNode<T>>();
+    private void initModifiedDataAndRemoveInValidNodes(MultiDataSourceNode<T> root) {
+        ArrayList<MultiDataSourceNode<T>> allChildren = new ArrayList<MultiDataSourceNode<T>>();
         root.getAllChildren(allChildren);
         blockExecute(executorService,
-                new SyncUtils.ParamCallable<AsyncDataSourceNode<T>, Void>() {
-                    public Void call(AsyncDataSourceNode<T> singleExecutor) throws Exception {
+                new SyncUtils.ParamCallable<MultiDataSourceNode<T>, Void>() {
+                    public Void call(MultiDataSourceNode<T> singleExecutor) throws Exception {
                         singleExecutor.initModifiedData();
                         return null;
                     }
-                }, new SyncUtils.ParamCallable<AsyncDataSourceNode<T>, Void>() {
-                    public Void call(AsyncDataSourceNode<T> singleExecutor) throws Exception {
+                }, new SyncUtils.ParamCallable<MultiDataSourceNode<T>, Void>() {
+                    public Void call(MultiDataSourceNode<T> singleExecutor) throws Exception {
                         // 把子节点从树中移除
                         singleExecutor.getParent().getChildren().remove(singleExecutor);
                         singleExecutor.setParent(null);
@@ -243,10 +243,10 @@ public class MultiSynchronizer<T extends Tracable> implements Synchronizer<T> {
                 }, list);
     }
 
-    private AsyncDataSourceNode<T> chooseRoot(List<MultiDataSource<T>> dataSources) {
+    private MultiDataSourceNode<T> chooseRoot(List<MultiDataSource<T>> dataSources) {
         initSyncKeyForSync(dataSources);
         MultiDataSource<T> rootDataSource = getMaxConnectedDataSource(dataSources);
-        AsyncDataSourceNode<T> rootNode = AsyncDataSourceNode.of(rootDataSource);
+        MultiDataSourceNode<T> rootNode = MultiDataSourceNode.of(rootDataSource);
         dataSources.remove(rootDataSource);
         return rootNode;
     }
@@ -297,7 +297,7 @@ public class MultiSynchronizer<T extends Tracable> implements Synchronizer<T> {
         return count;
     }
 
-    private void constructTree(AsyncDataSourceNode<T> root, List<MultiDataSource<T>> dataSources) {
+    private void constructTree(MultiDataSourceNode<T> root, List<MultiDataSource<T>> dataSources) {
         if (dataSources == null || dataSources.isEmpty()) {
             return;
         }
@@ -305,11 +305,11 @@ public class MultiSynchronizer<T extends Tracable> implements Synchronizer<T> {
         while (iterator.hasNext()) {
             MultiDataSource<T> next = iterator.next();
             if (root.getDataSource().getKey().equals(next.getChosenKey())) {
-                root.addChild(AsyncDataSourceNode.of(next));
+                root.addChild(MultiDataSourceNode.of(next));
                 iterator.remove();
             }
         }
-        for (AsyncDataSourceNode<T> child : root.getChildren()) {
+        for (MultiDataSourceNode<T> child : root.getChildren()) {
             constructTree(child, dataSources);
         }
     }

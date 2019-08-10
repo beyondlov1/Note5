@@ -102,7 +102,7 @@ public class ReminderTimeItemDataGenerator extends AbstractItemDataGenerator<Tod
     private long getTodayTotalCount() {
         Date start = DateUtils.truncate(new Date(), Calendar.DATE);
         Date end = DateUtils.addDays(start, 1);
-        return countToday("WHERE T.TYPE = 'todo' AND " +
+        return countToday("WHERE T.TYPE = 'todo' AND T.VALID = '1' AND " +
                 "(T0.START >= " + start.getTime() + " AND T0.START <" + end.getTime() +
                 " OR T0.START IS NULL)");
     }
@@ -110,7 +110,7 @@ public class ReminderTimeItemDataGenerator extends AbstractItemDataGenerator<Tod
     private long getTodayDoneCount() {
         Date start = DateUtils.truncate(new Date(), Calendar.DATE);
         Date end = DateUtils.addDays(start, 1);
-        return countToday("WHERE T.TYPE = 'todo' AND T.READ_FLAG = '1' AND " +
+        return countToday("WHERE T.TYPE = 'todo' AND T.VALID = '1' AND T.READ_FLAG = '1' AND " +
                 "(T0.START >= " + start.getTime() + " AND T0.START <" + end.getTime() +
                 " OR T0.START IS NULL)");
     }

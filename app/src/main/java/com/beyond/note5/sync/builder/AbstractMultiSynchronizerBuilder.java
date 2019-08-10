@@ -4,7 +4,7 @@ import android.support.annotation.NonNull;
 
 import com.beyond.note5.bean.Account;
 import com.beyond.note5.bean.Tracable;
-import com.beyond.note5.sync.MultiSynchronizer;
+import com.beyond.note5.sync.DefaultMultiSynchronizer;
 import com.beyond.note5.sync.Synchronizer;
 import com.beyond.note5.sync.datasource.MultiDataSource;
 import com.beyond.note5.sync.datasource.dav.DavDataSourceProperty;
@@ -62,7 +62,7 @@ public abstract class AbstractMultiSynchronizerBuilder<T extends Tracable> {
             dataSource.init();
         }
 
-        return new MultiSynchronizer<T>(dataSources, executorService);
+        return new DefaultMultiSynchronizer<T>(dataSources, executorService);
 
     }
 

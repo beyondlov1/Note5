@@ -10,22 +10,22 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
-public class AsyncDataSourceNode<T> {
+public class MultiDataSourceNode<T> {
 
-    private AsyncDataSourceNode<T> parent;
-    private List<AsyncDataSourceNode<T>> children = new ArrayList<>();
+    private MultiDataSourceNode<T> parent;
+    private List<MultiDataSourceNode<T>> children = new ArrayList<>();
     private MultiDataSource<T> dataSource;
     private List<T> modifiedData = new ArrayList<T>();
 
 
-    public static <T> AsyncDataSourceNode<T> of(MultiDataSource<T> dataSource) {
-        AsyncDataSourceNode<T> node = new AsyncDataSourceNode<T>();
+    public static <T> MultiDataSourceNode<T> of(MultiDataSource<T> dataSource) {
+        MultiDataSourceNode<T> node = new MultiDataSourceNode<T>();
         node.setDataSource(dataSource);
         return node;
     }
 
-    public void getAllChildren(List<AsyncDataSourceNode<T>> result) {
-        for (AsyncDataSourceNode<T> child : children) {
+    public void getAllChildren(List<MultiDataSourceNode<T>> result) {
+        for (MultiDataSourceNode<T> child : children) {
             result.add(child);
             child.getAllChildren(result);
         }
@@ -33,7 +33,7 @@ public class AsyncDataSourceNode<T> {
 
     public List<T> getChildrenModifiedData() {
         List<T> childrenModifiedData = new ArrayList<T>();
-        for (AsyncDataSourceNode<T> child : children) {
+        for (MultiDataSourceNode<T> child : children) {
             childrenModifiedData.addAll(child.modifiedData);
             childrenModifiedData.addAll(child.getChildrenModifiedData());
         }
@@ -63,7 +63,7 @@ public class AsyncDataSourceNode<T> {
         }
     }
 
-    public AsyncDataSourceNode<T> addChild(AsyncDataSourceNode<T> node) {
+    public MultiDataSourceNode<T> addChild(MultiDataSourceNode<T> node) {
         node.setParent(this);
         children.add(node);
         return this;
@@ -71,13 +71,13 @@ public class AsyncDataSourceNode<T> {
 
 
 
-    public List<AsyncDataSourceNode<T>> getChildren() {
+    public List<MultiDataSourceNode<T>> getChildren() {
         return children;
     }
 
-    public void setChildren(List<AsyncDataSourceNode<T>> children) {
+    public void setChildren(List<MultiDataSourceNode<T>> children) {
         this.children = children;
-        for (AsyncDataSourceNode<T> child : children) {
+        for (MultiDataSourceNode<T> child : children) {
             child.setParent(this);
         }
     }
@@ -90,11 +90,11 @@ public class AsyncDataSourceNode<T> {
         this.dataSource = dataSource;
     }
 
-    public AsyncDataSourceNode<T> getParent() {
+    public MultiDataSourceNode<T> getParent() {
         return parent;
     }
 
-    public void setParent(AsyncDataSourceNode<T> parent) {
+    public void setParent(MultiDataSourceNode<T> parent) {
         this.parent = parent;
     }
 

@@ -2,7 +2,7 @@ package com.beyond.note5.sync.builder;
 
 import com.beyond.note5.bean.Account;
 import com.beyond.note5.bean.Tracable;
-import com.beyond.note5.sync.DefaultSynchronizer;
+import com.beyond.note5.sync.DefaultPointSynchronizer;
 import com.beyond.note5.sync.Synchronizer;
 import com.beyond.note5.sync.context.SyncContext;
 import com.beyond.note5.sync.context.SyncContextAware;
@@ -35,7 +35,7 @@ public abstract class SynchronizerBuilder<T extends Tracable> {
         }
         dataSource1.init();
         dataSource2.init();
-        return new DefaultSynchronizer<>(context,dataSource1,dataSource2, null);
+        return new DefaultPointSynchronizer<>(context,dataSource1,dataSource2, null);
     }
 
     public abstract DataSource<T> getDataSource1();
