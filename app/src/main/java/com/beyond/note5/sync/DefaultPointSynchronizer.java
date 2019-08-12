@@ -85,6 +85,7 @@ public class DefaultPointSynchronizer<T extends Tracable> implements Synchronize
             }
         } else {
             Log.d(getClass().getSimpleName(), "同步正在进行, 本次同步取消");
+            throw new MessageException("同步正在进行...");
         }
         return true;
     }

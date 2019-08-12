@@ -37,7 +37,6 @@ public class NoteSyncPresenterImpl implements SyncPresenter {
                     }catch (Exception e){
                         Log.e(getClass().getSimpleName(),"同步失败",e);
                         success = false;
-                        msg.append("同步失败:");
                         msg.append(e.getMessage());
                         msg.append("\n");
                     }

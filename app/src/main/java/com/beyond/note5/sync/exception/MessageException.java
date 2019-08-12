@@ -2,6 +2,8 @@ package com.beyond.note5.sync.exception;
 
 import com.thegrizzlylabs.sardineandroid.impl.SardineException;
 
+import org.apache.commons.lang3.StringUtils;
+
 import java.net.UnknownHostException;
 
 /**
@@ -12,12 +14,20 @@ import java.net.UnknownHostException;
 public class MessageException extends Exception {
     private Exception exception;
 
+    private String msg;
+
+    public MessageException(String msg) {
+        this.msg = msg;
+    }
     public MessageException(Exception exception) {
         this.exception = exception;
     }
 
     @Override
     public String getMessage() {
+        if (StringUtils.isNotBlank(msg)){
+            return msg;
+        }
         if (exception instanceof SaveException){
             return "保存失败["+((SaveException) exception).getKey()+"]";
         }
