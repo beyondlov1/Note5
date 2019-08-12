@@ -3,6 +3,7 @@ package com.beyond.note5.sync.datasource.dav;
 import com.beyond.note5.sync.datasource.SyncProperty;
 
 import static com.beyond.note5.MyApplication.DAV_DATA_DIR;
+import static com.beyond.note5.MyApplication.DAV_FILES_DIR;
 import static com.beyond.note5.MyApplication.DAV_LOCK_DIR;
 import static com.beyond.note5.MyApplication.DAV_STAMP_BASE_PREFIX;
 import static com.beyond.note5.MyApplication.DAV_STAMP_DIR;
@@ -24,6 +25,7 @@ public class DavDataSourceProperty extends SyncProperty{
     private boolean needExecutorService = true;
     private String latestSyncStampFileName = DAV_STAMP_LATEST_NAME;
     private String baseSyncStampFilePrefix = DAV_STAMP_BASE_PREFIX;
+    private String filesDir = DAV_FILES_DIR;
 
     public DavDataSourceProperty(String username, String password, String server) {
         this.username = username;
@@ -103,4 +105,11 @@ public class DavDataSourceProperty extends SyncProperty{
         this.needExecutorService = needExecutorService;
     }
 
+    public String getFilesDir() {
+        return filesDir;
+    }
+
+    public void setFilesDir(String filesDir) {
+        this.filesDir = filesDir;
+    }
 }

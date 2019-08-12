@@ -77,7 +77,7 @@ public class DefaultPointDavDataSource<T extends Tracable> implements DavDataSou
         this.baseSyncStampModel = new DavBaseSyncStampModel(client, property , clazz);
         this.latestSyncStampModel = new DavLatestSyncStampModel(client, property ,clazz);
         this.davPathStrategy = new UuidDavPathStrategy(property.getServer(),clazz);
-        this.lock = new DavLock(client, getLockUrl(property.getServer()));
+        this.lock = new DavLock(client, getLockUrl(property.getServer()), getKey());
         this.syncStateModel = new SyncStateModelImpl();
     }
 

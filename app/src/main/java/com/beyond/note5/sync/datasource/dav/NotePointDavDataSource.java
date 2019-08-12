@@ -40,8 +40,8 @@ public class NotePointDavDataSource extends DefaultPointDavDataSource<Note> {
 
     private String getRemoteUrl(Note note, String server, Attachment attachment) {
         return OkWebDavUtil.concat(
-                OkWebDavUtil.concat(server,getPath(note)),
-                getLocalPath(attachment).replaceFirst(MyApplication.getInstance().getFileStorageDir().getAbsolutePath(),"/files")
+                server,getPath(note),
+                getLocalPath(attachment).replaceFirst(MyApplication.getInstance().getFileStorageDir().getAbsolutePath(),"/"+property.getFilesDir())
         );
     }
 

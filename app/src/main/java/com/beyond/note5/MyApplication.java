@@ -75,6 +75,8 @@ public class MyApplication extends Application {
     public static final String DAV_STAMP_BASE_PREFIX = "BASE_STAMP_";
     public static final String DAV_STAMP_LATEST_NAME = "LATEST_STAMP";
     public static final String DAV_LOCK_DIR = "LOCK";
+    public static final String DAV_FILES_DIR = "FILES";
+
 
     // Preference Name Auto Config
     public static final String DEFAULT_PAGE = "default_page";
