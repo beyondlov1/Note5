@@ -40,7 +40,7 @@ import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 
 
-public class DefaultDavDataSource<T extends Tracable> implements DavDataSource<T> {
+public class DefaultPointDavDataSource<T extends Tracable> implements DavDataSource<T> {
 
     private DavClient client;
 
@@ -60,7 +60,7 @@ public class DefaultDavDataSource<T extends Tracable> implements DavDataSource<T
 
     protected DavDataSourceProperty property;
 
-    public DefaultDavDataSource(DavDataSourceProperty property,Class<T> clazz){
+    public DefaultPointDavDataSource(DavDataSourceProperty property, Class<T> clazz){
         this.property = property;
         this.clazz = clazz;
     }
@@ -83,7 +83,7 @@ public class DefaultDavDataSource<T extends Tracable> implements DavDataSource<T
 
     private String getLockUrl(String server) {
         String clazzUpCase = clazz.getSimpleName().toUpperCase();
-        return OkWebDavUtil.concat(server, clazzUpCase, property.getSyncStampPath(), clazzUpCase + ".lock");
+        return OkWebDavUtil.concat(server, clazzUpCase, property.getLockPath(), clazzUpCase + ".lock");
     }
 
     @Override
@@ -92,22 +92,22 @@ public class DefaultDavDataSource<T extends Tracable> implements DavDataSource<T
     }
 
     @Override
-    public void saveAll(List<T> ts, String oppositeKey) throws IOException, SaveException {
+    public void saveAll(List<T> ts, String... oppositeKeys) throws IOException, SaveException {
         if (executorService == null) {
-            singleThreadSaveAll(ts,oppositeKey);
+            singleThreadSaveAll(ts,oppositeKeys);
             return;
         }
-        multiThreadSaveAll(ts,oppositeKey);
+        multiThreadSaveAll(ts,oppositeKeys);
     }
 
-    private void multiThreadSaveAll(List<T> ts,String oppositeKey) throws SaveException {
+    private void multiThreadSaveAll(List<T> ts, String[] oppositeKeys) throws SaveException {
         mkDirForMultiThread();
         CompletionService<T> completionService = new ExecutorCompletionService<>(executorService);
         for (T t : ts) {
             completionService.submit(new Callable<T>() {
                 @Override
                 public T call() throws Exception {
-                    save(t,oppositeKey);
+                    save(t,oppositeKeys);
                     return t;
                 }
             });
@@ -141,7 +141,7 @@ public class DefaultDavDataSource<T extends Tracable> implements DavDataSource<T
         }
     }
 
-    private void singleThreadSaveAll(List<T> ts,String oppositeKey) throws SaveException {
+    private void singleThreadSaveAll(List<T> ts, String[] oppositeKey) throws SaveException {
         List<String> successIds = new ArrayList<>();
         for (T t : ts) {
             try {
@@ -154,7 +154,7 @@ public class DefaultDavDataSource<T extends Tracable> implements DavDataSource<T
         }
     }
 
-    private void save(T t ,String oppositeKey) throws IOException {
+    private void save(T t , String[] oppositeKeys) throws IOException {
         if (client.exists(getDocumentUrl(t))) {
             T remoteT = decode(client.get(getDocumentUrl(t)));
             if (t.getLastModifyTime().after(remoteT.getLastModifyTime())
@@ -165,17 +165,23 @@ public class DefaultDavDataSource<T extends Tracable> implements DavDataSource<T
             add(t);
         }
 
-        saveSuccessState(t, oppositeKey);
+        saveSuccessState(t, oppositeKeys);
     }
 
-    private void saveSuccessState(T t, String oppositeKey) {
-        SyncState syncStateInfo = SyncState.create();
-        syncStateInfo.setDocumentId(t.getId());
-        syncStateInfo.setLocal(oppositeKey);
-        syncStateInfo.setServer(getKey());
-        syncStateInfo.setState(SyncStateEnum.SUCCESS.getValue());
-        syncStateInfo.setType(clazz().getSimpleName().toLowerCase());
-        syncStateModel.save(syncStateInfo);
+    protected void saveSuccessState(T t, String[] oppositeKeys) {
+
+        List<SyncState> syncStateInfos = new ArrayList<>(oppositeKeys.length);
+        for (String oppositeKey : oppositeKeys) {
+            SyncState syncStateInfo = SyncState.create();
+            syncStateInfo.setDocumentId(t.getId());
+            syncStateInfo.setLocal(oppositeKey);
+            syncStateInfo.setServer(getKey());
+            syncStateInfo.setState(SyncStateEnum.SUCCESS.getValue());
+            syncStateInfo.setType(clazz().getSimpleName().toLowerCase());
+            syncStateInfos.add(syncStateInfo);
+        }
+
+        syncStateModel.saveAll(syncStateInfos);
     }
 
     protected void add(T t) throws IOException {

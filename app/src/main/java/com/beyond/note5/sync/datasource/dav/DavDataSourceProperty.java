@@ -102,4 +102,5 @@ public class DavDataSourceProperty extends SyncProperty{
     public void setNeedExecutorService(boolean needExecutorService) {
         this.needExecutorService = needExecutorService;
     }
+
 }

@@ -321,7 +321,7 @@ public class NotePresenterImpl implements NotePresenter {
     }
 
     @Override
-    public void addAllForSync(List<Note> addList) {
+    public void addAllForSync(List<Note> addList, String[] oppositeKeys) {
         try {
             noteModel.addAll(addList);
             addAllSuccess(addList);
@@ -364,7 +364,7 @@ public class NotePresenterImpl implements NotePresenter {
     }
 
     @Override
-    public void updateAllForSync(List<Note> updateList) {
+    public void updateAllForSync(List<Note> updateList, String[] oppositeKeys) {
         try {
             noteModel.updateAll(updateList);
             updateAllSuccess(updateList);

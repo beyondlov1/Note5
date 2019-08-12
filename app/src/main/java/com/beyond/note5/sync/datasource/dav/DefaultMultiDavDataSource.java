@@ -24,7 +24,7 @@ import static com.beyond.note5.MyApplication.DAV_STAMP_DIR;
  * @date: 2019/8/9
  */
 
-public class DefaultMultiDavDataSource<T extends Tracable> extends DefaultDavDataSource<T> implements MultiDataSource<T> {
+public class DefaultMultiDavDataSource<T extends Tracable> extends DefaultPointDavDataSource<T> implements MultiDataSource<T> {
 
     private String chosenKey;
 

@@ -30,16 +30,16 @@ public class SyncStateModelImpl implements SyncStateModel {
 
     @Override
     public void save(SyncState syncState) {
-       SyncState foundState = dao.queryBuilder()
+        SyncState foundState = dao.queryBuilder()
                 .where(SyncStateDao.Properties.DocumentId.eq(syncState.getDocumentId()))
                 .unique();
 
-       if (foundState!=null){
-           syncState.setId(foundState.getId());
-           update(syncState);
-       }else {
-           add(syncState);
-       }
+        if (foundState != null) {
+            syncState.setId(foundState.getId());
+            update(syncState);
+        } else {
+            add(syncState);
+        }
 
     }
 
@@ -58,13 +58,13 @@ public class SyncStateModelImpl implements SyncStateModel {
         for (SyncState successSyncState : successSyncStates) {
             boolean found = false;
             for (SyncState foundStateInfo : list) {
-                if (StringUtils.equals(successSyncState.getDocumentId(),foundStateInfo.getDocumentId())){
+                if (StringUtils.equals(successSyncState.getDocumentId(), foundStateInfo.getDocumentId())) {
                     successSyncState.setId(foundStateInfo.getId());
                     updateList.add(successSyncState);
                     found = true;
                 }
             }
-            if (!found){
+            if (!found) {
                 addList.add(successSyncState);
             }
         }
@@ -76,6 +76,9 @@ public class SyncStateModelImpl implements SyncStateModel {
     @Override
     public List<SyncState> findAll(SyncState syncState) {
         QueryBuilder<SyncState> queryBuilder = dao.queryBuilder();
+        if (syncState == null) {
+            return queryBuilder.list();
+        }
         if (syncState.getId() != null) {
             queryBuilder.where(SyncStateDao.Properties.Id.eq(syncState.getId()));
         }
@@ -103,11 +106,27 @@ public class SyncStateModelImpl implements SyncStateModel {
 
     @Override
     public void deleteAll(SyncState queryState) {
-        List<SyncState> list = dao.queryBuilder()
-                .where(SyncStateDao.Properties.Local.eq(queryState.getLocal()))
-                .where(SyncStateDao.Properties.Server.eq(queryState.getServer()))
-                .where(SyncStateDao.Properties.Type.eq(queryState.getType()))
-                .list();
+        QueryBuilder<SyncState> builder = dao.queryBuilder();
+        if (queryState.getLocal() != null) {
+            builder.where(SyncStateDao.Properties.Local.eq(queryState.getLocal()));
+        }
+        if (queryState.getServer() != null) {
+            builder.where(SyncStateDao.Properties.Server.eq(queryState.getServer()));
+        }
+        if (queryState.getType() != null) {
+            builder.where(SyncStateDao.Properties.Type.eq(queryState.getType()));
+        }
+        List<SyncState> list = builder.list();
+        dao.deleteInTx(list);
+    }
+
+    @Override
+    public void deleteConnectedEachOtherIn(List<String> keys, Class clazz) {
+        QueryBuilder<SyncState> builder = dao.queryBuilder();
+        builder.where(SyncStateDao.Properties.Local.in(keys));
+        builder.where(SyncStateDao.Properties.Server.in(keys));
+        builder.where(SyncStateDao.Properties.Type.eq(clazz.getSimpleName().toLowerCase()));
+        List<SyncState> list = builder.list();
         dao.deleteInTx(list);
     }
 }

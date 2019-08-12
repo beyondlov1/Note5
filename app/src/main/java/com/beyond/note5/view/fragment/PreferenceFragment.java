@@ -1,6 +1,7 @@
 package com.beyond.note5.view.fragment;
 
 import android.os.Bundle;
+import android.support.v7.preference.Preference;
 import android.support.v7.preference.PreferenceFragmentCompat;
 
 import com.beyond.note5.MyApplication;
@@ -17,6 +18,14 @@ public class PreferenceFragment extends PreferenceFragmentCompat {
     public void onCreatePreferences(Bundle savedInstanceState, String rootKey) {
         getPreferenceManager().setSharedPreferencesName(MyApplication.SHARED_PREFERENCES_NAME);
         addPreferencesFromResource(R.xml.app_preferences);
-    }
 
+        findPreference(MyApplication.SYNC_STRATEGY).setOnPreferenceChangeListener(new Preference.OnPreferenceChangeListener() {
+            @Override
+            public boolean onPreferenceChange(Preference preference, Object newValue) {
+                    MyApplication.getInstance().refreshSynchronizers(newValue.toString());
+                    return true;
+            }
+        });
+
+    }
 }

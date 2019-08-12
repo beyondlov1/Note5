@@ -54,7 +54,7 @@ public abstract class DocumentSqlDataSource<T extends Document> implements SqlDa
     }
 
     @Override
-    public void saveAll(List<T> ts, String oppositeKey) throws IOException {
+    public void saveAll(List<T> ts, String... oppositeKeys) throws IOException {
         Map<String, T> map = new HashMap<>(ts.size());
         for (T t : ts) {
             map.put(t.getId(), t);
@@ -79,8 +79,8 @@ public abstract class DocumentSqlDataSource<T extends Document> implements SqlDa
                 addList.add(map.get(id));
             }
         }
-        documentPresenter.addAllForSync(addList, oppositeKey);
-        documentPresenter.updateAllForSync(updateList, oppositeKey);
+        documentPresenter.addAllForSync(addList, oppositeKeys);
+        documentPresenter.updateAllForSync(updateList, oppositeKeys);
     }
 
     @Override

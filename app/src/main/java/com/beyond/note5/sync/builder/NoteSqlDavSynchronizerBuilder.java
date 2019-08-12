@@ -4,7 +4,7 @@ import com.beyond.note5.bean.Account;
 import com.beyond.note5.bean.Note;
 import com.beyond.note5.sync.datasource.DataSource;
 import com.beyond.note5.sync.datasource.dav.DavDataSourceProperty;
-import com.beyond.note5.sync.datasource.dav.NoteDavDataSource;
+import com.beyond.note5.sync.datasource.dav.NotePointDavDataSource;
 import com.beyond.note5.sync.datasource.sql.NoteSqlDataSourceWrap;
 import com.beyond.note5.utils.OkWebDavUtil;
 
@@ -15,7 +15,7 @@ import static com.beyond.note5.MyApplication.DAV_ROOT_DIR;
  * @date: 2019/8/3
  */
 
-public class NoteSqlDavSynchronizerBuilder extends SynchronizerBuilder<Note> {
+public class NoteSqlDavSynchronizerBuilder extends AbstractPointSynchronizerBuilder<Note> {
 
 
     public NoteSqlDavSynchronizerBuilder(Account account) {
@@ -53,6 +53,6 @@ public class NoteSqlDavSynchronizerBuilder extends SynchronizerBuilder<Note> {
         }
         property.setNeedExecutorService(needExecutor);
 
-        return new NoteDavDataSource(property,Note.class);
+        return new NotePointDavDataSource(property,Note.class);
     }
 }

@@ -85,4 +85,15 @@ public class SyncState {
     }
 
 
+    @Override
+    public String toString() {
+        return "SyncState{" +
+                "id='" + id + '\'' +
+                ", documentId='" + documentId + '\'' +
+                ", local='" + local + '\'' +
+                ", server='" + server + '\'' +
+                ", type='" + type + '\'' +
+                ", state=" + state +
+                '}';
+    }
 }

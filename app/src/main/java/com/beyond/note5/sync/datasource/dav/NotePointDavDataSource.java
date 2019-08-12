@@ -11,10 +11,10 @@ import java.io.File;
 import java.io.IOException;
 import java.util.List;
 
-public class NoteDavDataSource extends DefaultDavDataSource<Note> {
+public class NotePointDavDataSource extends DefaultPointDavDataSource<Note> {
 
 
-    public NoteDavDataSource(DavDataSourceProperty property, Class<Note> clazz) {
+    public NotePointDavDataSource(DavDataSourceProperty property, Class<Note> clazz) {
         super(property, clazz);
     }
 

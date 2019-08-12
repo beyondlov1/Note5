@@ -16,4 +16,6 @@ public interface SyncStateModel {
     List<SyncState> findAll(SyncState syncState);
 
     void deleteAll(SyncState queryState);
+
+    void deleteConnectedEachOtherIn(List<String> keys, Class clazz);
 }

@@ -29,8 +29,8 @@ public class NoteSqlDataSourceWrap extends NoteSqlDataSource implements SyncCont
     }
 
     @Override
-    public void saveAll(List<Note> notes, String oppositeKey) throws IOException {
-        super.saveAll(notes, oppositeKey);
+    public void saveAll(List<Note> notes, String... oppositeKeys) throws IOException {
+        super.saveAll(notes, oppositeKeys);
 
         if (getDavDataSource() == null) {
             return;

@@ -2,9 +2,15 @@ package com.beyond.note5.sync;
 
 import android.util.Log;
 
+import com.beyond.note5.MyApplication;
 import com.beyond.note5.bean.Tracable;
+import com.beyond.note5.service.SyncRetryService;
+import com.beyond.note5.sync.context.entity.SyncState;
+import com.beyond.note5.sync.context.model.SyncStateModel;
+import com.beyond.note5.sync.context.model.SyncStateModelImpl;
 import com.beyond.note5.sync.datasource.MultiDataSource;
 import com.beyond.note5.sync.datasource.entity.SyncStamp;
+import com.beyond.note5.sync.exception.MessageException;
 import com.beyond.note5.sync.exception.SaveException;
 
 import java.io.IOException;
@@ -14,10 +20,13 @@ import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Random;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantLock;
 
 import static com.beyond.note5.MyApplication.CPU_COUNT;
 import static com.beyond.note5.sync.SyncUtils.blockExecute;
@@ -29,13 +38,18 @@ import static com.beyond.note5.sync.SyncUtils.blockExecute;
 //TODO: STATE
 public class DefaultMultiSynchronizer<T extends Tracable> implements Synchronizer<T> {
 
+    private long remoteLockTimeOutMills = 30 * 60000L; // 30min
+    private Lock lock;
+
     private List<MultiDataSource<T>> dataSources;
 
     private ExecutorService executorService;
 
+    private String[] dataSourceKeys;
+
     private ExecutorService executorServiceExtra;  // 防止多线程嵌套时死锁
 
-//    private MultiSyncContext context;
+    private final SyncStateModel syncStateModel;
 
     private Date syncTimeStart;
 
@@ -46,10 +60,48 @@ public class DefaultMultiSynchronizer<T extends Tracable> implements Synchronize
                 CPU_COUNT*2+1, 60,
                 60, TimeUnit.SECONDS,
                 new LinkedBlockingQueue<>());
+        this.lock = new ReentrantLock();
+        ArrayList<String> keyList = new ArrayList<>(dataSources.size());
+        for (MultiDataSource<T> dataSource : dataSources) {
+            keyList.add(dataSource.getKey());
+        }
+        this.dataSourceKeys = keyList.toArray(new String[0]);
+        this.syncStateModel = new SyncStateModelImpl();
     }
 
     @Override
     public boolean sync() throws Exception {
+        if (lock.tryLock()) {
+            try {
+                Log.d(getClass().getSimpleName(), "同步开始");
+                doSync();
+                Log.d(getClass().getSimpleName(), "同步成功");
+            } catch (Exception e) {
+                long delay = (new Random().nextInt(20) + 35) * 60 * 1000;
+                retryIfNecessary(delay);
+                Log.e(getClass().getSimpleName(), "同步失败", e);
+                e.printStackTrace();
+                throw new MessageException(e);
+            } finally {
+                lock.unlock();
+            }
+        } else {
+            Log.d(getClass().getSimpleName(), "同步正在进行, 本次同步取消");
+        }
+        return true;
+    }
+
+    private void retryIfNecessary(long delay) {
+        SyncRetryService.retryIfNecessary(MyApplication.getInstance(), delay);
+        SyncRetryService.addFailCount();
+    }
+
+    private void doSync() throws Exception {
+
+        if (!remoteLock()){
+            releaseLock();
+            return;
+        }
 
         syncTimeStart = new Date();
 
@@ -85,8 +137,82 @@ public class DefaultMultiSynchronizer<T extends Tracable> implements Synchronize
         SyncStamp uniteSyncStamp = getUniteSyncStamp(childrenModifiedData, singlesSyncStamp,dataSources);
         saveSyncStamps(successNodes, uniteSyncStamp);
 
+        List<SyncState> beforeClear = syncStateModel.findAll(null);
+        System.out.println(beforeClear);
+
+        Log.d(getClass().getSimpleName(), "clearSyncState:" + new Date());
+        clearSyncState(successNodes, root);
+
+        List<SyncState> afterClear = syncStateModel.findAll(null);
+        System.out.println(afterClear);
+
         Log.d(getClass().getSimpleName(), "end:" + new Date());
-        return true;
+
+        releaseLock();
+    }
+
+    private void clearSyncState(List<MultiDataSourceNode<T>> successNodes,MultiDataSourceNode<T> root) {
+
+        if (dataSources == null || dataSources.isEmpty()){
+            return;
+        }
+
+        List<MultiDataSource<T>> successDataSources = extract(successNodes);
+
+        ArrayList<MultiDataSourceNode<T>> allConnectedNodes = new ArrayList<>();
+        root.getAllChildren(allConnectedNodes);
+        List<MultiDataSource<T>> allConnectedDataSource = extract(allConnectedNodes);
+
+        ArrayList<MultiDataSource<T>> inValidDataSource = new ArrayList<>(dataSources);
+        inValidDataSource.removeAll(allConnectedDataSource);
+
+        List<MultiDataSource<T>> nonRecordDataSource = new ArrayList<>(successDataSources);
+        nonRecordDataSource.addAll(inValidDataSource);
+
+        List<String> keys = new ArrayList<>(nonRecordDataSource.size());
+        for (MultiDataSource<T> dataSource : nonRecordDataSource) {
+            keys.add(dataSource.getKey());
+        }
+
+        syncStateModel.deleteConnectedEachOtherIn(keys,dataSources.get(0).clazz());
+    }
+
+    private List<MultiDataSource<T>>  extract(List<MultiDataSourceNode<T>> nodes){
+        List<MultiDataSource<T>> dataSources = new ArrayList<>(nodes.size());
+        for (MultiDataSourceNode<T> node : nodes) {
+            dataSources.add(node.getDataSource());
+        }
+        return dataSources;
+    }
+
+    private void releaseLock() {
+        blockExecute(executorService,
+                new SyncUtils.ParamCallable<MultiDataSource<T>, Void>() {
+                    @Override
+                    public Void call(MultiDataSource<T> singleExecutor) throws Exception {
+                        singleExecutor.release();
+                        return null;
+                    }
+                },null,
+                dataSources);
+    }
+
+    private boolean remoteLock() {
+        final boolean[] locked = {true};
+        blockExecute(executorService,
+                new SyncUtils.ParamCallable<MultiDataSource<T>, Boolean>() {
+                    @Override
+                    public Boolean call(MultiDataSource<T> singleExecutor) throws Exception {
+                        return singleExecutor.tryLock(remoteLockTimeOutMills);
+                    }
+                }, new SyncUtils.Handler<MultiDataSource<T>, Boolean>() {
+                    @Override
+                    public void handle(MultiDataSource<T> param, Boolean result) throws IOException, SaveException {
+                        locked[0] = result && locked[0];
+                    }
+                },null,
+                dataSources);
+        return locked[0];
     }
 
     private SyncStamp getUniteSyncStamp(List<T> childrenModifiedData, SyncStamp singlesSyncStamp, List<MultiDataSource<T>> dataSources) {
@@ -119,7 +245,7 @@ public class DefaultMultiSynchronizer<T extends Tracable> implements Synchronize
                         result.removeAll(rootAll);
                         childrenModifiedData.addAll(result);
                         // 保存root的全量
-                        param.saveAll(rootAll, root.getDataSource().getKey());
+                        param.saveAll(rootAll,dataSourceKeys);
                         // 添加到树
                         MultiDataSourceNode<T> node = MultiDataSourceNode.of(param);
                         node.setModifiedData(result);
@@ -190,10 +316,7 @@ public class DefaultMultiSynchronizer<T extends Tracable> implements Synchronize
                 new SyncUtils.ParamCallable<MultiDataSourceNode<T>, Void>() {
                     @Override
                     public Void call(MultiDataSourceNode<T> singleExecutor) throws Exception {
-                        singleExecutor.saveData(modifiedData);
-//                        context.clearSyncState(
-//                                singleExecutor.getDataSource().getKey(),
-//                                singleExecutor.getParent().getDataSource().getKey());
+                        singleExecutor.saveData(modifiedData,dataSourceKeys);
                         return null;
                     }
                 }, new SyncUtils.Handler<MultiDataSourceNode<T>, Void>() {

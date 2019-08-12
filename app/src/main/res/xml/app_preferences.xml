@@ -12,6 +12,14 @@
 
         </PreferenceScreen>
 
+        <android.support.v7.preference.ListPreference
+            android:key= "sync.strategy"
+            android:entries = "@array/sync_strategy_name"
+            android:entryValues = "@array/sync_strategy_value"
+            android:summary="账号多于3个, 建议用多点同步"
+            android:defaultValue="point"
+            android:title="同步策略" />
+
         <android.support.v7.preference.SwitchPreferenceCompat
             android:defaultValue="true"
             android:key="sync.schedule.enabled"

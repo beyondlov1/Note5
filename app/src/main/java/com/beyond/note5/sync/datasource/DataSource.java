@@ -16,7 +16,7 @@ public interface DataSource<T> extends Lock {
 
     String getKey();
 
-    void saveAll(List<T> tList, String oppositeKey) throws IOException, SaveException;
+    void saveAll(List<T> tList, String... oppositeKeys) throws IOException, SaveException;
 
     List<T> selectAll() throws IOException, ExecutionException, InterruptedException;
 

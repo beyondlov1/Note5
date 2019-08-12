@@ -28,8 +28,11 @@ import com.beyond.note5.service.schedule.ScheduleReceiver;
 import com.beyond.note5.service.schedule.callback.SyncScheduleCallback;
 import com.beyond.note5.service.schedule.utils.ScheduleUtil;
 import com.beyond.note5.sync.Synchronizer;
+import com.beyond.note5.sync.builder.AbstractPointSynchronizerBuilder;
 import com.beyond.note5.sync.builder.NoteMultiSynchronizerBuilder;
+import com.beyond.note5.sync.builder.NoteSqlDavSynchronizerBuilder;
 import com.beyond.note5.sync.builder.TodoMultiSynchronizerBuilder;
+import com.beyond.note5.sync.builder.TodoSqlDavSynchronizerBuilder;
 import com.beyond.note5.utils.IDUtil;
 import com.beyond.note5.utils.PreferenceUtil;
 import com.beyond.note5.utils.ToastUtil;
@@ -86,6 +89,7 @@ public class MyApplication extends Application {
     public static final String NOTE_SHOULD_EDIT_MARKDOWN_JUST_IN_TIME = "todo.markdown.edit.render.jit.enabled";
     public static final String TODO_SHOULD_TRAIN = "todo.train.enabled";
     public static final String FLOAT_BUTTON_SHOULD_SHOW = "float.button.enabled";
+    public static final String SYNC_STRATEGY = "sync.strategy";
 
     private static MyApplication instance;
 
@@ -185,8 +189,12 @@ public class MyApplication extends Application {
         }
     }
 
-    @SuppressWarnings("unchecked")
     private void initSynchronizer() {
+        initSynchronizer(PreferenceUtil.getString(SYNC_STRATEGY));
+    }
+
+    @SuppressWarnings("unchecked")
+    private void initSynchronizer(String syncStrategy) {
 
         accountModel = new AccountModelImpl();
         List<Account> accounts = accountModel.findAllValid();
@@ -198,30 +206,31 @@ public class MyApplication extends Application {
         noteSynchronizers = new ArrayList<>();
         todoSynchronizers = new ArrayList<>();
 
-        /**
-         * heap
-         */
-        NoteMultiSynchronizerBuilder noteSyncBuilder = new NoteMultiSynchronizerBuilder(accounts);
-        Synchronizer<Note> noteMultiSynchronizer = noteSyncBuilder.build();
-        noteSynchronizers.add(noteMultiSynchronizer);
+        if (Synchronizer.SYNC_STRATEGY_MULTI.equals(syncStrategy)){
+            /**
+             * heap
+             */
+            NoteMultiSynchronizerBuilder noteSyncBuilder = new NoteMultiSynchronizerBuilder(accounts);
+            Synchronizer<Note> noteMultiSynchronizer = noteSyncBuilder.build();
+            noteSynchronizers.add(noteMultiSynchronizer);
 
-        TodoMultiSynchronizerBuilder todoSyncBuilder = new TodoMultiSynchronizerBuilder(accounts);
-        Synchronizer<Todo> todoMultiSynchronizer = todoSyncBuilder.build();
-        todoSynchronizers.add(todoMultiSynchronizer);
+            TodoMultiSynchronizerBuilder todoSyncBuilder = new TodoMultiSynchronizerBuilder(accounts);
+            Synchronizer<Todo> todoMultiSynchronizer = todoSyncBuilder.build();
+            todoSynchronizers.add(todoMultiSynchronizer);
+        }else {
+            /**
+             * one to one
+             */
+            for (Account account : accounts) {
+                AbstractPointSynchronizerBuilder<Note> noteSynchronizerBuilder =
+                        new NoteSqlDavSynchronizerBuilder(account);
+                noteSynchronizers.add(noteSynchronizerBuilder.build());
 
-
-        /**
-         * one to one
-         */
-//        for (Account account : accounts) {
-//            SynchronizerBuilder<Note> noteSynchronizerBuilder =
-//                    new NoteSqlDavSynchronizerBuilder(account);
-//            noteSynchronizers.add(noteSynchronizerBuilder.build());
-//
-//            SynchronizerBuilder<Todo> todoSynchronizerBuilder =
-//                    new TodoSqlDavSynchronizerBuilder(account);
-//            todoSynchronizers.add(todoSynchronizerBuilder.build());
-//        }
+                AbstractPointSynchronizerBuilder<Todo> todoSynchronizerBuilder =
+                        new TodoSqlDavSynchronizerBuilder(account);
+                todoSynchronizers.add(todoSynchronizerBuilder.build());
+            }
+        }
 
     }
 
@@ -342,6 +351,15 @@ public class MyApplication extends Application {
 
     public void refreshSynchronizers() {
         initSynchronizer();
+    }
+
+    public void refreshSynchronizers(String syncStrategy) {
+        try {
+            initSynchronizer(syncStrategy);
+        }catch (Exception e){
+            Log.e(getClass().getSimpleName(),"同步初始化失败");
+            ToastUtil.toast(this,"同步初始化失败");
+        }
     }
 
     public List<Synchronizer<Note>> getNoteSynchronizers() {

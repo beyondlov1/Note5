@@ -43,24 +43,19 @@ public class MultiDataSourceNode<T> {
     public void initModifiedData() throws IOException {
         MultiDataSource<T> parentDataSource = parent.getDataSource();
         SyncStamp lastSyncStamp = this.dataSource.getLastSyncStamp(parentDataSource);
-        if (this.dataSource.isChanged(parentDataSource)){
-            modifiedData = this.dataSource.getChangedData(lastSyncStamp,parentDataSource);
+        if (this.dataSource.isChanged(parentDataSource)) {
+            modifiedData = this.dataSource.getChangedData(lastSyncStamp, parentDataSource);
         }
     }
 
-    public void saveData(List<T> data) throws IOException, SaveException {
+    public void saveData(List<T> data, String... oppositeKeys) throws IOException, SaveException {
         Set<T> notMineData = new HashSet<>(data);
         notMineData.removeAll(modifiedData);
-        if (notMineData.isEmpty()){
+        if (notMineData.isEmpty()) {
             return;
         }
 
-        if (getParent() != null){
-            dataSource.saveAll(new ArrayList<>(notMineData), getParent().getDataSource().getKey());
-        }else {
-            // FIXME: 这里会影响 State 的保存, 暂时还不知道用谁的key比较好
-            dataSource.saveAll(new ArrayList<>(notMineData), null);
-        }
+        dataSource.saveAll(new ArrayList<>(notMineData), oppositeKeys);
     }
 
     public MultiDataSourceNode<T> addChild(MultiDataSourceNode<T> node) {
@@ -68,7 +63,6 @@ public class MultiDataSourceNode<T> {
         children.add(node);
         return this;
     }
-
 
 
     public List<MultiDataSourceNode<T>> getChildren() {

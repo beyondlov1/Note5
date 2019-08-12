@@ -14,10 +14,10 @@ import com.beyond.note5.sync.datasource.DataSource;
  * @date: 2019/8/3
  */
 
-public abstract class SynchronizerBuilder<T extends Tracable> {
+public abstract class AbstractPointSynchronizerBuilder<T extends Tracable> {
     protected Account account;
 
-    public SynchronizerBuilder(Account account) {
+    public AbstractPointSynchronizerBuilder(Account account) {
         this.account = account;
     }
 

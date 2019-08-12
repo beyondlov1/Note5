@@ -89,7 +89,7 @@ public class TodoPresenterImpl implements TodoPresenter {
     }
 
     @Override
-    public void addAllForSync(List<Todo> addList) {
+    public void addAllForSync(List<Todo> addList, String[] oppositeKeys) {
         try {
             todoModel.addAll(addList);
             addAllSuccess(addList);
@@ -126,7 +126,7 @@ public class TodoPresenterImpl implements TodoPresenter {
     }
 
     @Override
-    public void updateAllForSync(List<Todo> updateList) {
+    public void updateAllForSync(List<Todo> updateList, String[] oppositeKeys) {
         try {
             todoModel.updateAll(updateList);
             updateAllSuccess(updateList);
