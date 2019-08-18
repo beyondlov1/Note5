@@ -91,17 +91,7 @@ public class DefaultMultiSynchronizer<T extends Tracable> implements Synchronize
         return true;
     }
 
-    private void retryIfNecessary(long delay) {
-        SyncRetryService.retryIfNecessary(MyApplication.getInstance(), delay);
-        SyncRetryService.addFailCount();
-    }
-
     private void doSync() throws Exception {
-
-        if (!remoteLock()){
-            releaseLock();
-            return;
-        }
 
         syncTimeStart = new Date();
 
@@ -121,6 +111,11 @@ public class DefaultMultiSynchronizer<T extends Tracable> implements Synchronize
 
         Log.d(getClass().getSimpleName(), "getChildrenModifiedData:" + new Date());
         List<T> childrenModifiedData = root.getChildrenModifiedData();
+
+        if (childrenModifiedData.isEmpty()&&!remoteLock()){
+            releaseLock();
+            return;
+        }
 
         Log.d(getClass().getSimpleName(), "handleSingles:" + new Date());
         SyncStamp singlesSyncStamp = handleSingles(root, childrenModifiedData, dataSources);
@@ -149,6 +144,11 @@ public class DefaultMultiSynchronizer<T extends Tracable> implements Synchronize
         Log.d(getClass().getSimpleName(), "end:" + new Date());
 
         releaseLock();
+    }
+
+    private void retryIfNecessary(long delay) {
+        SyncRetryService.retryIfNecessary(MyApplication.getInstance(), delay);
+        SyncRetryService.addFailCount();
     }
 
     private void clearSyncState(List<MultiDataSourceNode<T>> successNodes,MultiDataSourceNode<T> root) {
