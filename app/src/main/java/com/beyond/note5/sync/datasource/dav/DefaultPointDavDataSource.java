@@ -3,8 +3,6 @@ package com.beyond.note5.sync.datasource.dav;
 import android.support.annotation.NonNull;
 import android.util.Log;
 
-import com.alibaba.fastjson.JSONException;
-import com.alibaba.fastjson.JSONObject;
 import com.beyond.note5.bean.Tracable;
 import com.beyond.note5.sync.context.entity.SyncState;
 import com.beyond.note5.sync.context.model.SyncStateEnum;
@@ -14,6 +12,8 @@ import com.beyond.note5.sync.datasource.DataSource;
 import com.beyond.note5.sync.datasource.SyncStampModel;
 import com.beyond.note5.sync.datasource.entity.SyncStamp;
 import com.beyond.note5.sync.exception.SaveException;
+import com.beyond.note5.sync.utils.JsonSerializer;
+import com.beyond.note5.sync.utils.Serializer;
 import com.beyond.note5.sync.webdav.DavLock;
 import com.beyond.note5.sync.webdav.Lock;
 import com.beyond.note5.sync.webdav.client.AfterModifiedTimeDavFilter;
@@ -25,7 +25,6 @@ import com.beyond.note5.utils.OkWebDavUtil;
 import org.apache.commons.lang3.time.DateUtils;
 
 import java.io.IOException;
-import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
@@ -56,29 +55,32 @@ public class DefaultPointDavDataSource<T extends Tracable> implements DavDataSou
 
     private SyncStateModel syncStateModel;
 
+    private Serializer<String, T> serializer;
+
     protected Class<T> clazz;
 
     protected DavDataSourceProperty property;
 
-    public DefaultPointDavDataSource(DavDataSourceProperty property, Class<T> clazz){
+    public DefaultPointDavDataSource(DavDataSourceProperty property, Class<T> clazz) {
         this.property = property;
         this.clazz = clazz;
     }
 
     @Override
     public void init() {
-        this.client = new SardineDavClient(property.getUsername(),property.getPassword());
-        if (property.isNeedExecutorService()){
-            executorService  = new ThreadPoolExecutor(
+        this.client = new SardineDavClient(property.getUsername(), property.getPassword());
+        if (property.isNeedExecutorService()) {
+            executorService = new ThreadPoolExecutor(
                     17, 60,
                     60, TimeUnit.SECONDS,
                     new LinkedBlockingQueue<>());
         }
-        this.baseSyncStampModel = new DavBaseSyncStampModel(client, property , clazz);
-        this.latestSyncStampModel = new DavLatestSyncStampModel(client, property ,clazz);
-        this.davPathStrategy = new UuidDavPathStrategy(property.getServer(),clazz);
+        this.baseSyncStampModel = new DavBaseSyncStampModel(client, property, clazz);
+        this.latestSyncStampModel = new DavLatestSyncStampModel(client, property, clazz);
+        this.davPathStrategy = new UuidDavPathStrategy(property.getServer(), clazz);
         this.lock = new DavLock(client, getLockUrl(property.getServer()), getKey());
         this.syncStateModel = new SyncStateModelImpl();
+        this.serializer = new JsonSerializer<>(clazz);
     }
 
     private String getLockUrl(String server) {
@@ -94,10 +96,10 @@ public class DefaultPointDavDataSource<T extends Tracable> implements DavDataSou
     @Override
     public void saveAll(List<T> ts, String... oppositeKeys) throws IOException, SaveException {
         if (executorService == null) {
-            singleThreadSaveAll(ts,oppositeKeys);
+            singleThreadSaveAll(ts, oppositeKeys);
             return;
         }
-        multiThreadSaveAll(ts,oppositeKeys);
+        multiThreadSaveAll(ts, oppositeKeys);
     }
 
     private void multiThreadSaveAll(List<T> ts, String[] oppositeKeys) throws SaveException {
@@ -107,7 +109,7 @@ public class DefaultPointDavDataSource<T extends Tracable> implements DavDataSou
             completionService.submit(new Callable<T>() {
                 @Override
                 public T call() throws Exception {
-                    save(t,oppositeKeys);
+                    save(t, oppositeKeys);
                     return t;
                 }
             });
@@ -145,7 +147,7 @@ public class DefaultPointDavDataSource<T extends Tracable> implements DavDataSou
         List<String> successIds = new ArrayList<>();
         for (T t : ts) {
             try {
-                save(t,oppositeKey);
+                save(t, oppositeKey);
                 successIds.add(t.getId());
             } catch (Exception e) {
                 Log.e(getClass().getSimpleName(), "save失败", e);
@@ -154,7 +156,7 @@ public class DefaultPointDavDataSource<T extends Tracable> implements DavDataSou
         }
     }
 
-    private void save(T t , String[] oppositeKeys) throws IOException {
+    private void save(T t, String[] oppositeKeys) throws IOException {
         if (client.exists(getDocumentUrl(t))) {
             T remoteT = decode(client.get(getDocumentUrl(t)));
             if (t.getLastModifyTime().after(remoteT.getLastModifyTime())
@@ -309,7 +311,7 @@ public class DefaultPointDavDataSource<T extends Tracable> implements DavDataSou
 
     @Override
     public void updateLastSyncStamp(SyncStamp syncStamp, DataSource<T> targetDataSource) throws IOException {
-        baseSyncStampModel.update(syncStamp,targetDataSource.getKey());
+        baseSyncStampModel.update(syncStamp, targetDataSource.getKey());
     }
 
     @Override
@@ -319,7 +321,7 @@ public class DefaultPointDavDataSource<T extends Tracable> implements DavDataSou
 
     @Override
     public void updateLatestSyncStamp(SyncStamp syncStamp) throws IOException {
-        latestSyncStampModel.update(syncStamp,null);
+        latestSyncStampModel.update(syncStamp, null);
     }
 
     private String getDocumentUrl(T t) {
@@ -335,20 +337,12 @@ public class DefaultPointDavDataSource<T extends Tracable> implements DavDataSou
     }
 
     private String encode(T t) {
-        return JSONObject.toJSONString(t);
+        return serializer.encode(t);
     }
 
     private T decode(String target) {
-        if (target == null) {
-            return null;
-        }
-        try {
-            return JSONObject.parseObject(target, (Type) clazz);
-        } catch (JSONException e) {
-            return null;
-        }
+        return serializer.decode(target);
     }
-
 
     @Override
     public boolean tryLock(Long time) {

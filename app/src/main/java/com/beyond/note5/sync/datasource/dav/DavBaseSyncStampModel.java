@@ -1,6 +1,6 @@
 package com.beyond.note5.sync.datasource.dav;
 
-import com.beyond.note5.sync.SyncUtils;
+import com.beyond.note5.sync.utils.SyncUtils;
 import com.beyond.note5.sync.datasource.entity.SyncStamp;
 import com.beyond.note5.sync.webdav.client.DavClient;
 import com.beyond.note5.utils.OkWebDavUtil;

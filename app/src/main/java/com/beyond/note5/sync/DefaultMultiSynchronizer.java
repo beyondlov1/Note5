@@ -12,6 +12,7 @@ import com.beyond.note5.sync.datasource.MultiDataSource;
 import com.beyond.note5.sync.datasource.entity.SyncStamp;
 import com.beyond.note5.sync.exception.MessageException;
 import com.beyond.note5.sync.exception.SaveException;
+import com.beyond.note5.sync.utils.SyncUtils;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -29,7 +30,7 @@ import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 
 import static com.beyond.note5.MyApplication.CPU_COUNT;
-import static com.beyond.note5.sync.SyncUtils.blockExecute;
+import static com.beyond.note5.sync.utils.SyncUtils.blockExecute;
 
 /**
  * @author: beyond
@@ -186,6 +187,10 @@ public class DefaultMultiSynchronizer<T extends Tracable> implements Synchronize
     }
 
     private void releaseLock() {
+        releaseLock(dataSources);
+    }
+
+    private void releaseLock(List<MultiDataSource<T>> dataSources) {
         blockExecute(executorService,
                 new SyncUtils.ParamCallable<MultiDataSource<T>, Void>() {
                     @Override
@@ -198,6 +203,9 @@ public class DefaultMultiSynchronizer<T extends Tracable> implements Synchronize
     }
 
     private boolean remoteLock() {
+        return remoteLock(dataSources);
+    }
+    private boolean remoteLock(List<MultiDataSource<T>> dataSources) {
         final boolean[] locked = {true};
         blockExecute(executorService,
                 new SyncUtils.ParamCallable<MultiDataSource<T>, Boolean>() {
@@ -231,6 +239,12 @@ public class DefaultMultiSynchronizer<T extends Tracable> implements Synchronize
     private SyncStamp handleSingles(MultiDataSourceNode<T> root, List<T> childrenModifiedData, List<MultiDataSource<T>> dataSources) throws IOException {
         if (dataSources.isEmpty()) {
             return null;
+        }
+        if (childrenModifiedData.isEmpty()){
+            if (!remoteLock(dataSources)){
+                releaseLock(dataSources);
+                throw new RuntimeException("singles lock failed");
+            }
         }
         List<T> rootAll = root.getDataSource().getChangedData(SyncStamp.ZERO, null);
         SyncUtils.blockExecute(executorService

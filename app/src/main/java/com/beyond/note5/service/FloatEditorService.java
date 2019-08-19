@@ -73,7 +73,7 @@ public class FloatEditorService extends Service {
         button.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                startActivity(new Intent(getBaseContext(), FloatEditorActivity.class));
+                startActivity(new Intent(getApplicationContext(), FloatEditorActivity.class));
                 button.setVisibility(View.GONE);
             }
         });

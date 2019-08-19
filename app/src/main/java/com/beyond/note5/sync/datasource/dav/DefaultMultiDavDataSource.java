@@ -3,7 +3,7 @@ package com.beyond.note5.sync.datasource.dav;
 import com.alibaba.fastjson.JSONException;
 import com.alibaba.fastjson.JSONObject;
 import com.beyond.note5.bean.Tracable;
-import com.beyond.note5.sync.SyncUtils;
+import com.beyond.note5.sync.utils.SyncUtils;
 import com.beyond.note5.sync.datasource.MultiDataSource;
 import com.beyond.note5.sync.datasource.entity.SyncStamp;
 import com.beyond.note5.sync.webdav.client.PrefixDavFilter;
