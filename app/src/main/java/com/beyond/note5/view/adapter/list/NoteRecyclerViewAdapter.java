@@ -32,6 +32,7 @@ import com.beyond.note5.view.adapter.list.header.ItemDataGenerator;
 import com.beyond.note5.view.adapter.list.viewholder.NoteViewHolder;
 import com.beyond.note5.view.animator.svg.VectorAnimation;
 import com.beyond.note5.view.animator.svg.VectorAnimationImpl;
+import com.beyond.note5.view.custom.AutoSizeTextView;
 import com.beyond.note5.view.custom.MarkdownRenderAsyncTask;
 import com.beyond.note5.view.markdown.render.MarkdownRenders;
 
@@ -147,7 +148,9 @@ public class NoteRecyclerViewAdapter extends DocumentRecyclerViewAdapter<Note, N
 //        viewHolder.cardViewContainer.setCardElevation(4);
         FrameLayout.LayoutParams cardLp = (FrameLayout.LayoutParams) viewHolder.cardViewContainer.getLayoutParams();
         if (shouldFullSpan) {
-            cardLp.setMargins(20,15,20,15);
+//            cardLp.setMargins(20,15,20,15);
+            cardLp.setMargins(0,0,0,0);
+            viewHolder.dataContainer.setBackground(null);
             viewHolder.nonImageContainer.setPadding(25, 20, 25, 20);
         } else {
             cardLp.setMargins(10,10,10,10);
@@ -236,6 +239,9 @@ public class NoteRecyclerViewAdapter extends DocumentRecyclerViewAdapter<Note, N
     }
 
     private void setText(TextView textView, String content) {
+        if (textView instanceof AutoSizeTextView){
+            ((AutoSizeTextView)textView).disable();
+        }
         if (shouldFullSpan) {
             textView.setTextSize(12 * 1.2f);
             textView.setLineSpacing(0, 1.2f);

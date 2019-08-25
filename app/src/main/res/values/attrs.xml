@@ -11,6 +11,7 @@
 
     <declare-styleable name="AutoSizeTextView">
         <attr name="scaleFactor" format="float"/>
+        <attr name="enabled" format="boolean"/>
     </declare-styleable>
     <declare-styleable name="ForwardPreference">
         <attr name="forwardClassName" format="string"/>

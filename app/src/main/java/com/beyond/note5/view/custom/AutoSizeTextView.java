@@ -15,6 +15,8 @@ import com.beyond.note5.R;
 
 public class AutoSizeTextView extends android.support.v7.widget.AppCompatTextView {
 
+    private boolean enabled;
+
     private float mScaleFactor;
 
     private Float baseTextSize;
@@ -31,12 +33,17 @@ public class AutoSizeTextView extends android.support.v7.widget.AppCompatTextVie
         super(context, attrs, defStyleAttr);
         TypedArray typedArray = context.obtainStyledAttributes(attrs, R.styleable.AutoSizeTextView);
         mScaleFactor = typedArray.getFloat(R.styleable.AutoSizeTextView_scaleFactor, 0.618f);
+        enabled = typedArray.getBoolean(R.styleable.AutoSizeTextView_enabled, true);
         typedArray.recycle();
         baseTextSize = null;
     }
 
     @Override
     public void setText(CharSequence text, BufferType type) {
+        if (!enabled){
+            super.setText(text,type);
+            return;
+        }
         if (text == null) {
             return;
         }
@@ -55,12 +62,22 @@ public class AutoSizeTextView extends android.support.v7.widget.AppCompatTextVie
     @Override
     public void setTextSize(float size) {
         super.setTextSize(size);
+        if (!enabled){
+            return;
+        }
         baseTextSize = getTextSize();
     }
 
     @Override
     public void setTextSize(int unit, float size) {
         super.setTextSize(unit, size);
+        if (!enabled){
+            return;
+        }
         baseTextSize = getTextSize();
+    }
+
+    public void disable() {
+        enabled = false;
     }
 }

@@ -2,6 +2,7 @@ package com.beyond.note5.view.adapter.list;
 
 import android.content.Context;
 import android.support.v7.widget.RecyclerView;
+import android.util.SparseArray;
 import android.view.ViewGroup;
 
 import com.beyond.note5.R;
@@ -10,6 +11,7 @@ import com.beyond.note5.bean.Element;
 import com.beyond.note5.view.adapter.list.header.Header;
 import com.beyond.note5.view.adapter.list.header.ItemDataGenerator;
 import com.beyond.note5.view.adapter.list.viewholder.DocumentViewHolder;
+import com.beyond.note5.view.adapter.list.viewholder.ItemType;
 
 import java.util.List;
 
@@ -24,6 +26,8 @@ public abstract class DocumentRecyclerViewAdapter<T extends Document, S extends 
 
     private List<Element> itemData;
 
+    private SparseArray<ItemType> itemTypeMap;
+
     ItemDataGenerator<T, ? extends Header> itemDataGenerator;
 
     static final int[] colorResIds = new int[]{
@@ -37,6 +41,7 @@ public abstract class DocumentRecyclerViewAdapter<T extends Document, S extends 
         this.context = context;
         this.itemDataGenerator = itemDataGenerator;
         this.itemData = itemDataGenerator.getItemData();
+        this.itemTypeMap  = new SparseArray<>();
     }
 
     @Override
@@ -57,10 +62,16 @@ public abstract class DocumentRecyclerViewAdapter<T extends Document, S extends 
         if (itemData.get(position) instanceof Header) {
             Header header = (Header) itemData.get(position);
             initHeader(position, header, viewHolder);
+            itemTypeMap.put(position,ItemType.HEAD);
         } else if (itemData.get(position) instanceof Document) {
             T document = (T) itemData.get(position);
             initContent(position, document, viewHolder);
+            itemTypeMap.put(position,ItemType.CONTENT);
         }
+    }
+
+    public ItemType getItemType(int position){
+        return itemTypeMap.get(position);
     }
 
     private void initHeader(int position, Header header, S viewHolder) {
