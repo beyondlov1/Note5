@@ -59,6 +59,7 @@ import com.beyond.note5.event.FillNoteDetailEvent;
 import com.beyond.note5.event.HideFABEvent;
 import com.beyond.note5.event.HideKeyBoardEvent2;
 import com.beyond.note5.event.HideNoteDetailEvent;
+import com.beyond.note5.event.HideSearchBarEvent;
 import com.beyond.note5.event.HideTodoEditorEvent;
 import com.beyond.note5.event.PollRequest;
 import com.beyond.note5.event.PollResponse;
@@ -66,6 +67,7 @@ import com.beyond.note5.event.ShowFABEvent;
 import com.beyond.note5.event.ShowFloatButtonEvent;
 import com.beyond.note5.event.ShowKeyBoardEvent;
 import com.beyond.note5.event.ShowNoteDetailEvent;
+import com.beyond.note5.event.ShowSearchBarEvent;
 import com.beyond.note5.event.ShowTodoEditorEvent;
 import com.beyond.note5.presenter.NotePresenter;
 import com.beyond.note5.presenter.NotePresenterImpl;
@@ -144,18 +146,21 @@ public class MainActivity extends FragmentActivity implements
     private String currentType;
 
     private AtomicBoolean isFabShown = new AtomicBoolean(true);
+    private AtomicBoolean isSearchBarShown = new AtomicBoolean(true);
     private AnimatorSet showAnimatorSet;
     private AnimatorSet hideAnimatorSet;
+
+    private AnimatorSet showSearchBarAnimatorSet;
+    private AnimatorSet hideSearchBarAnimatorSet;
 
     protected NotePresenter notePresenter;
 
     private MyNoteView noteView = new MyNoteView();
-
     private final static int REQUEST_MEDIA_PROJECTION = 2;
     private MediaProjectionManager mediaProjectionManager;
     private MediaProjection mediaProjection;
-    private VirtualDisplay virtualDisplay;
 
+    private VirtualDisplay virtualDisplay;
     private CardView toolbarContainer;
     private SimpleToolbar toolbar;
     private int toolbarMargin;
@@ -557,6 +562,82 @@ public class MainActivity extends FragmentActivity implements
         }
     }
 
+    private void initSearchBarAnimator() {
+        showSearchBarAnimatorSet = (AnimatorSet) AnimatorInflater.loadAnimator(this, R.animator.search_bar_show);
+        hideSearchBarAnimatorSet = (AnimatorSet) AnimatorInflater.loadAnimator(this, R.animator.search_bar_hide);
+    }
+
+
+    @Deprecated
+    @Subscribe(threadMode = ThreadMode.MAIN)
+    public void onReceived(ShowSearchBarEvent event) {
+        showSearchBar();
+    }
+
+    @Deprecated
+    private void showSearchBar(){
+        if (showSearchBarAnimatorSet == null) {
+            initSearchBarAnimator();
+        }
+        if (!isSearchBarShown.get()) {
+            showSearchBarAnimatorSet.setTarget(toolbarContainer);
+            showSearchBarAnimatorSet.start();
+            showSearchBarAnimatorSet.addListener(new AnimatorListenerAdapter() {
+                @Override
+                public void onAnimationEnd(Animator animation) {
+                    super.onAnimationEnd(animation);
+                    isSearchBarShown.set(true);
+                }
+            });
+        }
+    }
+
+    @Deprecated
+    @Subscribe(threadMode = ThreadMode.MAIN)
+    public void onReceived(HideSearchBarEvent event) {
+        hideSearchBar();
+    }
+
+    @Deprecated
+    private void hideSearchBar(){
+        if (hideSearchBarAnimatorSet == null) {
+            initSearchBarAnimator();
+        }
+        if (isSearchBarShown.get()) {
+            hideSearchBarAnimatorSet.setTarget(toolbarContainer);
+            hideSearchBarAnimatorSet.start();
+            hideSearchBarAnimatorSet.addListener(new AnimatorListenerAdapter() {
+                @Override
+                public void onAnimationEnd(Animator animation) {
+                    super.onAnimationEnd(animation);
+                    isSearchBarShown.set(false);
+                }
+            });
+        }
+    }
+
+    public void adaptAlphaOfSearchBar(Integer dy) {
+        float alpha = toolbarContainer.getAlpha();
+        if (dy>0){
+            float v = alpha - dy / 500F;
+            if (v<0){
+                v = 0;
+            }
+            toolbarContainer.setAlpha(v);
+            if (toolbarContainer.getAlpha()<0.1){
+                toolbarContainer.setVisibility(View.GONE);
+            }
+        }else if (dy<0){
+            toolbarContainer.setVisibility(View.VISIBLE);
+            float v = alpha - dy / 500F;
+            if (v>1){
+                v = 1;
+            }
+            toolbarContainer.setAlpha(v);
+        }
+    }
+
+
     @Override
     protected void onResume() {
         super.onResume();
@@ -787,6 +868,8 @@ public class MainActivity extends FragmentActivity implements
         }
 
         EventBus.getDefault().post(new ShowFABEvent(0));
+        toolbarContainer.setVisibility(View.VISIBLE);
+        toolbarContainer.setAlpha(1);
     }
 
     private class MyOnKeyboardChangeListener extends OnKeyboardChangeListener {

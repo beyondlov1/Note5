@@ -148,7 +148,6 @@ public class NoteRecyclerViewAdapter extends DocumentRecyclerViewAdapter<Note, N
 //        viewHolder.cardViewContainer.setCardElevation(4);
         FrameLayout.LayoutParams cardLp = (FrameLayout.LayoutParams) viewHolder.cardViewContainer.getLayoutParams();
         if (shouldFullSpan) {
-//            cardLp.setMargins(20,15,20,15);
             cardLp.setMargins(0,15,0,15);
             viewHolder.dataContainer.setBackground(null);
             viewHolder.nonImageContainer.setPadding(25, 20, 25, 20);

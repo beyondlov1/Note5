@@ -163,9 +163,14 @@ public class NoteListFragment extends Fragment {
                 if (!recyclerView.canScrollVertically(-1)) {
                     EventBus.getDefault().post(new ShowFABEvent(R.id.note_recycler_view));
                 }
-
             }
 
+            @Override
+            public void onScrolled(RecyclerView recyclerView, int dx, int dy) {
+                super.onScrolled(recyclerView, dx, dy);
+                MainActivity activity = (MainActivity)getActivity();
+                activity.adaptAlphaOfSearchBar(dy);
+            }
         });
     }
 
