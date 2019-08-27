@@ -149,7 +149,12 @@ public class NoteRecyclerViewAdapter extends DocumentRecyclerViewAdapter<Note, N
         FrameLayout.LayoutParams cardLp = (FrameLayout.LayoutParams) viewHolder.cardViewContainer.getLayoutParams();
         if (shouldFullSpan) {
             cardLp.setMargins(0,15,0,15);
-            viewHolder.dataContainer.setBackground(null);
+            Drawable drawable = context.getResources().getDrawable(R.drawable.vert_line);
+            if (note.getPriority() != null && note.getPriority() > 0) {
+                viewHolder.dataContainer.setBackground(drawable);
+            }else {
+                viewHolder.dataContainer.setBackground(null);
+            }
             viewHolder.nonImageContainer.setPadding(25, 20, 25, 20);
         } else {
             cardLp.setMargins(10,10,10,10);

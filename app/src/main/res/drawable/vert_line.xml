@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android" android:width="300dp"
+    android:height="30dp"
+    android:viewportWidth="300.0"
+    android:viewportHeight="30.0">
+    <path
+        android:name="rect_red_top"
+        android:pathData="M0,0 L0,30z"
+        android:strokeColor="@color/google_red"
+        android:strokeWidth="3"
+        android:strokeAlpha="0.8"
+        />
+    <path
+        android:name="rect_red_top"
+        android:pathData="M300,0 L300,30z"
+        android:strokeColor="@color/google_red"
+        android:strokeWidth="3"
+        android:strokeAlpha="0.8"
+        />
+</vector>
