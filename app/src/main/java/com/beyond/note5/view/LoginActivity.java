@@ -23,13 +23,9 @@ import android.widget.TextView;
 import com.beyond.note5.MyApplication;
 import com.beyond.note5.R;
 import com.beyond.note5.bean.Account;
-import com.beyond.note5.inject.BeanInjectUtils;
-import com.beyond.note5.inject.Qualifier;
-import com.beyond.note5.inject.SingletonInject;
-import com.beyond.note5.model.AccountModel;
-import com.beyond.note5.model.AccountModelImpl;
+import com.beyond.note5.component.module.AccountModule;
+import com.beyond.note5.component.DaggerLoginActivityComponent;
 import com.beyond.note5.presenter.AccountPresenter;
-import com.beyond.note5.presenter.AccountPresenterImpl;
 import com.beyond.note5.utils.OkWebDavUtil;
 import com.beyond.note5.utils.StatusBarUtil;
 import com.beyond.note5.utils.ToastUtil;
@@ -37,6 +33,8 @@ import com.beyond.note5.view.adapter.view.AccountViewAdapter;
 
 import java.util.ArrayList;
 import java.util.List;
+
+import javax.inject.Inject;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
@@ -52,16 +50,11 @@ public abstract class LoginActivity extends AppCompatActivity {
     public static final String DAV_LOGIN_USERNAME = "dav.login.username";
     public static final String DAV_LOGIN_PASSWORD = "dav.login.password";
 
-    @SingletonInject
-    private Handler handler;
+    @Inject
+    Handler handler;
 
-    private AccountPresenter accountPresenter;
-
-    @SingletonInject
-    @Qualifier(implementClass = AccountModelImpl.class)
-    private AccountModel accountModel;
-
-    private  MyAccountView accountView = new MyAccountView();
+    @Inject
+    AccountPresenter accountPresenter;
 
     @BindView(R.id.login_server)
     EditText server;
@@ -91,8 +84,9 @@ public abstract class LoginActivity extends AppCompatActivity {
     }
 
     protected void initInject(){
-        BeanInjectUtils.inject(this);
-        accountPresenter = new AccountPresenterImpl(accountModel,accountView);
+        DaggerLoginActivityComponent.builder()
+                .accountModule(new AccountModule(new MyAccountView()))
+                .build().inject(this);
     }
 
     protected void initEvent(){

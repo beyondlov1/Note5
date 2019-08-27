@@ -7,14 +7,11 @@ import android.view.View;
 import android.view.ViewGroup;
 
 import com.beyond.note5.bean.Todo;
-import com.beyond.note5.module.DaggerTodoComponent;
-import com.beyond.note5.module.PredictModule;
-import com.beyond.note5.module.TodoComponent;
-import com.beyond.note5.module.TodoModule;
 import com.beyond.note5.predict.bean.Tag;
-import com.beyond.note5.presenter.CalendarPresenter;
 import com.beyond.note5.presenter.PredictPresenter;
+import com.beyond.note5.presenter.PredictPresenterImpl;
 import com.beyond.note5.presenter.TodoPresenter;
+import com.beyond.note5.presenter.TodoPresenterImpl;
 import com.beyond.note5.view.CalendarView;
 import com.beyond.note5.view.PredictView;
 import com.beyond.note5.view.TodoView;
@@ -33,8 +30,6 @@ public abstract class AbstractTodoFragment extends AbstractDocumentFragment<Todo
     @Inject
     protected TodoPresenter todoPresenter;
     @Inject
-    protected CalendarPresenter calendarPresenter;
-    @Inject
     protected PredictPresenter predictPresenter;
 
 
@@ -46,11 +41,8 @@ public abstract class AbstractTodoFragment extends AbstractDocumentFragment<Todo
     }
 
     private void initInjection() {
-        TodoComponent todoComponent = DaggerTodoComponent.builder()
-                .todoModule(new TodoModule(getActivity(),this,this))
-                .predictModule(new PredictModule(this))
-                .build();
-        todoComponent.inject(this);
+        todoPresenter = new TodoPresenterImpl(this);
+        predictPresenter = new PredictPresenterImpl(this);
     }
 
     @Nullable

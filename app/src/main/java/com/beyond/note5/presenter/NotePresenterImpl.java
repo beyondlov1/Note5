@@ -11,9 +11,8 @@ import com.beyond.note5.event.UpdateNoteAllSuccessEvent;
 import com.beyond.note5.event.note.AddNoteSuccessEvent;
 import com.beyond.note5.event.note.DeleteNoteSuccessEvent;
 import com.beyond.note5.event.note.UpdateNoteSuccessEvent;
-import com.beyond.note5.inject.BeanInjectUtils;
-import com.beyond.note5.inject.SingletonInject;
 import com.beyond.note5.model.NoteModel;
+import com.beyond.note5.component.DaggerCommonComponent;
 import com.beyond.note5.service.schedule.ScheduleReceiver;
 import com.beyond.note5.service.schedule.callback.NoteExactNotifyScheduleCallback;
 import com.beyond.note5.utils.HtmlUtil;
@@ -31,7 +30,9 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.ExecutorService;
+import java.util.concurrent.ThreadPoolExecutor;
+
+import javax.inject.Inject;
 
 import okhttp3.Call;
 import okhttp3.OkHttpClient;
@@ -50,18 +51,18 @@ import static com.beyond.note5.service.schedule.callback.NoteNotifyScheduleCallb
 public class NotePresenterImpl implements NotePresenter {
 
     private NoteView noteView;
-    @SingletonInject
-    private NoteModel noteModel;
-    @SingletonInject
-    private ExecutorService executorService;
-    @SingletonInject
-    private OkHttpClient okHttpClient;
-    @SingletonInject
-    private Handler handler;
+    @Inject
+    NoteModel noteModel;
+    @Inject
+    ThreadPoolExecutor executorService;
+    @Inject
+    OkHttpClient okHttpClient;
+    @Inject
+    Handler handler;
 
     public NotePresenterImpl(@Nullable NoteView noteView) {
         this.noteView = noteView;
-        BeanInjectUtils.inject(this);
+        DaggerCommonComponent.builder().build().inject(this);
     }
 
     @Override

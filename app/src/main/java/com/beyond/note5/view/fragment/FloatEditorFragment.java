@@ -17,10 +17,8 @@ import com.beyond.note5.constant.DocumentConst;
 import com.beyond.note5.event.AfterFloatEditorSavedEvent;
 import com.beyond.note5.event.RefreshNoteListEvent;
 import com.beyond.note5.event.RefreshTodoListEvent;
-import com.beyond.note5.module.DaggerDocumentCompositeComponent;
-import com.beyond.note5.module.DocumentCompositeComponent;
-import com.beyond.note5.module.DocumentCompositeModule;
 import com.beyond.note5.presenter.DocumentCompositePresenter;
+import com.beyond.note5.presenter.DocumentCompositePresenterImpl;
 import com.beyond.note5.utils.IDUtil;
 import com.beyond.note5.utils.InputMethodUtil;
 import com.beyond.note5.utils.ToastUtil;
@@ -56,9 +54,7 @@ public class FloatEditorFragment extends Fragment implements View.OnClickListene
     }
 
     private void initInjection() {
-        DocumentCompositeComponent documentCompositeComponent = DaggerDocumentCompositeComponent.builder()
-                .documentCompositeModule(new DocumentCompositeModule(this)).build();
-        documentCompositeComponent.inject(this);
+        presenter = new DocumentCompositePresenterImpl(this);
     }
 
     @Nullable

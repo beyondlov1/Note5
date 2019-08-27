@@ -34,15 +34,13 @@ import com.beyond.note5.event.todo.CompleteTodoEvent;
 import com.beyond.note5.event.todo.DeleteTodoSuccessEvent;
 import com.beyond.note5.event.todo.UpdateTodoPriorityEvent;
 import com.beyond.note5.event.todo.UpdateTodoSuccessEvent;
-import com.beyond.note5.inject.BeanInjectUtils;
-import com.beyond.note5.inject.SingletonInject;
-import com.beyond.note5.presenter.CalendarPresenterImpl;
-import com.beyond.note5.presenter.PredictPresenterImpl;
+import com.beyond.note5.component.module.CalendarModule;
+import com.beyond.note5.component.DaggerTodoListFragmentComponent;
+import com.beyond.note5.component.module.PredictModule;
+import com.beyond.note5.component.module.TodoModule;
+import com.beyond.note5.component.module.TodoSyncModule;
 import com.beyond.note5.presenter.SyncPresenter;
 import com.beyond.note5.presenter.TodoCompositePresenter;
-import com.beyond.note5.presenter.TodoCompositePresenterImpl;
-import com.beyond.note5.presenter.TodoPresenterImpl;
-import com.beyond.note5.presenter.TodoSyncPresenterImpl;
 import com.beyond.note5.utils.ToastUtil;
 import com.beyond.note5.view.DavLoginActivity;
 import com.beyond.note5.view.SyncView;
@@ -68,6 +66,8 @@ import java.util.Date;
 import java.util.Iterator;
 import java.util.List;
 
+import javax.inject.Inject;
+
 import static com.beyond.note5.model.TodoModelImpl.IS_SHOW_READ_FLAG_DONE;
 
 /**
@@ -92,12 +92,14 @@ public class TodoListFragment extends Fragment {
 
     MySyncView syncView = new MySyncView();
 
+    @Inject
     TodoCompositePresenter todoCompositePresenter;
 
-    private SyncPresenter syncPresenter;
+    @Inject
+    SyncPresenter syncPresenter;
 
-    @SingletonInject
-    private Handler handler;
+    @Inject
+    Handler handler;
 
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
@@ -108,13 +110,13 @@ public class TodoListFragment extends Fragment {
     }
 
     private void initInjection() {
-        BeanInjectUtils.inject(this);
-        todoCompositePresenter = new TodoCompositePresenterImpl.Builder(new TodoPresenterImpl(todoView))
-                .calendarPresenter(new CalendarPresenterImpl(getActivity(), calendarView))
-                .predictPresenter(new PredictPresenterImpl(predictView))
-                .build();
-
-        syncPresenter = new TodoSyncPresenterImpl(syncView,handler);
+        DaggerTodoListFragmentComponent.builder()
+                .todoModule(new TodoModule(todoView))
+                .calendarModule(new CalendarModule(getActivity(),calendarView))
+                .predictModule(new PredictModule(predictView))
+                .todoSyncModule(new TodoSyncModule(syncView))
+                .build()
+                .inject(this);
     }
 
     @Nullable

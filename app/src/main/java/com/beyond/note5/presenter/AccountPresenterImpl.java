@@ -3,6 +3,7 @@ package com.beyond.note5.presenter;
 import com.beyond.note5.MyApplication;
 import com.beyond.note5.bean.Account;
 import com.beyond.note5.model.AccountModel;
+import com.beyond.note5.component.DaggerCommonComponent;
 import com.beyond.note5.utils.IDUtil;
 import com.beyond.note5.utils.OkWebDavUtil;
 import com.beyond.note5.view.AccountView;
@@ -11,17 +12,20 @@ import com.thegrizzlylabs.sardineandroid.impl.handler.OkHttpSardine2;
 
 import java.util.List;
 
+import javax.inject.Inject;
+
 import static com.beyond.note5.MyApplication.DAV_ROOT_DIR;
 import static com.beyond.note5.MyApplication.LOGIN_PATH;
 
 public class AccountPresenterImpl implements AccountPresenter {
-    
-    private AccountModel accountModel;
+
+    @Inject
+    AccountModel accountModel;
 
     private AccountView accountView;
 
-    public AccountPresenterImpl(AccountModel accountModel, AccountView accountView) {
-        this.accountModel = accountModel;
+    public AccountPresenterImpl(AccountView accountView) {
+        DaggerCommonComponent.builder().build().inject(this);
         this.accountView = accountView;
     }
 

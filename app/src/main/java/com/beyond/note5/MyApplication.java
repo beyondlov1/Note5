@@ -9,15 +9,13 @@ import android.util.Log;
 import com.beyond.note5.bean.Account;
 import com.beyond.note5.bean.Note;
 import com.beyond.note5.bean.Todo;
-import com.beyond.note5.inject.BeanInjectUtils;
 import com.beyond.note5.model.AccountModel;
-import com.beyond.note5.model.AccountModelImpl;
 import com.beyond.note5.model.NoteModel;
-import com.beyond.note5.model.NoteModelImpl;
 import com.beyond.note5.model.PredictModel;
 import com.beyond.note5.model.PredictModelImpl;
 import com.beyond.note5.model.dao.DaoMaster;
 import com.beyond.note5.model.dao.DaoSession;
+import com.beyond.note5.component.DaggerCommonComponent;
 import com.beyond.note5.predict.Predictor;
 import com.beyond.note5.predict.PredictorImpl;
 import com.beyond.note5.predict.bean.TagGraph;
@@ -50,11 +48,9 @@ import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
-import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.ThreadPoolExecutor;
-import java.util.concurrent.TimeUnit;
 
-import okhttp3.OkHttpClient;
+import javax.inject.Inject;
 
 /**
  * @author: beyond
@@ -97,16 +93,26 @@ public class MyApplication extends Application {
 
     private boolean isApplicationToBeBorn = false;
 
-    public Handler handler = new Handler();
+    @Inject
+    Handler handler;
+
+    @Inject
+    DaoSession daoSession;
+
+    @Inject
+    ThreadPoolExecutor threadPoolExecutor;
+
+    @Inject
+    NoteModel noteModel;
+
+    @Inject
+    PredictModel predictModel;
+
+    @Inject
+    AccountModel accountModel;
 
     private List<Synchronizer<Note>> noteSynchronizers;
     private List<Synchronizer<Todo>> todoSynchronizers;
-
-    private DaoSession daoSession;
-    private ExecutorService executorService;
-    private NoteModel noteModel;
-    private PredictModel predictModel;
-    private AccountModel accountModel;
 
     public static MyApplication getInstance() {
         return instance;
@@ -117,9 +123,8 @@ public class MyApplication extends Application {
         super.onCreate();
         isApplicationToBeBorn = true;
         instance = this;
-        initSingletons();
+        initInjection();
         initPreference();
-        initDaoSession();
         initSynchronizer();
         startNotificationScanner();
         scheduleSyncService();
@@ -128,19 +133,8 @@ public class MyApplication extends Application {
 
     }
 
-    private void initSingletons() {
-        OkHttpClient.Builder httpBuilder = new OkHttpClient.Builder();
-        httpBuilder.connectTimeout(10000, TimeUnit.MILLISECONDS);
-        httpBuilder.readTimeout(10000, TimeUnit.MILLISECONDS);
-        BeanInjectUtils.registerSingletonBean(OkHttpClient.class, httpBuilder.build());
-
-        BeanInjectUtils.registerSingletonBean(ExecutorService.class, getExecutorService());
-
-        BeanInjectUtils.registerSingletonBean(Handler.class, handler);
-
-        BeanInjectUtils.registerSingletonBean(DaoSession.class, getDaoSession());
-
-        BeanInjectUtils.registerSingletonBean(PredictModel.class, getPredictModel());
+    private void initInjection() {
+        DaggerCommonComponent.builder().build().inject(this);
     }
 
     private void scheduleSyncService() {
@@ -165,7 +159,7 @@ public class MyApplication extends Application {
         if (!shouldSchedule) {
             return;
         }
-        List<Note> toNotifyNote = getNoteModel().findByPriority(5);
+        List<Note> toNotifyNote = noteModel.findByPriority(5);
         for (Note note : toNotifyNote) {
             try {
                 if (!ScheduleUtil.isSet(note)) {
@@ -198,7 +192,6 @@ public class MyApplication extends Application {
     @SuppressWarnings("unchecked")
     private void initSynchronizer(String syncStrategy) {
 
-        accountModel = new AccountModelImpl();
         List<Account> accounts = accountModel.findAllValid();
 
         if (accounts.isEmpty()) {
@@ -263,13 +256,7 @@ public class MyApplication extends Application {
     }
 
     public ExecutorService getExecutorService() {
-        if (executorService == null) {
-            executorService = new ThreadPoolExecutor(
-                    0, 60,
-                    60, TimeUnit.SECONDS,
-                    new LinkedBlockingQueue<>());
-        }
-        return executorService;
+        return threadPoolExecutor;
     }
 
     public DaoSession getDaoSession() {
@@ -395,7 +382,7 @@ public class MyApplication extends Application {
             predictor.addTrainFilter(new UselessTrainFilter());
             predictor.addTrainFilter(new UrlTrainFilter());
             predictor.addTrainFilter(new TimeExpressionTrainFilter());
-            predictor.setExecutorService(executorService);
+            predictor.setExecutorService(threadPoolExecutor);
             predictModel = PredictModelImpl.getRelativeSingletonInstance(predictor);
         }
         return predictModel;
@@ -405,10 +392,4 @@ public class MyApplication extends Application {
         return accountModel;
     }
 
-    public NoteModel getNoteModel() {
-        if (noteModel == null) {
-            noteModel = NoteModelImpl.getSingletonInstance();
-        }
-        return noteModel;
-    }
 }

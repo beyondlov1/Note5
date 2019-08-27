@@ -7,10 +7,8 @@ import android.view.View;
 import android.view.ViewGroup;
 
 import com.beyond.note5.bean.Note;
-import com.beyond.note5.module.DaggerNoteComponent;
-import com.beyond.note5.module.NoteComponent;
-import com.beyond.note5.module.NoteModule;
 import com.beyond.note5.presenter.NotePresenter;
+import com.beyond.note5.presenter.NotePresenterImpl;
 import com.beyond.note5.view.NoteView;
 import com.beyond.note5.view.adapter.list.NoteRecyclerViewAdapter;
 import com.beyond.note5.view.adapter.list.header.ReadFlagItemDataGenerator;
@@ -37,8 +35,7 @@ public abstract class AbstractNoteFragment extends AbstractDocumentFragment<Note
     }
 
     private void initInjection() {
-        NoteComponent noteComponent = DaggerNoteComponent.builder().noteModule(new NoteModule(this)).build();
-        noteComponent.inject(this);
+        notePresenter = new NotePresenterImpl(this);
     }
 
     @Nullable

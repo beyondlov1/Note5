@@ -5,15 +5,16 @@ import android.support.annotation.Nullable;
 import android.util.Log;
 
 import com.beyond.note5.MyApplication;
-import com.beyond.note5.inject.BeanInjectUtils;
-import com.beyond.note5.inject.SingletonInject;
 import com.beyond.note5.model.PredictModel;
+import com.beyond.note5.component.DaggerCommonComponent;
 import com.beyond.note5.predict.bean.Tag;
 import com.beyond.note5.utils.PreferenceUtil;
 import com.beyond.note5.view.PredictView;
 
 import java.util.List;
-import java.util.concurrent.ExecutorService;
+import java.util.concurrent.ThreadPoolExecutor;
+
+import javax.inject.Inject;
 
 /**
  * @author beyondlov1
@@ -22,16 +23,17 @@ import java.util.concurrent.ExecutorService;
 public class PredictPresenterImpl implements PredictPresenter {
 
     private PredictView predictView;
-    @SingletonInject
-    private PredictModel predictModel;
-    @SingletonInject
-    private ExecutorService executorService;
-    @SingletonInject
-    private Handler handler;
+
+    @Inject
+    PredictModel predictModel;
+    @Inject
+    ThreadPoolExecutor executorService;
+    @Inject
+    Handler handler;
 
     public PredictPresenterImpl(@Nullable PredictView predictView) {
         this.predictView = predictView;
-        BeanInjectUtils.inject(this);
+        DaggerCommonComponent.builder().build().inject(this);
     }
 
     @Override

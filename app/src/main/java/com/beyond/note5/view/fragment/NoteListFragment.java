@@ -31,13 +31,12 @@ import com.beyond.note5.event.note.AddNoteSuccessEvent;
 import com.beyond.note5.event.note.DeleteNoteSuccessEvent;
 import com.beyond.note5.event.note.UpdateNotePriorityEvent;
 import com.beyond.note5.event.note.UpdateNoteSuccessEvent;
-import com.beyond.note5.inject.BeanInjectUtils;
-import com.beyond.note5.inject.SingletonInject;
+import com.beyond.note5.component.DaggerNoteListFragmentComponent;
+import com.beyond.note5.component.module.NoteModule;
+import com.beyond.note5.component.module.NoteSyncModule;
 import com.beyond.note5.ocr.OCRCallBack;
 import com.beyond.note5.ocr.OCRTask;
 import com.beyond.note5.presenter.NotePresenter;
-import com.beyond.note5.presenter.NotePresenterImpl;
-import com.beyond.note5.presenter.NoteSyncPresenterImpl;
 import com.beyond.note5.presenter.SyncPresenter;
 import com.beyond.note5.utils.RecyclerViewUtil;
 import com.beyond.note5.utils.ToastUtil;
@@ -61,6 +60,8 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
+import javax.inject.Inject;
+
 /**
  * @author: beyond
  * @date: 2019/1/30
@@ -76,16 +77,18 @@ public class NoteListFragment extends Fragment {
 
     protected List<Note> data = new ArrayList<>();
 
+    @Inject
     protected NotePresenter notePresenter;
 
+    @Inject
     protected SyncPresenter syncPresenter;
 
     protected NoteView noteView = new MyNoteView();
 
     protected SyncView syncView = new MySyncView();
 
-    @SingletonInject
-    private Handler handler;
+    @Inject
+    protected Handler handler;
 
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
@@ -96,9 +99,10 @@ public class NoteListFragment extends Fragment {
     }
 
     private void initInjection() {
-        BeanInjectUtils.inject(this);
-        notePresenter = new NotePresenterImpl(noteView);
-        syncPresenter = new NoteSyncPresenterImpl(syncView, handler);
+        DaggerNoteListFragmentComponent.builder()
+                .noteModule(new NoteModule(noteView))
+                .noteSyncModule(new NoteSyncModule(syncView))
+                .build().inject(this);
     }
 
     @Nullable

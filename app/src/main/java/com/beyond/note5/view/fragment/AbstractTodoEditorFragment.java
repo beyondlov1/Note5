@@ -23,8 +23,7 @@ import android.widget.TextView;
 import com.beyond.note5.R;
 import com.beyond.note5.bean.Todo;
 import com.beyond.note5.event.ShowKeyBoardEvent;
-import com.beyond.note5.inject.BeanInjectUtils;
-import com.beyond.note5.inject.SingletonInject;
+import com.beyond.note5.component.DaggerCommonComponent;
 import com.beyond.note5.utils.InputMethodUtil;
 import com.beyond.note5.utils.StatusBarUtil;
 import com.beyond.note5.view.custom.SelectionListenableEditText;
@@ -34,6 +33,8 @@ import com.zhy.view.flowlayout.TagFlowLayout;
 
 import java.util.ArrayList;
 import java.util.List;
+
+import javax.inject.Inject;
 
 import butterknife.BindView;
 
@@ -68,13 +69,13 @@ public abstract class AbstractTodoEditorFragment extends AbstractDocumentEditorF
     protected TagAdapter<String> tagAdapter;
     protected List<String> tagData = new ArrayList<>();
 
-    @SingletonInject
+    @Inject
     protected Handler handler;
 
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        BeanInjectUtils.inject(this);
+        DaggerCommonComponent.builder().build().inject(this);
     }
 
     @Override
