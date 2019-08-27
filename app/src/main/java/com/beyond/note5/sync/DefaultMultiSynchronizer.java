@@ -113,7 +113,7 @@ public class DefaultMultiSynchronizer<T extends Tracable> implements Synchronize
         Log.d(getClass().getSimpleName(), "getChildrenModifiedData:" + new Date());
         List<T> childrenModifiedData = root.getChildrenModifiedData();
 
-        if (childrenModifiedData.isEmpty()&&!remoteLock()){
+        if (!remoteLock()){
             releaseLock();
             return;
         }
