@@ -13,6 +13,9 @@ import java.util.List;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Future;
+import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.ThreadPoolExecutor;
+import java.util.concurrent.TimeUnit;
 
 public class SyncUtils {
 
@@ -38,6 +41,10 @@ public class SyncUtils {
         } catch (UnsupportedEncodingException e) {
             return source;
         }
+    }
+
+    public static <V, S> Executor<V, S> executor() {
+        return new Executor<>();
     }
 
     @SuppressWarnings("unchecked")
@@ -117,4 +124,38 @@ public class SyncUtils {
         }
     }
 
+    public static class Executor<V, S> {
+        ExecutorService executorService;
+        Handler<V, S> handler;
+        ParamCallable<V, Void> exceptionHandler;
+
+        public Executor<V, S> executorService(ExecutorService executorService) {
+            if (executorService == null) {
+                executorService = new ThreadPoolExecutor(
+                        0, 60,
+                        60, TimeUnit.SECONDS,
+                        new LinkedBlockingQueue<>());
+            }
+            this.executorService = executorService;
+            return this;
+        }
+
+        public Executor<V, S> handler(Handler<V, S> handler) {
+            this.handler = handler;
+            return this;
+        }
+
+        public Executor<V, S> exceptionHandler(ParamCallable<V, Void> exceptionHandler) {
+            this.exceptionHandler = exceptionHandler;
+            return this;
+        }
+
+        public void execute(List<V> targetList, ParamCallable<V, S> callable) {
+            blockExecute(executorService,
+                    callable,
+                    handler,
+                    exceptionHandler,
+                    targetList);
+        }
+    }
 }
