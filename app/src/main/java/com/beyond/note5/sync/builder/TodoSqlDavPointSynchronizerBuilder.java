@@ -15,10 +15,10 @@ import static com.beyond.note5.MyApplication.DAV_ROOT_DIR;
  * @date: 2019/8/3
  */
 
-public class TodoSqlDavSynchronizerBuilder extends AbstractPointSynchronizerBuilder<Todo> {
+public class TodoSqlDavPointSynchronizerBuilder extends AbstractPointSynchronizerBuilder<Todo> {
 
 
-    public TodoSqlDavSynchronizerBuilder(Account account) {
+    public TodoSqlDavPointSynchronizerBuilder(Account account) {
         super(account);
     }
 

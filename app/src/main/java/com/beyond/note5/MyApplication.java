@@ -28,9 +28,9 @@ import com.beyond.note5.service.schedule.utils.ScheduleUtil;
 import com.beyond.note5.sync.Synchronizer;
 import com.beyond.note5.sync.builder.AbstractPointSynchronizerBuilder;
 import com.beyond.note5.sync.builder.NoteMultiSynchronizerBuilder;
-import com.beyond.note5.sync.builder.NoteSqlDavSynchronizerBuilder;
+import com.beyond.note5.sync.builder.NoteSqlDavPointSynchronizerBuilder;
 import com.beyond.note5.sync.builder.TodoMultiSynchronizerBuilder;
-import com.beyond.note5.sync.builder.TodoSqlDavSynchronizerBuilder;
+import com.beyond.note5.sync.builder.TodoSqlDavPointSynchronizerBuilder;
 import com.beyond.note5.utils.IDUtil;
 import com.beyond.note5.utils.PreferenceUtil;
 import com.beyond.note5.utils.ToastUtil;
@@ -218,11 +218,11 @@ public class MyApplication extends Application {
              */
             for (Account account : accounts) {
                 AbstractPointSynchronizerBuilder<Note> noteSynchronizerBuilder =
-                        new NoteSqlDavSynchronizerBuilder(account);
+                        new NoteSqlDavPointSynchronizerBuilder(account);
                 noteSynchronizers.add(noteSynchronizerBuilder.build());
 
                 AbstractPointSynchronizerBuilder<Todo> todoSynchronizerBuilder =
-                        new TodoSqlDavSynchronizerBuilder(account);
+                        new TodoSqlDavPointSynchronizerBuilder(account);
                 todoSynchronizers.add(todoSynchronizerBuilder.build());
             }
         }

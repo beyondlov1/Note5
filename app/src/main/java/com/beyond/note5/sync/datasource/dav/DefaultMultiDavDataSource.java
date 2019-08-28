@@ -30,7 +30,7 @@ public class DefaultMultiDavDataSource<T extends Tracable> extends DefaultPointD
 
     private Map<String, SyncStamp> syncStamps = new LinkedHashMap<>();
 
-    private ExecutorService executorService;
+    protected ExecutorService executorService;
 
     public DefaultMultiDavDataSource(DavDataSourceProperty property, Class<T> clazz, ExecutorService executorService) {
         super(property, clazz);

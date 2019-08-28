@@ -22,13 +22,12 @@ public class NotePointDavDataSource extends DefaultPointDavDataSource<Note> {
     public void add(Note note) throws IOException {
         super.add(note);
 
-        String server = getServer();
         List<Attachment> attachments = note.getAttachments();
         if (attachments!= null && !attachments.isEmpty()){
             for (Attachment attachment : attachments) {
                 if (new File(attachment.getPath()).exists()){
                     upload(
-                            getRemoteUrl(note, server, attachment),
+                            getRemotePath(note, attachment),
                             getLocalPath(attachment)
                     );
                 }else {
@@ -38,15 +37,33 @@ public class NotePointDavDataSource extends DefaultPointDavDataSource<Note> {
         }
     }
 
-    private String getRemoteUrl(Note note, String server, Attachment attachment) {
+    private String getRemotePath(Note note, Attachment attachment) {
+        return getRemotePath(note, getLocalPath(attachment));
+    }
+
+    private String getRemotePath(Note note, String localPath) {
         return OkWebDavUtil.concat(
-                server,getPath(note),
-                getLocalPath(attachment).replaceFirst(MyApplication.getInstance().getFileStorageDir().getAbsolutePath(),"/"+property.getFilesDir())
+                getPath(note),
+                localPath.replaceFirst(MyApplication.getInstance().getFileStorageDir().getAbsolutePath(),"/"+property.getFilesDir())
         );
     }
 
     private String getLocalPath(Attachment attachment) {
         return attachment.getPath();
+    }
+
+    @Override
+    public void upload(String id, String localPath) throws IOException {
+        Note note = new Note();
+        note.setId(id);
+        getClient().upload(localPath, OkWebDavUtil.concat(getServer(),getRemotePath(note,localPath)));
+    }
+
+    @Override
+    public void download(String id, String localPath) throws IOException {
+        Note note = new Note();
+        note.setId(id);
+        getClient().download(OkWebDavUtil.concat(getServer(),getPath(note)), localPath);
     }
 
 }

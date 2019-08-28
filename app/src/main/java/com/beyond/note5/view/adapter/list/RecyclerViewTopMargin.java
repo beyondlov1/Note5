@@ -56,7 +56,7 @@ public class RecyclerViewTopMargin extends RecyclerView.ItemDecoration {
             StaggeredGridLayoutManager.LayoutParams layoutParams = (StaggeredGridLayoutManager.LayoutParams) child.getLayoutParams();
 
             DocumentRecyclerViewAdapter adapter = (DocumentRecyclerViewAdapter)parent.getAdapter();
-            if (layoutParams.isFullSpan() && i != 0 && adapter.getItemType(i) != ItemType.HEAD){
+            if (layoutParams.isFullSpan() && i != 0 && adapter.getItemType(i) != ItemType.HEAD && !(adapter instanceof TodoRecyclerViewAdapter)){
                 c.drawLine(left,top,right,top,paint);
             }
         }

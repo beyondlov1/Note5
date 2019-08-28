@@ -2,6 +2,7 @@ package com.beyond.note5.view.adapter.list;
 
 import android.content.Context;
 import android.support.v7.widget.RecyclerView;
+import android.util.Log;
 import android.util.SparseArray;
 import android.view.ViewGroup;
 
@@ -67,6 +68,8 @@ public abstract class DocumentRecyclerViewAdapter<T extends Document, S extends 
             T document = (T) itemData.get(position);
             initContent(position, document, viewHolder);
             itemTypeMap.put(position,ItemType.CONTENT);
+        }else {
+            Log.d(getClass().getSimpleName(),"position:"+position+", data:" + itemData.get(position));
         }
     }
 

@@ -2,6 +2,7 @@ package com.beyond.note5.sync.datasource.sql;
 
 
 import com.beyond.note5.bean.Note;
+import com.beyond.note5.sync.datasource.FileStore;
 import com.beyond.note5.sync.datasource.MultiDataSource;
 import com.beyond.note5.sync.datasource.entity.SyncStamp;
 
@@ -9,7 +10,7 @@ import java.io.IOException;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
-public class NoteMultiSqlDataSource extends NoteSqlDataSource implements MultiDataSource<Note> {
+public class NoteMultiSqlDataSource extends NoteSqlDataSource implements MultiDataSource<Note>,FileStore {
 
     private String chosenKey;
 
@@ -43,5 +44,15 @@ public class NoteMultiSqlDataSource extends NoteSqlDataSource implements MultiDa
     @Override
     public void setSyncStampsCache(Map<String, SyncStamp> syncStamps) {
         this.syncStamps = syncStamps;
+    }
+
+    @Override
+    public void upload(String id, String localPath) throws IOException {
+
+    }
+
+    @Override
+    public void download(String id, String localPath) throws IOException {
+
     }
 }

@@ -30,7 +30,7 @@ public class UuidDavPathStrategy implements DavPathStrategy {
     }
 
     @Override
-    public String getStoragePath(String id) {
+    public String getStorageDir(String id) {
         if (depth > 32) {
             throw new RuntimeException("depth is too big");
         }
@@ -44,12 +44,12 @@ public class UuidDavPathStrategy implements DavPathStrategy {
     }
 
     @Override
-    public String getStorageUrl(String id) {
-        return OkWebDavUtil.concat(server, getStoragePath(id));
+    public String getStorageDirUrl(String id) {
+        return OkWebDavUtil.concat(server, getStorageDir(id));
     }
 
     @Override
-    public String[] getAllStoragePaths(String type) {
+    public String[] getAllStorageDirs(String type) {
         return new String[]{OkWebDavUtil.concat(clazz.getSimpleName().toUpperCase(), DAV_DATA_DIR)};
     }
 }

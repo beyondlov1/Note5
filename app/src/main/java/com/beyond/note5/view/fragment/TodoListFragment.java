@@ -20,6 +20,11 @@ import com.beyond.note5.MyApplication;
 import com.beyond.note5.R;
 import com.beyond.note5.bean.Account;
 import com.beyond.note5.bean.Todo;
+import com.beyond.note5.component.DaggerTodoListFragmentComponent;
+import com.beyond.note5.component.module.CalendarModule;
+import com.beyond.note5.component.module.PredictModule;
+import com.beyond.note5.component.module.TodoModule;
+import com.beyond.note5.component.module.TodoSyncModule;
 import com.beyond.note5.event.AddTodoAllSuccessEvent;
 import com.beyond.note5.event.HideFABEvent;
 import com.beyond.note5.event.InCompleteTodoEvent;
@@ -34,15 +39,11 @@ import com.beyond.note5.event.todo.CompleteTodoEvent;
 import com.beyond.note5.event.todo.DeleteTodoSuccessEvent;
 import com.beyond.note5.event.todo.UpdateTodoPriorityEvent;
 import com.beyond.note5.event.todo.UpdateTodoSuccessEvent;
-import com.beyond.note5.component.module.CalendarModule;
-import com.beyond.note5.component.DaggerTodoListFragmentComponent;
-import com.beyond.note5.component.module.PredictModule;
-import com.beyond.note5.component.module.TodoModule;
-import com.beyond.note5.component.module.TodoSyncModule;
 import com.beyond.note5.presenter.SyncPresenter;
 import com.beyond.note5.presenter.TodoCompositePresenter;
 import com.beyond.note5.utils.ToastUtil;
 import com.beyond.note5.view.DavLoginActivity;
+import com.beyond.note5.view.MainActivity;
 import com.beyond.note5.view.SyncView;
 import com.beyond.note5.view.TodoView;
 import com.beyond.note5.view.adapter.list.DocumentRecyclerViewAdapter;
@@ -233,6 +234,12 @@ public class TodoListFragment extends Fragment {
 
             }
 
+            @Override
+            public void onScrolled(RecyclerView recyclerView, int dx, int dy) {
+                super.onScrolled(recyclerView, dx, dy);
+                MainActivity activity = (MainActivity)getActivity();
+                activity.adaptAlphaOfSearchBar(dy);
+            }
         });
     }
 

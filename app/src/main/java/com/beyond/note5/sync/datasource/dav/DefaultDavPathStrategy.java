@@ -24,7 +24,7 @@ public class DefaultDavPathStrategy implements DavPathStrategy {
     }
 
     @Override
-    public String getStoragePath(String id) {
+    public String getStorageDir(String id) {
         if (paths.length == 0) {
             throw new RuntimeException("url不能为空");
         }
@@ -43,12 +43,12 @@ public class DefaultDavPathStrategy implements DavPathStrategy {
     }
 
     @Override
-    public String getStorageUrl(String id) {
-        return OkWebDavUtil.concat(server,getStoragePath(id));
+    public String getStorageDirUrl(String id) {
+        return OkWebDavUtil.concat(server, getStorageDir(id));
     }
 
     @Override
-    public String[] getAllStoragePaths(String type) {
+    public String[] getAllStorageDirs(String type) {
         return new String[]{OkWebDavUtil.concat(clazz.getSimpleName().toUpperCase(),DAV_DATA_DIR)};
     }
 }

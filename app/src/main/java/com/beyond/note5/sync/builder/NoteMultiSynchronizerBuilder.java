@@ -6,7 +6,7 @@ import com.beyond.note5.bean.Account;
 import com.beyond.note5.bean.Note;
 import com.beyond.note5.sync.datasource.MultiDataSource;
 import com.beyond.note5.sync.datasource.dav.DavDataSourceProperty;
-import com.beyond.note5.sync.datasource.dav.DefaultMultiDavDataSource;
+import com.beyond.note5.sync.datasource.dav.NoteMultiDavDataSource;
 import com.beyond.note5.sync.datasource.sql.NoteMultiSqlDataSource;
 
 import java.util.List;
@@ -32,6 +32,6 @@ public class NoteMultiSynchronizerBuilder extends AbstractMultiSynchronizerBuild
     @NonNull
     @Override
     protected MultiDataSource<Note> getMultiDavDataSource(ExecutorService executorService, DavDataSourceProperty property) {
-        return new DefaultMultiDavDataSource<>(property, Note.class, executorService);
+        return new NoteMultiDavDataSource(property, Note.class, executorService);
     }
 }

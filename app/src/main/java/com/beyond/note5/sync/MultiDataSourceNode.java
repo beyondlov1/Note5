@@ -1,6 +1,9 @@
 package com.beyond.note5.sync;
 
+import com.beyond.note5.bean.Note;
+import com.beyond.note5.sync.datasource.FileStore;
 import com.beyond.note5.sync.datasource.MultiDataSource;
+import com.beyond.note5.sync.datasource.attachment.AttachmentHelper;
 import com.beyond.note5.sync.datasource.entity.SyncStamp;
 import com.beyond.note5.sync.exception.SaveException;
 
@@ -16,12 +19,17 @@ public class MultiDataSourceNode<T> {
     private List<MultiDataSourceNode<T>> children = new ArrayList<>();
     private MultiDataSource<T> dataSource;
     private List<T> modifiedData = new ArrayList<T>();
+    private AttachmentHelper attachmentHelper;
 
 
     public static <T> MultiDataSourceNode<T> of(MultiDataSource<T> dataSource) {
         MultiDataSourceNode<T> node = new MultiDataSourceNode<T>();
         node.setDataSource(dataSource);
         return node;
+    }
+
+    public void setAttachmentHelper(AttachmentHelper attachmentHelper) {
+        this.attachmentHelper = attachmentHelper;
     }
 
     public void getAllChildren(List<MultiDataSourceNode<T>> result) {
@@ -34,10 +42,21 @@ public class MultiDataSourceNode<T> {
     public List<T> getChildrenModifiedData() {
         List<T> childrenModifiedData = new ArrayList<T>();
         for (MultiDataSourceNode<T> child : children) {
+            addAttachmentSource(child);
             childrenModifiedData.addAll(child.modifiedData);
             childrenModifiedData.addAll(child.getChildrenModifiedData());
         }
         return childrenModifiedData;
+    }
+
+    private void addAttachmentSource(MultiDataSourceNode<T> node) {
+        if (attachmentHelper != null) {
+            for (T t : node.getModifiedData()) {
+                if (t instanceof Note && node.getDataSource() instanceof FileStore){
+                    attachmentHelper.add(((FileStore) node.getDataSource()), ((Note) t));
+                }
+            }
+        }
     }
 
     public void initModifiedData() throws IOException {

@@ -15,10 +15,10 @@ import static com.beyond.note5.MyApplication.DAV_ROOT_DIR;
  * @date: 2019/8/3
  */
 
-public class NoteSqlDavSynchronizerBuilder extends AbstractPointSynchronizerBuilder<Note> {
+public class NoteSqlDavPointSynchronizerBuilder extends AbstractPointSynchronizerBuilder<Note> {
 
 
-    public NoteSqlDavSynchronizerBuilder(Account account) {
+    public NoteSqlDavPointSynchronizerBuilder(Account account) {
         super(account);
     }
 

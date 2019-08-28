@@ -333,7 +333,7 @@ public class DefaultPointDavDataSource<T extends Tracable> implements DavDataSou
     }
 
     private String getPathById(String id) {
-        return davPathStrategy.getStoragePath(id);
+        return davPathStrategy.getStorageDir(id);
     }
 
     private String encode(T t) {
@@ -372,7 +372,7 @@ public class DefaultPointDavDataSource<T extends Tracable> implements DavDataSou
 
     @Override
     public String[] getPaths() {
-        return davPathStrategy.getAllStoragePaths(clazz.getSimpleName().toLowerCase());
+        return davPathStrategy.getAllStorageDirs(clazz.getSimpleName().toLowerCase());
     }
 
     @Override
@@ -393,7 +393,7 @@ public class DefaultPointDavDataSource<T extends Tracable> implements DavDataSou
     @NonNull
     private List<String> getModifiedIds(DavFilter davFilter) throws IOException {
         List<String> ids = new ArrayList<>();
-        String[] allPaths = davPathStrategy.getAllStoragePaths(clazz.getSimpleName().toLowerCase());
+        String[] allPaths = davPathStrategy.getAllStorageDirs(clazz.getSimpleName().toLowerCase());
         for (String path : allPaths) {
             ids.addAll(client.listAllFileName(OkWebDavUtil.concat(property.getServer(), path), davFilter));
         }
@@ -401,12 +401,12 @@ public class DefaultPointDavDataSource<T extends Tracable> implements DavDataSou
     }
 
     @Override
-    public void upload(String url, String path) throws IOException {
-        getClient().upload(path, url);
+    public void upload(String remotePath, String localPath) throws IOException {
+        // for subclass
     }
 
     @Override
-    public void download(String url, String path) throws IOException {
-        getClient().download(url, path);
+    public void download(String remotePath, String localPath) throws IOException {
+        // for subclass
     }
 }

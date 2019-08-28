@@ -43,8 +43,8 @@ public class SyncUtils {
         }
     }
 
-    public static <V, S> Executor<V, S> executor() {
-        return new Executor<>();
+    public static <V, S> Executor<V, S> executor(List<V> targetList) {
+        return new Executor<>(targetList);
     }
 
     @SuppressWarnings("unchecked")
@@ -128,6 +128,11 @@ public class SyncUtils {
         ExecutorService executorService;
         Handler<V, S> handler;
         ParamCallable<V, Void> exceptionHandler;
+        List<V> targetList;
+
+        public Executor(List<V> targetList) {
+            this.targetList = targetList;
+        }
 
         public Executor<V, S> executorService(ExecutorService executorService) {
             if (executorService == null) {
@@ -150,7 +155,7 @@ public class SyncUtils {
             return this;
         }
 
-        public void execute(List<V> targetList, ParamCallable<V, S> callable) {
+        public void execute(ParamCallable<V, S> callable) {
             blockExecute(executorService,
                     callable,
                     handler,
