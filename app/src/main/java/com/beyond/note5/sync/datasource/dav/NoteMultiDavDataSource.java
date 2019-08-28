@@ -1,6 +1,5 @@
 package com.beyond.note5.sync.datasource.dav;
 
-import com.beyond.note5.MyApplication;
 import com.beyond.note5.bean.Attachment;
 import com.beyond.note5.bean.Note;
 import com.beyond.note5.sync.datasource.attachment.AttachmentHelper;
@@ -30,31 +29,32 @@ public class NoteMultiDavDataSource extends DefaultMultiDavDataSource<Note> {
     protected void add(Note note) throws IOException {
         super.add(note);
 
-        if (attachmentHelper !=null){
+        if (attachmentHelper != null) {
             for (Attachment attachment : note.getAttachments()) {
-                attachmentHelper.upload(attachment,this);
+                attachmentHelper.upload(attachment, this);
             }
         }
     }
 
     @Override
-    public void upload(String id, String localPath) throws IOException {
+    public void upload(String id, String name, String localPath) throws IOException {
         Note note = new Note();
         note.setId(id);
-        getClient().upload(localPath, OkWebDavUtil.concat(getServer(),getRemotePath(note,localPath)));
+        getClient().upload(localPath, OkWebDavUtil.concat(getServer(), getRemotePath(note, name)));
     }
 
     @Override
-    public void download(String id, String localPath) throws IOException {
+    public void download(String id, String name, String localPath) throws IOException {
         Note note = new Note();
         note.setId(id);
-        getClient().download(OkWebDavUtil.concat(getServer(),getPath(note)), localPath);
+        getClient().download(OkWebDavUtil.concat(getServer(), getRemotePath(note, name)), localPath);
     }
 
-    private String getRemotePath(Note note, String localPath) {
+    private String getRemotePath(Note note, String fileName) {
         return OkWebDavUtil.concat(
                 getPath(note),
-                localPath.replaceFirst(MyApplication.getInstance().getFileStorageDir().getAbsolutePath(),"/"+property.getFilesDir())
+                property.getFilesDir(),
+                fileName
         );
     }
 }

@@ -47,12 +47,12 @@ public class NoteMultiSqlDataSource extends NoteSqlDataSource implements MultiDa
     }
 
     @Override
-    public void upload(String id, String localPath) throws IOException {
+    public void upload(String id, String name, String localPath) throws IOException {
 
     }
 
     @Override
-    public void download(String id, String localPath) throws IOException {
+    public void download(String id, String name, String localPath) throws IOException {
 
     }
 }

@@ -401,12 +401,12 @@ public class DefaultPointDavDataSource<T extends Tracable> implements DavDataSou
     }
 
     @Override
-    public void upload(String remotePath, String localPath) throws IOException {
+    public void upload(String id, String name, String localPath) throws IOException {
         // for subclass
     }
 
     @Override
-    public void download(String remotePath, String localPath) throws IOException {
+    public void download(String id,String name, String localPath) throws IOException {
         // for subclass
     }
 }

@@ -44,7 +44,8 @@ public class NoteSqlDataSourceWrap extends NoteSqlDataSource implements SyncCont
                             continue;
                         }
                         getDavDataSource().download(
-                                getRemoteUrl(note, attachment),
+                                note.getId(),
+                                attachment.getName(),
                                 getLocalPath(attachment)
                         );
                     } catch (IOException e) {

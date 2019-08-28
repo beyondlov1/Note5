@@ -8,6 +8,6 @@ import java.io.IOException;
  */
 
 public interface FileStore {
-    void upload(String id, String localPath) throws IOException;
-    void download(String id, String localPath) throws IOException;
+    void upload(String id,String name, String localPath) throws IOException;
+    void download(String id, String name, String localPath) throws IOException;
 }

@@ -55,7 +55,10 @@ public class AttachmentHelper {
                 .execute(new SyncUtils.ParamCallable<AttachmentSource, Object>() {
                     @Override
                     public Object call(AttachmentSource singleExecutor) throws Exception {
-                        singleExecutor.getFileStore().download(singleExecutor.getNote().getId(), singleExecutor.getAttachment().getPath());
+                        singleExecutor.getFileStore().download(
+                                singleExecutor.getNote().getId(),
+                                singleExecutor.getAttachment().getName(),
+                                singleExecutor.getAttachment().getPath());
                         return null;
                     }
                 });
@@ -75,7 +78,10 @@ public class AttachmentHelper {
                 .execute(new SyncUtils.ParamCallable<AttachmentSource, Object>() {
                     @Override
                     public Object call(AttachmentSource attachmentSource) throws Exception {
-                        fileStore.upload(attachmentSource.getNote().getId(), attachmentSource.getAttachment().getPath());
+                        fileStore.upload(
+                                attachmentSource.getNote().getId(),
+                                attachmentSource.getAttachment().getName(),
+                                attachmentSource.getAttachment().getPath());
                         return null;
                     }
                 });
@@ -84,7 +90,13 @@ public class AttachmentHelper {
     public void upload(Attachment attachment, FileStore fileStore) throws IOException {
         String id = attachment.getId();
         AttachmentSource attachmentSource = attachmentSourceMap.get(id);
-        attachmentSource.getFileStore().download(attachmentSource.getNote().getId(), attachmentSource.getAttachment().getPath());
-        fileStore.upload(attachmentSource.getNote().getId(), attachmentSource.getAttachment().getPath());
+        attachmentSource.getFileStore().download(
+                attachmentSource.getNote().getId(),
+                attachmentSource.getAttachment().getName(),
+                attachmentSource.getAttachment().getPath());
+        fileStore.upload(
+                attachmentSource.getNote().getId(),
+                attachmentSource.getAttachment().getName(),
+                attachmentSource.getAttachment().getPath());
     }
 }
