@@ -3,17 +3,14 @@ package com.beyond.note5.sync;
 import android.util.Log;
 
 import com.beyond.note5.MyApplication;
-import com.beyond.note5.bean.Note;
 import com.beyond.note5.bean.Tracable;
 import com.beyond.note5.service.SyncRetryService;
 import com.beyond.note5.sync.context.entity.SyncState;
 import com.beyond.note5.sync.context.model.SyncStateModel;
 import com.beyond.note5.sync.context.model.SyncStateModelImpl;
-import com.beyond.note5.sync.datasource.DataSource;
-import com.beyond.note5.sync.datasource.FileStore;
+import com.beyond.note5.sync.datasource.AttachmentHelperAware;
 import com.beyond.note5.sync.datasource.MultiDataSource;
 import com.beyond.note5.sync.datasource.attachment.AttachmentHelper;
-import com.beyond.note5.sync.datasource.dav.NoteMultiDavDataSource;
 import com.beyond.note5.sync.datasource.entity.SyncStamp;
 import com.beyond.note5.sync.exception.MessageException;
 import com.beyond.note5.sync.exception.SaveException;
@@ -21,7 +18,6 @@ import com.beyond.note5.sync.utils.SyncUtils;
 
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.Date;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
@@ -60,8 +56,6 @@ public class DefaultMultiSynchronizer<T extends Tracable> implements Synchronize
 
     private Date syncTimeStart;
 
-    private ThreadLocal<AttachmentHelper> attachmentHelperHolder;
-
     public DefaultMultiSynchronizer(List<MultiDataSource<T>> dataSources, ExecutorService executorService) {
         this.dataSources = dataSources;
         this.executorService = executorService;
@@ -76,7 +70,6 @@ public class DefaultMultiSynchronizer<T extends Tracable> implements Synchronize
         }
         this.dataSourceKeys = keyList.toArray(new String[0]);
         this.syncStateModel = new SyncStateModelImpl();
-        this.attachmentHelperHolder = new ThreadLocal<>();
     }
 
     @Override
@@ -107,8 +100,6 @@ public class DefaultMultiSynchronizer<T extends Tracable> implements Synchronize
 
         List<MultiDataSource<T>> dataSources = new ArrayList<>(this.dataSources);
 
-        attachmentHelperHolder.set(new AttachmentHelper(executorService));
-
         initDataSourceAttachmentHelper(dataSources);
 
         Log.d(getClass().getSimpleName(), "initSyncStamps:" + new Date());
@@ -122,11 +113,12 @@ public class DefaultMultiSynchronizer<T extends Tracable> implements Synchronize
 
         Log.d(getClass().getSimpleName(), "initModifiedDataAndRemoveInValidNodes:" + new Date());
         initModifiedDataAndRemoveInValidNodes(root);
-        initNodeAttachmentHelper(root);
 
         Log.d(getClass().getSimpleName(), "getChildrenModifiedData:" + new Date());
         List<T> childrenModifiedData = root.getChildrenModifiedData();
-        childrenModifiedData.addAll(getRootModifiedData(root));
+        childrenModifiedData.addAll(root.getModifiedData());
+        Log.d(getClass().getSimpleName(), "modifiedData:" + childrenModifiedData);
+
 
         if (!remoteLock()) {
             releaseLock();
@@ -162,16 +154,8 @@ public class DefaultMultiSynchronizer<T extends Tracable> implements Synchronize
         releaseLock();
     }
 
-    private void initNodeAttachmentHelper(MultiDataSourceNode<T> root) {
-        AttachmentHelper attachmentHelper = attachmentHelperHolder.get();
-        List<MultiDataSourceNode<T>> childrenNodes = getAllChildrenNodes(root);
-        for (MultiDataSourceNode<T> childrenNode : childrenNodes) {
-            childrenNode.setAttachmentHelper(attachmentHelper);
-        }
-        root.setAttachmentHelper(attachmentHelper);
-    }
-
-    private Collection<? extends T> getRootModifiedData(MultiDataSourceNode<T> root) throws IOException {
+    private void initRootModifiedData(MultiDataSourceNode<T> root) throws IOException {
+        // root 的 ModifiedData 是根据与 children 中最新同步的比较
         List<MultiDataSourceNode<T>> children = root.getChildren();
         SyncStamp latestSyncStamp = SyncStamp.ZERO;
         MultiDataSourceNode<T> latestSyncChild = null;
@@ -182,26 +166,14 @@ public class DefaultMultiSynchronizer<T extends Tracable> implements Synchronize
             }
         }
         List<T> changedData = root.getDataSource().getChangedData(latestSyncStamp, latestSyncChild == null ? null : latestSyncChild.getDataSource());
-        addAttachmentSource(root.getDataSource(), changedData);
-        return changedData;
-    }
-
-    private void addAttachmentSource(DataSource dataSource, List<T> modifiedData) {
-        AttachmentHelper attachmentHelper = attachmentHelperHolder.get();
-        if (attachmentHelper != null) {
-            for (T t : modifiedData) {
-                if (t instanceof Note && dataSource instanceof FileStore) {
-                    attachmentHelper.add(((FileStore) dataSource), ((Note) t));
-                }
-            }
-        }
+        root.setModifiedData(changedData);
     }
 
     private void initDataSourceAttachmentHelper(List<MultiDataSource<T>> dataSources) {
-        AttachmentHelper attachmentHelper = attachmentHelperHolder.get();
+        AttachmentHelper attachmentHelper = new AttachmentHelper(executorService);
         for (MultiDataSource<T> dataSource : dataSources) {
-            if (dataSource instanceof NoteMultiDavDataSource) {
-                ((NoteMultiDavDataSource) dataSource).setAttachmentHelper(attachmentHelper);
+            if (dataSource instanceof AttachmentHelperAware) {
+                ((AttachmentHelperAware) dataSource).setAttachmentHelper(attachmentHelper);
             }
         }
     }
@@ -307,7 +279,6 @@ public class DefaultMultiSynchronizer<T extends Tracable> implements Synchronize
             }
         }
         List<T> rootAll = root.getDataSource().getChangedData(SyncStamp.ZERO, null);
-        addAttachmentSource(root.getDataSource(), rootAll);
         SyncUtils.blockExecute(executorService
                 , new SyncUtils.ParamCallable<MultiDataSource<T>, List<T>>() {
                     @Override
@@ -403,7 +374,7 @@ public class DefaultMultiSynchronizer<T extends Tracable> implements Synchronize
         return successNodes;
     }
 
-    private void initModifiedDataAndRemoveInValidNodes(MultiDataSourceNode<T> root) {
+    private void initModifiedDataAndRemoveInValidNodes(MultiDataSourceNode<T> root) throws IOException {
         ArrayList<MultiDataSourceNode<T>> allChildren = new ArrayList<MultiDataSourceNode<T>>();
         root.getAllChildren(allChildren);
         blockExecute(executorService,
@@ -420,6 +391,7 @@ public class DefaultMultiSynchronizer<T extends Tracable> implements Synchronize
                         return null;
                     }
                 }, allChildren);
+        initRootModifiedData(root);
     }
 
     private void initSyncStamps(List<MultiDataSource<T>> list) {

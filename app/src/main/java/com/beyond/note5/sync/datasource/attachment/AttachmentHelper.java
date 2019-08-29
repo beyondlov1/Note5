@@ -8,11 +8,11 @@ import com.beyond.note5.sync.utils.SyncUtils;
 import org.apache.commons.lang3.StringUtils;
 
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.ExecutorService;
 
 /**
@@ -22,9 +22,9 @@ import java.util.concurrent.ExecutorService;
 
 public class AttachmentHelper {
 
-    private List<AttachmentSource> attachmentSources = new ArrayList<>();
+    private List<AttachmentSource> attachmentSources = new CopyOnWriteArrayList<>();
 
-    private Map<String, AttachmentSource> attachmentSourceMap = new HashMap<>();
+    private Map<String, AttachmentSource> attachmentSourceMap = new ConcurrentHashMap<>();
 
     private ExecutorService executor;
 
