@@ -326,7 +326,8 @@ public class NoteModelImpl implements NoteModel {
         return noteDao.queryBuilder()
                 .where(NoteDao.Properties.Type.eq(Document.NOTE))
                 .where(NoteDao.Properties.Valid.eq(true))
-                .where(NoteDao.Properties.Content.like("%" + searchKey + "%"))
+                .whereOr(NoteDao.Properties.Title.like("%" + searchKey + "%"),
+                        NoteDao.Properties.Content.like("%" + searchKey + "%"))
                 .orderAsc(NoteDao.Properties.ReadFlag)
                 .orderDesc(NoteDao.Properties.LastModifyTime)
                 .list();
