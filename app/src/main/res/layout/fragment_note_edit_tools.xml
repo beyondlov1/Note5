@@ -6,6 +6,7 @@
         android:id="@+id/fragment_edit_note_tools_container"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
+        android:layout_marginTop="15dp"
         android:layout_marginBottom="15dp">
         <ImageButton
             android:id="@+id/fragment_edit_note_clear"

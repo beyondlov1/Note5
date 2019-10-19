@@ -2,7 +2,6 @@ package com.beyond.note5.view.fragment;
 
 import android.annotation.SuppressLint;
 import android.app.Dialog;
-import android.content.DialogInterface;
 import android.graphics.Color;
 import android.graphics.drawable.ColorDrawable;
 import android.os.Bundle;
@@ -65,16 +64,12 @@ public abstract class AbstractNoteEditorFragment extends AbstractDocumentEditorF
         AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());
         builder.setView(root)
                 .setPositiveButton("OK",
-                        new DialogInterface.OnClickListener() {
-                            @Override
-                            public void onClick(DialogInterface dialog, int id) {
-                                String content = getEditorContent();
-                                if (content.length() > 0) {
-                                    creatingDocument.setContent(content);
-                                    onOKClick();
-                                }
-                                dialog.dismiss();
+                        (dialog, id) -> {
+                            String content = getEditorContent();
+                            if (content.length() > 0) {
+                                save(content);
                             }
+                            dialog.dismiss();
                         }).setNegativeButton("Cancel", null);
         AlertDialog alertDialog = builder.create();
         processStatusBarColor(alertDialog);
@@ -92,8 +87,6 @@ public abstract class AbstractNoteEditorFragment extends AbstractDocumentEditorF
     private void processStatusBarColor(AlertDialog dialog) {
         StatusBarUtil.showWhiteStatusBarForDialog(getActivity(),dialog);
     }
-
-    protected abstract void onOKClick();
 
     @Override
     protected void initCommonView() {
@@ -191,22 +184,13 @@ public abstract class AbstractNoteEditorFragment extends AbstractDocumentEditorF
     @Override
     protected void initFragmentEvent() {
         super.initFragmentEvent();
-        clearButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                editorContent.setText(null);
+        clearButton.setOnClickListener(v -> editorContent.setText(null));
+        saveButton.setOnClickListener(v -> {
+            String content = getEditorContent();
+            if (StringUtils.isNotBlank(content)) {
+                save(content);
             }
-        });
-        saveButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                String content = getEditorContent();
-                if (StringUtils.isNotBlank(content)) {
-                    creatingDocument.setContent(content);
-                    onOKClick();
-                }
-                InputMethodUtil.hideKeyboard(editorContent);
-            }
+            InputMethodUtil.hideKeyboard(editorContent);
         });
     }
 

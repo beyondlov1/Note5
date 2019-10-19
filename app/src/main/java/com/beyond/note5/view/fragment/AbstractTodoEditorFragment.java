@@ -87,8 +87,7 @@ public abstract class AbstractTodoEditorFragment extends AbstractDocumentEditorF
                             @Override
                             public void onClick(DialogInterface dialog, int id) {
                                 String content = editorContent.getText().toString();
-                                creatingDocument.setContent(content);
-                                onOKClick();
+                                save(content);
                                 dialog.dismiss();
                                 InputMethodUtil.hideKeyboard(editorContent);
                             }
@@ -101,8 +100,6 @@ public abstract class AbstractTodoEditorFragment extends AbstractDocumentEditorF
     private void processStatusBarColor(AlertDialog dialog) {
         StatusBarUtil.showWhiteStatusBarForDialog(getActivity(),dialog);
     }
-
-    protected abstract void onOKClick();
 
     @Override
     protected void initCommonView(){

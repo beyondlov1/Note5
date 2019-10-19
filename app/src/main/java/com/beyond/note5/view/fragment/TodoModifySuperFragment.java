@@ -1,6 +1,5 @@
 package com.beyond.note5.view.fragment;
 
-import android.annotation.SuppressLint;
 import android.content.Intent;
 import android.net.Uri;
 import android.os.Bundle;
@@ -60,6 +59,7 @@ import org.apache.commons.lang3.time.DateUtils;
 import org.greenrobot.eventbus.EventBus;
 import org.greenrobot.eventbus.Subscribe;
 import org.greenrobot.eventbus.ThreadMode;
+import org.greenrobot.greendao.annotation.NotNull;
 
 import java.util.Collections;
 import java.util.Comparator;
@@ -174,7 +174,6 @@ public class TodoModifySuperFragment extends AbstractTodoEditorFragment implemen
         super.initFragmentEvent();
         //防止事件向下传递
         root.setOnTouchListener(new View.OnTouchListener() {
-            @SuppressLint("ClickableViewAccessibility")
             @Override
             public boolean onTouch(View v, MotionEvent event) {
                 return true;
@@ -216,7 +215,7 @@ public class TodoModifySuperFragment extends AbstractTodoEditorFragment implemen
                 todoCompositePresenter.deleteLogic(creatingDocument);
                 EventBus.getDefault().post(new HideTodoEditorEvent(currentIndex));
                 InputMethodUtil.hideKeyboard(editorContent);
-                ToastUtil.toast(getContext(), "已转化为NOTE", Toast.LENGTH_SHORT);
+                ToastUtil.toast(TodoModifySuperFragment.this.getContext(), "已转化为NOTE", Toast.LENGTH_SHORT);
             }
         });
 
@@ -227,9 +226,9 @@ public class TodoModifySuperFragment extends AbstractTodoEditorFragment implemen
                 if (url != null) {
                     Uri uri = Uri.parse(url);
                     Intent intent = new Intent(Intent.ACTION_VIEW, uri);
-                    startActivity(intent);
+                    TodoModifySuperFragment.this.startActivity(intent);
                 } else {
-                    ToastUtil.toast(getContext(), "搜索文字不能超过32个字", Toast.LENGTH_SHORT);
+                    ToastUtil.toast(TodoModifySuperFragment.this.getContext(), "搜索文字不能超过32个字", Toast.LENGTH_SHORT);
                 }
 
                 onKeyboardChangeListener.setExecuteHideCallback(false);
@@ -241,13 +240,13 @@ public class TodoModifySuperFragment extends AbstractTodoEditorFragment implemen
         saveButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                onOKClick();
+                String content = editorContent.getText().toString();
+                TodoModifySuperFragment.this.save(content);
             }
         });
 
         if (editorContent instanceof SelectionListenableEditText) {
             ((SelectionListenableEditText) editorContent).setOnSelectionChanged(new SelectionListenableEditText.OnSelectionChangeListener() {
-
                 @Override
                 public void onChanged(String content, int selStart, int selEnd) {
                     if (content.length() >= selStart) {
@@ -286,12 +285,12 @@ public class TodoModifySuperFragment extends AbstractTodoEditorFragment implemen
     }
 
     @Override
-    protected void onOKClick() {
+    public void saveInternal(@NotNull CharSequence cs) {
         HideTodoEditorEvent hideTodoEditorEvent = new HideTodoEditorEvent(currentIndex);
         EventBus.getDefault().post(hideTodoEditorEvent);
         InputMethodUtil.hideKeyboard(editorContent, onKeyboardChangeListener, false);
 
-        String content = editorContent.getText().toString();
+        String content = cs.toString();
         if (StringUtils.isBlank(content)) {
             todoCompositePresenter.deleteLogic(creatingDocument);
         } else {
@@ -405,7 +404,6 @@ public class TodoModifySuperFragment extends AbstractTodoEditorFragment implemen
         this.fragmentContainer = fragmentContainer;
     }
 
-    
     private class MyTodoView extends TodoViewAdapter {
 
         @Override

@@ -37,6 +37,7 @@ import com.beyond.note5.utils.StatusBarUtil;
 import com.beyond.note5.utils.ToastUtil;
 import com.beyond.note5.utils.ViewUtil;
 import com.beyond.note5.utils.WebViewUtil;
+import com.beyond.note5.view.NoteModifyEditorActivity;
 import com.beyond.note5.view.adapter.view.CalendarViewAdapter;
 import com.beyond.note5.view.adapter.view.NoteViewAdapter;
 import com.beyond.note5.view.adapter.view.PredictViewAdapter;
@@ -325,8 +326,10 @@ public class NoteDetailSuperFragment extends AbstractDocumentDialogFragment impl
     }
 
     protected void showModifyView() {
-        NoteModifyFragment noteModifyFragment = new NoteModifyFragment();
-        noteModifyFragment.show(getActivity().getSupportFragmentManager(), "modifyDialog");
+        //NoteModifyFragment noteModifyFragment = new NoteModifyFragment();
+        //noteModifyFragment.show(getActivity().getSupportFragmentManager(), "modifyDialog");
+        Intent intent = new Intent(getContext(), NoteModifyEditorActivity.class);
+        startActivity(intent);
         EventBus.getDefault().postSticky(new FillNoteModifyEvent(multiDetailStage.getCurrentData()));
     }
 

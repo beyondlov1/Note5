@@ -85,10 +85,8 @@ import com.beyond.note5.view.animator.SmoothScalable;
 import com.beyond.note5.view.animator.SmoothScaleAnimation;
 import com.beyond.note5.view.fragment.FragmentContainerAware;
 import com.beyond.note5.view.fragment.NoteDetailSuperFragment;
-import com.beyond.note5.view.fragment.NoteEditFragment;
 import com.beyond.note5.view.fragment.NoteListFragment;
 import com.beyond.note5.view.fragment.PreferenceFragment;
-import com.beyond.note5.view.fragment.TodoEditFragment;
 import com.beyond.note5.view.fragment.TodoListFragment;
 import com.beyond.note5.view.fragment.TodoModifySuperFragment;
 import com.beyond.note5.view.listener.OnBackPressListener;
@@ -715,13 +713,17 @@ public class MainActivity extends FragmentActivity implements
         Fragment fragment = fragments.get(currentItemPosition);
         DialogFragment dialog;
         if (fragment instanceof NoteListFragment) {
-            dialog = new NoteEditFragment();
+//            dialog = new NoteEditFragment();
+            Intent intent = new Intent(getBaseContext(), NoteEditorActivity.class);
+            startActivity(intent);
         } else if (fragment instanceof TodoListFragment) {
-            dialog = new TodoEditFragment();
+//            dialog = new TodoEditFragment();
+            Intent intent = new Intent(getBaseContext(), TodoEditorActivity.class);
+            startActivity(intent);
         } else {
             return;
         }
-        dialog.show(getSupportFragmentManager(), "editDialog");
+//        dialog.show(getSupportFragmentManager(), "editDialog");
     }
 
 

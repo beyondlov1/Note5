@@ -16,6 +16,7 @@ import com.beyond.note5.view.adapter.view.NoteViewAdapter;
 import org.apache.commons.lang3.ObjectUtils;
 import org.greenrobot.eventbus.Subscribe;
 import org.greenrobot.eventbus.ThreadMode;
+import org.greenrobot.greendao.annotation.NotNull;
 
 import java.util.Date;
 
@@ -52,16 +53,17 @@ public class NoteModifyFragment extends AbstractNoteEditorFragment {
     }
 
     @Override
-    protected void onOKClick() {
-        creatingDocument.setLastModifyTime(new Date());
-        creatingDocument.setVersion(creatingDocument.getVersion() == null?0: creatingDocument.getVersion()+1);
-        notePresenter.update(creatingDocument);
-    }
-
-    @Override
     public void onDismiss(DialogInterface dialog) {
         super.onDismiss(dialog);
         StatusBarUtil.hideStatusBar(getActivity());
+    }
+
+    @Override
+    public void saveInternal(@NotNull CharSequence cs) {
+        creatingDocument.setContent(cs.toString());
+        creatingDocument.setLastModifyTime(new Date());
+        creatingDocument.setVersion(creatingDocument.getVersion() == null?0: creatingDocument.getVersion()+1);
+        notePresenter.update(creatingDocument);
     }
 
     private class MyNoteView extends NoteViewAdapter {

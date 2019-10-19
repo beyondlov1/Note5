@@ -114,16 +114,17 @@ public class TodoEditFragment extends AbstractTodoEditorFragment {
         saveButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                creatingDocument.setContent(editorContent.getText().toString());
-                onOKClick();
+                String content = editorContent.getText().toString();
+                save(content);
                 InputMethodUtil.hideKeyboard(editorContent);
             }
         });
     }
 
     @Override
-    protected void onOKClick() {
-        String content = creatingDocument.getContent();
+    public void saveInternal(CharSequence cs) {
+        String content = cs.toString();
+        creatingDocument.setContent(content);
         if (StringUtils.isBlank(content)) {
             return;
         }

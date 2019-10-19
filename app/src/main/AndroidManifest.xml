@@ -90,6 +90,13 @@
             android:theme="@style/Theme.AppCompat.Light.NoActionBar"
             android:windowSoftInputMode="stateVisible"/>
 
+        <activity android:name=".view.NoteEditorActivity"
+            android:windowSoftInputMode="stateVisible|adjustResize"/>
+        <activity android:name=".view.TodoEditorActivity"
+            android:windowSoftInputMode="stateVisible|adjustResize"/>
+        <activity android:name=".view.NoteModifyEditorActivity"
+            android:windowSoftInputMode="stateVisible|adjustResize" />
+
         <provider
             android:name="android.support.v4.content.FileProvider"
             android:authorities="com.beyond.note5"

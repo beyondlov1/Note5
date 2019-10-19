@@ -11,6 +11,8 @@ import com.beyond.note5.utils.ToastUtil;
 import com.beyond.note5.view.NoteView;
 import com.beyond.note5.view.adapter.view.NoteViewAdapter;
 
+import org.greenrobot.greendao.annotation.NotNull;
+
 import java.util.Date;
 
 /**
@@ -35,8 +37,9 @@ public class NoteEditFragment extends AbstractNoteEditorFragment {
     }
 
     @Override
-    protected void onOKClick() {
+    public void saveInternal(@NotNull CharSequence cs) {
         creatingDocument.setId(IDUtil.uuid());
+        creatingDocument.setContent(cs.toString());
         creatingDocument.setCreateTime(new Date());
         creatingDocument.setLastModifyTime(new Date());
         creatingDocument.setVersion(1);
