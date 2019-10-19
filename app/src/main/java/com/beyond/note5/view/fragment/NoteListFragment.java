@@ -54,6 +54,7 @@ import com.beyond.note5.view.adapter.view.DocumentViewBase;
 import org.greenrobot.eventbus.EventBus;
 import org.greenrobot.eventbus.Subscribe;
 import org.greenrobot.eventbus.ThreadMode;
+import org.greenrobot.greendao.annotation.NotNull;
 
 import java.io.FileInputStream;
 import java.io.IOException;
@@ -90,6 +91,8 @@ public class NoteListFragment extends Fragment {
     @Inject
     protected Handler handler;
 
+    private boolean dataFromOutSide = false;
+
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -112,7 +115,9 @@ public class NoteListFragment extends Fragment {
         initView(viewGroup);
         initEvent(viewGroup);
         //显示所有Note
-        notePresenter.findAll();
+        if (!dataFromOutSide) {
+            notePresenter.findAll();
+        }
         return viewGroup;
     }
 
@@ -144,7 +149,7 @@ public class NoteListFragment extends Fragment {
                 if (velocityY < 0) {
                     EventBus.getDefault().post(new ShowFABEvent(R.id.note_recycler_view));
 //                    EventBus.getDefault().post(new ShowToolBarEvent(null));
-                }else {
+                } else {
 //                    EventBus.getDefault().post(new HideToolBarEvent(null));
                 }
                 return false;
@@ -172,8 +177,10 @@ public class NoteListFragment extends Fragment {
             @Override
             public void onScrolled(RecyclerView recyclerView, int dx, int dy) {
                 super.onScrolled(recyclerView, dx, dy);
-                MainActivity activity = (MainActivity)getActivity();
-                activity.adaptAlphaOfSearchBar(dy);
+                if (getActivity() instanceof MainActivity){
+                    MainActivity activity = (MainActivity) getActivity();
+                    activity.adaptAlphaOfSearchBar(dy);
+                }
             }
         });
     }
@@ -336,4 +343,8 @@ public class NoteListFragment extends Fragment {
         refreshLayout.setRefreshing(false);
     }
 
+    public void setData(@NotNull List<Note> data) {
+        this.data = data;
+        dataFromOutSide = true;
+    }
 }

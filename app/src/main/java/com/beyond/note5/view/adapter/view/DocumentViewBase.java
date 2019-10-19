@@ -117,4 +117,14 @@ public abstract class DocumentViewBase<T extends Document> implements DocumentVi
     public abstract RecyclerView getRecyclerView() ;
 
     public abstract List<T> getData() ;
+
+    @Override
+    public void onSearchSuccess(List<T> documents) {
+
+    }
+
+    @Override
+    public void onSearchFail(Exception e) {
+
+    }
 }

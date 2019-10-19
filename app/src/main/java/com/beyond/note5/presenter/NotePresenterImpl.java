@@ -500,4 +500,28 @@ public class NotePresenterImpl implements NotePresenter {
         }
         return null;
     }
+
+
+    @Override
+    public void search(String searchKey) {
+        try {
+            List<Note> allNote = noteModel.searchByContent(searchKey);
+            searchSuccess(allNote);
+        } catch (Exception e) {
+            e.printStackTrace();
+            this.searchFail(e);
+        }
+    }
+
+    private void searchSuccess(List<Note> notes) {
+        if (noteView!=null){
+            noteView.onSearchSuccess(notes);
+        }
+    }
+
+    private void searchFail(Exception e) {
+        if (noteView!=null){
+            noteView.onSearchFail(e);
+        }
+    }
 }

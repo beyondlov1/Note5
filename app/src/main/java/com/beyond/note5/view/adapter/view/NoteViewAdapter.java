@@ -76,4 +76,14 @@ public class NoteViewAdapter implements NoteView {
 
     }
 
+    @Override
+    public void onSearchSuccess(List<Note> documents) {
+
+    }
+
+    @Override
+    public void onSearchFail(Exception e) {
+
+    }
+
 }

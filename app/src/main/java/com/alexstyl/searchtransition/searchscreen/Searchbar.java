@@ -38,4 +38,11 @@ public class Searchbar extends TransformingToolbar {
         editText.setText(null);
     }
 
+    public String getText(){
+        return editText.getText().toString();
+    }
+
+    public EditText getEditText(){
+        return editText;
+    }
 }

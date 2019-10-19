@@ -34,4 +34,6 @@ public interface DocumentPresenter<T>  extends CRUDPresenter<T>{
     void updateAllForSync(List<T> updateList, String[] oppositeKeys);
 
     void updateAllForSync(List<T> updateList, String source);
+
+    void search(String searchKey);
 }

@@ -17,6 +17,7 @@ import com.beyond.note5.utils.IDUtil;
 import com.beyond.note5.utils.PreferenceUtil;
 
 import org.apache.commons.collections4.CollectionUtils;
+import org.apache.commons.lang3.StringUtils;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -295,5 +296,26 @@ public class TodoModelImpl implements TodoModel {
                 .where(SyncStateDao.Properties.DocumentId.eq(todo.getId()))
                 .buildDelete()
                 .executeDeleteWithoutDetachingEntities();
+    }
+
+    @Override
+    public List<Todo> searchByContent(String searchKey) {
+        if (StringUtils.isNotBlank(searchKey)){
+            return todoDao.queryDeep("WHERE T.TYPE = 'todo' AND T.READ_FLAG = 0 AND T.VALID = '1' AND T.CONTENT LIKE '%"+searchKey+"%'" +
+                    "ORDER BY CASE WHEN T0.START IS NULL THEN DATE('now','localtime') ELSE DATE( T0.START/1000,'unixepoch','localtime') END ASC," +
+                    "READ_FLAG ASC, " +
+                    "CASE WHEN T0.START IS NULL THEN 1 ELSE 0 END ASC," +
+                    "T0.START ASC," +
+                    "LAST_MODIFY_TIME DESC"
+            );
+        }else {
+            return todoDao.queryDeep("WHERE T.TYPE = 'todo' AND T.READ_FLAG = 0 AND T.VALID = '1' " +
+                    "ORDER BY CASE WHEN T0.START IS NULL THEN DATE('now','localtime') ELSE DATE( T0.START/1000,'unixepoch','localtime') END ASC," +
+                    "READ_FLAG ASC, " +
+                    "CASE WHEN T0.START IS NULL THEN 1 ELSE 0 END ASC," +
+                    "T0.START ASC," +
+                    "LAST_MODIFY_TIME DESC"
+            );
+        }
     }
 }

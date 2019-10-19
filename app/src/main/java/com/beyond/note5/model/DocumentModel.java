@@ -38,4 +38,6 @@ public interface DocumentModel<T extends Document> extends Model<T> {
     void updateAll(List<T> updateList);
 
     void updateAll(List<T> updateList, String source);
+
+    List<T> searchByContent(String searchKey);
 }

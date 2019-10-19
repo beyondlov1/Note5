@@ -4,6 +4,7 @@ import com.beyond.note5.component.module.CommonModule;
 import com.beyond.note5.component.module.NoteModule;
 import com.beyond.note5.component.module.NoteSyncModule;
 import com.beyond.note5.view.fragment.NoteListFragment;
+import com.beyond.note5.view.fragment.SearchResultFragment;
 
 import javax.inject.Singleton;
 
@@ -17,4 +18,5 @@ import dagger.Component;
 @Component(modules = {CommonModule.class,NoteModule.class,NoteSyncModule.class})
 public interface NoteListFragmentComponent {
     void inject(NoteListFragment target);
+    void inject(SearchResultFragment target);
 }

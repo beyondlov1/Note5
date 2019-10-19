@@ -83,4 +83,14 @@ public class TodoViewAdapter implements TodoView {
     public void onUpdateAllFail(Exception e) {
 
     }
+
+    @Override
+    public void onSearchSuccess(List<Todo> documents) {
+
+    }
+
+    @Override
+    public void onSearchFail(Exception e) {
+
+    }
 }

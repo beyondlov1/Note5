@@ -240,8 +240,6 @@ public class NoteModelImpl implements NoteModel {
         onUpdatedAll(source,updateList.toArray(new Note[0]));
     }
 
-
-
     private void onInserted(Note note, String source) {
         addInsertLog(note,source);
     }
@@ -321,5 +319,16 @@ public class NoteModelImpl implements NoteModel {
                 .where(SyncStateDao.Properties.DocumentId.eq(note.getId()))
                 .buildDelete()
                 .executeDeleteWithoutDetachingEntities();
+    }
+
+    @Override
+    public List<Note> searchByContent(String searchKey) {
+        return noteDao.queryBuilder()
+                .where(NoteDao.Properties.Type.eq(Document.NOTE))
+                .where(NoteDao.Properties.Valid.eq(true))
+                .where(NoteDao.Properties.Content.like("%" + searchKey + "%"))
+                .orderAsc(NoteDao.Properties.ReadFlag)
+                .orderDesc(NoteDao.Properties.LastModifyTime)
+                .list();
     }
 }

@@ -66,7 +66,7 @@ public class DefaultPointSynchronizer<T extends Tracable> implements Synchronize
     }
 
     @Override
-    public boolean sync() throws Exception {
+    public synchronized boolean sync() throws Exception {
         if (lock.tryLock()) {
             try {
                 Log.d(getClass().getSimpleName(), dataSource2.getKey() + " sync start");

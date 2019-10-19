@@ -316,4 +316,28 @@ public class TodoPresenterImpl implements TodoPresenter {
         }
         todo.setContentWithoutTime(contentWithoutTime);
     }
+
+
+    @Override
+    public void search(String searchKey) {
+        try {
+            List<Todo> todos = todoModel.searchByContent(searchKey);
+            searchSuccess(todos);
+        } catch (Exception e) {
+            e.printStackTrace();
+            this.searchFail(e);
+        }
+    }
+
+    private void searchSuccess(List<Todo> notes) {
+        if (todoView!=null){
+            todoView.onSearchSuccess(notes);
+        }
+    }
+
+    private void searchFail(Exception e) {
+        if (todoView!=null){
+            todoView.onSearchFail(e);
+        }
+    }
 }

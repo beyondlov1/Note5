@@ -35,4 +35,8 @@ public interface DocumentView<T> {
     void onUpdateAllSuccess(List<T> updateList);
 
     void onUpdateAllFail(Exception e);
+
+    void onSearchSuccess(List<T> documents);
+
+    void onSearchFail(Exception e);
 }
