@@ -1,11 +1,6 @@
 package com.alexstyl.searchtransition.searchscreen;
 
-import android.graphics.Point;
 import android.os.Bundle;
-import android.support.design.widget.CoordinatorLayout;
-import android.support.v4.app.Fragment;
-import android.support.v4.app.FragmentManager;
-import android.support.v4.app.FragmentTransaction;
 import android.text.Editable;
 import android.text.TextWatcher;
 import android.transition.Transition;
@@ -15,59 +10,19 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewTreeObserver;
-import android.widget.FrameLayout;
 
 import com.alexstyl.searchtransition.boilerplate.BoilerplateActivity;
 import com.alexstyl.searchtransition.transition.FadeInTransition;
 import com.alexstyl.searchtransition.transition.FadeOutTransition;
 import com.alexstyl.searchtransition.transition.SimpleTransitionListener;
 import com.beyond.note5.R;
-import com.beyond.note5.bean.Note;
-import com.beyond.note5.constant.LoadType;
-import com.beyond.note5.event.FillNoteDetailEvent;
-import com.beyond.note5.event.HideNoteDetailEvent;
-import com.beyond.note5.event.ShowNoteDetailEvent;
-import com.beyond.note5.presenter.NotePresenter;
-import com.beyond.note5.presenter.NotePresenterImpl;
 import com.beyond.note5.utils.StatusBarUtil;
-import com.beyond.note5.utils.ToastUtil;
-import com.beyond.note5.view.adapter.view.NoteViewAdapter;
-import com.beyond.note5.view.animator.DefaultSmoothScaleAnimation;
-import com.beyond.note5.view.animator.SmoothScalable;
-import com.beyond.note5.view.animator.SmoothScaleAnimation;
-import com.beyond.note5.view.fragment.FragmentContainerAware;
-import com.beyond.note5.view.fragment.NoteDetailSuperFragment;
-import com.beyond.note5.view.fragment.SearchResultFragment;
-import com.beyond.note5.view.listener.OnBackPressListener;
-
-import org.greenrobot.eventbus.EventBus;
-import org.greenrobot.eventbus.Subscribe;
-import org.greenrobot.eventbus.ThreadMode;
-
-import java.util.List;
-
-import butterknife.BindView;
 
 import static android.view.KeyEvent.KEYCODE_ENTER;
 
-public class SearchActivity extends BoilerplateActivity {
+public abstract class SearchActivity extends BoilerplateActivity {
 
-    private Searchbar searchbar;
-
-    private FrameLayout resultContainer;
-
-    private NotePresenter notePresenter;
-
-    private Fragment noteDetailFragment;
-    private Fragment todoModifyFragment;
-
-    @BindView(R.id.note_detail_fragment_container)
-    FrameLayout noteDetailFragmentContainer;
-
-    @BindView(R.id.main_container)
-    CoordinatorLayout mainContainer;
-
-    private SmoothScaleAnimation noteDetailSmoothScaleAnimation = new DefaultSmoothScaleAnimation();
+    Searchbar searchbar;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -76,8 +31,7 @@ public class SearchActivity extends BoilerplateActivity {
 
         StatusBarUtil.showLightWhiteStatusBar(this);
 
-        searchbar = (Searchbar) findViewById(R.id.search_toolbar);
-        resultContainer = findViewById(R.id.search_result_container);
+        searchbar = findViewById(R.id.search_toolbar);
 
         // make sure to check if this is the first time running the activity
         // we don't want to play the enter animation on configuration changes (i.e. orientation)
@@ -106,41 +60,16 @@ public class SearchActivity extends BoilerplateActivity {
             });
         }
 
-        EventBus.getDefault().register(this);
-
-        initNoteDetailFragmentContainer();
-
-        initPresenter();
+        searchbar.setNavigationOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                finish();
+            }
+        });
 
         initSearchEvent();
-
-        // 显示搜索结果
-        showSearchResult();
-
     }
 
-    private void initNoteDetailFragmentContainer() {
-        Point point = new Point();
-        getWindowManager().getDefaultDisplay().getSize(point);
-        noteDetailFragment = new NoteDetailSuperFragment();
-
-        FragmentManager fragmentManager = getSupportFragmentManager();
-        FragmentTransaction fragmentTransaction = fragmentManager.beginTransaction();
-        fragmentTransaction.replace(R.id.note_detail_fragment_container, noteDetailFragment);
-        fragmentTransaction.commit();
-
-        noteDetailFragmentContainer = findViewById(R.id.note_detail_fragment_container);
-        noteDetailFragmentContainer.setVisibility(View.GONE);
-
-        if (noteDetailFragment instanceof FragmentContainerAware) {
-            ((FragmentContainerAware) noteDetailFragment).setFragmentContainer(noteDetailFragmentContainer);
-        }
-
-        if (noteDetailFragment instanceof SmoothScalable) {
-            ((SmoothScalable) noteDetailFragment).registerHooks(noteDetailSmoothScaleAnimation);
-        }
-
-    }
 
     private void initSearchEvent() {
         searchbar.getEditText().addTextChangedListener(new TextWatcher() {
@@ -170,14 +99,7 @@ public class SearchActivity extends BoilerplateActivity {
         });
     }
 
-    private void initPresenter() {
-        notePresenter = new NotePresenterImpl(new MyNoteView());
-    }
-
-    private void showSearchResult() {
-        String searchKey = searchbar.getText();
-        notePresenter.search(searchKey);
-    }
+    protected abstract void showSearchResult();
 
     private boolean isFirstTimeRunning(Bundle savedInstanceState) {
         return savedInstanceState == null;
@@ -233,50 +155,6 @@ public class SearchActivity extends BoilerplateActivity {
         return super.onOptionsItemSelected(item);
     }
 
-    @Subscribe(threadMode = ThreadMode.MAIN)
-    public void onReceived(final ShowNoteDetailEvent event) {
-        showNoteDetail(event.get(), event.getData(), event.getIndex(), event.getLoadType());
-    }
 
-    private void showNoteDetail(View startView, List<Note> data, int index, LoadType loadType) {
-        noteDetailFragmentContainer.setVisibility(View.VISIBLE);
-
-        FillNoteDetailEvent fillNoteDetailEvent = new FillNoteDetailEvent(data, index);
-        fillNoteDetailEvent.setLoadType(loadType);
-        EventBus.getDefault().postSticky(fillNoteDetailEvent);
-    }
-
-    @Subscribe(threadMode = ThreadMode.MAIN)
-    public void onReceived(HideNoteDetailEvent event) {
-        noteDetailFragmentContainer.setVisibility(View.GONE);
-    }
-
-    @Override
-    public void onBackPressed() {
-        if (noteDetailFragmentContainer.getVisibility() == View.VISIBLE) {
-            OnBackPressListener noteDetailOnBackPressListener = (OnBackPressListener) noteDetailFragment;
-            boolean consumed = noteDetailOnBackPressListener.onBackPressed();
-            if (!consumed) {
-                super.onBackPressed();
-            }
-        }  else {
-            super.onBackPressed();
-        }
-        ToastUtil.cancel();
-    }
-
-    class MyNoteView extends NoteViewAdapter {
-
-        @Override
-        public void onSearchSuccess(List<Note> documents) {
-            super.onSearchSuccess(documents);
-            SearchResultFragment fragment = new SearchResultFragment();
-            fragment.setData(documents);
-            FragmentManager fragmentManager = getSupportFragmentManager();
-            FragmentTransaction fragmentTransaction = fragmentManager.beginTransaction();
-            fragmentTransaction.replace(R.id.search_result_container, fragment);
-            fragmentTransaction.commit();
-        }
-    }
 
 }

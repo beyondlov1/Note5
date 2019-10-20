@@ -86,9 +86,13 @@
         <activity
             android:name=".view.DavLoginActivity"
             android:theme="@style/StartLoadBackgroundFullScreenTheme" />
-        <activity android:name="com.alexstyl.searchtransition.searchscreen.SearchActivity"
+        <activity android:name="com.alexstyl.searchtransition.searchscreen.NoteSearchActivity"
             android:theme="@style/Theme.AppCompat.Light.NoActionBar"
             android:windowSoftInputMode="stateVisible"/>
+        <activity android:name="com.alexstyl.searchtransition.searchscreen.TodoSearchActivity"
+            android:theme="@style/Theme.AppCompat.Light.NoActionBar"
+            android:windowSoftInputMode="stateVisible"/>
+
 
         <activity android:name=".view.NoteEditorActivity"
             android:windowSoftInputMode="stateVisible|adjustResize"/>

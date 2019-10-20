@@ -45,7 +45,8 @@ import android.widget.Toast;
 
 import com.alexstyl.searchtransition.boilerplate.ShareDemo;
 import com.alexstyl.searchtransition.mainscreen.SimpleToolbar;
-import com.alexstyl.searchtransition.searchscreen.SearchActivity;
+import com.alexstyl.searchtransition.searchscreen.NoteSearchActivity;
+import com.alexstyl.searchtransition.searchscreen.TodoSearchActivity;
 import com.alexstyl.searchtransition.transition.FadeInTransition;
 import com.alexstyl.searchtransition.transition.FadeOutTransition;
 import com.alexstyl.searchtransition.transition.SimpleTransitionListener;
@@ -141,6 +142,7 @@ public class MainActivity extends FragmentActivity implements
     private SmoothScaleAnimation todoEditSmoothScaleAnimation = new DefaultSmoothScaleAnimation();
 
     private String[] documentTypes = new String[3];
+    // Document.NOTE/Document.TOD.O
     private String currentType;
 
     private AtomicBoolean isFabShown = new AtomicBoolean(true);
@@ -171,10 +173,10 @@ public class MainActivity extends FragmentActivity implements
 
         initInjection();
 
-        initSearchBar();
         initView();
         initViewPager();
         initEvent();
+        initSearchBar();
 
         initNoteDetailFragmentContainer();
         initTodoEditFragmentContainer();
@@ -187,9 +189,14 @@ public class MainActivity extends FragmentActivity implements
         // setup your Toolbar as you would normally would
         // For simplicity, I am wrapping the styling of it into its a separate class
         toolbar =  findViewById(R.id.main_toolbar);
-        toolbarContainer =  findViewById(R.id.main_toolbar_container);
+                toolbarContainer =  findViewById(R.id.main_toolbar_container);
 
         toolbarMargin = getResources().getDimensionPixelSize(R.dimen.toolbarMargin);
+
+        int currentItemPosition = mainViewPager.getCurrentItem();
+        CharSequence currentPageTitle = mainViewPager.getAdapter().getPageTitle(currentItemPosition);
+        toolbar.setTitle(currentPageTitle!=null? currentPageTitle.toString().toUpperCase() :"");
+
         toolbar.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -243,7 +250,14 @@ public class MainActivity extends FragmentActivity implements
             }
 
             private void doNavigate(){
-                Intent intent = new Intent(MainActivity.this, SearchActivity.class);
+                Intent intent;
+                if (Document.NOTE.equals(currentType)) {
+                    intent = new Intent(MainActivity.this, NoteSearchActivity.class);
+                } else if (Document.TODO.equals(currentType)) {
+                    intent = new Intent(MainActivity.this, TodoSearchActivity.class);
+                }else {
+                    intent = new Intent(MainActivity.this, NoteSearchActivity.class);
+                }
                 startActivity(intent);
                 overridePendingTransition(0, 0);
             }
@@ -872,6 +886,9 @@ public class MainActivity extends FragmentActivity implements
         EventBus.getDefault().post(new ShowFABEvent(0));
         toolbarContainer.setVisibility(View.VISIBLE);
         toolbarContainer.setAlpha(1);
+
+        CharSequence currentPageTitle = mainViewPager.getAdapter().getPageTitle(currentItemPosition);
+        toolbar.setTitle(currentPageTitle!=null? currentPageTitle.toString().toUpperCase() :"");
     }
 
     private class MyOnKeyboardChangeListener extends OnKeyboardChangeListener {

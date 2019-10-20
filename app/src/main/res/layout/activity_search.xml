@@ -25,4 +25,8 @@
         android:id="@+id/note_detail_fragment_container"
         android:layout_width="match_parent"
         android:layout_height="match_parent" />
+    <FrameLayout
+        android:id="@+id/todo_edit_fragment_container"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"/>
 </FrameLayout>

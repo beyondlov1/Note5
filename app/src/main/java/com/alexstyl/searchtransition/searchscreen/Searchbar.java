@@ -45,4 +45,8 @@ public class Searchbar extends TransformingToolbar {
     public EditText getEditText(){
         return editText;
     }
+
+    public void setHint(String hint) {
+        editText.setHint(hint);
+    }
 }
