@@ -97,12 +97,12 @@ public class NoteListFragment extends Fragment {
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         EventBus.getDefault().register(this);
-        Log.d(getClass().getSimpleName(), "onCreate: create adapter start - "+System.currentTimeMillis());
+        Log.d(getClass().getSimpleName(), "onCreate: create adapter start - " + System.currentTimeMillis());
         recyclerViewAdapter = new NoteRecyclerViewAdapter(this.getContext(), new ReadFlagItemDataGenerator<>(data));
-        Log.d(getClass().getSimpleName(), "onCreate: create adapter end - "+System.currentTimeMillis());
-        Log.d(getClass().getSimpleName(), "onCreate: inject start - "+System.currentTimeMillis());
+        Log.d(getClass().getSimpleName(), "onCreate: create adapter end - " + System.currentTimeMillis());
+        Log.d(getClass().getSimpleName(), "onCreate: inject start - " + System.currentTimeMillis());
         initInjection();
-        Log.d(getClass().getSimpleName(), "onCreate: inject end - "+System.currentTimeMillis());
+        Log.d(getClass().getSimpleName(), "onCreate: inject end - " + System.currentTimeMillis());
     }
 
     private void initInjection() {
@@ -115,7 +115,7 @@ public class NoteListFragment extends Fragment {
     @Nullable
     @Override
     public View onCreateView(LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
-        Log.d(getClass().getSimpleName(), "onCreateView: start - "+System.currentTimeMillis());
+        Log.d(getClass().getSimpleName(), "onCreateView: start - " + System.currentTimeMillis());
         ViewGroup viewGroup = (ViewGroup) inflater.inflate(R.layout.fragment_note_list, container, false);
         initView(viewGroup);
         initEvent(viewGroup);
@@ -123,7 +123,7 @@ public class NoteListFragment extends Fragment {
         if (!dataFromOutSide) {
             notePresenter.findAll();
         }
-        Log.d(getClass().getSimpleName(), "onCreateView: end - "+System.currentTimeMillis());
+        Log.d(getClass().getSimpleName(), "onCreateView: end - " + System.currentTimeMillis());
         return viewGroup;
     }
 
@@ -183,7 +183,7 @@ public class NoteListFragment extends Fragment {
             @Override
             public void onScrolled(RecyclerView recyclerView, int dx, int dy) {
                 super.onScrolled(recyclerView, dx, dy);
-                if (getActivity() instanceof MainActivity){
+                if (getActivity() instanceof MainActivity) {
                     MainActivity activity = (MainActivity) getActivity();
                     activity.adaptAlphaOfSearchBar(dy);
                 }
@@ -315,7 +315,7 @@ public class NoteListFragment extends Fragment {
         @Override
         public void onAddSuccess(Note note) {
             super.onAddSuccess(note);
-            ToastUtil.toast(getContext(), "添加成功");
+            ToastUtil.toast("添加成功");
         }
 
         public DocumentRecyclerViewAdapter getRecyclerViewAdapter() {
@@ -335,13 +335,13 @@ public class NoteListFragment extends Fragment {
         @Override
         public void onSyncSuccess(String msg) {
             stopRefresh();
-            ToastUtil.toast(getContext(), msg);
+            ToastUtil.toast(msg);
         }
 
         @Override
         public void onSyncFail(String msg) {
             stopRefresh();
-            ToastUtil.toast(getContext(), msg);
+            ToastUtil.toast(msg);
         }
     }
 
