@@ -119,6 +119,7 @@ public class MainActivity extends FragmentActivity implements
 
     private static final int TAKE_PHOTO_REQUEST_CODE = 1;
     public static final int NOTIFICATION_REDIRECT_REQUEST_CODE = 2;
+    private static final int SPEECH_REQUEST_CODE = 3;
 
     @BindView(R.id.pager_tab_strip)
     PagerTabStrip pagerTabStrip;

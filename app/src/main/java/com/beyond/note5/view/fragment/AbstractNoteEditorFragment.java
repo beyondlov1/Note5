@@ -29,6 +29,9 @@ import com.beyond.note5.R;
 import com.beyond.note5.bean.Note;
 import com.beyond.note5.event.HideKeyBoardEvent2;
 import com.beyond.note5.event.ShowKeyBoardEvent;
+import com.beyond.note5.event.SpeechRecognizedEvent;
+import com.beyond.note5.speech.SpeechService;
+import com.beyond.note5.speech.SpeechServiceImpl;
 import com.beyond.note5.utils.InputMethodUtil;
 import com.beyond.note5.utils.StatusBarUtil;
 import com.beyond.note5.utils.WebViewUtil;
@@ -36,6 +39,8 @@ import com.beyond.note5.view.custom.MarkdownAutoRenderEditText;
 import com.beyond.note5.view.listener.OnClickToInsertBeforeLineListener;
 
 import org.apache.commons.lang3.StringUtils;
+import org.greenrobot.eventbus.Subscribe;
+import org.greenrobot.eventbus.ThreadMode;
 
 import butterknife.BindView;
 
@@ -58,6 +63,9 @@ public abstract class AbstractNoteEditorFragment extends AbstractDocumentEditorF
 
     protected ImageButton clearButton;
     protected ImageButton saveButton;
+    protected ImageButton speechButton;
+
+    SpeechService speechService = new SpeechServiceImpl();
 
     @Override
     public Dialog createDialogInternal(Bundle savedInstanceState) {
@@ -178,6 +186,7 @@ public abstract class AbstractNoteEditorFragment extends AbstractDocumentEditorF
         View browserSearchButton = root.findViewById(R.id.fragment_edit_note_browser_search);
         browserSearchButton.setVisibility(View.GONE);
         saveButton = root.findViewById(R.id.fragment_edit_note_save);
+        speechButton = root.findViewById(R.id.fragment_edit_note_speech);
         InputMethodUtil.showKeyboard(editorContent);
     }
 
@@ -192,6 +201,17 @@ public abstract class AbstractNoteEditorFragment extends AbstractDocumentEditorF
             }
             InputMethodUtil.hideKeyboard(editorContent);
         });
+        speechButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                speechService.speak(getContext());
+            }
+        });
+    }
+
+    @Subscribe(threadMode = ThreadMode.MAIN,sticky = true)
+    protected void onSpeechRecognized(SpeechRecognizedEvent event) {
+        editorContent.setText(event.get());
     }
 
     @Override

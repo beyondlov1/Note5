@@ -35,6 +35,15 @@
                 android:layout_toEndOf="@+id/fragment_edit_note_to_note" />
 
         <ImageButton
+            android:id="@+id/fragment_edit_note_speech"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:src="@drawable/ic_open_in_browser_yellow_800_24dp"
+            android:background="@null"
+            android:layout_marginStart="15dp"
+            android:layout_toEndOf="@+id/fragment_edit_note_browser_search" />
+
+        <ImageButton
             android:id="@+id/fragment_edit_note_save"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"

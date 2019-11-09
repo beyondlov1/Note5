@@ -3,10 +3,9 @@ package com.beyond.note5.view;
 import android.app.Activity;
 import android.content.Intent;
 import android.content.res.ColorStateList;
-import android.graphics.Bitmap;
 import android.graphics.Color;
 import android.os.Bundle;
-import android.os.Handler;
+import android.speech.RecognizerIntent;
 import android.support.annotation.Nullable;
 import android.text.Spannable;
 import android.text.SpannableString;
@@ -16,23 +15,18 @@ import android.text.style.ForegroundColorSpan;
 import android.text.style.SuggestionSpan;
 import android.text.style.TextAppearanceSpan;
 import android.util.Log;
+import android.view.View;
+import android.widget.Button;
 import android.widget.EditText;
-import android.widget.ImageView;
 import android.widget.TextView;
+import android.widget.Toast;
 
-import com.beyond.note5.MyApplication;
 import com.beyond.note5.R;
-import com.beyond.note5.bean.Attachment;
-import com.beyond.note5.bean.Note;
-import com.beyond.note5.model.dao.NoteDao;
-import com.beyond.note5.utils.BitmapUtil;
 import com.beyond.note5.utils.PhotoUtil;
-import com.beyond.note5.utils.ViewUtil;
-import com.beyond.note5.view.markdown.render.MarkdownRender;
 import com.beyond.note5.view.markdown.render.DefaultMarkdownRender;
+import com.beyond.note5.view.markdown.render.MarkdownRender;
 
-import java.io.File;
-import java.util.List;
+import java.util.ArrayList;
 
 import static android.graphics.Typeface.BOLD_ITALIC;
 
@@ -62,36 +56,62 @@ public class TestActivity extends Activity {
 //        detailStage.setData(data);
 //        detailStage.setCurrentIndex(1);
 //        detailStage.refresh(LoadType.CONTENT);
-        new Handler().postDelayed(new Runnable() {
+//        new Handler().postDelayed(new Runnable() {
+//            @Override
+//            public void run() {
+//            }
+//        }, 2000);
+//
+//
+//        NoteDao noteDao = MyApplication.getInstance().getDaoSession().getNoteDao();
+//        List<Note> list = noteDao.loadAll();
+//        Attachment attachment = null;
+//        for (Note note : list) {
+//            if (!note.getAttachments().isEmpty()){
+//                attachment = note.getAttachments().get(0);
+//                if (new File(attachment.getPath()).exists()){
+//                    break;
+//                }
+//            }
+//        }
+//
+//        if (attachment!=null){
+//            ImageView imageView = findViewById(R.id.test_imageView);
+//            double factor = (double) BitmapUtil.getOptions(attachment.getPath()).outHeight/(double) BitmapUtil.getOptions(attachment.getPath()).outWidth;
+////            imageView.setImageBitmap(BitmapUtil.decodeSampledBitmapFromResource(getResources(),R.drawable.ic_link_green_600_24dp,200,200));
+//            Bitmap bm = BitmapUtil.decodeSampledBitmapFromFile(attachment.getPath(),ViewUtil.getScreenSize().x,
+//                    (int) (ViewUtil.getScreenSize().x * factor));
+//            imageView.setImageBitmap(BitmapUtil.scale(bm,(double) ViewUtil.getScreenSize().x/(double) bm.getWidth()));
+//        }
+
+
+//        testSpanned();
+
+        Button speakButton = findViewById(R.id.speak);
+        speakButton.setOnClickListener(new View.OnClickListener() {
             @Override
-            public void run() {
+            public void onClick(View v) {
+                speak();
             }
-        }, 2000);
+        });
+    }
 
+    private void speak(){
+        try{
+            //通过Intent传递语音识别的模式，开启语音
+            Intent intent=new Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH);
+            //语言模式和自由模式的语音识别
+            intent.putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL, RecognizerIntent.LANGUAGE_MODEL_FREE_FORM);
+            //提示语音开始
+            intent.putExtra(RecognizerIntent.EXTRA_PROMPT, "开始语音");
 
-        NoteDao noteDao = MyApplication.getInstance().getDaoSession().getNoteDao();
-        List<Note> list = noteDao.loadAll();
-        Attachment attachment = null;
-        for (Note note : list) {
-            if (!note.getAttachments().isEmpty()){
-                attachment = note.getAttachments().get(0);
-                if (new File(attachment.getPath()).exists()){
-                    break;
-                }
-            }
+            //开始语音识别
+            startActivityForResult(intent, 77);
+        }catch (Exception e) {
+            // TODO: handle exception
+            e.printStackTrace();
+            Toast.makeText(getApplicationContext(), "找不到语音设备", Toast.LENGTH_LONG).show();
         }
-
-        if (attachment!=null){
-            ImageView imageView = findViewById(R.id.test_imageView);
-            double factor = (double) BitmapUtil.getOptions(attachment.getPath()).outHeight/(double) BitmapUtil.getOptions(attachment.getPath()).outWidth;
-//            imageView.setImageBitmap(BitmapUtil.decodeSampledBitmapFromResource(getResources(),R.drawable.ic_link_green_600_24dp,200,200));
-            Bitmap bm = BitmapUtil.decodeSampledBitmapFromFile(attachment.getPath(),ViewUtil.getScreenSize().x,
-                    (int) (ViewUtil.getScreenSize().x * factor));
-            imageView.setImageBitmap(BitmapUtil.scale(bm,(double) ViewUtil.getScreenSize().x/(double) bm.getWidth()));
-        }
-
-
-        testSpanned();
     }
 
     private void testSpanned() {
@@ -144,5 +164,15 @@ public class TestActivity extends Activity {
             Log.d(this.getClass().getSimpleName(), "" + delete);
         }
 
+        if(requestCode==77 && resultCode==RESULT_OK){
+            //取得语音的字符
+            ArrayList<String> results=data.getStringArrayListExtra(RecognizerIntent.EXTRA_RESULTS);
+            //谷歌可能有许多语音类似的返回，越往上优先级越高，这里列出所有的返回并拼接成字符串
+            StringBuilder resultString= new StringBuilder();
+            for(int i=0;i<results.size();i++){
+                resultString.append(results.get(i));
+            }
+            Toast.makeText(this, resultString.toString(), Toast.LENGTH_LONG).show();
+        }
     }
 }
