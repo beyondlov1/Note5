@@ -7,12 +7,16 @@ import com.beyond.note5.R;
 import com.beyond.note5.bean.Document;
 import com.beyond.note5.bean.Todo;
 import com.beyond.note5.event.HideKeyBoardEvent2;
+import com.beyond.note5.event.SpeechBeginEvent;
+import com.beyond.note5.event.SpeechEndEvent;
 import com.beyond.note5.predict.bean.Tag;
 import com.beyond.note5.presenter.CalendarPresenterImpl;
 import com.beyond.note5.presenter.PredictPresenterImpl;
 import com.beyond.note5.presenter.TodoCompositePresenter;
 import com.beyond.note5.presenter.TodoCompositePresenterImpl;
 import com.beyond.note5.presenter.TodoPresenterImpl;
+import com.beyond.note5.speech.SpeechService;
+import com.beyond.note5.speech.XfSpeechServiceImpl;
 import com.beyond.note5.utils.InputMethodUtil;
 import com.beyond.note5.utils.ToastUtil;
 import com.beyond.note5.view.adapter.view.CalendarViewAdapter;
@@ -21,13 +25,20 @@ import com.beyond.note5.view.adapter.view.TodoViewAdapter;
 import com.beyond.note5.view.custom.SelectionListenableEditText;
 import com.beyond.note5.view.listener.OnTagClickToAppendListener;
 import com.beyond.note5.view.listener.TimeExpressionDetectiveTextWatcher;
+import com.iflytek.cloud.SpeechConstant;
+import com.iflytek.cloud.SpeechRecognizer;
+import com.iflytek.cloud.SpeechUtility;
 
 import org.apache.commons.lang3.StringUtils;
+import org.greenrobot.eventbus.Subscribe;
+import org.greenrobot.eventbus.ThreadMode;
 
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.Iterator;
 import java.util.List;
+
+import static com.beyond.note5.speech.XfSpeechServiceImpl.XF_APP_ID;
 
 /**
  * @author: beyond
@@ -43,6 +54,8 @@ public class TodoEditFragment extends AbstractTodoEditorFragment {
     MyCalendarView calendarView = new MyCalendarView();
 
     MyPredictView predictView = new MyPredictView();
+
+    private SpeechService speechService;
 
     @Override
     protected void init(Bundle savedInstanceState) {
@@ -92,6 +105,9 @@ public class TodoEditFragment extends AbstractTodoEditorFragment {
     @Override
     protected void initFragmentView() {
         super.initFragmentView();
+
+        initSpeech();
+
         editorToolViewStub.inflate();
         clearButton = root.findViewById(R.id.fragment_edit_todo_clear);
         View convertButton = root.findViewById(R.id.fragment_edit_todo_to_note);
@@ -99,7 +115,13 @@ public class TodoEditFragment extends AbstractTodoEditorFragment {
         View browserSearchButton = root.findViewById(R.id.fragment_edit_todo_browser_search);
         browserSearchButton.setVisibility(View.GONE);
         saveButton = root.findViewById(R.id.fragment_edit_todo_save);
+        speechButton = root.findViewById(R.id.fragment_edit_todo_speech);
         InputMethodUtil.showKeyboard(editorContent);
+    }
+
+    private void initSpeech() {
+        SpeechUtility.createUtility(getContext(), SpeechConstant.APPID + "=" + XF_APP_ID);
+        speechService = new XfSpeechServiceImpl(SpeechRecognizer.createRecognizer(getContext(), null));
     }
 
     @Override
@@ -119,6 +141,32 @@ public class TodoEditFragment extends AbstractTodoEditorFragment {
                 InputMethodUtil.hideKeyboard(editorContent);
             }
         });
+        speechButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                speechButton.setImageDrawable(getResources().getDrawable(R.drawable.ic_keyboard_voice_green_600_24dp,null));
+                speechService.speak(getContext(), new SpeechService.SpeakListener() {
+                    @Override
+                    public void onRecognized(String result) {
+                        appendToContent(result);
+                    }
+                });
+            }
+        });
+    }
+
+    private void appendToContent(String s) {
+        editorContent.append(s);
+    }
+
+    @Subscribe(threadMode = ThreadMode.MAIN)
+    public void onSpeechRecognized(SpeechBeginEvent event) {
+        speechButton.setImageDrawable(getResources().getDrawable(R.drawable.ic_keyboard_voice_green_600_24dp,null));
+    }
+
+    @Subscribe(threadMode = ThreadMode.MAIN)
+    public void onSpeechRecognized(SpeechEndEvent event) {
+        speechButton.setImageDrawable(getResources().getDrawable(R.drawable.ic_keyboard_voice_black_24dp,null));
     }
 
     @Override

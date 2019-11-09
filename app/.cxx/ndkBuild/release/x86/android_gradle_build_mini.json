@@ -1,0 +1,17 @@
+{
+  "buildFiles": [
+    "E:\\GitHubProject\\Note5\\app\\src\\main\\jniLibs\\Android.mk"
+  ],
+  "cleanCommands": [
+    "D:\\AndroidStudio\\SDK\\ndk\\20.1.5948944\\ndk-build.cmd NDK_PROJECT_PATH\u003dnull APP_BUILD_SCRIPT\u003dE:\\GitHubProject\\Note5\\app\\src\\main\\jniLibs\\Android.mk APP_ABI\u003dx86 NDK_ALL_ABIS\u003dx86 NDK_DEBUG\u003d0 APP_PLATFORM\u003dandroid-23 NDK_OUT\u003dE:/GitHubProject/Note5/app/build/intermediates/ndkBuild/release/obj NDK_LIBS_OUT\u003dE:\\GitHubProject\\Note5\\app\\build\\intermediates\\ndkBuild\\release\\lib clean"
+  ],
+  "buildTargetsCommand": "D:\\AndroidStudio\\SDK\\ndk\\20.1.5948944\\ndk-build.cmd NDK_PROJECT_PATH\u003dnull APP_BUILD_SCRIPT\u003dE:\\GitHubProject\\Note5\\app\\src\\main\\jniLibs\\Android.mk APP_ABI\u003dx86 NDK_ALL_ABIS\u003dx86 NDK_DEBUG\u003d0 APP_PLATFORM\u003dandroid-23 NDK_OUT\u003dE:/GitHubProject/Note5/app/build/intermediates/ndkBuild/release/obj NDK_LIBS_OUT\u003dE:\\GitHubProject\\Note5\\app\\build\\intermediates\\ndkBuild\\release\\lib {LIST_OF_TARGETS_TO_BUILD}",
+  "libraries": {
+    "app-release-x86": {
+      "artifactName": "app",
+      "buildCommand": "D:\\AndroidStudio\\SDK\\ndk\\20.1.5948944\\ndk-build.cmd NDK_PROJECT_PATH\u003dnull APP_BUILD_SCRIPT\u003dE:\\GitHubProject\\Note5\\app\\src\\main\\jniLibs\\Android.mk APP_ABI\u003dx86 NDK_ALL_ABIS\u003dx86 NDK_DEBUG\u003d0 APP_PLATFORM\u003dandroid-23 NDK_OUT\u003dE:/GitHubProject/Note5/app/build/intermediates/ndkBuild/release/obj NDK_LIBS_OUT\u003dE:\\GitHubProject\\Note5\\app\\build\\intermediates\\ndkBuild\\release\\lib E:/GitHubProject/Note5/app/build/intermediates/ndkBuild/release/obj/local/x86/libapp.so",
+      "abi": "x86",
+      "output": "E:\\GitHubProject\\Note5\\app\\build\\intermediates\\ndkBuild\\release\\obj\\local\\x86\\libapp.so"
+    }
+  }
+}

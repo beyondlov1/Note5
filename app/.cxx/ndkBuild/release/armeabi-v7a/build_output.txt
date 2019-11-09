@@ -1,0 +1,9 @@
+Android NDK: WARNING: Unsupported source file extensions in E:\GitHubProject\Note5\app\src\main\jniLibs\Android.mk for module app    
+Android NDK:   E:\GitHubProject\Note5\app\src\main\jniLibs\arm64-v8a\libmsc.so E:\GitHubProject\Note5\app\src\main\jniLibs\armeabi-v7a\libmsc.so    
+md "E:\GitHubProject\Note5\app\build\intermediates\ndkBuild\release\obj\local\armeabi-v7a" >NUL 2>NUL || rem
+D:/AndroidStudio/SDK/ndk/20.1.5948944/build//../prebuilt/windows-x86_64/bin/echo.exe [armeabi-v7a] "SharedLibrary  ": "libapp.so"
+D:/AndroidStudio/SDK/ndk/20.1.5948944/build//../toolchains/llvm/prebuilt/windows-x86_64/bin/clang++.exe -Wl,-soname,libapp.so -shared -lgcc -Wl,--exclude-libs,libgcc.a -latomic -Wl,--exclude-libs,libatomic.a -target armv7-none-linux-androideabi23 -no-canonical-prefixes    -Wl,--build-id -Wl,--build-id -stdlib=libstdc++ -Wl,--no-undefined -Wl,-z,noexecstack -Wl,--warn-shared-textrel -Wl,--fatal-warnings   -lc -lm -o E:/GitHubProject/Note5/app/build/intermediates/ndkBuild/release/obj/local/armeabi-v7a/libapp.so
+md "E:\GitHubProject\Note5\app\build\intermediates\ndkBuild\release\lib\armeabi-v7a" >NUL 2>NUL || rem
+D:/AndroidStudio/SDK/ndk/20.1.5948944/build//../prebuilt/windows-x86_64/bin/echo.exe [armeabi-v7a] "Install        ": "libapp.so => E:\GitHubProject\Note5\app\build\intermediates\ndkBuild\release\lib/armeabi-v7a/libapp.so"
+copy /b/y "E:\GitHubProject\Note5\app\build\intermediates\ndkBuild\release\obj\local\armeabi-v7a\libapp.so" "E:\GitHubProject\Note5\app\build\intermediates\ndkBuild\release\lib\armeabi-v7a\libapp.so" > NUL
+D:/AndroidStudio/SDK/ndk/20.1.5948944/build//../toolchains/llvm/prebuilt/windows-x86_64/bin/arm-linux-androideabi-strip --strip-unneeded  E:\GitHubProject\Note5\app\build\intermediates\ndkBuild\release\lib/armeabi-v7a/libapp.so

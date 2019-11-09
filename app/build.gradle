@@ -1,6 +1,9 @@
+import org.aspectj.bridge.IMessage
+import org.aspectj.bridge.MessageHandler
+import org.aspectj.tools.ajc.Main
+
 apply plugin: 'com.android.application'
 apply plugin: 'org.greenrobot.greendao' // apply plugin
-
 
 android {
     compileSdkVersion 26
@@ -26,9 +29,12 @@ android {
 
     sourceSets {
         // Place your db/migration folder here
-        main { assets.srcDirs = ['src/main/assets'] }
+        main {
+            assets.srcDirs = ['src/main/assets']
+            jni.srcDirs = ['src/main/jni', 'src/main/jniLibs/']
+        }
     }
-    packagingOptions{
+    packagingOptions {
         exclude 'META-INF/DEPENDENCIES'
         exclude 'META-INF/LINCENSE'
         exclude 'META-INF/LINCENSE.txt'
@@ -41,9 +47,14 @@ android {
     testOptions {
         unitTests.returnDefaultValues = true
     }
+    externalNativeBuild {
+        ndkBuild {
+            path file('src/main/jniLibs/Android.mk')
+        }
+    }
 }
 
-buildscript{
+buildscript {
     repositories {
 //        maven { rootUrl 'https://dl.google.com/dl/android/maven2/' }
 //        google()
@@ -53,9 +64,11 @@ buildscript{
     }
     dependencies {
         //noinspection GradleDependency
-        classpath 'com.android.tools.build:gradle:3.2.1'
+        classpath 'com.android.tools.build:gradle:3.5.1'
+        classpath 'org.aspectj:aspectjtools:1.8.9'
+        classpath 'org.aspectj:aspectjweaver:1.8.9'
         classpath 'org.greenrobot:greendao-gradle-plugin:3.2.2' // add plugin
-        classpath 'com.jakewharton:butterknife-gradle-plugin:8.8.1'
+        classpath 'com.jakewharton:butterknife-gradle-plugin:9.0.0-rc2'
     }
 }
 
@@ -104,6 +117,7 @@ dependencies {
     //markdown
     implementation 'org.markdownj:markdownj-core:0.4'
     implementation 'com.zzhoujay.richtext:richtext:3.0.8'
+    implementation 'com.zzhoujay.markdown:markdown:1.0.5'
     //compress
     implementation 'id.zelory:compressor:2.1.0'
     implementation 'com.zxy.android:tiny:0.0.6'
@@ -148,4 +162,51 @@ dependencies {
     implementation 'com.github.SheHuan:NiceImageView:1.0.5'
 
     //editText
+
+    // aspectJ
+    implementation 'org.aspectj:aspectjrt:1.8.9'
+}
+
+
+final def log = project.logger
+final def variants = project.android.applicationVariants
+
+variants.all { variant ->
+    if (!variant.buildType.isDebuggable()) {
+        log.debug("Skipping non-debuggable build type '${variant.buildType.name}'.")
+        return;
+    }
+
+    def javaCompile = variant.getJavaCompileProvider().get()
+    javaCompile.doLast {
+        String[] args = ["-showWeaveInfo",
+                         "-1.8",
+                         "-inpath", javaCompile.destinationDir.toString(),
+                         "-aspectpath", javaCompile.classpath.asPath,
+                         "-d", javaCompile.destinationDir.toString(),
+                         "-classpath", javaCompile.classpath.asPath,
+                         "-bootclasspath", project.android.bootClasspath.join(File.pathSeparator)]
+        log.debug "ajc args: " + Arrays.toString(args)
+
+        MessageHandler handler = new MessageHandler(true);
+        new Main().run(args, handler);
+        for (IMessage message : handler.getMessages(null, true)) {
+            switch (message.getKind()) {
+                case IMessage.ABORT:
+                case IMessage.ERROR:
+                case IMessage.FAIL:
+                    log.error message.message, message.thrown
+                    break;
+                case IMessage.WARNING:
+                    log.warn message.message, message.thrown
+                    break;
+                case IMessage.INFO:
+                    log.info message.message, message.thrown
+                    break;
+                case IMessage.DEBUG:
+                    log.debug message.message, message.thrown
+                    break;
+            }
+        }
+    }
 }

@@ -49,6 +49,7 @@ public abstract class AbstractDocumentDialogFragment<T extends Document> extends
     @Nullable
     @Override
     public View onCreateView(LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
+        EventBus.getDefault().register(this);
         if (isDialog()) {
             unbinder = ButterKnife.bind(this, root);
             initCommonView();
@@ -95,7 +96,6 @@ public abstract class AbstractDocumentDialogFragment<T extends Document> extends
     @Override
     public void onStart() {
         super.onStart();
-        EventBus.getDefault().register(this);
         if (isDialog()) {
             onDialogStartInternal();
         } else {
@@ -113,12 +113,12 @@ public abstract class AbstractDocumentDialogFragment<T extends Document> extends
 
     @Override
     public void onStop() {
-        EventBus.getDefault().unregister(this);
         super.onStop();
     }
 
     @Override
     public void onDestroyView() {
+        EventBus.getDefault().unregister(this);
         super.onDestroyView();
         unbinder.unbind();
     }

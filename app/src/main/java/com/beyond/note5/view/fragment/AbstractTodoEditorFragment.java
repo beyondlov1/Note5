@@ -65,6 +65,7 @@ public abstract class AbstractTodoEditorFragment extends AbstractDocumentEditorF
     ImageButton convertButton;
     ImageButton browserSearchButton;
     ImageButton saveButton;
+    ImageButton speechButton;
 
     protected TagAdapter<String> tagAdapter;
     protected List<String> tagData = new ArrayList<>();

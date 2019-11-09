@@ -29,20 +29,27 @@ import com.beyond.note5.R;
 import com.beyond.note5.bean.Note;
 import com.beyond.note5.event.HideKeyBoardEvent2;
 import com.beyond.note5.event.ShowKeyBoardEvent;
+import com.beyond.note5.event.SpeechBeginEvent;
+import com.beyond.note5.event.SpeechEndEvent;
 import com.beyond.note5.event.SpeechRecognizedEvent;
 import com.beyond.note5.speech.SpeechService;
-import com.beyond.note5.speech.SpeechServiceImpl;
+import com.beyond.note5.speech.XfSpeechServiceImpl;
 import com.beyond.note5.utils.InputMethodUtil;
 import com.beyond.note5.utils.StatusBarUtil;
 import com.beyond.note5.utils.WebViewUtil;
 import com.beyond.note5.view.custom.MarkdownAutoRenderEditText;
 import com.beyond.note5.view.listener.OnClickToInsertBeforeLineListener;
+import com.iflytek.cloud.SpeechConstant;
+import com.iflytek.cloud.SpeechRecognizer;
+import com.iflytek.cloud.SpeechUtility;
 
 import org.apache.commons.lang3.StringUtils;
 import org.greenrobot.eventbus.Subscribe;
 import org.greenrobot.eventbus.ThreadMode;
 
 import butterknife.BindView;
+
+import static com.beyond.note5.speech.XfSpeechServiceImpl.XF_APP_ID;
 
 
 /**
@@ -65,7 +72,7 @@ public abstract class AbstractNoteEditorFragment extends AbstractDocumentEditorF
     protected ImageButton saveButton;
     protected ImageButton speechButton;
 
-    SpeechService speechService = new SpeechServiceImpl();
+    private SpeechService speechService;
 
     @Override
     public Dialog createDialogInternal(Bundle savedInstanceState) {
@@ -86,14 +93,14 @@ public abstract class AbstractNoteEditorFragment extends AbstractDocumentEditorF
 
     @NonNull
     private String getEditorContent() {
-        if (editorContent instanceof MarkdownAutoRenderEditText){
+        if (editorContent instanceof MarkdownAutoRenderEditText) {
             return ((MarkdownAutoRenderEditText) editorContent).getRealContent();
         }
         return editorContent.getText().toString();
     }
 
     private void processStatusBarColor(AlertDialog dialog) {
-        StatusBarUtil.showWhiteStatusBarForDialog(getActivity(),dialog);
+        StatusBarUtil.showWhiteStatusBarForDialog(getActivity(), dialog);
     }
 
     @Override
@@ -176,6 +183,9 @@ public abstract class AbstractNoteEditorFragment extends AbstractDocumentEditorF
     @Override
     protected void initFragmentView() {
         super.initFragmentView();
+
+        initSpeech();
+
         editorContainer.setBackgroundColor(Color.WHITE);
         editorContainer.setBackgroundResource(R.drawable.corners_5dp);
         editorContainer.setPadding(5, 5, 5, 5);
@@ -188,6 +198,11 @@ public abstract class AbstractNoteEditorFragment extends AbstractDocumentEditorF
         saveButton = root.findViewById(R.id.fragment_edit_note_save);
         speechButton = root.findViewById(R.id.fragment_edit_note_speech);
         InputMethodUtil.showKeyboard(editorContent);
+    }
+
+    private void initSpeech() {
+        SpeechUtility.createUtility(getContext(), SpeechConstant.APPID + "=" + XF_APP_ID);
+        speechService = new XfSpeechServiceImpl(SpeechRecognizer.createRecognizer(getContext(), null));
     }
 
     @Override
@@ -204,14 +219,34 @@ public abstract class AbstractNoteEditorFragment extends AbstractDocumentEditorF
         speechButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                speechService.speak(getContext());
+                speechButton.setImageDrawable(getResources().getDrawable(R.drawable.ic_keyboard_voice_green_600_24dp,null));
+                speechService.speak(getContext(), new SpeechService.SpeakListener() {
+                    @Override
+                    public void onRecognized(String result) {
+                        appendToContent(result);
+                    }
+                });
             }
         });
     }
 
-    @Subscribe(threadMode = ThreadMode.MAIN,sticky = true)
-    protected void onSpeechRecognized(SpeechRecognizedEvent event) {
-        editorContent.setText(event.get());
+    @Subscribe(threadMode = ThreadMode.MAIN, sticky = true)
+    public void onSpeechRecognized(SpeechRecognizedEvent event) {
+        appendToContent(event.get());
+    }
+
+    @Subscribe(threadMode = ThreadMode.MAIN)
+    public void onSpeechRecognized(SpeechBeginEvent event) {
+        speechButton.setImageDrawable(getResources().getDrawable(R.drawable.ic_keyboard_voice_green_600_24dp,null));
+    }
+
+    @Subscribe(threadMode = ThreadMode.MAIN)
+    public void onSpeechRecognized(SpeechEndEvent event) {
+        speechButton.setImageDrawable(getResources().getDrawable(R.drawable.ic_keyboard_voice_black_24dp,null));
+    }
+
+    private void appendToContent(String s) {
+        editorContent.append(s);
     }
 
     @Override

@@ -1,0 +1,13 @@
+Executable : D:\AndroidStudio\SDK\ndk\20.1.5948944\ndk-build.cmd
+arguments : 
+NDK_PROJECT_PATH=null
+APP_BUILD_SCRIPT=E:\GitHubProject\Note5\app\src\main\jniLibs\Android.mk
+APP_ABI=x86_64
+NDK_ALL_ABIS=x86_64
+NDK_DEBUG=1
+APP_PLATFORM=android-23
+NDK_OUT=E:/GitHubProject/Note5/app/build/intermediates/ndkBuild/debug/obj
+NDK_LIBS_OUT=E:\GitHubProject\Note5\app\build\intermediates\ndkBuild\debug\lib
+app
+jvmArgs : 
+

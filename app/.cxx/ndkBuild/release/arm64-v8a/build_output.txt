@@ -1,0 +1,9 @@
+Android NDK: WARNING: Unsupported source file extensions in E:\GitHubProject\Note5\app\src\main\jniLibs\Android.mk for module app    
+Android NDK:   E:\GitHubProject\Note5\app\src\main\jniLibs\arm64-v8a\libmsc.so E:\GitHubProject\Note5\app\src\main\jniLibs\armeabi-v7a\libmsc.so    
+md "E:\GitHubProject\Note5\app\build\intermediates\ndkBuild\release\obj\local\arm64-v8a" >NUL 2>NUL || rem
+D:/AndroidStudio/SDK/ndk/20.1.5948944/build//../prebuilt/windows-x86_64/bin/echo.exe [arm64-v8a] "SharedLibrary  ": "libapp.so"
+D:/AndroidStudio/SDK/ndk/20.1.5948944/build//../toolchains/llvm/prebuilt/windows-x86_64/bin/clang++.exe -Wl,-soname,libapp.so -shared -lgcc -Wl,--exclude-libs,libgcc.a -latomic -Wl,--exclude-libs,libatomic.a -target aarch64-none-linux-android23 -no-canonical-prefixes    -Wl,--build-id -Wl,--build-id -stdlib=libstdc++ -Wl,--no-undefined -Wl,-z,noexecstack -Wl,--warn-shared-textrel -Wl,--fatal-warnings  -lc -lm -o E:/GitHubProject/Note5/app/build/intermediates/ndkBuild/release/obj/local/arm64-v8a/libapp.so
+md "E:\GitHubProject\Note5\app\build\intermediates\ndkBuild\release\lib\arm64-v8a" >NUL 2>NUL || rem
+D:/AndroidStudio/SDK/ndk/20.1.5948944/build//../prebuilt/windows-x86_64/bin/echo.exe [arm64-v8a] "Install        ": "libapp.so => E:\GitHubProject\Note5\app\build\intermediates\ndkBuild\release\lib/arm64-v8a/libapp.so"
+copy /b/y "E:\GitHubProject\Note5\app\build\intermediates\ndkBuild\release\obj\local\arm64-v8a\libapp.so" "E:\GitHubProject\Note5\app\build\intermediates\ndkBuild\release\lib\arm64-v8a\libapp.so" > NUL
+D:/AndroidStudio/SDK/ndk/20.1.5948944/build//../toolchains/llvm/prebuilt/windows-x86_64/bin/aarch64-linux-android-strip --strip-unneeded  E:\GitHubProject\Note5\app\build\intermediates\ndkBuild\release\lib/arm64-v8a/libapp.so

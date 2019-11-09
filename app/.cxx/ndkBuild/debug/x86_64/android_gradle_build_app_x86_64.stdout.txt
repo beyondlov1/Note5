@@ -1,0 +1,3 @@
+Android NDK: WARNING: Unsupported source file extensions in E:\GitHubProject\Note5\app\src\main\jniLibs\Android.mk for module app    
+Android NDK:   E:\GitHubProject\Note5\app\src\main\jniLibs\arm64-v8a\libmsc.so E:\GitHubProject\Note5\app\src\main\jniLibs\armeabi-v7a\libmsc.so    
+[x86_64] SharedLibrary  : libapp.so

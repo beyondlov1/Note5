@@ -36,12 +36,12 @@
 
         <ImageButton
             android:id="@+id/fragment_edit_note_speech"
-            android:layout_width="wrap_content"
+            android:layout_width="50dp"
             android:layout_height="wrap_content"
-            android:src="@drawable/ic_open_in_browser_yellow_800_24dp"
-            android:background="@null"
+            android:layout_centerHorizontal="true"
             android:layout_marginStart="15dp"
-            android:layout_toEndOf="@+id/fragment_edit_note_browser_search" />
+            android:background="@null"
+            android:src="@drawable/ic_keyboard_voice_black_24dp" />
 
         <ImageButton
             android:id="@+id/fragment_edit_note_save"
