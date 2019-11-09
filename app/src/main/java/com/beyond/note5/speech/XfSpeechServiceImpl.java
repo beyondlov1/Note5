@@ -13,12 +13,13 @@ import com.iflytek.cloud.RecognizerResult;
 import com.iflytek.cloud.SpeechConstant;
 import com.iflytek.cloud.SpeechError;
 import com.iflytek.cloud.SpeechRecognizer;
+import com.iflytek.cloud.util.ResourceUtil;
 
 import org.greenrobot.eventbus.EventBus;
 
 public class XfSpeechServiceImpl implements SpeechService {
 
-    public static final String XF_APP_ID = "xxxxx";
+    public static final String XF_APP_ID = "xxxx";
 
     private SpeechRecognizer mIat;
 
@@ -39,11 +40,14 @@ public class XfSpeechServiceImpl implements SpeechService {
         mIat.setParameter(SpeechConstant.LANGUAGE, "zh_cn"); //语音
         mIat.setParameter(SpeechConstant.ACCENT, "mandarin"); //普通话
         mIat.setParameter(SpeechConstant.ENGINE_TYPE, SpeechConstant.TYPE_CLOUD);//引擎
+        // 设置本地识别资源
+//        mIat.setParameter(ResourceUtil.ASR_RES_PATH, getResourcePath(context));
+
         mIat.setParameter(SpeechConstant.RESULT_TYPE, "json");//返回结果格式
         // 设置语音前端点:静音超时时间，即用户多长时间不说话则当做超时处理
         mIat.setParameter(SpeechConstant.VAD_BOS, "4000");
         // 设置语音后端点:后端点静音检测时间，即用户停止说话多长时间内即认为不再输入， 自动停止录音
-        mIat.setParameter(SpeechConstant.VAD_EOS,"1000");
+        mIat.setParameter(SpeechConstant.VAD_EOS, "1000");
         // 设置标点符号,设置为"0"返回结果无标点,设置为"1"返回结果有标点
         mIat.setParameter(SpeechConstant.ASR_PTT, "0");
 
@@ -84,6 +88,15 @@ public class XfSpeechServiceImpl implements SpeechService {
             }
         });
     }
+
+    private String getResourcePath(Context context){
+        //识别通用资源
+        //识别8k资源-使用8k的时候请解开注释
+        return ResourceUtil.generateResourcePath(context, ResourceUtil.RESOURCE_TYPE.assets, "iat/common.jet") +
+                ";" +
+                ResourceUtil.generateResourcePath(context, ResourceUtil.RESOURCE_TYPE.assets, "iat/sms_16k.jet");
+    }
+
 
 
     public SpeechRecognizer getmIat() {
