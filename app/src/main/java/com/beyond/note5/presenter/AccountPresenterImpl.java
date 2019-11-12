@@ -2,14 +2,21 @@ package com.beyond.note5.presenter;
 
 import com.beyond.note5.MyApplication;
 import com.beyond.note5.bean.Account;
-import com.beyond.note5.model.AccountModel;
+import com.beyond.note5.bean.AccountWrapper;
+import com.beyond.note5.bean.Document;
 import com.beyond.note5.component.DaggerCommonComponent;
+import com.beyond.note5.model.AccountModel;
+import com.beyond.note5.sync.datasource.SyncStampModel;
+import com.beyond.note5.sync.datasource.entity.SyncStamp;
+import com.beyond.note5.sync.datasource.sql.model.SqlBaseSyncStampModel;
 import com.beyond.note5.utils.IDUtil;
 import com.beyond.note5.utils.OkWebDavUtil;
+import com.beyond.note5.utils.PreferenceUtil;
 import com.beyond.note5.view.AccountView;
 import com.thegrizzlylabs.sardineandroid.Sardine;
 import com.thegrizzlylabs.sardineandroid.impl.handler.OkHttpSardine2;
 
+import java.io.IOException;
 import java.util.List;
 
 import javax.inject.Inject;
@@ -22,11 +29,23 @@ public class AccountPresenterImpl implements AccountPresenter {
     @Inject
     AccountModel accountModel;
 
+    SyncStampModel noteSyncStampModel;
+    SyncStampModel todoSyncStampModel;
+
     private AccountView accountView;
 
     public AccountPresenterImpl(AccountView accountView) {
         DaggerCommonComponent.builder().build().inject(this);
         this.accountView = accountView;
+
+        this.noteSyncStampModel = new SqlBaseSyncStampModel(
+                MyApplication.getInstance().getDaoSession().getBaseSyncStampDao(),
+                PreferenceUtil.getString(MyApplication.VIRTUAL_USER_ID),
+                Document.NOTE);
+        this.todoSyncStampModel = new SqlBaseSyncStampModel(
+                MyApplication.getInstance().getDaoSession().getBaseSyncStampDao(),
+                PreferenceUtil.getString(MyApplication.VIRTUAL_USER_ID),
+                Document.TODO);
     }
 
     @Override
@@ -91,5 +110,20 @@ public class AccountPresenterImpl implements AccountPresenter {
             e.printStackTrace();
             accountView.onDeleteFail(account);
         }
+    }
+
+    @Override
+    public AccountWrapper wrap(Account account) {
+        try {
+            SyncStamp noteSyncStamp = noteSyncStampModel.retrieve(OkWebDavUtil.concat(account.getServer(), DAV_ROOT_DIR));
+            SyncStamp todoSyncStamp = todoSyncStampModel.retrieve(OkWebDavUtil.concat(account.getServer(), DAV_ROOT_DIR));
+            AccountWrapper wrapper = new AccountWrapper(account);
+            wrapper.setNoteLastSyncTime(noteSyncStamp.getLastSyncTimeEnd());
+            wrapper.setTodoLastSyncTime(todoSyncStamp.getLastSyncTimeEnd());
+            return wrapper;
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        return new AccountWrapper(account);
     }
 }

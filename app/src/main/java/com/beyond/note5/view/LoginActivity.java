@@ -23,13 +23,16 @@ import android.widget.TextView;
 import com.beyond.note5.MyApplication;
 import com.beyond.note5.R;
 import com.beyond.note5.bean.Account;
-import com.beyond.note5.component.module.AccountModule;
+import com.beyond.note5.bean.AccountWrapper;
 import com.beyond.note5.component.DaggerLoginActivityComponent;
+import com.beyond.note5.component.module.AccountModule;
 import com.beyond.note5.presenter.AccountPresenter;
 import com.beyond.note5.utils.OkWebDavUtil;
 import com.beyond.note5.utils.StatusBarUtil;
 import com.beyond.note5.utils.ToastUtil;
 import com.beyond.note5.view.adapter.view.AccountViewAdapter;
+
+import org.apache.commons.lang3.time.DateFormatUtils;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -200,7 +203,7 @@ public abstract class LoginActivity extends AppCompatActivity {
 
     private class MyRecyclerAdapter extends RecyclerView.Adapter {
 
-        private List<Account> data = new ArrayList<>();
+        private List<AccountWrapper> data = new ArrayList<>();
 
         @Override
         public RecyclerView.ViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
@@ -213,6 +216,10 @@ public abstract class LoginActivity extends AppCompatActivity {
             MyViewHolder myViewHolder = (MyViewHolder) holder;
             myViewHolder.server.setText(data.get(position).getServer());
             myViewHolder.username.setText(data.get(position).getUsername());
+            String noteLastSyncTime = DateFormatUtils.format(data.get(position).getNoteLastSyncTime(), "yyyy-MM-dd HH:mm:ss");
+            String todoLastSyncTime = DateFormatUtils.format(data.get(position).getTodoLastSyncTime(), "yyyy-MM-dd HH:mm:ss");
+            myViewHolder.noteLastSyncTime.setText(String.format("NoteLastSyncTime:%s", noteLastSyncTime));
+            myViewHolder.todoLastSyncTime.setText(String.format("TodoLastSyncTime:%s", todoLastSyncTime));
             if (data.get(position).getValid()){
                 myViewHolder.enable.setChecked(true);
             }else {
@@ -222,13 +229,13 @@ public abstract class LoginActivity extends AppCompatActivity {
                 @Override
                 public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
                     if (isChecked){
-                        Account account = data.get(position);
+                        AccountWrapper account = data.get(position);
                         account.setValid(true);
-                        accountPresenter.update(account);
+                        accountPresenter.update(account.getAccount());
                     }else {
-                        Account account = data.get(position);
+                        AccountWrapper account = data.get(position);
                         account.setValid(false);
-                        accountPresenter.update(account);
+                        accountPresenter.update(account.getAccount());
                     }
                     refreshSynchronizers();
                 }
@@ -236,7 +243,7 @@ public abstract class LoginActivity extends AppCompatActivity {
             myViewHolder.delete.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
-                    accountPresenter.delete(data.get(position));
+                    accountPresenter.delete(data.get(position).getAccount());
                     refreshSynchronizers();
                 }
             });
@@ -252,12 +259,16 @@ public abstract class LoginActivity extends AppCompatActivity {
             CheckBox enable;
             TextView server;
             TextView username;
+            TextView noteLastSyncTime;
+            TextView todoLastSyncTime;
             ImageButton delete;
 
             MyViewHolder(View itemView) {
                 super(itemView);
                 server = itemView.findViewById(R.id.item_account_server);
                 username = itemView.findViewById(R.id.item_account_username);
+                noteLastSyncTime = itemView.findViewById(R.id.item_account_last_sync_time_note);
+                todoLastSyncTime = itemView.findViewById(R.id.item_account_last_sync_time_todo);
                 enable = itemView.findViewById(R.id.item_account_enable);
                 delete = itemView.findViewById(R.id.item_account_delete);
             }
@@ -266,7 +277,9 @@ public abstract class LoginActivity extends AppCompatActivity {
         public void setData(List<Account> data){
             notifyItemRangeRemoved(0,this.data.size());
             this.data.clear();
-            this.data.addAll(data);
+            for (Account datum : data) {
+                this.data.add(accountPresenter.wrap(datum));
+            }
             notifyItemRangeInserted(0,this.data.size());
         }
 
