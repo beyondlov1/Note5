@@ -24,7 +24,7 @@ public class AttachmentHelper {
 
     private List<AttachmentSource> attachmentSources = new CopyOnWriteArrayList<>();
 
-    private Map<String, AttachmentSource> attachmentSourceMap = new ConcurrentHashMap<>();
+    private Map<String, AttachmentSource> attachmentSourcePool = new ConcurrentHashMap<>();
 
     private ExecutorService executor;
 
@@ -35,12 +35,12 @@ public class AttachmentHelper {
         this.executor = executor;
     }
 
-    public void add(FileStore fileStore, Note note) {
+    public void joinPool(FileStore fileStore, Note note) {
         for (Attachment attachment : note.getAttachments()) {
             if (checkAttachment(attachment)) {
                 AttachmentSource a = new AttachmentSource(fileStore, note, attachment);
                 attachmentSources.add(a);
-                attachmentSourceMap.put(attachment.getId(), a);
+                attachmentSourcePool.put(attachment.getId(), a);
             }
         }
     }
@@ -49,6 +49,7 @@ public class AttachmentHelper {
         return attachment != null && StringUtils.isNotBlank(attachment.getPath());
     }
 
+    @Deprecated
     public void dispatch(FileStore... fileStores) {
         SyncUtils.executor(attachmentSources)
                 .executorService(executor)
@@ -87,9 +88,9 @@ public class AttachmentHelper {
                 });
     }
 
-    public void upload(Attachment attachment, FileStore fileStore) throws IOException {
+    public void saveAttachment(Attachment attachment, FileStore fileStore) throws IOException {
         String id = attachment.getId();
-        AttachmentSource attachmentSource = attachmentSourceMap.get(id);
+        AttachmentSource attachmentSource = attachmentSourcePool.get(id);
         attachmentSource.getFileStore().download(
                 attachmentSource.getNote().getId(),
                 attachmentSource.getAttachment().getName(),

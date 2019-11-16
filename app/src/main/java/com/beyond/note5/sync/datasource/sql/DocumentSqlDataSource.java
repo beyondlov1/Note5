@@ -79,7 +79,16 @@ public abstract class DocumentSqlDataSource<T extends Document> implements SqlDa
                 addList.add(map.get(id));
             }
         }
+
+        addAll(addList,oppositeKeys);
+        updateAll(updateList,oppositeKeys);
+    }
+
+    protected void addAll(List<T> addList, String... oppositeKeys) throws IOException {
         documentPresenter.addAllForSync(addList, oppositeKeys);
+    }
+
+    protected void updateAll(List<T> updateList, String... oppositeKeys){
         documentPresenter.updateAllForSync(updateList, oppositeKeys);
     }
 

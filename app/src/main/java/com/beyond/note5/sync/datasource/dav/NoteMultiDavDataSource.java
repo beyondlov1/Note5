@@ -31,7 +31,7 @@ public class NoteMultiDavDataSource extends DefaultMultiDavDataSource<Note> impl
 
         if (attachmentHelper != null) {
             for (Attachment attachment : note.getAttachments()) {
-                attachmentHelper.upload(attachment, this);
+                attachmentHelper.saveAttachment(attachment, this);
             }
         }
     }
@@ -62,7 +62,7 @@ public class NoteMultiDavDataSource extends DefaultMultiDavDataSource<Note> impl
     public List<Note> getChangedData(SyncStamp syncStamp, DataSource<Note> targetDataSource) throws IOException {
         List<Note> changedData = super.getChangedData(syncStamp, targetDataSource);
         for (Note note : changedData) {
-            attachmentHelper.add(this, note);
+            attachmentHelper.joinPool(this, note);
         }
         return changedData;
     }
