@@ -28,17 +28,17 @@ public class RequirePermissionAspect {
     public void around(ProceedingJoinPoint joinPoint) throws Throwable {
         MethodSignature signature = (MethodSignature) joinPoint.getSignature();
         Method method = signature.getMethod();
-        Context context = getContextParam(joinPoint, method);
-
         RequirePermission annotation = method.getAnnotation(RequirePermission.class);
         assert annotation != null;
+
+        Context context = getContextParam(joinPoint, annotation);
 
         String[] requirePermissions = annotation.value();
         checkAndRequestPermission(context, requirePermissions, joinPoint);
     }
 
     @NonNull
-    private Context getContextParam(ProceedingJoinPoint joinPoint, Method method) {
+    private Context getContextParam(ProceedingJoinPoint joinPoint, RequirePermission requirePermission) {
         Object[] args = joinPoint.getArgs();
         Context context = null;
         for (Object arg : args) {
@@ -48,7 +48,10 @@ public class RequirePermissionAspect {
             }
         }
         if (context == null){
-            throw new RuntimeException("方法参数中要配置 Context context");
+            context = ApplicationHolder.get();
+        }
+        if (context == null){
+            throw new RuntimeException("方法参数中要配置 Context context 或 ApplicationHolder.set(application)");
         }
         return context;
     }

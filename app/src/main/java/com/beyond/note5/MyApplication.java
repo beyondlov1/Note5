@@ -16,6 +16,7 @@ import com.beyond.note5.model.PredictModelImpl;
 import com.beyond.note5.model.dao.DaoMaster;
 import com.beyond.note5.model.dao.DaoSession;
 import com.beyond.note5.component.DaggerCommonComponent;
+import com.beyond.note5.permission.ApplicationHolder;
 import com.beyond.note5.predict.Predictor;
 import com.beyond.note5.predict.PredictorImpl;
 import com.beyond.note5.predict.bean.TagGraph;
@@ -123,6 +124,7 @@ public class MyApplication extends Application {
         super.onCreate();
         isApplicationToBeBorn = true;
         instance = this;
+        ApplicationHolder.set(this);
         initInjection();
         initPreference();
         initSynchronizer();

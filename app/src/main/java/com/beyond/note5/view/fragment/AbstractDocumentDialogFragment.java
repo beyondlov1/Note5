@@ -49,9 +49,9 @@ public abstract class AbstractDocumentDialogFragment<T extends Document> extends
     @Nullable
     @Override
     public View onCreateView(LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
-        EventBus.getDefault().register(this);
         if (isDialog()) {
             unbinder = ButterKnife.bind(this, root);
+            EventBus.getDefault().register(this);
             initCommonView();
             initCommonEvent();
             initDialogView();
@@ -59,6 +59,7 @@ public abstract class AbstractDocumentDialogFragment<T extends Document> extends
         } else {
             root = inflater.inflate(getFragmentLayoutResId(), null);
             unbinder = ButterKnife.bind(this, root);
+            EventBus.getDefault().register(this);
             initCommonView();
             initCommonEvent();
             initFragmentView();

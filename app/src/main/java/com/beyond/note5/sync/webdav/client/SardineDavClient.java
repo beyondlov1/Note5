@@ -1,5 +1,7 @@
 package com.beyond.note5.sync.webdav.client;
 
+import com.beyond.note5.MyApplication;
+import com.beyond.note5.utils.FileUtil;
 import com.beyond.note5.utils.OkWebDavUtil;
 import com.thegrizzlylabs.sardineandroid.DavResource;
 import com.thegrizzlylabs.sardineandroid.Sardine;
@@ -123,6 +125,7 @@ public class SardineDavClient implements DavClient {
 
     @Override
     public void download(String url, File file) throws IOException {
+        FileUtil.savePicture(MyApplication.getInstance(), file.getName());
         try (InputStream inputStream = sardine.get(url);
              FileOutputStream output = new FileOutputStream(file)) {
             IOUtils.copy(inputStream, output);

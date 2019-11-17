@@ -1,25 +1,21 @@
 package com.beyond.note5.model;
 
 import android.Manifest;
+import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.content.ContentResolver;
 import android.content.ContentUris;
 import android.content.ContentValues;
-import android.content.pm.PackageManager;
 import android.net.Uri;
-import android.os.Build;
 import android.provider.CalendarContract;
-import android.support.annotation.NonNull;
-import android.support.v4.app.ActivityCompat;
 import android.util.Log;
 
 import com.beyond.note5.MyApplication;
 import com.beyond.note5.bean.Todo;
 import com.beyond.note5.model.dao.DaoSession;
 import com.beyond.note5.model.dao.ReminderDao;
+import com.beyond.note5.permission.RequirePermission;
 import com.beyond.note5.utils.CalendarUtil;
-import com.github.dfqin.grantor.PermissionListener;
-import com.github.dfqin.grantor.PermissionsUtil;
 
 import org.apache.commons.lang3.time.DateUtils;
 
@@ -57,24 +53,8 @@ public class CalendarModelImpl implements CalendarModel {
     }
 
     @Override
+    @RequirePermission({Manifest.permission.WRITE_CALENDAR,Manifest.permission.READ_CALENDAR})
     public void add(final Todo todo) {
-
-        if (ActivityCompat.checkSelfPermission(activity, Manifest.permission.WRITE_CALENDAR) != PackageManager.PERMISSION_GRANTED) {
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-                PermissionsUtil.requestPermission(activity, new PermissionListener() {
-                    @Override
-                    public void permissionGranted(@NonNull String[] permission) {
-                        add(todo);
-                    }
-
-                    @Override
-                    public void permissionDenied(@NonNull String[] permission) {
-
-                    }
-                }, new String[]{Manifest.permission.WRITE_CALENDAR}, false, null);
-            }
-            return;
-        }
 
         ContentValues values = getContentValues(todo);
         if (values == null) {
@@ -82,7 +62,7 @@ public class CalendarModelImpl implements CalendarModel {
         }
 
         ContentResolver cr = MyApplication.getInstance().getContentResolver();
-        Uri uri = cr.insert(CalendarContract.Events.CONTENT_URI, values);
+        @SuppressLint("MissingPermission") Uri uri = cr.insert(CalendarContract.Events.CONTENT_URI, values);
 
         if (uri != null) {
             long eventID = Long.parseLong(uri.getLastPathSegment());
@@ -92,7 +72,7 @@ public class CalendarModelImpl implements CalendarModel {
             reminderValues.put(CalendarContract.Reminders.EVENT_ID, eventID);
             reminderValues.put(CalendarContract.Reminders.MINUTES, 0);
             reminderValues.put(CalendarContract.Reminders.METHOD, CalendarContract.Reminders.METHOD_ALERT);
-            Uri reminderUri = cr.insert(CalendarContract.Reminders.CONTENT_URI, reminderValues);
+            @SuppressLint("MissingPermission") Uri reminderUri = cr.insert(CalendarContract.Reminders.CONTENT_URI, reminderValues);
             if (reminderUri == null) {
                 Log.e(TAG, "添加提醒失败");
                 throw new RuntimeException("添加提醒失败");
@@ -108,23 +88,8 @@ public class CalendarModelImpl implements CalendarModel {
     }
 
     @Override
+    @RequirePermission({Manifest.permission.WRITE_CALENDAR,Manifest.permission.READ_CALENDAR})
     public void update(final Todo todo) {
-        if (ActivityCompat.checkSelfPermission(activity, Manifest.permission.WRITE_CALENDAR) != PackageManager.PERMISSION_GRANTED) {
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-                PermissionsUtil.requestPermission(activity, new PermissionListener() {
-                    @Override
-                    public void permissionGranted(@NonNull String[] permission) {
-                        update(todo);
-                    }
-
-                    @Override
-                    public void permissionDenied(@NonNull String[] permission) {
-
-                    }
-                }, new String[]{Manifest.permission.WRITE_CALENDAR}, false, null);
-            }
-            return;
-        }
         ContentValues values = getContentValues(todo);
         if (values == null) {
             return;
@@ -140,24 +105,8 @@ public class CalendarModelImpl implements CalendarModel {
     }
 
     @Override
+    @RequirePermission({Manifest.permission.WRITE_CALENDAR,Manifest.permission.READ_CALENDAR})
     public void delete(final Todo todo) {
-        if (ActivityCompat.checkSelfPermission(activity, Manifest.permission.WRITE_CALENDAR) != PackageManager.PERMISSION_GRANTED) {
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-                PermissionsUtil.requestPermission(activity, new PermissionListener() {
-                    @Override
-                    public void permissionGranted(@NonNull String[] permission) {
-                        delete(todo);
-                    }
-
-                    @Override
-                    public void permissionDenied(@NonNull String[] permission) {
-
-                    }
-                }, new String[]{Manifest.permission.WRITE_CALENDAR}, false, null);
-            }
-            return;
-        }
-
         if (todo.getReminder() == null){
             return;
         }
@@ -177,24 +126,8 @@ public class CalendarModelImpl implements CalendarModel {
     }
 
     @Override
+    @RequirePermission({Manifest.permission.WRITE_CALENDAR,Manifest.permission.READ_CALENDAR})
     public void deleteReminder(final Todo todo) {
-        if (ActivityCompat.checkSelfPermission(activity, Manifest.permission.WRITE_CALENDAR) != PackageManager.PERMISSION_GRANTED) {
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-                PermissionsUtil.requestPermission(activity, new PermissionListener() {
-                    @Override
-                    public void permissionGranted(@NonNull String[] permission) {
-                        deleteReminder(todo);
-                    }
-
-                    @Override
-                    public void permissionDenied(@NonNull String[] permission) {
-
-                    }
-                }, new String[]{Manifest.permission.WRITE_CALENDAR}, false, null);
-            }
-            return;
-        }
-
         Long reminderId = todo.getReminder().getCalendarReminderId();
         if (reminderId == null) {
             return;
@@ -208,28 +141,11 @@ public class CalendarModelImpl implements CalendarModel {
     }
 
     @Override
+    @RequirePermission({Manifest.permission.WRITE_CALENDAR,Manifest.permission.READ_CALENDAR})
     public void restoreCalendarReminder(final Todo todo) {
         if (todo.getReminder() == null || todo.getReminder().getCalendarEventId() == null) {
             return;
         }
-
-        if (ActivityCompat.checkSelfPermission(activity, Manifest.permission.WRITE_CALENDAR) != PackageManager.PERMISSION_GRANTED) {
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-                PermissionsUtil.requestPermission(activity, new PermissionListener() {
-                    @Override
-                    public void permissionGranted(@NonNull String[] permission) {
-                        restoreCalendarReminder(todo);
-                    }
-
-                    @Override
-                    public void permissionDenied(@NonNull String[] permission) {
-
-                    }
-                }, new String[]{Manifest.permission.WRITE_CALENDAR}, false, null);
-            }
-            return;
-        }
-
         ContentResolver cr = MyApplication.getInstance().getContentResolver();
         long eventID = todo.getReminder().getCalendarEventId();
         //add Reminder
@@ -237,7 +153,7 @@ public class CalendarModelImpl implements CalendarModel {
         reminderValues.put(CalendarContract.Reminders.EVENT_ID, eventID);
         reminderValues.put(CalendarContract.Reminders.MINUTES, 0);
         reminderValues.put(CalendarContract.Reminders.METHOD, CalendarContract.Reminders.METHOD_ALERT);
-        Uri reminderUri = cr.insert(CalendarContract.Reminders.CONTENT_URI, reminderValues);
+        @SuppressLint("MissingPermission") Uri reminderUri = cr.insert(CalendarContract.Reminders.CONTENT_URI, reminderValues);
         if (reminderUri == null) {
             Log.e(TAG, "恢复提醒失败");
             throw new RuntimeException("恢复提醒失败");
